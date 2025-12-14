@@ -1,0 +1,23 @@
+[package]
+name = "anchor-testnet"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Test service that generates random ANCHOR transactions on regtest"
+
+[[bin]]
+name = "anchor-testnet"
+path = "src/main.rs"
+
+[dependencies]
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+dotenvy.workspace = true
+reqwest = { version = "0.12", features = ["json"] }
+rand = "0.8"
+

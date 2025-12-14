@@ -1,0 +1,31 @@
+[package]
+name = "anchor-wallet"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Wallet service for creating ANCHOR transactions"
+
+[[bin]]
+name = "anchor-wallet"
+path = "src/main.rs"
+
+[dependencies]
+anchor-core.workspace = true
+bitcoin.workspace = true
+bitcoincore-rpc.workspace = true
+tokio.workspace = true
+axum.workspace = true
+tower.workspace = true
+tower-http.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+anyhow.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+hex.workspace = true
+dotenvy.workspace = true
+utoipa.workspace = true
+utoipa-swagger-ui.workspace = true
+

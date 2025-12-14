@@ -1,0 +1,58 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/anchor-core",
+    "crates/anchor-indexer",
+    "crates/anchor-wallet",
+    "crates/anchor-testnet",
+    "crates/anchor-wallet-lib",
+    "explorer/backend",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+authors = ["ANCHOR Protocol Contributors"]
+repository = "https://github.com/anchor-protocol/anchor"
+
+[workspace.dependencies]
+# Bitcoin
+bitcoin = { version = "0.32", features = ["serde"] }
+bitcoincore-rpc = "0.19"
+
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# Web framework
+axum = { version = "0.7", features = ["macros"] }
+tower = "0.4"
+tower-http = { version = "0.5", features = ["cors", "trace"] }
+
+# Database
+sqlx = { version = "0.8", features = ["runtime-tokio", "postgres", "chrono"] }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Error handling
+thiserror = "1"
+anyhow = "1"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Utilities
+hex = "0.4"
+chrono = { version = "0.4", features = ["serde"] }
+dotenvy = "0.15"
+
+# OpenAPI / Swagger
+utoipa = { version = "5", features = ["axum_extras", "chrono"] }
+utoipa-swagger-ui = { version = "8", features = ["axum"] }
+
+# Internal crates
+anchor-core = { path = "crates/anchor-core" }
+

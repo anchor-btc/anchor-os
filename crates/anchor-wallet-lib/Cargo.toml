@@ -1,0 +1,36 @@
+[package]
+name = "anchor-wallet-lib"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Rust library for building ANCHOR protocol wallets"
+keywords = ["bitcoin", "anchor", "metaprotocol", "wallet"]
+categories = ["cryptography::cryptocurrencies"]
+readme = "README.md"
+
+[lib]
+name = "anchor_wallet_lib"
+path = "src/lib.rs"
+
+[dependencies]
+anchor-core.workspace = true
+bitcoin.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+hex.workspace = true
+thiserror.workspace = true
+
+# Bitcoin RPC client
+bitcoincore-rpc = "0.19"
+
+# Optional async runtime for async methods
+tokio = { workspace = true, optional = true }
+
+[features]
+default = []
+async = ["tokio"]
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
+

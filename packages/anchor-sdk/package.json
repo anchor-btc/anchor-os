@@ -1,0 +1,73 @@
+{
+  "name": "@AnchorProtocol/sdk",
+  "version": "0.1.0",
+  "description": "TypeScript SDK for the ANCHOR protocol - create and parse chained messages on Bitcoin",
+  "author": "ANCHOR Protocol",
+  "license": "MIT",
+  "keywords": [
+    "bitcoin",
+    "anchor",
+    "metaprotocol",
+    "op_return",
+    "blockchain",
+    "messaging"
+  ],
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./browser": {
+      "import": {
+        "types": "./dist/browser.d.ts",
+        "default": "./dist/browser.js"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "bitcoinjs-lib": "^6.1.6",
+    "ecpair": "^2.1.0",
+    "tiny-secp256k1": "^2.2.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AnchorProtocol/anchor"
+  },
+  "bugs": {
+    "url": "https://github.com/AnchorProtocol/anchor/issues"
+  },
+  "homepage": "https://github.com/AnchorProtocol/anchor#readme"
+}
+

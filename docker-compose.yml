@@ -1,0 +1,136 @@
+services:
+  bitcoin:
+    build:
+      context: ./docker/bitcoin
+      dockerfile: Dockerfile
+    container_name: anchor-bitcoin
+    ports:
+      - "18443:18443"  # RPC
+      - "18444:18444"  # P2P
+    volumes:
+      - bitcoin-data:/home/bitcoin/.bitcoin
+    healthcheck:
+      test: ["CMD", "bitcoin-cli", "-regtest", "-rpcuser=anchor", "-rpcpassword=anchor", "getblockchaininfo"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+    networks:
+      - anchor-network
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: anchor-postgres
+    environment:
+      POSTGRES_USER: anchor
+      POSTGRES_PASSWORD: anchor
+      POSTGRES_DB: anchor
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U anchor -d anchor"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - anchor-network
+
+  indexer:
+    build:
+      context: .
+      dockerfile: ./crates/anchor-indexer/Dockerfile
+    container_name: anchor-indexer
+    environment:
+      BITCOIN_RPC_URL: http://bitcoin:18443
+      BITCOIN_RPC_USER: anchor
+      BITCOIN_RPC_PASSWORD: anchor
+      DATABASE_URL: postgres://anchor:anchor@postgres:5432/anchor
+      RUST_LOG: info
+    depends_on:
+      bitcoin:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - anchor-network
+
+  wallet:
+    build:
+      context: .
+      dockerfile: ./crates/anchor-wallet/Dockerfile
+    container_name: anchor-wallet
+    ports:
+      - "3001:3001"
+    environment:
+      BITCOIN_RPC_URL: http://bitcoin:18443
+      BITCOIN_RPC_USER: anchor
+      BITCOIN_RPC_PASSWORD: anchor
+      WALLET_NAME: anchor_wallet
+      RUST_LOG: info
+    depends_on:
+      bitcoin:
+        condition: service_healthy
+    networks:
+      - anchor-network
+
+  explorer-api:
+    build:
+      context: .
+      dockerfile: ./explorer/backend/Dockerfile
+    container_name: anchor-explorer-api
+    ports:
+      - "3002:3002"
+    environment:
+      DATABASE_URL: postgres://anchor:anchor@postgres:5432/anchor
+      RUST_LOG: info
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - anchor-network
+
+  explorer-web:
+    build:
+      context: ./explorer/frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:3002
+        NEXT_PUBLIC_WALLET_URL: http://localhost:3001
+    container_name: anchor-explorer-web
+    ports:
+      - "3000:3000"
+    depends_on:
+      - explorer-api
+      - wallet
+    networks:
+      - anchor-network
+
+  testnet:
+    build:
+      context: .
+      dockerfile: ./crates/anchor-testnet/Dockerfile
+    container_name: anchor-testnet
+    environment:
+      WALLET_URL: http://wallet:3001
+      MIN_INTERVAL_SECS: 5
+      MAX_INTERVAL_SECS: 15
+      BLOCKS_PER_CYCLE: 1
+      INITIAL_BLOCKS: 101
+      RUST_LOG: info
+    depends_on:
+      - wallet
+      - indexer
+    networks:
+      - anchor-network
+    restart: unless-stopped
+
+volumes:
+  bitcoin-data:
+  postgres-data:
+
+networks:
+  anchor-network:
+    driver: bridge
+
