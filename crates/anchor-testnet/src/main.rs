@@ -94,12 +94,19 @@ async fn main() -> Result<()> {
         cycle += 1;
         info!("━━━ Cycle {} ━━━", cycle);
 
-        // Generate a message (root or reply)
+        // Generate a message (root, reply, or image)
         match generator.generate_message().await {
             Ok(result) => {
+                let msg_type = if result.is_image {
+                    "🖼️  image"
+                } else if result.is_reply {
+                    "reply"
+                } else {
+                    "root"
+                };
                 info!(
                     "📨 Created {} message: {}:{}",
-                    if result.is_reply { "reply" } else { "root" },
+                    msg_type,
                     &result.txid[..16],
                     result.vout
                 );

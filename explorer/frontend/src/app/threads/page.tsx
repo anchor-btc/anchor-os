@@ -33,7 +33,7 @@ const KIND_OPTIONS = [
   { value: "1", label: "Text" },
   { value: "2", label: "State" },
   { value: "3", label: "Vote" },
-  { value: "4", label: "React" },
+  { value: "4", label: "Image" },
 ];
 
 export default function ThreadsPage() {

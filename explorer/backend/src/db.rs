@@ -624,6 +624,7 @@ fn kind_to_name(kind: i16) -> String {
         1 => "Text".to_string(),
         2 => "State".to_string(),
         3 => "Vote".to_string(),
+        4 => "Image".to_string(),
         n => format!("Custom({})", n),
     }
 }

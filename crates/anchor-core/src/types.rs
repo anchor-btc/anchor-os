@@ -15,7 +15,9 @@ pub enum AnchorKind {
     State = 2,
     /// Vote
     Vote = 3,
-    /// Custom type (value 4-255)
+    /// Image (body is raw image bytes: PNG, JPEG, GIF, WebP)
+    Image = 4,
+    /// Custom type (value 5-255)
     Custom(u8),
 }
 
@@ -26,6 +28,7 @@ impl From<u8> for AnchorKind {
             1 => AnchorKind::Text,
             2 => AnchorKind::State,
             3 => AnchorKind::Vote,
+            4 => AnchorKind::Image,
             n => AnchorKind::Custom(n),
         }
     }
@@ -38,6 +41,7 @@ impl From<AnchorKind> for u8 {
             AnchorKind::Text => 1,
             AnchorKind::State => 2,
             AnchorKind::Vote => 3,
+            AnchorKind::Image => 4,
             AnchorKind::Custom(n) => n,
         }
     }

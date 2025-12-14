@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
-import { Message, truncateTxid, formatBlockHeight } from "@/lib/api";
+import { Message, truncateTxid, formatBlockHeight, hexToImageDataUrl } from "@/lib/api";
 import {
   MessageSquare,
   Link2,
@@ -11,6 +11,7 @@ import {
   Box,
   AlertTriangle,
   ChevronRight,
+  Image as ImageIcon,
 } from "lucide-react";
 
 interface MessageCardProps {
@@ -27,6 +28,10 @@ export function MessageCard({
   const router = useRouter();
   const hasText = message.body_text && message.body_text.trim().length > 0;
   const parentAnchor = message.anchors.find((a) => a.index === 0);
+  
+  // Check if this is an image message
+  const isImage = message.kind === 4 || message.kind_name === "Image";
+  const imageDataUrl = isImage ? hexToImageDataUrl(message.body_hex) : null;
 
   const handleCardClick = () => {
     router.push(`/message/${message.txid}/${message.vout}`);
@@ -91,7 +96,23 @@ export function MessageCard({
 
       {/* Body */}
       <div className="mb-3">
-        {hasText ? (
+        {isImage && imageDataUrl ? (
+          <div className="flex items-center gap-3">
+            <div className="relative w-16 h-16 rounded-lg overflow-hidden border border-border bg-secondary flex items-center justify-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={imageDataUrl}
+                alt="ANCHOR Image"
+                className="object-cover w-full h-full"
+                style={{ imageRendering: "pixelated" }}
+              />
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <ImageIcon className="h-4 w-4" />
+              <span>Image ({Math.floor(message.body_hex.length / 2)} bytes)</span>
+            </div>
+          </div>
+        ) : hasText ? (
           <p className="text-foreground whitespace-pre-wrap break-words">
             {message.body_text}
           </p>

@@ -398,6 +398,7 @@ function ReplyCard({ message, depth }: { message: Message; depth: number }) {
     "bg-yellow-50/50",
   ];
   const bgColor = bgColors[Math.min(depth, bgColors.length - 1)];
+  const hasReplies = message.reply_count > 0;
 
   return (
     <article
@@ -425,8 +426,8 @@ function ReplyCard({ message, depth }: { message: Message; depth: number }) {
             Reply
           </Link>
           <Link
-            href={`/message/${message.txid}/${message.vout}`}
-            className="text-gray-400 hover:text-orange-500 transition-colors"
+            href={`/thread/${message.txid}/${message.vout}`}
+            className="text-gray-400 hover:text-orange-500 transition-colors flex items-center gap-1"
           >
             <ChevronRight className="h-4 w-4" />
           </Link>
@@ -444,10 +445,20 @@ function ReplyCard({ message, depth }: { message: Message; depth: number }) {
       </div>
 
       <div className="flex items-center justify-between text-xs text-gray-400">
-        <span className="flex items-center gap-1">
-          <MessageSquare className="h-3 w-3" />
-          {message.reply_count} {message.reply_count === 1 ? "reply" : "replies"}
-        </span>
+        {hasReplies ? (
+          <Link
+            href={`/thread/${message.txid}/${message.vout}`}
+            className="flex items-center gap-1 hover:text-orange-500 hover:bg-orange-50 px-2 py-1 -ml-2 rounded transition-colors"
+          >
+            <MessageSquare className="h-3 w-3" />
+            {message.reply_count} {message.reply_count === 1 ? "reply" : "replies"}
+          </Link>
+        ) : (
+          <span className="flex items-center gap-1">
+            <MessageSquare className="h-3 w-3" />
+            {message.reply_count} replies
+          </span>
+        )}
         <span className="font-mono">{truncateTxid(message.txid)}:{message.vout}</span>
       </div>
     </article>

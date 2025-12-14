@@ -221,3 +221,58 @@ export function formatBlockHeight(height: number | null): string {
   return `Block #${height.toLocaleString()}`;
 }
 
+// Image detection constants (kind 4 = Image)
+export const MESSAGE_KIND_IMAGE = 4;
+
+// Known image magic bytes (hex prefixes)
+const IMAGE_MAGIC_BYTES: Record<string, string> = {
+  "89504e47": "image/png",      // PNG
+  "ffd8ff": "image/jpeg",        // JPEG
+  "47494638": "image/gif",       // GIF
+  "52494646": "image/webp",      // WebP (RIFF header)
+};
+
+/**
+ * Detect image MIME type from hex-encoded body
+ */
+export function detectImageMimeType(hexBody: string): string | null {
+  const lowerHex = hexBody.toLowerCase();
+  for (const [magic, mime] of Object.entries(IMAGE_MAGIC_BYTES)) {
+    if (lowerHex.startsWith(magic)) {
+      return mime;
+    }
+  }
+  return null;
+}
+
+/**
+ * Check if a message is an image (by kind or by content)
+ */
+export function isImageMessage(message: Message): boolean {
+  // Check kind first
+  if (message.kind === MESSAGE_KIND_IMAGE) {
+    return true;
+  }
+  // Also check magic bytes as fallback
+  return detectImageMimeType(message.body_hex) !== null;
+}
+
+/**
+ * Convert hex-encoded image data to a data URL for display
+ */
+export function hexToImageDataUrl(hexBody: string): string | null {
+  const mimeType = detectImageMimeType(hexBody);
+  if (!mimeType) return null;
+
+  // Convert hex to base64
+  try {
+    const bytes = new Uint8Array(
+      hexBody.match(/.{1,2}/g)?.map((byte) => parseInt(byte, 16)) || []
+    );
+    const base64 = btoa(String.fromCharCode(...bytes));
+    return `data:${mimeType};base64,${base64}`;
+  } catch {
+    return null;
+  }
+}
+

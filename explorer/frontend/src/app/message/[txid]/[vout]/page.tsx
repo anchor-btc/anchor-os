@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
-import { fetchMessage, fetchReplies, truncateTxid, formatBlockHeight } from "@/lib/api";
+import { fetchMessage, fetchReplies, truncateTxid, formatBlockHeight, hexToImageDataUrl } from "@/lib/api";
 import { MessageCard } from "@/components/message-card";
 import {
   Loader2,
@@ -24,6 +24,8 @@ import {
   Fingerprint,
   Database,
   Zap,
+  Image as ImageIcon,
+  Download,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
@@ -84,6 +86,10 @@ export default function MessagePage() {
 
   const hasText = message.body_text && message.body_text.trim().length > 0;
   const parentAnchor = message.anchors.find((a) => a.index === 0);
+  
+  // Check if this is an image message
+  const isImage = message.kind === 4 || message.kind_name === "Image";
+  const imageDataUrl = isImage ? hexToImageDataUrl(message.body_hex) : null;
   
   // Calculate technical details
   const bodySize = message.body_hex ? message.body_hex.length / 2 : 0;
@@ -188,7 +194,33 @@ export default function MessagePage() {
         )}
 
         <div className="mb-6">
-          {hasText ? (
+          {isImage && imageDataUrl ? (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <ImageIcon className="h-4 w-4" />
+                <span>Image ({Math.floor(message.body_hex.length / 2)} bytes)</span>
+              </div>
+              <div className="flex flex-col items-start gap-4">
+                <div className="relative border border-border rounded-xl overflow-hidden bg-secondary/50 p-4">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={imageDataUrl}
+                    alt="ANCHOR Image"
+                    className="max-w-full max-h-96 object-contain"
+                    style={{ imageRendering: message.body_hex.length < 1000 ? "pixelated" : "auto" }}
+                  />
+                </div>
+                <a
+                  href={imageDataUrl}
+                  download={`anchor-${message.txid.slice(0, 8)}.png`}
+                  className="flex items-center gap-2 text-sm text-primary hover:underline"
+                >
+                  <Download className="h-4 w-4" />
+                  Download Image
+                </a>
+              </div>
+            </div>
+          ) : hasText ? (
             <p className="text-lg whitespace-pre-wrap break-words">{message.body_text}</p>
           ) : (
             <div>
