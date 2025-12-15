@@ -15,27 +15,30 @@ ANCHOR enables embedding messages in Bitcoin transactions that can reference pre
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                       Docker Compose                            │
-├─────────────────────────────────────────────────────────────────┤
-│  ┌──────────────┐  ┌──────────────┐  ┌────────────────────┐     │
-│  │ Bitcoin Core │  │  PostgreSQL  │  │    Next.js Web     │     │
-│  │   (regtest)  │  │              │  │    (Explorer)      │     │
-│  └──────────────┘  └──────────────┘  └────────────────────┘     │
-│         │                 │                     │               │
-│         │     ┌───────────┼─────────────────────┤               │
-│         ▼     ▼           ▼                     ▼               │
-│  ┌──────────────┐  ┌──────────────┐  ┌────────────────────┐     │
-│  │   Indexer    │  │    Wallet    │  │   Explorer API     │     │
-│  │   (Rust)     │  │    (Rust)    │  │      (Rust)        │     │
-│  └──────────────┘  └──────────────┘  └────────────────────┘     │
-│                           ▲                                     │
-│                           │                                     │
-│                    ┌──────────────┐                             │
-│                    │   Testnet    │  Generates random messages  │
-│                    │   (Rust)     │  and mines blocks           │
-│                    └──────────────┘                             │
-└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           Docker Compose                                 │
+├─────────────────────────────────────────────────────────────────────────┤
+│  ┌──────────────┐  ┌──────────────┐  ┌────────────────────┐             │
+│  │ Bitcoin Core │  │  PostgreSQL  │  │    Next.js Web     │             │
+│  │   (regtest)  │  │              │  │    (Explorer)      │             │
+│  └──────────────┘  └──────────────┘  └────────────────────┘             │
+│         │                 │                     │                       │
+│         │     ┌───────────┼─────────────────────┤                       │
+│         ▼     ▼           ▼                     ▼                       │
+│  ┌──────────────┐  ┌──────────────┐  ┌────────────────────┐             │
+│  │   Indexer    │  │    Wallet    │  │   Explorer API     │             │
+│  │   (Rust)     │  │    (Rust)    │  │      (Rust)        │             │
+│  └──────────────┘  └──────────────┘  └────────────────────┘             │
+│         │                 │                                             │
+│         │                 ├─────────────────────────────────┐           │
+│         │                 │                                 │           │
+│  ┌──────┴───────┐  ┌──────┴───────┐  ┌────────────────────┐ │           │
+│  │   Testnet    │  │   PixelMap   │  │   PixelMap Web     │ │           │
+│  │   (Rust)     │  │   Backend    │  │    (Next.js)       │ │           │
+│  └──────────────┘  └──────────────┘  └────────────────────┘ │           │
+│                                                              │           │
+│  Apps use shared Bitcoin, PostgreSQL, and Wallet services ──┘           │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Project Structure
@@ -45,9 +48,9 @@ anchor/
 ├── docker-compose.yml          # Orchestrates all services
 ├── docker/
 │   ├── bitcoin/                # Bitcoin Core regtest setup
-│   └── postgres/               # Database schema
+│   └── postgres/               # Database schema & migrations
 ├── crates/
-│   ├── anchor-core/            # Core library (types, parsing)
+│   ├── anchor-core/            # Core library (types, parsing, carriers)
 │   ├── anchor-wallet-lib/      # Rust Wallet SDK
 │   ├── anchor-indexer/         # Blockchain indexer
 │   ├── anchor-wallet/          # Transaction creation API
@@ -57,6 +60,10 @@ anchor/
 ├── explorer/
 │   ├── backend/                # REST API (Axum)
 │   └── frontend/               # Web UI (Next.js)
+├── apps/
+│   └── pixelmap/               # PixelMap - Collaborative canvas app
+│       ├── backend/            # Rust indexer & API
+│       └── frontend/           # Next.js web interface
 └── Cargo.toml                  # Rust workspace
 ```
 
@@ -87,10 +94,12 @@ docker compose down
 |---------|------|-------------|
 | Bitcoin RPC | 18443 | Bitcoin Core regtest node |
 | PostgreSQL | 5432 | Database |
-| Wallet API | 3001 | Transaction creation |
+| Wallet API | 3001 | Transaction creation (multi-carrier) |
 | Explorer API | 3002 | Data querying |
 | Explorer Web | 3000 | Web interface |
 | Testnet | - | Auto-generates ANCHOR transactions |
+| **PixelMap Backend** | 3004 | Pixel canvas API & indexer |
+| **PixelMap Web** | 3005 | Collaborative canvas interface |
 
 ### Testnet Generator
 
@@ -168,13 +177,15 @@ Each ANCHOR message has the following structure:
 
 ANCHOR messages can be embedded using different Bitcoin transaction structures (carriers):
 
-| Carrier | Max Size | Prunable | UTXO Impact | Status |
-|---------|----------|----------|-------------|--------|
-| **OP_RETURN** | 80B-100KB | Yes | No | Active (default) |
-| **Inscription** | ~4MB | Yes | No | Active |
-| **Stamps** | ~8KB | **No** | **Yes** | Active |
-| **Taproot Annex** | 10KB | Yes | No | Reserved |
-| **Witness Data** | ~4MB | Yes | No | Active |
+| Carrier | Max Size | Prunable | UTXO Impact | Fee Discount | Status |
+|---------|----------|----------|-------------|--------------|--------|
+| **OP_RETURN** | 80 bytes | Yes | No | None | Active (default) |
+| **Witness Data** | ~520 KB | Yes | No | **75%** | Active |
+| **Inscription** | **~3.9 MB** | Yes | No | 75% | Active |
+| **Stamps** | ~8 KB | **No** | **Yes** | None | Active |
+| **Taproot Annex** | 10 KB | Yes | No | 75% | Reserved |
+
+The Inscription carrier can hold almost an entire Bitcoin block (~4MB with witness discount), enabling massive data payloads like images or large datasets.
 
 #### Carrier Selection
 
@@ -230,6 +241,19 @@ Anchors use a 64-bit prefix of the parent's txid, providing:
 | `/wallet/create-message` | POST | Create ANCHOR transaction |
 | `/wallet/broadcast` | POST | Broadcast raw transaction |
 | `/wallet/mine` | POST | Mine blocks (regtest only) |
+
+#### Create Message Parameters
+
+```json
+{
+  "kind": 1,                    // Message kind (1=text, 2=state, etc.)
+  "body": "Hello, ANCHOR!",     // Message body (string or hex)
+  "body_is_hex": false,         // Is body hex-encoded?
+  "anchors": [],                // Optional parent references
+  "carrier": 0,                 // Carrier type (0=OP_RETURN, 1=Inscription, 4=WitnessData)
+  "fee_rate": 1                 // Fee rate in sat/vB (default: 1)
+}
+```
 
 ## SDKs
 
@@ -344,6 +368,40 @@ let config = WalletConfig::regtest("http://127.0.0.1:18443", "user", "pass")
     .with_fee_rate(1.0);
 ```
 
+## Applications
+
+### PixelMap - Collaborative Bitcoin Canvas
+
+PixelMap is a collaborative pixel art canvas built on the Anchor protocol. Think Reddit Place, but permanent and decentralized on Bitcoin.
+
+**Access:** [http://localhost:3005](http://localhost:3005)
+
+#### Features
+
+- **21 Million Pixels**: 4580 x 4580 canvas (Bitcoin's magic number)
+- **Multi-Carrier Support**: 
+  - OP_RETURN: ~10 pixels
+  - Witness Data: ~74K pixels (75% fee discount)
+  - Inscription: **~557K pixels** (almost a full block!)
+- **Image Import**: Upload images and convert to pixels with preview
+- **Interactive Positioning**: Drag imported images before painting
+- **Dynamic Fees**: Adjustable fee rate (1-100+ sat/vB)
+- **Pending Pixels**: Visual feedback while waiting for confirmation
+
+#### Quick Start
+
+```bash
+# PixelMap is included in the main docker-compose
+docker compose up -d
+
+# Open PixelMap
+open http://localhost:3005
+```
+
+See [apps/pixelmap/README.md](apps/pixelmap/README.md) for detailed documentation.
+
+---
+
 ## Development
 
 ### Local Rust Development
@@ -374,6 +432,32 @@ cargo test -p anchor-wallet-lib
 cd explorer/frontend
 npm install
 npm run dev
+```
+
+### PixelMap Development
+
+```bash
+# Backend (Rust)
+cd apps/pixelmap/backend
+cargo run
+
+# Frontend (Next.js)
+cd apps/pixelmap/frontend
+npm install
+npm run dev
+```
+
+### Docker Development
+
+```bash
+# Build specific service
+docker compose build pixelmap-web
+
+# Rebuild and restart
+docker compose up -d pixelmap-web --force-recreate
+
+# View logs
+docker compose logs -f pixelmap-backend pixelmap-web
 ```
 
 ## License

@@ -123,6 +123,13 @@ pub struct CreateMessageRequest {
     /// Carrier type (0=op_return, 1=inscription, 2=stamps, 3=annex, 4=witness)
     /// Default: 0 (OP_RETURN)
     pub carrier: Option<u8>,
+    /// Fee rate in sat/vbyte (default: 1)
+    #[serde(default = "default_fee_rate")]
+    pub fee_rate: u64,
+}
+
+fn default_fee_rate() -> u64 {
+    1 // 1 sat/vbyte
 }
 
 fn default_kind() -> u8 {
@@ -188,11 +195,12 @@ pub async fn create_message(
         .collect();
 
     info!(
-        "Creating ANCHOR message: kind={}, body_len={}, parent={:?}, carrier={:?}",
+        "Creating ANCHOR message: kind={}, body_len={}, parent={:?}, carrier={:?}, fee_rate={}",
         req.kind,
         body.len(),
         req.parent_txid,
-        req.carrier
+        req.carrier,
+        req.fee_rate
     );
 
     match state.wallet.create_anchor_transaction(
@@ -202,6 +210,7 @@ pub async fn create_message(
         req.parent_vout,
         additional_anchors,
         req.carrier,
+        req.fee_rate,
     ) {
         Ok(result) => {
             info!(

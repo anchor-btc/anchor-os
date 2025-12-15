@@ -75,6 +75,11 @@ services:
         condition: service_healthy
     networks:
       - anchor-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   explorer-api:
     build:
@@ -151,6 +156,60 @@ services:
       BTCEXP_BASIC_AUTH_PASSWORD: ""
     depends_on:
       bitcoin:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    restart: unless-stopped
+
+  # =============================================
+  # PixelMap - Collaborative Bitcoin Canvas
+  # =============================================
+
+  pixelmap-backend:
+    build:
+      context: .
+      dockerfile: apps/pixelmap/backend/Dockerfile
+    container_name: anchor-pixelmap-backend
+    ports:
+      - "3004:3003"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3003
+      DATABASE_URL: postgres://anchor:anchor@postgres:5432/anchor
+      BITCOIN_RPC_URL: http://bitcoin:18443
+      BITCOIN_RPC_USER: anchor
+      BITCOIN_RPC_PASSWORD: anchor
+      WALLET_URL: http://wallet:3001
+      POLL_INTERVAL_SECS: 5
+      RUST_LOG: pixelmap_backend=info
+    depends_on:
+      postgres:
+        condition: service_healthy
+      bitcoin:
+        condition: service_healthy
+      wallet:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3003/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  pixelmap-web:
+    build:
+      context: ./apps/pixelmap/frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:3004
+        NEXT_PUBLIC_WALLET_URL: http://localhost:3001
+    container_name: anchor-pixelmap-web
+    ports:
+      - "3005:3004"
+    depends_on:
+      pixelmap-backend:
         condition: service_healthy
     networks:
       - anchor-network

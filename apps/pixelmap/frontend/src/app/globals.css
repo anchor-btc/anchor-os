@@ -1,0 +1,218 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Press+Start+2P&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #0d0d0d;
+  --foreground: #e0e0e0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #444;
+}
+
+/* Canvas container */
+.canvas-container {
+  position: relative;
+  width: 100%;
+  height: calc(100vh - 200px);
+  min-height: 400px;
+  background: #1a1a1a;
+  border: 2px solid #2a2a2a;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Pixel grid overlay */
+.pixel-grid {
+  background-image: 
+    linear-gradient(rgba(255, 107, 53, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 107, 53, 0.1) 1px, transparent 1px);
+  pointer-events: none;
+}
+
+/* Color picker styles */
+.color-swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+  border: 2px solid transparent;
+}
+
+.color-swatch:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.color-swatch.selected {
+  border-color: #00d9ff;
+  box-shadow: 0 0 15px rgba(0, 217, 255, 0.5);
+}
+
+/* Button styles */
+.btn-primary {
+  @apply px-6 py-3 bg-primary text-primary-foreground font-semibold rounded-lg 
+         hover:bg-primary-dark transition-all duration-200 
+         shadow-lg hover:shadow-xl active:scale-95;
+}
+
+.btn-secondary {
+  @apply px-4 py-2 bg-secondary text-secondary-foreground font-medium rounded-lg 
+         border border-gray-700 hover:border-primary/50 transition-all duration-200;
+}
+
+/* Glow effects */
+.glow-primary {
+  box-shadow: 0 0 20px rgba(255, 107, 53, 0.4);
+}
+
+.glow-accent {
+  box-shadow: 0 0 20px rgba(0, 217, 255, 0.4);
+}
+
+.glow-bitcoin {
+  box-shadow: 0 0 20px rgba(247, 147, 26, 0.4);
+}
+
+/* Retro pixel border */
+.pixel-border {
+  border: 4px solid;
+  border-image: 
+    linear-gradient(45deg, #ff6b35 0%, #00d9ff 50%, #ff6b35 100%) 1;
+}
+
+/* Stats card */
+.stats-card {
+  @apply bg-secondary/80 backdrop-blur-sm rounded-xl p-6 border border-gray-800;
+}
+
+/* Toolbar */
+.toolbar {
+  @apply flex items-center gap-4 bg-secondary/90 backdrop-blur-sm 
+         rounded-xl p-4 border border-gray-800;
+}
+
+/* Pixel info tooltip */
+.pixel-tooltip {
+  @apply absolute z-50 bg-secondary border border-gray-700 rounded-lg p-3 
+         shadow-xl text-sm pointer-events-none;
+}
+
+/* Recent activity item */
+.activity-item {
+  @apply flex items-center gap-3 p-3 rounded-lg bg-secondary/50 
+         hover:bg-secondary/80 transition-colors cursor-pointer;
+}
+
+/* Canvas cursor */
+.canvas-cursor-crosshair {
+  cursor: crosshair;
+}
+
+.canvas-cursor-grab {
+  cursor: grab;
+}
+
+.canvas-cursor-grabbing {
+  cursor: grabbing;
+}
+
+/* Animations */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Bitcoin logo animation */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Selection box */
+.selection-box {
+  position: absolute;
+  border: 2px dashed #00d9ff;
+  background: rgba(0, 217, 255, 0.1);
+  pointer-events: none;
+}
+
+/* Zoom controls */
+.zoom-controls {
+  @apply flex flex-col gap-2 bg-secondary/90 backdrop-blur-sm 
+         rounded-lg p-2 border border-gray-800;
+}
+
+.zoom-btn {
+  @apply w-10 h-10 flex items-center justify-center 
+         bg-gray-800 hover:bg-gray-700 rounded-lg 
+         text-lg font-bold transition-colors;
+}
+
+/* Loading spinner */
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #333;
+  border-top-color: #ff6b35;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+

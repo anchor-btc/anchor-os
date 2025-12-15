@@ -1,49 +1,55 @@
 # Build stage
 FROM rust:1.87-slim-bookworm AS builder
 
+WORKDIR /app
+
+# Install build dependencies
 RUN apt-get update && apt-get install -y \
     pkg-config \
     libssl-dev \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
-
 # Copy workspace files
-COPY Cargo.toml Cargo.lock* ./
+COPY Cargo.toml Cargo.lock ./
 COPY crates/anchor-core ./crates/anchor-core
-COPY crates/anchor-testnet ./crates/anchor-testnet
+COPY apps/pixelmap/backend ./apps/pixelmap/backend
 
 # Create dummy files for other workspace members
 RUN mkdir -p crates/anchor-indexer/src && echo "fn main() {}" > crates/anchor-indexer/src/main.rs
 RUN mkdir -p crates/anchor-wallet/src && echo "fn main() {}" > crates/anchor-wallet/src/main.rs
+RUN mkdir -p crates/anchor-testnet/src && echo "fn main() {}" > crates/anchor-testnet/src/main.rs
 RUN mkdir -p crates/anchor-wallet-lib/src && echo "" > crates/anchor-wallet-lib/src/lib.rs
 RUN mkdir -p explorer/backend/src && echo "fn main() {}" > explorer/backend/src/main.rs
-RUN mkdir -p apps/pixelmap/backend/src && echo "fn main() {}" > apps/pixelmap/backend/src/main.rs
 COPY crates/anchor-indexer/Cargo.toml ./crates/anchor-indexer/
 COPY crates/anchor-wallet/Cargo.toml ./crates/anchor-wallet/
+COPY crates/anchor-testnet/Cargo.toml ./crates/anchor-testnet/
 COPY crates/anchor-wallet-lib/Cargo.toml ./crates/anchor-wallet-lib/
 COPY explorer/backend/Cargo.toml ./explorer/backend/
-COPY apps/pixelmap/backend/Cargo.toml ./apps/pixelmap/backend/
 
-# Build the testnet service
-RUN cargo build --release -p anchor-testnet
+# Build the application
+RUN cargo build --release -p pixelmap-backend
 
 # Runtime stage
 FROM debian:bookworm-slim
 
+WORKDIR /app
+
+# Install runtime dependencies
 RUN apt-get update && apt-get install -y \
     ca-certificates \
     libssl3 \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /app/target/release/anchor-testnet /usr/local/bin/
+# Copy the binary
+COPY --from=builder /app/target/release/pixelmap-backend /app/pixelmap-backend
 
-ENV RUST_LOG=info
-ENV WALLET_URL=http://wallet:3001
-ENV MIN_INTERVAL_SECS=3
-ENV MAX_INTERVAL_SECS=10
-ENV BLOCKS_PER_CYCLE=1
-ENV INITIAL_BLOCKS=101
+# Set environment variables
+ENV HOST=0.0.0.0
+ENV PORT=3003
+ENV RUST_LOG=pixelmap_backend=info
 
-CMD ["anchor-testnet"]
+EXPOSE 3003
 
+CMD ["/app/pixelmap-backend"]

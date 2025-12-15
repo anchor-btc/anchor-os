@@ -1,0 +1,139 @@
+# PixelMap - Standalone Docker Compose (Alternative)
+#
+# USE THIS ONLY if you want to run PixelMap independently.
+# 
+# RECOMMENDED: Use the main docker-compose.yml in the root directory instead:
+#   cd /path/to/anchor
+#   docker compose up -d
+#
+# This will start all Anchor services including PixelMap:
+#   - pixelmap-backend: http://localhost:3004
+#   - pixelmap-web: http://localhost:3005
+#
+# =========================================================
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: pixelmap-postgres
+    environment:
+      POSTGRES_USER: anchor
+      POSTGRES_PASSWORD: anchor
+      POSTGRES_DB: anchor
+    volumes:
+      - pixelmap-postgres-data:/var/lib/postgresql/data
+      - ../../docker/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - ../../docker/postgres/migrations:/docker-entrypoint-initdb.d/migrations:ro
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U anchor"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pixelmap-network
+
+  # Bitcoin Core (regtest mode)
+  bitcoin:
+    build:
+      context: ../../docker/bitcoin
+      dockerfile: Dockerfile
+    container_name: pixelmap-bitcoin
+    ports:
+      - "18445:18443"
+    volumes:
+      - pixelmap-bitcoin-data:/home/bitcoin/.bitcoin
+    networks:
+      - pixelmap-network
+    healthcheck:
+      test: ["CMD", "bitcoin-cli", "-regtest", "-rpcuser=anchor", "-rpcpassword=anchor", "getblockchaininfo"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # Anchor Wallet API (for creating transactions)
+  wallet:
+    build:
+      context: ../../
+      dockerfile: crates/anchor-wallet/Dockerfile
+    container_name: pixelmap-wallet
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3001
+      BITCOIN_RPC_URL: http://bitcoin:18443
+      BITCOIN_RPC_USER: anchor
+      BITCOIN_RPC_PASSWORD: anchor
+      BITCOIN_NETWORK: regtest
+      RUST_LOG: anchor_wallet=info
+    ports:
+      - "3001:3001"
+    depends_on:
+      bitcoin:
+        condition: service_healthy
+    networks:
+      - pixelmap-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PixelMap Backend (API + Indexer)
+  backend:
+    build:
+      context: ../../
+      dockerfile: apps/pixelmap/backend/Dockerfile
+    container_name: pixelmap-backend
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3003
+      DATABASE_URL: postgres://anchor:anchor@postgres:5432/anchor
+      BITCOIN_RPC_URL: http://bitcoin:18443
+      BITCOIN_RPC_USER: anchor
+      BITCOIN_RPC_PASSWORD: anchor
+      WALLET_URL: http://wallet:3001
+      POLL_INTERVAL_SECS: 5
+      RUST_LOG: pixelmap_backend=info
+    ports:
+      - "3004:3003"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      bitcoin:
+        condition: service_healthy
+      wallet:
+        condition: service_healthy
+    networks:
+      - pixelmap-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3003/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PixelMap Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: pixelmap-frontend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3004
+      NEXT_PUBLIC_WALLET_URL: http://localhost:3001
+    ports:
+      - "3005:3004"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - pixelmap-network
+
+volumes:
+  pixelmap-postgres-data:
+  pixelmap-bitcoin-data:
+
+networks:
+  pixelmap-network:
+    driver: bridge

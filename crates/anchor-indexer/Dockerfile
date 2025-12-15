@@ -18,10 +18,12 @@ RUN mkdir -p crates/anchor-wallet/src && echo "fn main() {}" > crates/anchor-wal
 RUN mkdir -p crates/anchor-testnet/src && echo "fn main() {}" > crates/anchor-testnet/src/main.rs
 RUN mkdir -p crates/anchor-wallet-lib/src && echo "" > crates/anchor-wallet-lib/src/lib.rs
 RUN mkdir -p explorer/backend/src && echo "fn main() {}" > explorer/backend/src/main.rs
+RUN mkdir -p apps/pixelmap/backend/src && echo "fn main() {}" > apps/pixelmap/backend/src/main.rs
 COPY crates/anchor-wallet/Cargo.toml ./crates/anchor-wallet/
 COPY crates/anchor-testnet/Cargo.toml ./crates/anchor-testnet/
 COPY crates/anchor-wallet-lib/Cargo.toml ./crates/anchor-wallet-lib/
 COPY explorer/backend/Cargo.toml ./explorer/backend/
+COPY apps/pixelmap/backend/Cargo.toml ./apps/pixelmap/backend/
 
 # Build the indexer
 RUN cargo build --release -p anchor-indexer

@@ -19,9 +19,11 @@ COPY crates/anchor-wallet-lib ./crates/anchor-wallet-lib
 RUN mkdir -p crates/anchor-indexer/src && echo "fn main() {}" > crates/anchor-indexer/src/main.rs
 RUN mkdir -p crates/anchor-testnet/src && echo "fn main() {}" > crates/anchor-testnet/src/main.rs
 RUN mkdir -p explorer/backend/src && echo "fn main() {}" > explorer/backend/src/main.rs
+RUN mkdir -p apps/pixelmap/backend/src && echo "fn main() {}" > apps/pixelmap/backend/src/main.rs
 COPY crates/anchor-indexer/Cargo.toml ./crates/anchor-indexer/
 COPY crates/anchor-testnet/Cargo.toml ./crates/anchor-testnet/
 COPY explorer/backend/Cargo.toml ./explorer/backend/
+COPY apps/pixelmap/backend/Cargo.toml ./apps/pixelmap/backend/
 
 # Build the wallet
 RUN cargo build --release -p anchor-wallet
@@ -32,6 +34,7 @@ FROM debian:bookworm-slim
 RUN apt-get update && apt-get install -y \
     ca-certificates \
     libssl3 \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app/target/release/anchor-wallet /usr/local/bin/

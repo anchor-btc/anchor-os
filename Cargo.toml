@@ -7,6 +7,7 @@ members = [
     "crates/anchor-testnet",
     "crates/anchor-wallet-lib",
     "explorer/backend",
+    "apps/pixelmap/backend",
 ]
 
 [workspace.package]

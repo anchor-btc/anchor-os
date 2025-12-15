@@ -167,6 +167,7 @@ impl WalletService {
         parent_vout: Option<u8>,
         additional_anchors: Vec<(String, u8)>,
         carrier: Option<u8>,
+        fee_rate: u64, // sat/vbyte
     ) -> Result<CreatedTransaction> {
         // Build the ANCHOR message
         let mut builder = AnchorMessageBuilder::new().kind(AnchorKind::from(kind));
@@ -216,39 +217,39 @@ impl WalletService {
                     match output {
                         CarrierOutput::OpReturn(script) => {
                             debug!("Created ANCHOR OP_RETURN script: {} bytes", script.len());
-                            self.create_and_broadcast_tx_with_script(script, 0)
+                            self.create_and_broadcast_tx_with_script(script, 0, fee_rate)
                         }
                         CarrierOutput::Stamps(scripts) => {
                             debug!("Creating Stamps transaction with {} multisig outputs", scripts.len());
-                            self.create_and_broadcast_stamps_tx(scripts)
+                            self.create_and_broadcast_stamps_tx(scripts, fee_rate)
                         }
                         CarrierOutput::Inscription {
                             reveal_script,
                             content_type: _,
                         } => {
                             debug!("Creating Inscription transaction with reveal script");
-                            self.create_and_broadcast_inscription_tx(reveal_script)
+                            self.create_and_broadcast_inscription_tx(reveal_script, fee_rate)
                         }
                         CarrierOutput::Annex(annex_data) => {
                             debug!("Creating Taproot Annex transaction with {} bytes", annex_data.len());
-                            self.create_and_broadcast_annex_tx(annex_data)
+                            self.create_and_broadcast_annex_tx(annex_data, fee_rate)
                         }
                         CarrierOutput::WitnessData { chunks: _, script } => {
                             debug!("Creating WitnessData transaction with script {} bytes", script.len());
-                            self.create_and_broadcast_witness_data_tx(script)
+                            self.create_and_broadcast_witness_data_tx(script, fee_rate)
                         }
                     }
                 }
                 Err(e) => {
                     debug!("Carrier encode failed: {}, falling back to OP_RETURN", e);
                     let anchor_script = builder.to_script();
-                    self.create_and_broadcast_tx_with_script(anchor_script, 0)
+                    self.create_and_broadcast_tx_with_script(anchor_script, 0, fee_rate)
                 }
             }
         } else {
             // Carrier not available, use OP_RETURN
             let anchor_script = builder.to_script();
-            self.create_and_broadcast_tx_with_script(anchor_script, 0)
+            self.create_and_broadcast_tx_with_script(anchor_script, 0, fee_rate)
         }
     }
 
@@ -266,6 +267,7 @@ impl WalletService {
             parent_vout,
             Vec::new(),
             None, // Default carrier
+            1,    // Default fee rate: 1 sat/vbyte
         )
     }
 
@@ -274,10 +276,15 @@ impl WalletService {
         &self,
         op_return_script: ScriptBuf,
         carrier_type: u8,
+        fee_rate: u64, // sat/vbyte
     ) -> Result<CreatedTransaction> {
         // Get a change address
         let change_address = self.rpc.get_new_address(None, None)?;
         let change_address = change_address.assume_checked();
+
+        // Convert sat/vbyte to BTC/kB for fundrawtransaction
+        // 1 sat/vbyte = 0.00001 BTC/kB (1 sat = 0.00000001 BTC, 1 vbyte = 1/1000 kB)
+        let fee_rate_btc_kb = fee_rate as f64 * 0.00001;
 
         // Create raw transaction with OP_RETURN output
         let _inputs: Vec<bitcoincore_rpc::json::CreateRawTransactionInput> = vec![];
@@ -300,7 +307,7 @@ impl WalletService {
                 serde_json::json!(raw_tx),
                 serde_json::json!({
                     "changeAddress": change_address.to_string(),
-                    "feeRate": 0.00001
+                    "feeRate": fee_rate_btc_kb
                 }),
             ],
         )?;
@@ -356,7 +363,7 @@ impl WalletService {
 
     /// Create and broadcast a Stamps transaction with bare multisig outputs
     /// Builds the transaction manually since Bitcoin Core RPC doesn't support custom scriptPubKey
-    fn create_and_broadcast_stamps_tx(&self, scripts: Vec<ScriptBuf>) -> Result<CreatedTransaction> {
+    fn create_and_broadcast_stamps_tx(&self, scripts: Vec<ScriptBuf>, fee_rate: u64) -> Result<CreatedTransaction> {
         // Get UTXOs
         let utxos = self.rpc.list_unspent(Some(0), None, None, None, None)?;
         if utxos.is_empty() {
@@ -367,7 +374,9 @@ impl WalletService {
         // Bare multisig outputs have higher dust thresholds than P2PKH
         let dust_per_output = 1000u64; // satoshis (higher for bare multisig)
         let total_dust = dust_per_output * scripts.len() as u64;
-        let estimated_fee = 500u64; // Conservative fee estimate
+        // Estimate vbytes and calculate fee (rough estimate: 150 base + 40 per output)
+        let estimated_vbytes = 150 + scripts.len() as u64 * 40;
+        let estimated_fee = std::cmp::max(500, estimated_vbytes * fee_rate);
         let required = total_dust + estimated_fee;
 
         // Find UTXOs to cover the required amount
@@ -471,7 +480,7 @@ impl WalletService {
 
     /// Create and broadcast an Inscription transaction using commit+reveal pattern
     /// This creates a Taproot script-path spend that reveals the inscription in the witness
-    fn create_and_broadcast_inscription_tx(&self, reveal_script: ScriptBuf) -> Result<CreatedTransaction> {
+    fn create_and_broadcast_inscription_tx(&self, reveal_script: ScriptBuf, fee_rate: u64) -> Result<CreatedTransaction> {
         let secp = Secp256k1::new();
 
         // Generate an internal key (could be from wallet, using random for simplicity)
@@ -510,8 +519,19 @@ impl WalletService {
 
         debug!("Inscription commit script: {}", hex::encode(commit_script.as_bytes()));
 
+        // Calculate dynamic fee based on reveal script size and fee_rate
+        // Reveal tx: ~100 base vbytes + witness data (gets 75% discount)
+        let script_size = reveal_script.len();
+        let reveal_vbytes = 100 + (script_size + 3) / 4; // witness weight / 4
+        let reveal_fee = std::cmp::max(500, reveal_vbytes as u64 * fee_rate);
+        let commit_fee = std::cmp::max(250, 150 * fee_rate); // Commit tx is ~150 vbytes
+        
+        debug!("Inscription fees: reveal_script={} bytes, reveal_vbytes={}, reveal_fee={} sats", 
+               script_size, reveal_vbytes, reveal_fee);
+
         // Step 1: Create the commit transaction that funds the Taproot address
-        let commit_amount = 10000u64; // 10k sats for the commit output
+        // Commit amount must cover reveal fee + dust output
+        let commit_amount = reveal_fee + 546; // reveal fee + dust limit
         let utxos = self.rpc.list_unspent(Some(1), None, None, None, None)?;
         if utxos.is_empty() {
             anyhow::bail!("No UTXOs available for Inscription commit");
@@ -520,7 +540,7 @@ impl WalletService {
         // Select UTXOs
         let mut selected_utxos = Vec::new();
         let mut total_input = 0u64;
-        let required = commit_amount + 1000; // commit + fee
+        let required = commit_amount + commit_fee; // commit output + commit tx fee
 
         for utxo in &utxos {
             selected_utxos.push(utxo);
@@ -553,7 +573,7 @@ impl WalletService {
         let change_script = change_address.assume_checked().script_pubkey();
 
         // Build commit outputs: Taproot commit output + change
-        let change_value = total_input - commit_amount - 500;
+        let change_value = total_input - commit_amount - commit_fee;
         let commit_outputs = vec![
             TxOut {
                 value: Amount::from_sat(commit_amount),
@@ -611,8 +631,14 @@ impl WalletService {
         };
 
         // Reveal output: just a change output (inscription is in the witness)
+        // Output value = commit_amount - reveal_fee, ensuring at least dust limit
+        let reveal_output_value = if commit_amount > reveal_fee + 546 {
+            commit_amount - reveal_fee
+        } else {
+            546 // Dust limit
+        };
         let reveal_output = TxOut {
-            value: Amount::from_sat(commit_amount - 500), // Minus fee
+            value: Amount::from_sat(reveal_output_value),
             script_pubkey: reveal_change_script,
         };
 
@@ -660,7 +686,7 @@ impl WalletService {
     /// Create and broadcast a Taproot Annex transaction
     /// The annex is the last element in the witness stack, prefixed with 0x50
     /// Note: Standard Bitcoin Core nodes don't relay annex transactions, but they are valid
-    fn create_and_broadcast_annex_tx(&self, annex_data: Vec<u8>) -> Result<CreatedTransaction> {
+    fn create_and_broadcast_annex_tx(&self, annex_data: Vec<u8>, fee_rate: u64) -> Result<CreatedTransaction> {
         let secp = Secp256k1::new();
 
         // Generate a keypair for the Taproot key-path spend
@@ -693,8 +719,20 @@ impl WalletService {
 
         debug!("Annex commit script: {}", hex::encode(commit_script.as_bytes()));
 
+        // Calculate dynamic fee based on annex data size and fee_rate
+        // Reveal tx: ~150 base vbytes + witness data (gets 75% discount)
+        // Annex is in witness, so it gets the discount too
+        let annex_size = annex_data.len();
+        let reveal_vbytes = 150 + (annex_size + 64 + 3) / 4; // 64 for schnorr sig
+        let reveal_fee = std::cmp::max(500, reveal_vbytes as u64 * fee_rate);
+        let commit_fee = std::cmp::max(250, 150 * fee_rate); // Commit tx is ~150 vbytes
+        
+        debug!("Annex fees: annex_size={} bytes, reveal_vbytes={}, reveal_fee={} sats", 
+               annex_size, reveal_vbytes, reveal_fee);
+
         // Step 1: Create commit transaction that funds the Taproot address
-        let commit_amount = 10000u64; // 10k sats
+        // Commit amount must cover reveal fee + dust output
+        let commit_amount = reveal_fee + 546; // reveal fee + dust limit
         let utxos = self.rpc.list_unspent(Some(1), None, None, None, None)?;
         if utxos.is_empty() {
             anyhow::bail!("No UTXOs available for Annex commit");
@@ -703,7 +741,7 @@ impl WalletService {
         // Select UTXOs
         let mut selected_utxos = Vec::new();
         let mut total_input = 0u64;
-        let required = commit_amount + 1000;
+        let required = commit_amount + commit_fee;
 
         for utxo in &utxos {
             selected_utxos.push(utxo);
@@ -734,7 +772,7 @@ impl WalletService {
         let change_address = self.rpc.get_new_address(None, None)?;
         let change_script = change_address.assume_checked().script_pubkey();
 
-        let change_value = total_input - commit_amount - 500;
+        let change_value = total_input - commit_amount - commit_fee;
         let commit_outputs = vec![
             TxOut {
                 value: Amount::from_sat(commit_amount),
@@ -787,8 +825,14 @@ impl WalletService {
             witness: Witness::new(),
         };
 
+        // Reveal output value = commit_amount - reveal_fee, ensuring at least dust limit
+        let reveal_output_value = if commit_amount > reveal_fee + 546 {
+            commit_amount - reveal_fee
+        } else {
+            546 // Dust limit
+        };
         let reveal_output = TxOut {
-            value: Amount::from_sat(commit_amount - 500),
+            value: Amount::from_sat(reveal_output_value),
             script_pubkey: reveal_change_script,
         };
 
@@ -864,7 +908,7 @@ impl WalletService {
 
     /// Create and broadcast a WitnessData transaction using commit+reveal pattern
     /// Similar to inscriptions but uses a simpler data script (data drops + OP_TRUE)
-    fn create_and_broadcast_witness_data_tx(&self, data_script: ScriptBuf) -> Result<CreatedTransaction> {
+    fn create_and_broadcast_witness_data_tx(&self, data_script: ScriptBuf, fee_rate: u64) -> Result<CreatedTransaction> {
         let secp = Secp256k1::new();
 
         // Use a NUMS (Nothing Up My Sleeve) point for the internal key
@@ -896,8 +940,19 @@ impl WalletService {
 
         debug!("WitnessData commit script: {}", hex::encode(commit_script.as_bytes()));
 
+        // Calculate dynamic fee based on data script size and fee_rate
+        // Reveal tx: ~100 base vbytes + witness data (gets 75% discount)
+        let script_size = data_script.len();
+        let reveal_vbytes = 100 + (script_size + 3) / 4; // witness weight / 4
+        let reveal_fee = std::cmp::max(500, reveal_vbytes as u64 * fee_rate);
+        let commit_fee = std::cmp::max(250, 150 * fee_rate); // Commit tx is ~150 vbytes
+        
+        debug!("WitnessData fees: data_script={} bytes, reveal_vbytes={}, reveal_fee={} sats", 
+               script_size, reveal_vbytes, reveal_fee);
+
         // Step 1: Create the commit transaction
-        let commit_amount = 10000u64;
+        // Commit amount must cover reveal fee + dust output
+        let commit_amount = reveal_fee + 546; // reveal fee + dust limit
         let utxos = self.rpc.list_unspent(Some(1), None, None, None, None)?;
         if utxos.is_empty() {
             anyhow::bail!("No UTXOs available for WitnessData commit");
@@ -905,7 +960,7 @@ impl WalletService {
 
         let mut selected_utxos = Vec::new();
         let mut total_input = 0u64;
-        let required = commit_amount + 1000;
+        let required = commit_amount + commit_fee;
 
         for utxo in &utxos {
             selected_utxos.push(utxo);
@@ -935,7 +990,7 @@ impl WalletService {
         let change_address = self.rpc.get_new_address(None, None)?;
         let change_script = change_address.assume_checked().script_pubkey();
 
-        let change_value = total_input - commit_amount - 500;
+        let change_value = total_input - commit_amount - commit_fee;
         let commit_outputs = vec![
             TxOut {
                 value: Amount::from_sat(commit_amount),
@@ -988,8 +1043,14 @@ impl WalletService {
             witness: Witness::new(),
         };
 
+        // Reveal output value = commit_amount - reveal_fee, ensuring at least dust limit
+        let reveal_output_value = if commit_amount > reveal_fee + 546 {
+            commit_amount - reveal_fee
+        } else {
+            546 // Dust limit
+        };
         let reveal_output = TxOut {
-            value: Amount::from_sat(commit_amount - 500),
+            value: Amount::from_sat(reveal_output_value),
             script_pubkey: reveal_change_script,
         };
 
