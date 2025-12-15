@@ -5,11 +5,12 @@ use bitcoin::{
     transaction::Version,
     Amount, OutPoint, ScriptBuf, Sequence, Transaction, TxIn, TxOut, Txid, Witness,
 };
-use anchor_core::{Anchor, AnchorKind, ParsedAnchorMessage, encode_anchor_payload, create_anchor_script};
+use anchor_core::carrier::{CarrierOutput, CarrierPreferences, CarrierSelector, CarrierType};
+use anchor_core::{Anchor, AnchorKind, ParsedAnchorMessage, create_anchor_script, encode_anchor_payload};
 
 use crate::error::{Result, WalletError};
 
-/// Maximum OP_RETURN payload size
+/// Maximum OP_RETURN payload size (legacy)
 pub const MAX_OP_RETURN_SIZE: usize = 80;
 
 /// Represents an ANCHOR transaction
@@ -17,15 +18,40 @@ pub const MAX_OP_RETURN_SIZE: usize = 80;
 pub struct AnchorTransaction {
     /// The built transaction
     pub transaction: Transaction,
-    
+
     /// The ANCHOR message body
     pub body: Vec<u8>,
-    
+
     /// The message kind
     pub kind: AnchorKind,
-    
+
     /// Parent anchors (for replies)
     pub anchors: Vec<Anchor>,
+
+    /// The carrier type used
+    pub carrier: CarrierType,
+
+    /// Additional carrier-specific data (for inscription reveal, etc.)
+    pub carrier_data: Option<CarrierData>,
+}
+
+/// Additional data for specific carriers
+#[derive(Debug, Clone)]
+pub enum CarrierData {
+    /// Inscription requires a reveal script
+    Inscription {
+        reveal_script: ScriptBuf,
+        content_type: String,
+    },
+    /// Stamps creates multiple outputs
+    Stamps { scripts: Vec<ScriptBuf> },
+    /// Annex data for Taproot
+    Annex { data: Vec<u8> },
+    /// Witness data chunks
+    WitnessData {
+        chunks: Vec<Vec<u8>>,
+        script: ScriptBuf,
+    },
 }
 
 impl AnchorTransaction {
@@ -64,6 +90,8 @@ pub struct TransactionBuilder {
     inputs: Vec<(OutPoint, u64)>, // (outpoint, value in sats)
     change_script: Option<ScriptBuf>,
     fee_rate: f64,
+    carrier: Option<CarrierType>,
+    carrier_prefs: CarrierPreferences,
 }
 
 impl TransactionBuilder {
@@ -76,6 +104,8 @@ impl TransactionBuilder {
             inputs: Vec::new(),
             change_script: None,
             fee_rate: 1.0,
+            carrier: None,
+            carrier_prefs: CarrierPreferences::default(),
         }
     }
 
@@ -140,6 +170,24 @@ impl TransactionBuilder {
         self
     }
 
+    /// Set a specific carrier type to use
+    pub fn carrier(mut self, carrier: CarrierType) -> Self {
+        self.carrier = Some(carrier);
+        self
+    }
+
+    /// Set carrier preferences for auto-selection
+    pub fn carrier_prefs(mut self, prefs: CarrierPreferences) -> Self {
+        self.carrier_prefs = prefs;
+        self
+    }
+
+    /// Require permanent storage (uses Stamps carrier)
+    pub fn permanent(mut self) -> Self {
+        self.carrier = Some(CarrierType::Stamps);
+        self
+    }
+
     /// Build the parsed anchor message
     fn build_message(&self) -> ParsedAnchorMessage {
         ParsedAnchorMessage {
@@ -170,24 +218,58 @@ impl TransactionBuilder {
             return Err(WalletError::NoUtxos);
         }
 
-        // Build the ANCHOR message and OP_RETURN script
+        // Build the ANCHOR message
         let message = self.build_message();
-        let payload = encode_anchor_payload(&message);
-        
-        if payload.len() > MAX_OP_RETURN_SIZE {
-            return Err(WalletError::MessageTooLarge {
-                size: payload.len(),
-                max: MAX_OP_RETURN_SIZE,
-            });
-        }
-        
-        let op_return_script = create_anchor_script(&message);
 
+        // Select carrier
+        let selector = CarrierSelector::new();
+        let carrier_type = if let Some(ct) = self.carrier {
+            ct
+        } else {
+            // Auto-select based on payload size and preferences
+            let payload = encode_anchor_payload(&message);
+            if payload.len() <= MAX_OP_RETURN_SIZE {
+                CarrierType::OpReturn
+            } else {
+                // Try to find a suitable carrier
+                match selector.select(&message, &self.carrier_prefs) {
+                    Ok(carrier) => carrier.info().carrier_type,
+                    Err(_) => {
+                        return Err(WalletError::MessageTooLarge {
+                            size: payload.len(),
+                            max: MAX_OP_RETURN_SIZE,
+                        });
+                    }
+                }
+            }
+        };
+
+        // Get the carrier and encode
+        let carrier = selector
+            .get_carrier(carrier_type)
+            .ok_or_else(|| WalletError::TransactionBuild("Carrier not available".to_string()))?;
+
+        let carrier_output = carrier
+            .encode(&message)
+            .map_err(|e| WalletError::TransactionBuild(format!("Carrier encode error: {}", e)))?;
+
+        // Build transaction based on carrier type
+        self.build_with_carrier(message, carrier_type, carrier_output)
+    }
+
+    /// Build transaction with a specific carrier output
+    fn build_with_carrier(
+        self,
+        message: ParsedAnchorMessage,
+        carrier_type: CarrierType,
+        carrier_output: CarrierOutput,
+    ) -> Result<AnchorTransaction> {
         // Calculate total input value
         let total_input: u64 = self.inputs.iter().map(|(_, v)| v).sum();
 
         // Build inputs
-        let tx_inputs: Vec<TxIn> = self.inputs
+        let tx_inputs: Vec<TxIn> = self
+            .inputs
             .iter()
             .map(|(outpoint, _)| TxIn {
                 previous_output: *outpoint,
@@ -197,26 +279,81 @@ impl TransactionBuilder {
             })
             .collect();
 
-        // Build outputs
-        let mut outputs = vec![
-            TxOut {
-                value: Amount::ZERO,
-                script_pubkey: op_return_script,
-            },
-        ];
+        // Build outputs based on carrier
+        let (mut outputs, carrier_data) = match carrier_output {
+            CarrierOutput::OpReturn(script) => {
+                let outputs = vec![TxOut {
+                    value: Amount::ZERO,
+                    script_pubkey: script,
+                }];
+                (outputs, None)
+            }
+            CarrierOutput::Stamps(scripts) => {
+                let outputs: Vec<TxOut> = scripts
+                    .iter()
+                    .map(|s| TxOut {
+                        value: Amount::from_sat(546), // Dust limit for each output
+                        script_pubkey: s.clone(),
+                    })
+                    .collect();
+                let data = CarrierData::Stamps {
+                    scripts: scripts.clone(),
+                };
+                (outputs, Some(data))
+            }
+            CarrierOutput::Inscription {
+                reveal_script,
+                content_type,
+            } => {
+                // For inscriptions, we create a commit transaction first
+                // The reveal script needs to be committed
+                let outputs = vec![TxOut {
+                    value: Amount::ZERO,
+                    script_pubkey: create_anchor_script(&message), // Placeholder
+                }];
+                let data = CarrierData::Inscription {
+                    reveal_script,
+                    content_type,
+                };
+                (outputs, Some(data))
+            }
+            CarrierOutput::Annex(annex_data) => {
+                // Annex goes in witness, use OP_RETURN as placeholder
+                let outputs = vec![TxOut {
+                    value: Amount::ZERO,
+                    script_pubkey: create_anchor_script(&message),
+                }];
+                let data = CarrierData::Annex { data: annex_data };
+                (outputs, Some(data))
+            }
+            CarrierOutput::WitnessData { chunks, script } => {
+                let outputs = vec![TxOut {
+                    value: Amount::ZERO,
+                    script_pubkey: create_anchor_script(&message),
+                }];
+                let data = CarrierData::WitnessData { chunks, script };
+                (outputs, Some(data))
+            }
+        };
 
         // Estimate transaction size for fee calculation
-        // Base tx size + inputs + outputs
-        let estimated_vsize = 10 + (self.inputs.len() * 68) + (2 * 34);
+        let estimated_vsize = 10 + (self.inputs.len() * 68) + (outputs.len() * 34);
         let fee = (estimated_vsize as f64 * self.fee_rate).ceil() as u64;
+
+        // For Stamps, we need to account for the dust outputs
+        let stamps_dust: u64 = if carrier_type == CarrierType::Stamps {
+            outputs.iter().map(|o| o.value.to_sat()).sum()
+        } else {
+            0
+        };
 
         // Add change output if we have enough and a change script
         if let Some(change_script) = self.change_script {
-            let change_value = total_input.saturating_sub(fee);
-            
+            let change_value = total_input.saturating_sub(fee + stamps_dust);
+
             if change_value < 546 {
                 return Err(WalletError::InsufficientFunds {
-                    needed: fee + 546,
+                    needed: fee + stamps_dust + 546,
                     available: total_input,
                 });
             }
@@ -239,6 +376,8 @@ impl TransactionBuilder {
             body: self.body,
             kind: self.kind,
             anchors: self.anchors,
+            carrier: carrier_type,
+            carrier_data,
         })
     }
 }

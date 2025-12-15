@@ -1,6 +1,13 @@
 -- ANCHOR Protocol Database Schema
 
--- Messages table: stores ANCHOR messages from OP_RETURN outputs
+-- Carrier types:
+-- 0 = op_return (default)
+-- 1 = inscription (Ordinals-style)
+-- 2 = stamps (permanent bare multisig)
+-- 3 = taproot_annex
+-- 4 = witness_data
+
+-- Messages table: stores ANCHOR messages from various carriers
 CREATE TABLE messages (
     id SERIAL PRIMARY KEY,
     txid BYTEA NOT NULL,
@@ -9,6 +16,9 @@ CREATE TABLE messages (
     block_height INTEGER,
     kind SMALLINT NOT NULL,
     body BYTEA NOT NULL,
+    carrier SMALLINT NOT NULL DEFAULT 0,
+    inscription_id TEXT,
+    content_type TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE(txid, vout)
 );
@@ -43,7 +53,9 @@ INSERT INTO indexer_state (id, last_block_height) VALUES (1, 0);
 CREATE INDEX idx_messages_txid ON messages(txid);
 CREATE INDEX idx_messages_block_height ON messages(block_height);
 CREATE INDEX idx_messages_kind ON messages(kind);
+CREATE INDEX idx_messages_carrier ON messages(carrier);
 CREATE INDEX idx_messages_created_at ON messages(created_at DESC);
+CREATE INDEX idx_messages_inscription_id ON messages(inscription_id) WHERE inscription_id IS NOT NULL;
 
 CREATE INDEX idx_anchors_txid_prefix ON anchors(txid_prefix);
 CREATE INDEX idx_anchors_resolved_message_id ON anchors(resolved_message_id);

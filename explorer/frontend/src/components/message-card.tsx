@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
-import { Message, truncateTxid, formatBlockHeight, hexToImageDataUrl } from "@/lib/api";
+import { Message, truncateTxid, formatBlockHeight, hexToImageDataUrl, isImageMessage, CARRIER_INFO } from "@/lib/api";
 import {
   MessageSquare,
   Link2,
@@ -29,8 +29,8 @@ export function MessageCard({
   const hasText = message.body_text && message.body_text.trim().length > 0;
   const parentAnchor = message.anchors.find((a) => a.index === 0);
   
-  // Check if this is an image message
-  const isImage = message.kind === 4 || message.kind_name === "Image";
+  // Check if this is an image message (by kind or magic bytes)
+  const isImage = isImageMessage(message);
   const imageDataUrl = isImage ? hexToImageDataUrl(message.body_hex) : null;
 
   const handleCardClick = () => {
@@ -50,10 +50,21 @@ export function MessageCard({
     >
       {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-3">
-        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+        <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
           <span className="px-2 py-0.5 bg-primary/10 text-primary rounded text-xs font-medium">
             {message.kind_name}
           </span>
+          {message.carrier !== undefined && (
+            <span
+              className={`px-2 py-0.5 rounded text-xs font-medium ${
+                CARRIER_INFO[message.carrier]?.bgColor || "bg-gray-100"
+              } ${CARRIER_INFO[message.carrier]?.textColor || "text-gray-700"}`}
+              title={CARRIER_INFO[message.carrier]?.description || `Carrier: ${message.carrier_name}`}
+            >
+              {CARRIER_INFO[message.carrier]?.icon}{" "}
+              {CARRIER_INFO[message.carrier]?.label || message.carrier_name}
+            </span>
+          )}
           <span className="flex items-center gap-1">
             <Box className="h-3 w-3" />
             {formatBlockHeight(message.block_height)}
@@ -96,16 +107,20 @@ export function MessageCard({
 
       {/* Body */}
       <div className="mb-3">
-        {isImage && imageDataUrl ? (
+        {isImage ? (
           <div className="flex items-center gap-3">
             <div className="relative w-16 h-16 rounded-lg overflow-hidden border border-border bg-secondary flex items-center justify-center">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={imageDataUrl}
-                alt="ANCHOR Image"
-                className="object-cover w-full h-full"
-                style={{ imageRendering: "pixelated" }}
-              />
+              {imageDataUrl ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={imageDataUrl}
+                  alt="ANCHOR Image"
+                  className="object-cover w-full h-full"
+                  style={{ imageRendering: "pixelated" }}
+                />
+              ) : (
+                <ImageIcon className="h-6 w-6 text-muted-foreground" />
+              )}
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <ImageIcon className="h-4 w-4" />

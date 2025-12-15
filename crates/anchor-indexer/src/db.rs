@@ -6,6 +6,7 @@ use bitcoin::Txid;
 use sqlx::postgres::PgPool;
 use tracing::debug;
 
+use anchor_core::carrier::CarrierType;
 use anchor_core::{Anchor, ParsedAnchorMessage, TXID_PREFIX_SIZE};
 
 /// Database connection pool wrapper
@@ -45,7 +46,8 @@ impl Database {
         Ok(())
     }
 
-    /// Insert a new ANCHOR message
+    /// Insert a new ANCHOR message (legacy, defaults to OP_RETURN carrier)
+    #[allow(dead_code)]
     pub async fn insert_message(
         &self,
         txid: &Txid,
@@ -54,19 +56,42 @@ impl Database {
         block_height: Option<i32>,
         message: &ParsedAnchorMessage,
     ) -> Result<i32> {
+        self.insert_message_with_carrier(
+            txid,
+            vout,
+            block_hash,
+            block_height,
+            message,
+            CarrierType::OpReturn,
+        )
+        .await
+    }
+
+    /// Insert a new ANCHOR message with carrier type
+    pub async fn insert_message_with_carrier(
+        &self,
+        txid: &Txid,
+        vout: u32,
+        block_hash: Option<&[u8]>,
+        block_height: Option<i32>,
+        message: &ParsedAnchorMessage,
+        carrier: CarrierType,
+    ) -> Result<i32> {
         let txid_bytes = txid.to_byte_array().to_vec();
         let kind = u8::from(message.kind) as i16;
+        let carrier_id = carrier as i16;
 
-        // Insert the message
+        // Insert the message with carrier
         let row: (i32,) = sqlx::query_as(
             r#"
-            INSERT INTO messages (txid, vout, block_hash, block_height, kind, body)
-            VALUES ($1, $2, $3, $4, $5, $6)
+            INSERT INTO messages (txid, vout, block_hash, block_height, kind, body, carrier)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
             ON CONFLICT (txid, vout) DO UPDATE SET
                 block_hash = EXCLUDED.block_hash,
-                block_height = EXCLUDED.block_height
+                block_height = EXCLUDED.block_height,
+                carrier = EXCLUDED.carrier
             RETURNING id
-            "#
+            "#,
         )
         .bind(&txid_bytes)
         .bind(vout as i32)
@@ -74,6 +99,7 @@ impl Database {
         .bind(block_height)
         .bind(kind)
         .bind(&message.body)
+        .bind(carrier_id)
         .fetch_one(&self.pool)
         .await?;
 
@@ -85,9 +111,10 @@ impl Database {
         }
 
         debug!(
-            "Inserted message {} with {} anchors",
+            "Inserted message {} with {} anchors (carrier: {})",
             txid,
-            message.anchors.len()
+            message.anchors.len(),
+            carrier
         );
 
         Ok(message_id)

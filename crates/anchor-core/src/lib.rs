@@ -2,11 +2,36 @@
 //!
 //! This crate provides the core types and parsing logic for the ANCHOR protocol v1.
 //! ANCHOR is a minimalist metaprotocol for recording chained messages on Bitcoin.
+//!
+//! # Features
+//!
+//! - **Multi-carrier support**: Embed ANCHOR messages in OP_RETURN, Inscriptions,
+//!   Stamps, Taproot Annex, or Witness Data
+//! - **Message chaining**: Reference parent messages via compact 64-bit anchors
+//! - **Extensible kinds**: Support for text, images, state updates, votes, and more
+//!
+//! # Example
+//!
+//! ```ignore
+//! use anchor_core::{AnchorMessageBuilder, AnchorKind};
+//! use anchor_core::carrier::{CarrierSelector, CarrierPreferences};
+//!
+//! // Create a message
+//! let message = AnchorMessageBuilder::new()
+//!     .text("Hello, ANCHOR!")
+//!     .build();
+//!
+//! // Select best carrier and encode
+//! let selector = CarrierSelector::new();
+//! let prefs = CarrierPreferences::default();
+//! let (carrier_type, output) = selector.encode(&message, &prefs)?;
+//! ```
 
 mod types;
 mod parser;
 mod encoder;
 mod error;
+pub mod carrier;
 
 pub use types::*;
 pub use parser::*;

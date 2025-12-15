@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useCallback, useState } from "react";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { fetchRoots, fetchStats, fetchPopularThreads, type Message, type PopularThread } from "@/lib/api";
+import { fetchRoots, fetchStats, fetchPopularThreads, type Message, type PopularThread, detectImageMimeType, hexToImageDataUrl } from "@/lib/api";
 import { MessageCard } from "@/components/message-card";
 import Link from "next/link";
 import {
@@ -21,6 +21,7 @@ import {
   Hash,
   Layers,
   ArrowUpRight,
+  Image as ImageIcon,
 } from "lucide-react";
 
 // Typewriter effect component - more organic timing
@@ -526,6 +527,9 @@ function QuickAction({
 
 // Thread card component
 function ThreadCard({ thread }: { thread: PopularThread }) {
+  const isImage = thread.kind === 4 || thread.kind_name === "Image" || detectImageMimeType(thread.body_hex) !== null;
+  const imageDataUrl = isImage ? hexToImageDataUrl(thread.body_hex) : null;
+
   return (
     <Link
       href={`/thread/${thread.txid}/${thread.vout}`}
@@ -540,9 +544,25 @@ function ThreadCard({ thread }: { thread: PopularThread }) {
           Block {thread.block_height?.toLocaleString()}
         </span>
       </div>
-      <p className="text-sm text-gray-700 line-clamp-2 group-hover:text-gray-900 transition-colors">
-        {thread.body_text || `[Binary: ${thread.body_hex.slice(0, 16)}...]`}
-      </p>
+
+      {isImage ? (
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg overflow-hidden border border-gray-200 bg-gray-50 flex items-center justify-center flex-shrink-0">
+            {imageDataUrl ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img src={imageDataUrl} alt="" className="object-cover w-full h-full" style={{ imageRendering: "pixelated" }} />
+            ) : (
+              <ImageIcon className="h-4 w-4 text-gray-400" />
+            )}
+          </div>
+          <span className="text-sm text-gray-500">Image</span>
+        </div>
+      ) : (
+        <p className="text-sm text-gray-700 line-clamp-2 group-hover:text-gray-900 transition-colors">
+          {thread.body_text || `[Binary: ${thread.body_hex.slice(0, 16)}...]`}
+        </p>
+      )}
+
       <p className="text-xs text-gray-400 mt-2 font-mono">
         {thread.txid.slice(0, 8)}...{thread.txid.slice(-8)}
       </p>

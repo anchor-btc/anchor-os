@@ -9,6 +9,7 @@ use std::time::Duration;
 use tokio::time::sleep;
 use tracing::{debug, error, info, warn};
 
+use anchor_core::carrier::{CarrierSelector, CarrierType};
 use anchor_core::parse_transaction;
 
 use crate::config::Config;
@@ -19,6 +20,7 @@ pub struct Indexer {
     config: Config,
     rpc: Client,
     db: Database,
+    carrier_selector: CarrierSelector,
 }
 
 impl Indexer {
@@ -42,7 +44,19 @@ impl Indexer {
         let db = Database::connect(&config.database_url).await?;
         info!("Connected to database");
 
-        Ok(Self { config, rpc, db })
+        // Initialize carrier selector for multi-carrier detection
+        let carrier_selector = CarrierSelector::new();
+        info!(
+            "Initialized multi-carrier detector with {} carriers",
+            carrier_selector.carriers().len()
+        );
+
+        Ok(Self {
+            config,
+            rpc,
+            db,
+            carrier_selector,
+        })
     }
 
     /// Run the indexer loop
@@ -157,30 +171,47 @@ impl Indexer {
         block_height: Option<i32>,
     ) -> Result<u32> {
         let txid = tx.compute_txid();
-        
-        // Parse ANCHOR messages from the transaction
-        let messages = parse_transaction(tx);
+
+        // Try multi-carrier detection first
+        let detected = self.carrier_selector.detect(tx);
+
+        // Fall back to legacy OP_RETURN parsing if no messages detected
+        let messages: Vec<(u32, CarrierType, anchor_core::ParsedAnchorMessage)> = if detected
+            .is_empty()
+        {
+            // Use legacy parser for backwards compatibility
+            parse_transaction(tx)
+                .into_iter()
+                .map(|(vout, msg)| (vout, CarrierType::OpReturn, msg))
+                .collect()
+        } else {
+            detected
+                .into_iter()
+                .map(|d| (d.vout, d.carrier_type, d.message))
+                .collect()
+        };
 
         if messages.is_empty() {
             return Ok(0);
         }
 
-        debug!("Found {} ANCHOR messages in tx {}", messages.len(), txid);
+        debug!(
+            "Found {} ANCHOR messages in tx {} (carriers: {:?})",
+            messages.len(),
+            txid,
+            messages.iter().map(|(_, c, _)| c).collect::<Vec<_>>()
+        );
 
-        for (vout, message) in &messages {
+        for (vout, carrier_type, message) in &messages {
             // Check if already indexed
             if self.db.message_exists(&txid, *vout).await? {
                 debug!("Message {}:{} already indexed, skipping", txid, vout);
                 continue;
             }
 
-            self.db.insert_message(
-                &txid,
-                *vout,
-                block_hash,
-                block_height,
-                message,
-            ).await?;
+            self.db
+                .insert_message_with_carrier(&txid, *vout, block_hash, block_height, message, *carrier_type)
+                .await?;
         }
 
         Ok(messages.len() as u32)

@@ -1,5 +1,121 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002";
 const WALLET_URL = process.env.NEXT_PUBLIC_WALLET_URL || "http://localhost:3001";
+export const BTC_EXPLORER_URL = process.env.NEXT_PUBLIC_BTC_EXPLORER_URL || "http://localhost:3003";
+
+// Carrier types enum
+export enum CarrierType {
+  OpReturn = 0,
+  Inscription = 1,
+  Stamps = 2,
+  TaprootAnnex = 3,
+  WitnessData = 4,
+}
+
+// Carrier name lookup
+export const CARRIER_NAMES: Record<number, string> = {
+  0: "op_return",
+  1: "inscription",
+  2: "stamps",
+  3: "taproot_annex",
+  4: "witness_data",
+};
+
+// Carrier display info with detailed descriptions
+export const CARRIER_INFO: Record<
+  number,
+  {
+    name: string;
+    label: string;
+    color: string;
+    bgColor: string;
+    textColor: string;
+    borderColor: string;
+    icon: string;
+    description: string;
+    properties: { label: string; value: string }[];
+  }
+> = {
+  0: {
+    name: "op_return",
+    label: "OP_RETURN",
+    color: "bg-blue-500",
+    bgColor: "bg-blue-50",
+    textColor: "text-blue-700",
+    borderColor: "border-blue-200",
+    icon: "📤",
+    description: "Standard Bitcoin data output. Prunable by nodes, low cost, up to 80 bytes (100KB in Bitcoin Core v30+).",
+    properties: [
+      { label: "Max Size", value: "80 bytes (legacy) / 100KB (v30+)" },
+      { label: "Prunable", value: "Yes" },
+      { label: "UTXO Impact", value: "None (unspendable)" },
+      { label: "Fee Discount", value: "No" },
+    ],
+  },
+  1: {
+    name: "inscription",
+    label: "Inscription",
+    color: "bg-orange-500",
+    bgColor: "bg-orange-50",
+    textColor: "text-orange-700",
+    borderColor: "border-orange-200",
+    icon: "🖼️",
+    description: "Ordinals-style inscription using Taproot witness data with OP_FALSE OP_IF envelope.",
+    properties: [
+      { label: "Max Size", value: "~4MB (witness limit)" },
+      { label: "Prunable", value: "Yes (witness data)" },
+      { label: "UTXO Impact", value: "Minimal" },
+      { label: "Fee Discount", value: "Yes (75% witness discount)" },
+    ],
+  },
+  2: {
+    name: "stamps",
+    label: "Stamps",
+    color: "bg-green-500",
+    bgColor: "bg-green-50",
+    textColor: "text-green-700",
+    borderColor: "border-green-200",
+    icon: "📍",
+    description: "Permanent storage using bare multisig outputs. Data is embedded in public keys and cannot be pruned.",
+    properties: [
+      { label: "Max Size", value: "~520 bytes per output" },
+      { label: "Prunable", value: "No (permanent)" },
+      { label: "UTXO Impact", value: "High (creates UTXOs)" },
+      { label: "Fee Discount", value: "No" },
+    ],
+  },
+  3: {
+    name: "taproot_annex",
+    label: "Taproot Annex",
+    color: "bg-purple-500",
+    bgColor: "bg-purple-50",
+    textColor: "text-purple-700",
+    borderColor: "border-purple-200",
+    icon: "🔗",
+    description: "Reserved field in Taproot witness stack. Currently not relayed by most nodes.",
+    properties: [
+      { label: "Max Size", value: "~4MB (witness limit)" },
+      { label: "Prunable", value: "Yes (witness data)" },
+      { label: "UTXO Impact", value: "None" },
+      { label: "Fee Discount", value: "Yes (75% witness discount)" },
+    ],
+  },
+  4: {
+    name: "witness_data",
+    label: "Witness Data",
+    color: "bg-cyan-500",
+    bgColor: "bg-cyan-50",
+    textColor: "text-cyan-700",
+    borderColor: "border-cyan-200",
+    icon: "👁️",
+    description: "Raw witness data in SegWit transactions. Benefits from witness discount.",
+    properties: [
+      { label: "Max Size", value: "~4MB (witness limit)" },
+      { label: "Prunable", value: "Yes (witness data)" },
+      { label: "UTXO Impact", value: "None" },
+      { label: "Fee Discount", value: "Yes (75% witness discount)" },
+    ],
+  },
+};
 
 // Types
 export interface Message {
@@ -9,6 +125,8 @@ export interface Message {
   block_height: number | null;
   kind: number;
   kind_name: string;
+  carrier: number;
+  carrier_name: string;
   body_hex: string;
   body_text: string | null;
   anchors: Anchor[];
@@ -25,6 +143,14 @@ export interface Anchor {
   is_orphan: boolean;
 }
 
+export interface CarrierStats {
+  op_return: number;
+  inscription: number;
+  stamps: number;
+  taproot_annex: number;
+  witness_data: number;
+}
+
 export interface Stats {
   total_messages: number;
   total_roots: number;
@@ -34,6 +160,7 @@ export interface Stats {
   orphan_anchors: number;
   ambiguous_anchors: number;
   last_block_height: number;
+  carriers: CarrierStats;
 }
 
 export interface PaginatedResponse<T> {
@@ -67,12 +194,24 @@ export interface CreateMessageRequest {
   body_is_hex?: boolean;
   parent_txid?: string;
   parent_vout?: number;
+  carrier?: number;
 }
+
+// Carrier options for compose form
+export const CARRIER_OPTIONS = [
+  { value: 0, label: "OP_RETURN", icon: "📤", description: "Standard, prunable, 80 bytes" },
+  { value: 1, label: "Inscription", icon: "🖼️", description: "Ordinals-style, ~4MB, witness discount" },
+  { value: 2, label: "Stamps", icon: "📍", description: "Permanent, unprunable, ~520 bytes" },
+  { value: 3, label: "Taproot Annex", icon: "🔗", description: "Witness annex, needs libre relay" },
+  { value: 4, label: "Witness Data", icon: "📦", description: "Tapscript witness, ~4MB, prunable" },
+] as const;
 
 export interface CreateMessageResponse {
   txid: string;
   vout: number;
   hex: string;
+  carrier: number;
+  carrier_name: string;
 }
 
 // API Functions
@@ -106,6 +245,7 @@ export interface FilterOptions {
   block_min?: number;
   block_max?: number;
   kind?: number;
+  carrier?: number;
   text?: string;
   from_date?: string;
   to_date?: string;
@@ -131,6 +271,7 @@ export async function fetchRootsFiltered(
   if (filters.block_min !== undefined) params.set("block_min", filters.block_min.toString());
   if (filters.block_max !== undefined) params.set("block_max", filters.block_max.toString());
   if (filters.kind !== undefined) params.set("kind", filters.kind.toString());
+  if (filters.carrier !== undefined) params.set("carrier", filters.carrier.toString());
   if (filters.text) params.set("text", filters.text);
   if (filters.from_date) params.set("from_date", filters.from_date);
   if (filters.to_date) params.set("to_date", filters.to_date);

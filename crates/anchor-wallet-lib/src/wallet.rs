@@ -6,6 +6,7 @@ use bitcoincore_rpc::{Auth, Client, RpcApi};
 use crate::config::WalletConfig;
 use crate::error::{Result, WalletError};
 use crate::transaction::{AnchorTransaction, TransactionBuilder};
+use anchor_core::carrier::CarrierType;
 use anchor_core::AnchorKind;
 
 /// UTXO information
@@ -158,6 +159,17 @@ impl AnchorWallet {
         body: &[u8],
         anchors: &[(Txid, u8)],
     ) -> Result<Txid> {
+        self.create_message_with_carrier(kind, body, anchors, None)
+    }
+
+    /// Create a message with a specific carrier type
+    pub fn create_message_with_carrier(
+        &self,
+        kind: AnchorKind,
+        body: &[u8],
+        anchors: &[(Txid, u8)],
+        carrier: Option<CarrierType>,
+    ) -> Result<Txid> {
         // Get UTXOs
         let utxos = self.list_utxos()?;
         if utxos.is_empty() {
@@ -175,15 +187,26 @@ impl AnchorWallet {
             .fee_rate(self.config.fee_rate)
             .change_script(change_address.script_pubkey());
 
+        // Set carrier if specified
+        if let Some(ct) = carrier {
+            builder = builder.carrier(ct);
+        }
+
         // Add anchors
         for (txid, vout) in anchors {
             builder = builder.anchor(*txid, *vout);
         }
 
-        // Add inputs (use first UTXO for simplicity)
-        // In a real wallet, you'd implement coin selection
-        let utxo = &utxos[0];
-        builder = builder.input(utxo.txid, utxo.vout, utxo.amount);
+        // Add inputs - for Stamps, we need more inputs due to dust outputs
+        let required_inputs = if carrier == Some(CarrierType::Stamps) {
+            2 // Stamps needs more funds
+        } else {
+            1
+        };
+
+        for utxo in utxos.iter().take(required_inputs.min(utxos.len())) {
+            builder = builder.input(utxo.txid, utxo.vout, utxo.amount);
+        }
 
         // Build the transaction
         let anchor_tx = builder.build()?;
@@ -192,6 +215,33 @@ impl AnchorWallet {
         let txid = self.sign_and_broadcast(&anchor_tx)?;
 
         Ok(txid)
+    }
+
+    /// Create a permanent message using Stamps carrier
+    ///
+    /// This message will be stored permanently in the UTXO set and cannot be pruned.
+    pub fn create_permanent_message(&self, body: &str) -> Result<Txid> {
+        self.create_message_with_carrier(
+            AnchorKind::Text,
+            body.as_bytes(),
+            &[],
+            Some(CarrierType::Stamps),
+        )
+    }
+
+    /// Create a permanent reply using Stamps carrier
+    pub fn create_permanent_reply(
+        &self,
+        body: &str,
+        parent_txid: &Txid,
+        parent_vout: u8,
+    ) -> Result<Txid> {
+        self.create_message_with_carrier(
+            AnchorKind::Text,
+            body.as_bytes(),
+            &[(*parent_txid, parent_vout)],
+            Some(CarrierType::Stamps),
+        )
     }
 
     /// Build an unsigned ANCHOR transaction

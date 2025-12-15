@@ -96,6 +96,7 @@ async fn main() -> Result<()> {
         .route("/wallet/create-message", post(handlers::create_message))
         .route("/wallet/broadcast", post(handlers::broadcast))
         .route("/wallet/mine", post(handlers::mine_blocks))
+        .route("/wallet/rawtx/:txid", get(handlers::get_raw_tx))
         .with_state(state)
         .layer(TraceLayer::new_for_http())
         .layer(

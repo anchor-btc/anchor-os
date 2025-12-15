@@ -1,7 +1,15 @@
 //! Wallet operations using Bitcoin Core RPC
 
 use anyhow::{Context, Result};
-use bitcoin::{ScriptBuf, Txid};
+use bitcoin::consensus::encode::serialize_hex;
+use bitcoin::key::{TapTweak, UntweakedKeypair};
+use bitcoin::secp256k1::{Secp256k1, SecretKey};
+use bitcoin::taproot::{LeafVersion, TaprootBuilder, TaprootSpendInfo};
+use bitcoin::transaction::Version;
+use bitcoin::{
+    absolute::LockTime, Amount, OutPoint, ScriptBuf, Sequence, Transaction, TxIn, TxOut, Txid,
+    Witness, XOnlyPublicKey,
+};
 use bitcoincore_rpc::{Auth, Client, RpcApi};
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
@@ -34,6 +42,20 @@ pub struct CreatedTransaction {
     pub txid: String,
     pub hex: String,
     pub anchor_vout: u32,
+    pub carrier: u8,
+    pub carrier_name: String,
+}
+
+/// Get carrier name from type
+fn carrier_name(carrier: u8) -> &'static str {
+    match carrier {
+        0 => "op_return",
+        1 => "inscription",
+        2 => "stamps",
+        3 => "taproot_annex",
+        4 => "witness_data",
+        _ => "unknown",
+    }
 }
 
 /// The wallet service wrapping Bitcoin Core RPC
@@ -144,6 +166,7 @@ impl WalletService {
         parent_txid: Option<String>,
         parent_vout: Option<u8>,
         additional_anchors: Vec<(String, u8)>,
+        carrier: Option<u8>,
     ) -> Result<CreatedTransaction> {
         // Build the ANCHOR message
         let mut builder = AnchorMessageBuilder::new().kind(AnchorKind::from(kind));
@@ -163,12 +186,70 @@ impl WalletService {
         // Set the body
         builder = builder.body(body);
 
-        // Create the OP_RETURN script
-        let anchor_script = builder.to_script();
-        debug!("Created ANCHOR script: {} bytes", anchor_script.len());
+        // Get the carrier type (default to OP_RETURN)
+        let requested_carrier = carrier.unwrap_or(0);
 
-        // Create the transaction using fundrawtransaction
-        self.create_and_broadcast_tx(anchor_script)
+        // Build the message for carrier encoding
+        let message = anchor_core::ParsedAnchorMessage {
+            kind: AnchorKind::from(kind),
+            anchors: builder.get_anchors(),
+            body: builder.get_body(),
+        };
+
+        // Use the carrier selector to encode with the appropriate carrier
+        use anchor_core::carrier::{CarrierOutput, CarrierSelector, CarrierType};
+        let selector = CarrierSelector::new();
+
+        let carrier_type_enum = match requested_carrier {
+            0 => CarrierType::OpReturn,
+            1 => CarrierType::Inscription,
+            2 => CarrierType::Stamps,
+            3 => CarrierType::TaprootAnnex,
+            4 => CarrierType::WitnessData,
+            _ => CarrierType::OpReturn,
+        };
+
+        // Get the carrier and encode
+        if let Some(carrier_impl) = selector.get_carrier(carrier_type_enum) {
+            match carrier_impl.encode(&message) {
+                Ok(output) => {
+                    match output {
+                        CarrierOutput::OpReturn(script) => {
+                            debug!("Created ANCHOR OP_RETURN script: {} bytes", script.len());
+                            self.create_and_broadcast_tx_with_script(script, 0)
+                        }
+                        CarrierOutput::Stamps(scripts) => {
+                            debug!("Creating Stamps transaction with {} multisig outputs", scripts.len());
+                            self.create_and_broadcast_stamps_tx(scripts)
+                        }
+                        CarrierOutput::Inscription {
+                            reveal_script,
+                            content_type: _,
+                        } => {
+                            debug!("Creating Inscription transaction with reveal script");
+                            self.create_and_broadcast_inscription_tx(reveal_script)
+                        }
+                        CarrierOutput::Annex(annex_data) => {
+                            debug!("Creating Taproot Annex transaction with {} bytes", annex_data.len());
+                            self.create_and_broadcast_annex_tx(annex_data)
+                        }
+                        CarrierOutput::WitnessData { chunks: _, script } => {
+                            debug!("Creating WitnessData transaction with script {} bytes", script.len());
+                            self.create_and_broadcast_witness_data_tx(script)
+                        }
+                    }
+                }
+                Err(e) => {
+                    debug!("Carrier encode failed: {}, falling back to OP_RETURN", e);
+                    let anchor_script = builder.to_script();
+                    self.create_and_broadcast_tx_with_script(anchor_script, 0)
+                }
+            }
+        } else {
+            // Carrier not available, use OP_RETURN
+            let anchor_script = builder.to_script();
+            self.create_and_broadcast_tx_with_script(anchor_script, 0)
+        }
     }
 
     /// Create a text message transaction
@@ -184,11 +265,16 @@ impl WalletService {
             parent_txid,
             parent_vout,
             Vec::new(),
+            None, // Default carrier
         )
     }
 
     /// Create and broadcast a transaction with the given OP_RETURN script
-    fn create_and_broadcast_tx(&self, op_return_script: ScriptBuf) -> Result<CreatedTransaction> {
+    fn create_and_broadcast_tx_with_script(
+        &self,
+        op_return_script: ScriptBuf,
+        carrier_type: u8,
+    ) -> Result<CreatedTransaction> {
         // Get a change address
         let change_address = self.rpc.get_new_address(None, None)?;
         let change_address = change_address.assume_checked();
@@ -263,6 +349,686 @@ impl WalletService {
             txid,
             hex: signed_hex.to_string(),
             anchor_vout,
+            carrier: carrier_type,
+            carrier_name: carrier_name(carrier_type).to_string(),
+        })
+    }
+
+    /// Create and broadcast a Stamps transaction with bare multisig outputs
+    /// Builds the transaction manually since Bitcoin Core RPC doesn't support custom scriptPubKey
+    fn create_and_broadcast_stamps_tx(&self, scripts: Vec<ScriptBuf>) -> Result<CreatedTransaction> {
+        // Get UTXOs
+        let utxos = self.rpc.list_unspent(Some(0), None, None, None, None)?;
+        if utxos.is_empty() {
+            anyhow::bail!("No UTXOs available for Stamps transaction");
+        }
+
+        // Calculate required amount: dust for each output + fee
+        // Bare multisig outputs have higher dust thresholds than P2PKH
+        let dust_per_output = 1000u64; // satoshis (higher for bare multisig)
+        let total_dust = dust_per_output * scripts.len() as u64;
+        let estimated_fee = 500u64; // Conservative fee estimate
+        let required = total_dust + estimated_fee;
+
+        // Find UTXOs to cover the required amount
+        let mut selected_utxos = Vec::new();
+        let mut total_input = 0u64;
+
+        for utxo in &utxos {
+            let value = utxo.amount.to_sat();
+            selected_utxos.push(utxo);
+            total_input += value;
+            if total_input >= required + 546 {
+                // Need dust for change too
+                break;
+            }
+        }
+
+        if total_input < required {
+            anyhow::bail!(
+                "Insufficient funds for Stamps: need {} sats, have {}",
+                required,
+                total_input
+            );
+        }
+
+        // Get change address
+        let change_address = self.rpc.get_new_address(None, None)?;
+        let change_address = change_address.assume_checked();
+
+        // Build inputs
+        let inputs: Vec<TxIn> = selected_utxos
+            .iter()
+            .map(|utxo| TxIn {
+                previous_output: OutPoint {
+                    txid: utxo.txid,
+                    vout: utxo.vout,
+                },
+                script_sig: ScriptBuf::new(),
+                sequence: Sequence::ENABLE_RBF_NO_LOCKTIME,
+                witness: Witness::new(),
+            })
+            .collect();
+
+        // Build outputs: Stamps multisig outputs + change
+        let mut outputs: Vec<TxOut> = scripts
+            .iter()
+            .map(|script| TxOut {
+                value: Amount::from_sat(dust_per_output),
+                script_pubkey: script.clone(),
+            })
+            .collect();
+
+        // Add change output
+        let change_value = total_input - total_dust - estimated_fee;
+        if change_value >= 546 {
+            outputs.push(TxOut {
+                value: Amount::from_sat(change_value),
+                script_pubkey: change_address.script_pubkey(),
+            });
+        }
+
+        // Build unsigned transaction
+        let unsigned_tx = Transaction {
+            version: Version::TWO,
+            lock_time: LockTime::ZERO,
+            input: inputs,
+            output: outputs,
+        };
+
+        let unsigned_hex = serialize_hex(&unsigned_tx);
+        debug!("Built unsigned Stamps transaction: {} bytes", unsigned_hex.len() / 2);
+
+        // Sign using wallet
+        let signed: serde_json::Value = self.rpc.call(
+            "signrawtransactionwithwallet",
+            &[serde_json::json!(unsigned_hex)],
+        )?;
+
+        if !signed["complete"].as_bool().unwrap_or(false) {
+            anyhow::bail!("Stamps transaction signing incomplete");
+        }
+
+        let signed_hex = signed["hex"].as_str().context("No hex in signed tx")?;
+
+        // Broadcast
+        let txid: String = self.rpc.call("sendrawtransaction", &[serde_json::json!(signed_hex)])?;
+
+        info!(
+            "Broadcast Stamps transaction: {} with {} multisig outputs",
+            txid,
+            scripts.len()
+        );
+
+        Ok(CreatedTransaction {
+            txid,
+            hex: signed_hex.to_string(),
+            anchor_vout: 0,
+            carrier: 2,
+            carrier_name: "stamps".to_string(),
+        })
+    }
+
+    /// Create and broadcast an Inscription transaction using commit+reveal pattern
+    /// This creates a Taproot script-path spend that reveals the inscription in the witness
+    fn create_and_broadcast_inscription_tx(&self, reveal_script: ScriptBuf) -> Result<CreatedTransaction> {
+        let secp = Secp256k1::new();
+
+        // Generate an internal key (could be from wallet, using random for simplicity)
+        // For a real implementation, you'd derive this from the wallet
+        let internal_key = {
+            // Use a deterministic "nothing up my sleeve" key for the internal pubkey
+            // This is the standard NUMS (Nothing Up My Sleeve) point
+            let nums_bytes: [u8; 32] = [
+                0x50, 0x92, 0x9b, 0x74, 0xc1, 0xa0, 0x49, 0x54, 0xb7, 0x8b, 0x4b, 0x60, 0x35, 0xe9,
+                0x7a, 0x5e, 0x07, 0x8a, 0x5a, 0x0f, 0x28, 0xec, 0x96, 0xd5, 0x47, 0xbf, 0xee, 0x9a,
+                0xce, 0x80, 0x3a, 0xc0,
+            ];
+            XOnlyPublicKey::from_slice(&nums_bytes)
+                .unwrap_or_else(|_| {
+                    // Fallback: generate from a random key
+                    let secret = SecretKey::from_slice(&[1u8; 32]).expect("valid key");
+                    let keypair = UntweakedKeypair::from_secret_key(&secp, &secret);
+                    XOnlyPublicKey::from_keypair(&keypair).0
+                })
+        };
+
+        // Build the Taproot tree with the inscription script as a leaf
+        let taproot_builder = TaprootBuilder::new()
+            .add_leaf(0, reveal_script.clone())
+            .map_err(|e| anyhow::anyhow!("Failed to build Taproot tree: {:?}", e))?;
+
+        let taproot_info: TaprootSpendInfo = taproot_builder
+            .finalize(&secp, internal_key)
+            .map_err(|e| anyhow::anyhow!("Failed to finalize Taproot: {:?}", e))?;
+
+        // Get the Taproot output key (tweaked)
+        let output_key = taproot_info.output_key();
+
+        // Build the P2TR script pubkey for the commit transaction
+        let commit_script = ScriptBuf::new_p2tr_tweaked(output_key);
+
+        debug!("Inscription commit script: {}", hex::encode(commit_script.as_bytes()));
+
+        // Step 1: Create the commit transaction that funds the Taproot address
+        let commit_amount = 10000u64; // 10k sats for the commit output
+        let utxos = self.rpc.list_unspent(Some(1), None, None, None, None)?;
+        if utxos.is_empty() {
+            anyhow::bail!("No UTXOs available for Inscription commit");
+        }
+
+        // Select UTXOs
+        let mut selected_utxos = Vec::new();
+        let mut total_input = 0u64;
+        let required = commit_amount + 1000; // commit + fee
+
+        for utxo in &utxos {
+            selected_utxos.push(utxo);
+            total_input += utxo.amount.to_sat();
+            if total_input >= required + 546 {
+                break;
+            }
+        }
+
+        if total_input < required {
+            anyhow::bail!("Insufficient funds for inscription commit: need {} sats", required);
+        }
+
+        // Build commit transaction inputs
+        let commit_inputs: Vec<TxIn> = selected_utxos
+            .iter()
+            .map(|utxo| TxIn {
+                previous_output: OutPoint {
+                    txid: utxo.txid,
+                    vout: utxo.vout,
+                },
+                script_sig: ScriptBuf::new(),
+                sequence: Sequence::ENABLE_RBF_NO_LOCKTIME,
+                witness: Witness::new(),
+            })
+            .collect();
+
+        // Get change address
+        let change_address = self.rpc.get_new_address(None, None)?;
+        let change_script = change_address.assume_checked().script_pubkey();
+
+        // Build commit outputs: Taproot commit output + change
+        let change_value = total_input - commit_amount - 500;
+        let commit_outputs = vec![
+            TxOut {
+                value: Amount::from_sat(commit_amount),
+                script_pubkey: commit_script.clone(),
+            },
+            TxOut {
+                value: Amount::from_sat(change_value),
+                script_pubkey: change_script.clone(),
+            },
+        ];
+
+        let commit_tx = Transaction {
+            version: Version::TWO,
+            lock_time: LockTime::ZERO,
+            input: commit_inputs,
+            output: commit_outputs,
+        };
+
+        let commit_hex = serialize_hex(&commit_tx);
+
+        // Sign commit transaction
+        let signed_commit: serde_json::Value = self.rpc.call(
+            "signrawtransactionwithwallet",
+            &[serde_json::json!(commit_hex)],
+        )?;
+
+        if !signed_commit["complete"].as_bool().unwrap_or(false) {
+            anyhow::bail!("Inscription commit signing incomplete");
+        }
+
+        let signed_commit_hex = signed_commit["hex"].as_str().context("No hex in signed commit")?;
+
+        // Broadcast commit
+        let commit_txid: String = self.rpc.call("sendrawtransaction", &[serde_json::json!(signed_commit_hex)])?;
+        info!("Broadcast inscription commit tx: {}", commit_txid);
+
+        // Parse commit txid
+        let commit_txid_parsed = Txid::from_str(&commit_txid)?;
+
+        // Step 2: Create the reveal transaction that spends the commit output
+        // This reveals the inscription in the witness
+
+        // Get another change address for reveal tx
+        let reveal_change_address = self.rpc.get_new_address(None, None)?;
+        let reveal_change_script = reveal_change_address.assume_checked().script_pubkey();
+
+        let reveal_input = TxIn {
+            previous_output: OutPoint {
+                txid: commit_txid_parsed,
+                vout: 0, // First output of commit tx
+            },
+            script_sig: ScriptBuf::new(),
+            sequence: Sequence::ENABLE_RBF_NO_LOCKTIME,
+            witness: Witness::new(), // Will be filled with inscription data
+        };
+
+        // Reveal output: just a change output (inscription is in the witness)
+        let reveal_output = TxOut {
+            value: Amount::from_sat(commit_amount - 500), // Minus fee
+            script_pubkey: reveal_change_script,
+        };
+
+        let mut reveal_tx = Transaction {
+            version: Version::TWO,
+            lock_time: LockTime::ZERO,
+            input: vec![reveal_input],
+            output: vec![reveal_output],
+        };
+
+        // Build the witness for the script-path spend
+        // Witness stack for script-path: [script args...] [script] [control block]
+        let control_block = taproot_info
+            .control_block(&(reveal_script.clone(), LeafVersion::TapScript))
+            .context("Failed to build control block")?;
+
+        // Build witness: the inscription script goes into the witness
+        // Format: [signature if needed] [script] [control block]
+        // For our inscription, we don't need a signature because the script is just data
+        let mut witness = Witness::new();
+        witness.push(reveal_script.as_bytes()); // The inscription script
+        witness.push(control_block.serialize()); // Control block
+
+        reveal_tx.input[0].witness = witness;
+
+        let reveal_hex = serialize_hex(&reveal_tx);
+
+        // Broadcast reveal transaction (no signing needed for script-path with no sig check)
+        let reveal_txid: String = self.rpc.call("sendrawtransaction", &[serde_json::json!(reveal_hex)])?;
+
+        info!(
+            "Broadcast inscription reveal tx: {} (commit: {})",
+            reveal_txid, commit_txid
+        );
+
+        Ok(CreatedTransaction {
+            txid: reveal_txid,
+            hex: reveal_hex,
+            anchor_vout: 0, // Inscription is in input witness, not output
+            carrier: 1,
+            carrier_name: "inscription".to_string(),
+        })
+    }
+
+    /// Create and broadcast a Taproot Annex transaction
+    /// The annex is the last element in the witness stack, prefixed with 0x50
+    /// Note: Standard Bitcoin Core nodes don't relay annex transactions, but they are valid
+    fn create_and_broadcast_annex_tx(&self, annex_data: Vec<u8>) -> Result<CreatedTransaction> {
+        let secp = Secp256k1::new();
+
+        // Generate a keypair for the Taproot key-path spend
+        // Use deterministic key derivation for simplicity
+        let secret_bytes: [u8; 32] = {
+            let mut bytes = [0u8; 32];
+            // Use wallet's first address as entropy source
+            let addr = self.rpc.get_new_address(None, None)?;
+            let addr_bytes = addr.assume_checked().to_string().into_bytes();
+            for (i, b) in addr_bytes.iter().take(32).enumerate() {
+                bytes[i] = *b;
+            }
+            // Ensure it's a valid secret key (non-zero, less than curve order)
+            bytes[0] = bytes[0].max(1);
+            bytes
+        };
+
+        let secret_key = SecretKey::from_slice(&secret_bytes)
+            .map_err(|e| anyhow::anyhow!("Failed to create secret key: {}", e))?;
+        let keypair = UntweakedKeypair::from_secret_key(&secp, &secret_key);
+        let (internal_key, _parity) = XOnlyPublicKey::from_keypair(&keypair);
+
+        // Create a simple Taproot key-path output (no script tree)
+        let taproot_info = TaprootBuilder::new()
+            .finalize(&secp, internal_key)
+            .map_err(|e| anyhow::anyhow!("Failed to finalize Taproot: {:?}", e))?;
+
+        let output_key = taproot_info.output_key();
+        let commit_script = ScriptBuf::new_p2tr_tweaked(output_key);
+
+        debug!("Annex commit script: {}", hex::encode(commit_script.as_bytes()));
+
+        // Step 1: Create commit transaction that funds the Taproot address
+        let commit_amount = 10000u64; // 10k sats
+        let utxos = self.rpc.list_unspent(Some(1), None, None, None, None)?;
+        if utxos.is_empty() {
+            anyhow::bail!("No UTXOs available for Annex commit");
+        }
+
+        // Select UTXOs
+        let mut selected_utxos = Vec::new();
+        let mut total_input = 0u64;
+        let required = commit_amount + 1000;
+
+        for utxo in &utxos {
+            selected_utxos.push(utxo);
+            total_input += utxo.amount.to_sat();
+            if total_input >= required + 546 {
+                break;
+            }
+        }
+
+        if total_input < required {
+            anyhow::bail!("Insufficient funds for annex commit: need {} sats", required);
+        }
+
+        // Build commit transaction
+        let commit_inputs: Vec<TxIn> = selected_utxos
+            .iter()
+            .map(|utxo| TxIn {
+                previous_output: OutPoint {
+                    txid: utxo.txid,
+                    vout: utxo.vout,
+                },
+                script_sig: ScriptBuf::new(),
+                sequence: Sequence::ENABLE_RBF_NO_LOCKTIME,
+                witness: Witness::new(),
+            })
+            .collect();
+
+        let change_address = self.rpc.get_new_address(None, None)?;
+        let change_script = change_address.assume_checked().script_pubkey();
+
+        let change_value = total_input - commit_amount - 500;
+        let commit_outputs = vec![
+            TxOut {
+                value: Amount::from_sat(commit_amount),
+                script_pubkey: commit_script.clone(),
+            },
+            TxOut {
+                value: Amount::from_sat(change_value),
+                script_pubkey: change_script.clone(),
+            },
+        ];
+
+        let commit_tx = Transaction {
+            version: Version::TWO,
+            lock_time: LockTime::ZERO,
+            input: commit_inputs,
+            output: commit_outputs,
+        };
+
+        let commit_hex = serialize_hex(&commit_tx);
+
+        // Sign commit transaction
+        let signed_commit: serde_json::Value = self.rpc.call(
+            "signrawtransactionwithwallet",
+            &[serde_json::json!(commit_hex)],
+        )?;
+
+        if !signed_commit["complete"].as_bool().unwrap_or(false) {
+            anyhow::bail!("Annex commit signing incomplete");
+        }
+
+        let signed_commit_hex = signed_commit["hex"].as_str().context("No hex in signed commit")?;
+
+        // Broadcast commit
+        let commit_txid: String = self.rpc.call("sendrawtransaction", &[serde_json::json!(signed_commit_hex)])?;
+        info!("Broadcast annex commit tx: {}", commit_txid);
+
+        let commit_txid_parsed = Txid::from_str(&commit_txid)?;
+
+        // Step 2: Create the reveal transaction with annex in witness
+        let reveal_change_address = self.rpc.get_new_address(None, None)?;
+        let reveal_change_script = reveal_change_address.assume_checked().script_pubkey();
+
+        let reveal_input = TxIn {
+            previous_output: OutPoint {
+                txid: commit_txid_parsed,
+                vout: 0,
+            },
+            script_sig: ScriptBuf::new(),
+            sequence: Sequence::ENABLE_RBF_NO_LOCKTIME,
+            witness: Witness::new(),
+        };
+
+        let reveal_output = TxOut {
+            value: Amount::from_sat(commit_amount - 500),
+            script_pubkey: reveal_change_script,
+        };
+
+        let mut reveal_tx = Transaction {
+            version: Version::TWO,
+            lock_time: LockTime::ZERO,
+            input: vec![reveal_input],
+            output: vec![reveal_output],
+        };
+
+        // For Taproot key-path spend, we need to sign the transaction
+        // Then append the annex to the witness
+
+        // Compute the sighash for Taproot key-path spend WITH annex
+        use bitcoin::sighash::{Annex, Prevouts, SighashCache, TapSighashType};
+
+        let prev_out = TxOut {
+            value: Amount::from_sat(commit_amount),
+            script_pubkey: commit_script.clone(),
+        };
+        let prev_outs = [prev_out];
+        let prevouts = Prevouts::All(&prev_outs);
+
+        // Create the Annex struct (validates 0x50 prefix)
+        let annex = Annex::new(&annex_data)
+            .map_err(|e| anyhow::anyhow!("Invalid annex data: {:?}", e))?;
+
+        let mut sighash_cache = SighashCache::new(&reveal_tx);
+        
+        // Use taproot_signature_hash with annex for key-path spend
+        // For key-path spend: leaf_hash_code_separator = None
+        let sighash = sighash_cache
+            .taproot_signature_hash(0, &prevouts, Some(annex), None, TapSighashType::Default)
+            .map_err(|e| anyhow::anyhow!("Failed to compute sighash with annex: {:?}", e))?;
+
+        // Tweak the keypair for signing (key-path spend, no merkle root)
+        let tweaked_keypair = keypair.tap_tweak(&secp, None);
+
+        // Sign the sighash
+        use bitcoin::secp256k1::Message;
+        let msg = Message::from_digest_slice(sighash.as_ref())
+            .map_err(|e| anyhow::anyhow!("Invalid sighash: {}", e))?;
+        let signature = secp.sign_schnorr(&msg, &tweaked_keypair.to_keypair());
+
+        // Build witness: [signature] [annex]
+        // The annex must be the last element and start with 0x50
+        let mut witness = Witness::new();
+        witness.push(signature.as_ref()); // 64-byte Schnorr signature
+        witness.push(&annex_data); // Annex data (starts with 0x50)
+
+        reveal_tx.input[0].witness = witness;
+
+        let reveal_hex = serialize_hex(&reveal_tx);
+
+        // Broadcast reveal transaction
+        // Note: Standard nodes may reject this, but libre relay nodes should accept it
+        let reveal_txid: String = self.rpc.call("sendrawtransaction", &[serde_json::json!(reveal_hex)])
+            .map_err(|e| anyhow::anyhow!("Failed to broadcast annex tx (may need libre relay): {}", e))?;
+
+        info!(
+            "Broadcast annex reveal tx: {} (commit: {})",
+            reveal_txid, commit_txid
+        );
+
+        Ok(CreatedTransaction {
+            txid: reveal_txid,
+            hex: reveal_hex,
+            anchor_vout: 0,
+            carrier: 3,
+            carrier_name: "taproot_annex".to_string(),
+        })
+    }
+
+    /// Create and broadcast a WitnessData transaction using commit+reveal pattern
+    /// Similar to inscriptions but uses a simpler data script (data drops + OP_TRUE)
+    fn create_and_broadcast_witness_data_tx(&self, data_script: ScriptBuf) -> Result<CreatedTransaction> {
+        let secp = Secp256k1::new();
+
+        // Use a NUMS (Nothing Up My Sleeve) point for the internal key
+        let internal_key = {
+            let nums_bytes: [u8; 32] = [
+                0x50, 0x92, 0x9b, 0x74, 0xc1, 0xa0, 0x49, 0x54, 0xb7, 0x8b, 0x4b, 0x60, 0x35, 0xe9,
+                0x7a, 0x5e, 0x07, 0x8a, 0x5a, 0x0f, 0x28, 0xec, 0x96, 0xd5, 0x47, 0xbf, 0xee, 0x9a,
+                0xce, 0x80, 0x3a, 0xc0,
+            ];
+            XOnlyPublicKey::from_slice(&nums_bytes)
+                .unwrap_or_else(|_| {
+                    let secret = SecretKey::from_slice(&[1u8; 32]).expect("valid key");
+                    let keypair = UntweakedKeypair::from_secret_key(&secp, &secret);
+                    XOnlyPublicKey::from_keypair(&keypair).0
+                })
+        };
+
+        // Build the Taproot tree with the data script as a leaf
+        let taproot_builder = TaprootBuilder::new()
+            .add_leaf(0, data_script.clone())
+            .map_err(|e| anyhow::anyhow!("Failed to build Taproot tree: {:?}", e))?;
+
+        let taproot_info: TaprootSpendInfo = taproot_builder
+            .finalize(&secp, internal_key)
+            .map_err(|e| anyhow::anyhow!("Failed to finalize Taproot: {:?}", e))?;
+
+        let output_key = taproot_info.output_key();
+        let commit_script = ScriptBuf::new_p2tr_tweaked(output_key);
+
+        debug!("WitnessData commit script: {}", hex::encode(commit_script.as_bytes()));
+
+        // Step 1: Create the commit transaction
+        let commit_amount = 10000u64;
+        let utxos = self.rpc.list_unspent(Some(1), None, None, None, None)?;
+        if utxos.is_empty() {
+            anyhow::bail!("No UTXOs available for WitnessData commit");
+        }
+
+        let mut selected_utxos = Vec::new();
+        let mut total_input = 0u64;
+        let required = commit_amount + 1000;
+
+        for utxo in &utxos {
+            selected_utxos.push(utxo);
+            total_input += utxo.amount.to_sat();
+            if total_input >= required + 546 {
+                break;
+            }
+        }
+
+        if total_input < required {
+            anyhow::bail!("Insufficient funds for witness data commit: need {} sats", required);
+        }
+
+        let commit_inputs: Vec<TxIn> = selected_utxos
+            .iter()
+            .map(|utxo| TxIn {
+                previous_output: OutPoint {
+                    txid: utxo.txid,
+                    vout: utxo.vout,
+                },
+                script_sig: ScriptBuf::new(),
+                sequence: Sequence::ENABLE_RBF_NO_LOCKTIME,
+                witness: Witness::new(),
+            })
+            .collect();
+
+        let change_address = self.rpc.get_new_address(None, None)?;
+        let change_script = change_address.assume_checked().script_pubkey();
+
+        let change_value = total_input - commit_amount - 500;
+        let commit_outputs = vec![
+            TxOut {
+                value: Amount::from_sat(commit_amount),
+                script_pubkey: commit_script.clone(),
+            },
+            TxOut {
+                value: Amount::from_sat(change_value),
+                script_pubkey: change_script.clone(),
+            },
+        ];
+
+        let commit_tx = Transaction {
+            version: Version::TWO,
+            lock_time: LockTime::ZERO,
+            input: commit_inputs,
+            output: commit_outputs,
+        };
+
+        let commit_hex = serialize_hex(&commit_tx);
+
+        // Sign commit transaction
+        let signed_commit: serde_json::Value = self.rpc.call(
+            "signrawtransactionwithwallet",
+            &[serde_json::json!(commit_hex)],
+        )?;
+
+        if !signed_commit["complete"].as_bool().unwrap_or(false) {
+            anyhow::bail!("WitnessData commit signing incomplete");
+        }
+
+        let signed_commit_hex = signed_commit["hex"].as_str().context("No hex in signed commit")?;
+
+        // Broadcast commit
+        let commit_txid: String = self.rpc.call("sendrawtransaction", &[serde_json::json!(signed_commit_hex)])?;
+        info!("Broadcast witness data commit tx: {}", commit_txid);
+
+        let commit_txid_parsed = Txid::from_str(&commit_txid)?;
+
+        // Step 2: Create the reveal transaction
+        let reveal_change_address = self.rpc.get_new_address(None, None)?;
+        let reveal_change_script = reveal_change_address.assume_checked().script_pubkey();
+
+        let reveal_input = TxIn {
+            previous_output: OutPoint {
+                txid: commit_txid_parsed,
+                vout: 0,
+            },
+            script_sig: ScriptBuf::new(),
+            sequence: Sequence::ENABLE_RBF_NO_LOCKTIME,
+            witness: Witness::new(),
+        };
+
+        let reveal_output = TxOut {
+            value: Amount::from_sat(commit_amount - 500),
+            script_pubkey: reveal_change_script,
+        };
+
+        let mut reveal_tx = Transaction {
+            version: Version::TWO,
+            lock_time: LockTime::ZERO,
+            input: vec![reveal_input],
+            output: vec![reveal_output],
+        };
+
+        // Build the witness for script-path spend
+        let control_block = taproot_info
+            .control_block(&(data_script.clone(), LeafVersion::TapScript))
+            .context("Failed to build control block")?;
+
+        // Witness: [script] [control block]
+        // The data script drops all data and returns true, no signature needed
+        let mut witness = Witness::new();
+        witness.push(data_script.as_bytes());
+        witness.push(control_block.serialize());
+
+        reveal_tx.input[0].witness = witness;
+
+        let reveal_hex = serialize_hex(&reveal_tx);
+
+        // Broadcast reveal transaction
+        let reveal_txid: String = self.rpc.call("sendrawtransaction", &[serde_json::json!(reveal_hex)])?;
+
+        info!(
+            "Broadcast witness data reveal tx: {} (commit: {})",
+            reveal_txid, commit_txid
+        );
+
+        Ok(CreatedTransaction {
+            txid: reveal_txid,
+            hex: reveal_hex,
+            anchor_vout: 0,
+            carrier: 4,
+            carrier_name: "witness_data".to_string(),
         })
     }
 
@@ -280,6 +1046,72 @@ impl WalletService {
             &[serde_json::json!(tx_hex)],
         )?;
         Ok(txid)
+    }
+
+    /// Get raw transaction by txid
+    pub fn get_raw_transaction(&self, txid: &str) -> Result<(String, serde_json::Value, Option<u64>)> {
+        // Get raw hex
+        let hex: String = self.rpc.call(
+            "getrawtransaction",
+            &[serde_json::json!(txid)],
+        )?;
+
+        // Get decoded transaction
+        let decoded: serde_json::Value = self.rpc.call(
+            "getrawtransaction",
+            &[serde_json::json!(txid), serde_json::json!(true)],
+        )?;
+
+        // Calculate fee by summing input values and subtracting output values
+        let fee = self.calculate_tx_fee(&decoded);
+
+        Ok((hex, decoded, fee))
+    }
+
+    /// Calculate transaction fee by fetching input values
+    fn calculate_tx_fee(&self, decoded: &serde_json::Value) -> Option<u64> {
+        let vin = decoded.get("vin")?.as_array()?;
+        let vout = decoded.get("vout")?.as_array()?;
+
+        // Sum output values (in BTC, convert to sats)
+        let output_total: f64 = vout
+            .iter()
+            .filter_map(|out| out.get("value")?.as_f64())
+            .sum();
+
+        // Sum input values by fetching each input's previous output
+        let mut input_total: f64 = 0.0;
+        for input in vin {
+            // Skip coinbase inputs
+            if input.get("coinbase").is_some() {
+                return None; // Coinbase txs have no fee
+            }
+
+            let prev_txid = input.get("txid")?.as_str()?;
+            let prev_vout = input.get("vout")?.as_u64()? as usize;
+
+            // Fetch previous transaction
+            if let Ok(prev_decoded) = self.rpc.call::<serde_json::Value>(
+                "getrawtransaction",
+                &[serde_json::json!(prev_txid), serde_json::json!(true)],
+            ) {
+                if let Some(prev_outputs) = prev_decoded.get("vout").and_then(|v| v.as_array()) {
+                    if let Some(prev_out) = prev_outputs.get(prev_vout) {
+                        if let Some(value) = prev_out.get("value").and_then(|v| v.as_f64()) {
+                            input_total += value;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Fee in satoshis
+        let fee_btc = input_total - output_total;
+        if fee_btc >= 0.0 {
+            Some((fee_btc * 100_000_000.0).round() as u64)
+        } else {
+            None
+        }
     }
 }
 

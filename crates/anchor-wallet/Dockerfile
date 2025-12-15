@@ -13,15 +13,14 @@ WORKDIR /app
 COPY Cargo.toml Cargo.lock* ./
 COPY crates/anchor-core ./crates/anchor-core
 COPY crates/anchor-wallet ./crates/anchor-wallet
+COPY crates/anchor-wallet-lib ./crates/anchor-wallet-lib
 
 # Create dummy files for other workspace members
 RUN mkdir -p crates/anchor-indexer/src && echo "fn main() {}" > crates/anchor-indexer/src/main.rs
 RUN mkdir -p crates/anchor-testnet/src && echo "fn main() {}" > crates/anchor-testnet/src/main.rs
-RUN mkdir -p crates/anchor-wallet-lib/src && echo "" > crates/anchor-wallet-lib/src/lib.rs
 RUN mkdir -p explorer/backend/src && echo "fn main() {}" > explorer/backend/src/main.rs
 COPY crates/anchor-indexer/Cargo.toml ./crates/anchor-indexer/
 COPY crates/anchor-testnet/Cargo.toml ./crates/anchor-testnet/
-COPY crates/anchor-wallet-lib/Cargo.toml ./crates/anchor-wallet-lib/
 COPY explorer/backend/Cargo.toml ./explorer/backend/
 
 # Build the wallet

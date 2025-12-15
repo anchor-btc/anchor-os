@@ -28,7 +28,8 @@ services:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - ./docker/postgres/migrations:/docker-entrypoint-initdb.d/migrations
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U anchor -d anchor"]
       interval: 5s
@@ -98,6 +99,7 @@ services:
       args:
         NEXT_PUBLIC_API_URL: http://localhost:3002
         NEXT_PUBLIC_WALLET_URL: http://localhost:3001
+        NEXT_PUBLIC_BTC_EXPLORER_URL: http://localhost:3003
     container_name: anchor-explorer-web
     ports:
       - "3000:3000"
@@ -122,6 +124,34 @@ services:
     depends_on:
       - wallet
       - indexer
+    networks:
+      - anchor-network
+    restart: unless-stopped
+
+  # Bitcoin Block Explorer (btc-rpc-explorer)
+  btc-explorer:
+    image: getumbrel/btc-rpc-explorer:v3.4.0
+    container_name: anchor-btc-explorer
+    ports:
+      - "3003:3002"
+    environment:
+      BTCEXP_HOST: 0.0.0.0
+      BTCEXP_PORT: 3002
+      BTCEXP_BITCOIND_HOST: bitcoin
+      BTCEXP_BITCOIND_PORT: 18443
+      BTCEXP_BITCOIND_USER: anchor
+      BTCEXP_BITCOIND_PASS: anchor
+      BTCEXP_BITCOIND_RPC_TIMEOUT: 10000
+      BTCEXP_ADDRESS_API: ""
+      BTCEXP_SLOW_DEVICE_MODE: "false"
+      BTCEXP_NO_INMEMORY_RPC_CACHE: "false"
+      BTCEXP_PRIVACY_MODE: "false"
+      BTCEXP_NO_RATES: "true"
+      BTCEXP_RPC_ALLOWALL: "true"
+      BTCEXP_BASIC_AUTH_PASSWORD: ""
+    depends_on:
+      bitcoin:
+        condition: service_healthy
     networks:
       - anchor-network
     restart: unless-stopped

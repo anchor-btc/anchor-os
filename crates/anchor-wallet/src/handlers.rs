@@ -120,6 +120,9 @@ pub struct CreateMessageRequest {
     /// Additional anchor references [(txid, vout), ...]
     #[serde(default)]
     pub additional_anchors: Vec<AnchorRef>,
+    /// Carrier type (0=op_return, 1=inscription, 2=stamps, 3=annex, 4=witness)
+    /// Default: 0 (OP_RETURN)
+    pub carrier: Option<u8>,
 }
 
 fn default_kind() -> u8 {
@@ -148,6 +151,8 @@ pub struct CreateMessageResponse {
     pub txid: String,
     pub vout: u32,
     pub hex: String,
+    pub carrier: u8,
+    pub carrier_name: String,
 }
 
 /// Create and broadcast an ANCHOR message
@@ -183,10 +188,11 @@ pub async fn create_message(
         .collect();
 
     info!(
-        "Creating ANCHOR message: kind={}, body_len={}, parent={:?}",
+        "Creating ANCHOR message: kind={}, body_len={}, parent={:?}, carrier={:?}",
         req.kind,
         body.len(),
-        req.parent_txid
+        req.parent_txid,
+        req.carrier
     );
 
     match state.wallet.create_anchor_transaction(
@@ -195,13 +201,19 @@ pub async fn create_message(
         req.parent_txid,
         req.parent_vout,
         additional_anchors,
+        req.carrier,
     ) {
         Ok(result) => {
-            info!("Created transaction: {}", result.txid);
+            info!(
+                "Created transaction: {} with carrier {}",
+                result.txid, result.carrier_name
+            );
             Ok(Json(CreateMessageResponse {
                 txid: result.txid,
                 vout: result.anchor_vout,
                 hex: result.hex,
+                carrier: result.carrier,
+                carrier_name: result.carrier_name,
             }))
         }
         Err(e) => {
@@ -290,6 +302,55 @@ pub async fn mine_blocks(
         Err(e) => {
             error!("Failed to mine: {}", e);
             Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        }
+    }
+}
+
+/// Response for raw transaction
+#[derive(Serialize, ToSchema)]
+pub struct RawTxResponse {
+    /// Transaction ID
+    pub txid: String,
+    /// Raw transaction hex
+    pub hex: String,
+    /// Decoded transaction info
+    pub decoded: Option<serde_json::Value>,
+    /// Transaction fee in satoshis
+    pub fee_sats: Option<u64>,
+}
+
+/// Get raw transaction by txid
+#[utoipa::path(
+    get,
+    path = "/wallet/rawtx/{txid}",
+    tag = "Transaction",
+    params(
+        ("txid" = String, Path, description = "Transaction ID")
+    ),
+    responses(
+        (status = 200, description = "Raw transaction", body = RawTxResponse),
+        (status = 404, description = "Transaction not found"),
+        (status = 500, description = "Internal server error")
+    )
+)]
+pub async fn get_raw_tx(
+    State(state): State<Arc<AppState>>,
+    axum::extract::Path(txid): axum::extract::Path<String>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    match state.wallet.get_raw_transaction(&txid) {
+        Ok((hex, decoded, fee_sats)) => Ok(Json(RawTxResponse {
+            txid,
+            hex,
+            decoded: Some(decoded),
+            fee_sats,
+        })),
+        Err(e) => {
+            error!("Failed to get raw tx {}: {}", txid, e);
+            if e.to_string().contains("not found") {
+                Err((StatusCode::NOT_FOUND, "Transaction not found".to_string()))
+            } else {
+                Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+            }
         }
     }
 }

@@ -61,6 +61,28 @@ const SAMPLE_IMAGES: &[(&str, &str)] = &[
     ("red", "89504e470d0a1a0a0000000d4948445200000001000000010802000000907753de0000000c4944415478da63f8cf0000000201010078a834d00000000049454e44ae426082"),
 ];
 
+/// Carrier types for transactions
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CarrierType {
+    OpReturn = 0,
+    Inscription = 1,
+    Stamps = 2,
+    TaprootAnnex = 3,
+    WitnessData = 4,
+}
+
+impl CarrierType {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            CarrierType::OpReturn => "op_return",
+            CarrierType::Inscription => "inscription",
+            CarrierType::Stamps => "stamps",
+            CarrierType::TaprootAnnex => "taproot_annex",
+            CarrierType::WitnessData => "witness_data",
+        }
+    }
+}
+
 /// Result of creating a message
 #[derive(Debug)]
 pub struct MessageResult {
@@ -70,6 +92,7 @@ pub struct MessageResult {
     pub is_image: bool,
     pub parent_txid: Option<String>,
     pub parent_vout: Option<u32>,
+    pub carrier: CarrierType,
 }
 
 /// Response from wallet create-message endpoint
@@ -79,6 +102,9 @@ struct CreateMessageResponse {
     vout: u32,
     #[allow(dead_code)]
     hex: String,
+    carrier: u8,
+    #[allow(dead_code)]
+    carrier_name: String,
 }
 
 /// Response from wallet mine endpoint
@@ -108,6 +134,8 @@ struct CreateMessageRequest {
     parent_txid: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     parent_vout: Option<u8>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    carrier: Option<u8>,
 }
 
 /// Message generator that interacts with the wallet service
@@ -172,25 +200,51 @@ impl MessageGenerator {
         Ok(response.blocks)
     }
 
-    /// Generate a random message (root, reply, or image)
+    /// Generate a random message (root, reply, or image) with random carrier
     pub async fn generate_message(&mut self) -> Result<MessageResult> {
         // Decide what type of message to create
         let roll: f64 = self.rng.gen();
-        
+
+        // Randomly select a carrier (mostly OP_RETURN, occasionally Stamps)
+        let carrier = self.random_carrier();
+
         if roll < 0.15 {
             // 15% chance to create an image
-            self.create_image().await
+            self.create_image(carrier).await
         } else if !self.message_history.is_empty() && roll < 0.60 {
             // 45% chance to reply (if we have history)
-            self.create_reply().await
+            self.create_reply(carrier).await
         } else {
             // Otherwise create a root text message
-            self.create_root().await
+            self.create_root(carrier).await
+        }
+    }
+
+    /// Select a random carrier type
+    fn random_carrier(&mut self) -> CarrierType {
+        // Weighted selection:
+        // 30% OP_RETURN (default, most efficient, prunable)
+        // 20% Stamps (permanent, unprunable)
+        // 20% Inscription (Ordinals-style, witness discount)
+        // 15% TaprootAnnex (witness data with annex, needs libre relay)
+        // 15% WitnessData (witness data with Tapscript)
+        let roll: f64 = self.rng.gen();
+
+        if roll < 0.30 {
+            CarrierType::OpReturn
+        } else if roll < 0.50 {
+            CarrierType::Stamps
+        } else if roll < 0.70 {
+            CarrierType::Inscription
+        } else if roll < 0.85 {
+            CarrierType::TaprootAnnex
+        } else {
+            CarrierType::WitnessData
         }
     }
 
     /// Create a root message (new thread)
-    async fn create_root(&mut self) -> Result<MessageResult> {
+    async fn create_root(&mut self, carrier: CarrierType) -> Result<MessageResult> {
         let body = self.random_message();
 
         let request = CreateMessageRequest {
@@ -199,6 +253,7 @@ impl MessageGenerator {
             body_is_hex: false,
             parent_txid: None,
             parent_vout: None,
+            carrier: Some(carrier as u8),
         };
 
         let response = self.send_create_message(&request).await?;
@@ -211,6 +266,15 @@ impl MessageGenerator {
             self.message_history.remove(0);
         }
 
+        let actual_carrier = match response.carrier {
+            0 => CarrierType::OpReturn,
+            1 => CarrierType::Inscription,
+            2 => CarrierType::Stamps,
+            3 => CarrierType::TaprootAnnex,
+            4 => CarrierType::WitnessData,
+            _ => CarrierType::OpReturn,
+        };
+
         Ok(MessageResult {
             txid: response.txid,
             vout: response.vout,
@@ -218,11 +282,12 @@ impl MessageGenerator {
             is_image: false,
             parent_txid: None,
             parent_vout: None,
+            carrier: actual_carrier,
         })
     }
 
     /// Create a reply to an existing message
-    async fn create_reply(&mut self) -> Result<MessageResult> {
+    async fn create_reply(&mut self, carrier: CarrierType) -> Result<MessageResult> {
         // Pick a random parent from history
         let parent = self
             .message_history
@@ -238,6 +303,7 @@ impl MessageGenerator {
             body_is_hex: false,
             parent_txid: Some(parent.0.clone()),
             parent_vout: Some(parent.1 as u8),
+            carrier: Some(carrier as u8),
         };
 
         let response = self.send_create_message(&request).await?;
@@ -250,6 +316,15 @@ impl MessageGenerator {
             self.message_history.remove(0);
         }
 
+        let actual_carrier = match response.carrier {
+            0 => CarrierType::OpReturn,
+            1 => CarrierType::Inscription,
+            2 => CarrierType::Stamps,
+            3 => CarrierType::TaprootAnnex,
+            4 => CarrierType::WitnessData,
+            _ => CarrierType::OpReturn,
+        };
+
         Ok(MessageResult {
             txid: response.txid,
             vout: response.vout,
@@ -257,17 +332,22 @@ impl MessageGenerator {
             is_image: false,
             parent_txid: Some(parent.0),
             parent_vout: Some(parent.1),
+            carrier: actual_carrier,
         })
     }
 
     /// Create an image message
-    async fn create_image(&mut self) -> Result<MessageResult> {
+    async fn create_image(&mut self, carrier: CarrierType) -> Result<MessageResult> {
         // Pick a random sample image
         let (color, hex_data) = SAMPLE_IMAGES
             .choose(&mut self.rng)
             .unwrap_or(&SAMPLE_IMAGES[0]);
 
-        tracing::info!("Creating {} pixel image message", color);
+        tracing::info!(
+            "Creating {} pixel image message with {} carrier",
+            color,
+            carrier.as_str()
+        );
 
         let request = CreateMessageRequest {
             kind: 4, // Image
@@ -275,6 +355,7 @@ impl MessageGenerator {
             body_is_hex: true,
             parent_txid: None,
             parent_vout: None,
+            carrier: Some(carrier as u8),
         };
 
         let response = self.send_create_message(&request).await?;
@@ -287,6 +368,15 @@ impl MessageGenerator {
             self.message_history.remove(0);
         }
 
+        let actual_carrier = match response.carrier {
+            0 => CarrierType::OpReturn,
+            1 => CarrierType::Inscription,
+            2 => CarrierType::Stamps,
+            3 => CarrierType::TaprootAnnex,
+            4 => CarrierType::WitnessData,
+            _ => CarrierType::OpReturn,
+        };
+
         Ok(MessageResult {
             txid: response.txid,
             vout: response.vout,
@@ -294,6 +384,7 @@ impl MessageGenerator {
             is_image: true,
             parent_txid: None,
             parent_vout: None,
+            carrier: actual_carrier,
         })
     }
 

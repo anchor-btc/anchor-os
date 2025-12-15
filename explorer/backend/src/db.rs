@@ -5,7 +5,8 @@ use chrono::{DateTime, Utc};
 use sqlx::postgres::PgPool;
 
 use crate::models::{
-    AnchorResponse, ListParams, MessageResponse, StatsResponse, ThreadNodeResponse, ThreadResponse,
+    carrier_name, AnchorResponse, CarrierStats, ListParams, MessageResponse, StatsResponse,
+    ThreadNodeResponse, ThreadResponse,
 };
 
 /// Database connection pool wrapper
@@ -22,6 +23,7 @@ struct MessageRow {
     vout: i32,
     block_height: Option<i32>,
     kind: i16,
+    carrier: i16,
     body: Vec<u8>,
     created_at: DateTime<Utc>,
 }
@@ -34,6 +36,7 @@ struct MessageRowWithReplyCount {
     vout: i32,
     block_height: Option<i32>,
     kind: i16,
+    carrier: i16,
     body: Vec<u8>,
     created_at: DateTime<Utc>,
     reply_count: i64,
@@ -94,6 +97,34 @@ impl Database {
                 .fetch_one(&self.pool)
                 .await?;
 
+        // Get carrier stats
+        let op_return: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM messages WHERE carrier = 0")
+            .fetch_one(&self.pool)
+            .await
+            .unwrap_or((0,));
+
+        let inscription: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM messages WHERE carrier = 1")
+            .fetch_one(&self.pool)
+            .await
+            .unwrap_or((0,));
+
+        let stamps: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM messages WHERE carrier = 2")
+            .fetch_one(&self.pool)
+            .await
+            .unwrap_or((0,));
+
+        let taproot_annex: (i64,) =
+            sqlx::query_as("SELECT COUNT(*) FROM messages WHERE carrier = 3")
+                .fetch_one(&self.pool)
+                .await
+                .unwrap_or((0,));
+
+        let witness_data: (i64,) =
+            sqlx::query_as("SELECT COUNT(*) FROM messages WHERE carrier = 4")
+                .fetch_one(&self.pool)
+                .await
+                .unwrap_or((0,));
+
         Ok(StatsResponse {
             total_messages: total_messages.0,
             total_roots: total_roots.0,
@@ -103,6 +134,13 @@ impl Database {
             orphan_anchors: orphan_anchors.0,
             ambiguous_anchors: ambiguous_anchors.0,
             last_block_height: last_block.0,
+            carriers: CarrierStats {
+                op_return: op_return.0,
+                inscription: inscription.0,
+                stamps: stamps.0,
+                taproot_annex: taproot_annex.0,
+                witness_data: witness_data.0,
+            },
         })
     }
 
@@ -124,7 +162,7 @@ impl Database {
         let rows: Vec<MessageRow> = if let Some(kind) = params.kind {
             sqlx::query_as(
                 r#"
-                SELECT id, txid, vout, block_height, kind, body, created_at
+                SELECT id, txid, vout, block_height, kind, carrier, body, created_at
                 FROM messages
                 WHERE kind = $1
                 ORDER BY created_at DESC
@@ -139,7 +177,7 @@ impl Database {
         } else {
             sqlx::query_as(
                 r#"
-                SELECT id, txid, vout, block_height, kind, body, created_at
+                SELECT id, txid, vout, block_height, kind, carrier, body, created_at
                 FROM messages
                 ORDER BY created_at DESC
                 LIMIT $1 OFFSET $2
@@ -170,7 +208,7 @@ impl Database {
 
         let rows: Vec<MessageRow> = sqlx::query_as(
             r#"
-            SELECT m.id, m.txid, m.vout, m.block_height, m.kind, m.body, m.created_at
+            SELECT m.id, m.txid, m.vout, m.block_height, m.kind, m.carrier, m.body, m.created_at
             FROM messages m
             WHERE NOT EXISTS (SELECT 1 FROM anchors a WHERE a.message_id = m.id)
             ORDER BY m.created_at DESC
@@ -225,6 +263,11 @@ impl Database {
             bind_index += 1;
         }
 
+        if let Some(carrier) = params.carrier {
+            conditions.push(format!("m.carrier = ${}", bind_index));
+            bind_index += 1;
+        }
+
         if let Some(ref text) = params.text {
             conditions.push(format!("(convert_from(m.body, 'UTF8') ILIKE ${} OR encode(m.body, 'hex') ILIKE ${})", bind_index, bind_index));
             bind_index += 1;
@@ -269,7 +312,7 @@ impl Database {
         // Build main query with subquery for reply_count to allow sorting
         let main_query = format!(
             r#"
-            SELECT m.id, m.txid, m.vout, m.block_height, m.kind, m.body, m.created_at,
+            SELECT m.id, m.txid, m.vout, m.block_height, m.kind, m.carrier, m.body, m.created_at,
                    (SELECT COUNT(*) FROM anchors a2 WHERE a2.txid_prefix = substring(m.txid from 1 for 8) AND a2.vout = m.vout AND a2.anchor_index = 0) as reply_count
             FROM messages m
             WHERE {}
@@ -311,6 +354,11 @@ impl Database {
         if let Some(kind) = params.kind {
             count_q = count_q.bind(kind);
             main_q = main_q.bind(kind);
+        }
+
+        if let Some(carrier) = params.carrier {
+            count_q = count_q.bind(carrier);
+            main_q = main_q.bind(carrier);
         }
 
         if let Some(ref text) = params.text {
@@ -358,7 +406,7 @@ impl Database {
     pub async fn get_message(&self, txid: &[u8], vout: i32) -> Result<Option<MessageResponse>> {
         let row: Option<MessageRow> = sqlx::query_as(
             r#"
-            SELECT id, txid, vout, block_height, kind, body, created_at
+            SELECT id, txid, vout, block_height, kind, carrier, body, created_at
             FROM messages
             WHERE txid = $1 AND vout = $2
             "#,
@@ -380,7 +428,7 @@ impl Database {
 
         let rows: Vec<MessageRow> = sqlx::query_as(
             r#"
-            SELECT m.id, m.txid, m.vout, m.block_height, m.kind, m.body, m.created_at
+            SELECT m.id, m.txid, m.vout, m.block_height, m.kind, m.carrier, m.body, m.created_at
             FROM messages m
             INNER JOIN anchors a ON a.message_id = m.id
             WHERE a.anchor_index = 0
@@ -411,7 +459,7 @@ impl Database {
         // Get all root messages (no anchors)
         let rows: Vec<MessageRow> = sqlx::query_as(
             r#"
-            SELECT m.id, m.txid, m.vout, m.block_height, m.kind, m.body, m.created_at
+            SELECT m.id, m.txid, m.vout, m.block_height, m.kind, m.carrier, m.body, m.created_at
             FROM messages m
             WHERE NOT EXISTS (
                 SELECT 1 FROM anchors a WHERE a.message_id = m.id
@@ -556,6 +604,8 @@ impl Database {
             block_height: row.block_height,
             kind: row.kind,
             kind_name: kind_to_name(row.kind),
+            carrier: row.carrier,
+            carrier_name: carrier_name(row.carrier).to_string(),
             body_hex: hex::encode(&row.body),
             body_text,
             anchors,
@@ -565,7 +615,10 @@ impl Database {
     }
 
     /// Convert a database row with precomputed reply count to a response
-    async fn row_with_count_to_response(&self, row: MessageRowWithReplyCount) -> Result<MessageResponse> {
+    async fn row_with_count_to_response(
+        &self,
+        row: MessageRowWithReplyCount,
+    ) -> Result<MessageResponse> {
         // Get anchors
         let anchor_rows: Vec<AnchorRow> = sqlx::query_as(
             r#"
@@ -608,6 +661,8 @@ impl Database {
             block_height: row.block_height,
             kind: row.kind,
             kind_name: kind_to_name(row.kind),
+            carrier: row.carrier,
+            carrier_name: carrier_name(row.carrier).to_string(),
             body_hex: hex::encode(&row.body),
             body_text,
             anchors,

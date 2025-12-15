@@ -13,11 +13,25 @@ pub struct MessageResponse {
     pub block_height: Option<i32>,
     pub kind: i16,
     pub kind_name: String,
+    pub carrier: i16,
+    pub carrier_name: String,
     pub body_hex: String,
     pub body_text: Option<String>,
     pub anchors: Vec<AnchorResponse>,
     pub reply_count: i64,
     pub created_at: DateTime<Utc>,
+}
+
+/// Get carrier name from carrier type ID
+pub fn carrier_name(carrier: i16) -> &'static str {
+    match carrier {
+        0 => "op_return",
+        1 => "inscription",
+        2 => "stamps",
+        3 => "taproot_annex",
+        4 => "witness_data",
+        _ => "unknown",
+    }
 }
 
 /// Anchor response for the API
@@ -42,6 +56,17 @@ pub struct StatsResponse {
     pub orphan_anchors: i64,
     pub ambiguous_anchors: i64,
     pub last_block_height: i32,
+    pub carriers: CarrierStats,
+}
+
+/// Statistics per carrier type
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+pub struct CarrierStats {
+    pub op_return: i64,
+    pub inscription: i64,
+    pub stamps: i64,
+    pub taproot_annex: i64,
+    pub witness_data: i64,
 }
 
 /// Paginated list response
@@ -118,6 +143,8 @@ pub struct FilterParams {
     pub min_replies: Option<i32>,
     /// Sort order: "newest", "oldest", "replies", "size"
     pub sort: Option<String>,
+    /// Filter by carrier type (0=op_return, 1=inscription, 2=stamps, 3=annex, 4=witness)
+    pub carrier: Option<i16>,
 }
 
 fn default_page() -> i32 {

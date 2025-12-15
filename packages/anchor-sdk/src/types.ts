@@ -27,9 +27,148 @@ export const ANCHOR_SIZE = 9;
 export const MIN_PAYLOAD_SIZE = 6;
 
 /**
- * Maximum OP_RETURN payload size
+ * Maximum OP_RETURN payload size (legacy)
  */
 export const MAX_OP_RETURN_SIZE = 80;
+
+/**
+ * Maximum OP_RETURN payload size (v30+)
+ */
+export const MAX_OP_RETURN_SIZE_V30 = 100_000;
+
+/**
+ * Maximum witness data size (~4MB)
+ */
+export const MAX_WITNESS_SIZE = 4_000_000;
+
+/**
+ * Carrier status
+ */
+export enum CarrierStatus {
+  /** Fully functional and actively used */
+  Active = "active",
+  /** Reserved for future use, may not relay by default */
+  Reserved = "reserved",
+  /** Proposed but not yet implemented in Bitcoin */
+  Proposed = "proposed",
+  /** Legacy, not recommended for new use */
+  Deprecated = "deprecated",
+}
+
+/**
+ * Carrier type for embedding ANCHOR data
+ */
+export enum CarrierType {
+  /** OP_RETURN output (default, simplest) */
+  OpReturn = 0,
+  /** Ordinals-style inscription in witness */
+  Inscription = 1,
+  /** Stamps bare multisig (permanent, unprunable) */
+  Stamps = 2,
+  /** Taproot annex field */
+  TaprootAnnex = 3,
+  /** Raw witness data in Tapscript */
+  WitnessData = 4,
+}
+
+/**
+ * Carrier information and capabilities
+ */
+export interface CarrierInfo {
+  /** Carrier type */
+  type: CarrierType;
+  /** Human-readable name */
+  name: string;
+  /** Maximum payload size in bytes */
+  maxSize: number;
+  /** Whether data can be pruned by nodes */
+  isPrunable: boolean;
+  /** Whether carrier impacts UTXO set size */
+  utxoImpact: boolean;
+  /** Whether carrier benefits from witness discount (75%) */
+  witnessDiscount: boolean;
+  /** Current status of this carrier */
+  status: CarrierStatus;
+}
+
+/**
+ * Get carrier info by type
+ */
+export function getCarrierInfo(type: CarrierType): CarrierInfo {
+  switch (type) {
+    case CarrierType.OpReturn:
+      return {
+        type: CarrierType.OpReturn,
+        name: "op_return",
+        maxSize: MAX_OP_RETURN_SIZE,
+        isPrunable: true,
+        utxoImpact: false,
+        witnessDiscount: false,
+        status: CarrierStatus.Active,
+      };
+    case CarrierType.Inscription:
+      return {
+        type: CarrierType.Inscription,
+        name: "inscription",
+        maxSize: MAX_WITNESS_SIZE,
+        isPrunable: true,
+        utxoImpact: false,
+        witnessDiscount: true,
+        status: CarrierStatus.Active,
+      };
+    case CarrierType.Stamps:
+      return {
+        type: CarrierType.Stamps,
+        name: "stamps",
+        maxSize: 8000,
+        isPrunable: false,
+        utxoImpact: true,
+        witnessDiscount: false,
+        status: CarrierStatus.Active,
+      };
+    case CarrierType.TaprootAnnex:
+      return {
+        type: CarrierType.TaprootAnnex,
+        name: "taproot_annex",
+        maxSize: 10000,
+        isPrunable: true,
+        utxoImpact: false,
+        witnessDiscount: true,
+        status: CarrierStatus.Reserved,
+      };
+    case CarrierType.WitnessData:
+      return {
+        type: CarrierType.WitnessData,
+        name: "witness_data",
+        maxSize: MAX_WITNESS_SIZE,
+        isPrunable: true,
+        utxoImpact: false,
+        witnessDiscount: true,
+        status: CarrierStatus.Active,
+      };
+    default:
+      throw new Error(`Unknown carrier type: ${type}`);
+  }
+}
+
+/**
+ * Get carrier name from type
+ */
+export function getCarrierName(type: CarrierType): string {
+  return getCarrierInfo(type).name;
+}
+
+/**
+ * Get all active carrier types
+ */
+export function getActiveCarriers(): CarrierType[] {
+  return [
+    CarrierType.OpReturn,
+    CarrierType.Inscription,
+    CarrierType.Stamps,
+    CarrierType.WitnessData,
+  ];
+}
 
 /**
  * Message kind/type
@@ -96,6 +235,24 @@ export interface CreateMessageOptions {
   bodyBytes?: Uint8Array;
   /** Parent references (txid:vout pairs) */
   anchors?: Array<{ txid: string; vout: number }>;
+  /** Carrier type to use (default: auto-select) */
+  carrier?: CarrierType;
+}
+
+/**
+ * Carrier selection preferences
+ */
+export interface CarrierPreferences {
+  /** Require permanent (non-prunable) storage */
+  requirePermanent?: boolean;
+  /** Maximum acceptable fee in satoshis */
+  maxFee?: number;
+  /** Preferred carriers in order of preference */
+  preferred?: CarrierType[];
+  /** Carriers to exclude from selection */
+  exclude?: CarrierType[];
+  /** Fee rate in sat/vB */
+  feeRate?: number;
 }
 
 /**
@@ -157,6 +314,8 @@ export interface TransactionResult {
   hex: string;
   /** Output index of the ANCHOR message */
   vout: number;
+  /** Carrier type used */
+  carrier: CarrierType;
 }
 
 /**

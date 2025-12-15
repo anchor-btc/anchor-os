@@ -110,6 +110,67 @@ export default function StatsPage() {
         </div>
       </section>
 
+      {/* Carrier Stats */}
+      {stats.carriers && (
+        <section>
+          <h2 className="text-xl font-semibold mb-4 text-muted-foreground">
+            Carriers
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div className="bg-card border border-border rounded-lg p-5">
+              <div className="text-blue-500 mb-3">
+                <span className="text-2xl">📤</span>
+              </div>
+              <p className="text-3xl font-bold text-foreground mb-1">
+                {(stats.carriers.op_return || 0).toLocaleString()}
+              </p>
+              <p className="text-sm text-muted-foreground">OP_RETURN</p>
+              <p className="text-xs text-muted-foreground mt-1">Default carrier</p>
+            </div>
+            <div className="bg-card border border-border rounded-lg p-5">
+              <div className="text-orange-500 mb-3">
+                <span className="text-2xl">🖼️</span>
+              </div>
+              <p className="text-3xl font-bold text-foreground mb-1">
+                {(stats.carriers.inscription || 0).toLocaleString()}
+              </p>
+              <p className="text-sm text-muted-foreground">Inscriptions</p>
+              <p className="text-xs text-muted-foreground mt-1">Ordinals-style</p>
+            </div>
+            <div className="bg-card border border-border rounded-lg p-5">
+              <div className="text-green-500 mb-3">
+                <span className="text-2xl">📍</span>
+              </div>
+              <p className="text-3xl font-bold text-foreground mb-1">
+                {(stats.carriers.stamps || 0).toLocaleString()}
+              </p>
+              <p className="text-sm text-muted-foreground">Stamps</p>
+              <p className="text-xs text-muted-foreground mt-1">Permanent storage</p>
+            </div>
+            <div className="bg-card border border-border rounded-lg p-5">
+              <div className="text-purple-500 mb-3">
+                <span className="text-2xl">🔗</span>
+              </div>
+              <p className="text-3xl font-bold text-foreground mb-1">
+                {(stats.carriers.taproot_annex || 0).toLocaleString()}
+              </p>
+              <p className="text-sm text-muted-foreground">Taproot Annex</p>
+              <p className="text-xs text-muted-foreground mt-1">Reserved</p>
+            </div>
+            <div className="bg-card border border-border rounded-lg p-5">
+              <div className="text-cyan-500 mb-3">
+                <span className="text-2xl">👁️</span>
+              </div>
+              <p className="text-3xl font-bold text-foreground mb-1">
+                {(stats.carriers.witness_data || 0).toLocaleString()}
+              </p>
+              <p className="text-sm text-muted-foreground">Witness Data</p>
+              <p className="text-xs text-muted-foreground mt-1">Raw witness</p>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Indexer Stats */}
       <section>
         <h2 className="text-xl font-semibold mb-4 text-muted-foreground">

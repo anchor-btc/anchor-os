@@ -8,6 +8,7 @@ import {
   fetchWalletBalance,
   fetchNewAddress,
   mineBlocks,
+  CARRIER_OPTIONS,
 } from "@/lib/api";
 import {
   PenLine,
@@ -32,9 +33,10 @@ function ComposeForm() {
   const [body, setBody] = useState("");
   const [parentTxid, setParentTxid] = useState(parentFromUrl);
   const [parentVout, setParentVout] = useState(voutFromUrl);
+  const [carrier, setCarrier] = useState(0); // Default to OP_RETURN
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<{ txid: string; vout: number } | null>(
+  const [success, setSuccess] = useState<{ txid: string; vout: number; carrier?: number } | null>(
     null
   );
   
@@ -73,8 +75,9 @@ function ComposeForm() {
       return result;
     },
     onSuccess: (data) => {
-      setSuccess({ txid: data.txid, vout: data.vout });
+      setSuccess({ txid: data.txid, vout: data.vout, carrier: data.carrier });
       setBody("");
+      setCarrier(0); // Reset to default
       setError(null);
       
       // Invalidate caches
@@ -116,6 +119,7 @@ function ComposeForm() {
       body: body.trim(),
       parent_txid: parentTxid || undefined,
       parent_vout: parentTxid ? parseInt(parentVout) : undefined,
+      carrier,
     });
   };
 
@@ -211,7 +215,15 @@ function ComposeForm() {
       {/* Success */}
       {success && (
         <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
-          <p className="font-medium text-green-500 mb-2">Message Created!</p>
+          <div className="flex items-center justify-between mb-2">
+            <p className="font-medium text-green-500">Message Created!</p>
+            {success.carrier !== undefined && (
+              <span className="text-xs bg-green-500/20 text-green-600 px-2 py-1 rounded-full">
+                {CARRIER_OPTIONS.find(c => c.value === success.carrier)?.icon}{" "}
+                {CARRIER_OPTIONS.find(c => c.value === success.carrier)?.label}
+              </span>
+            )}
+          </div>
           <Link
             href={`/message/${success.txid}/${success.vout}`}
             className="text-sm text-green-400 hover:underline font-mono break-all"
@@ -232,6 +244,48 @@ function ComposeForm() {
             rows={5}
             className="w-full bg-secondary border border-border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
           />
+        </div>
+
+        {/* Carrier Selection */}
+        <div>
+          <label className="block text-sm font-medium mb-2">
+            Data Carrier
+          </label>
+          <div className="grid grid-cols-3 gap-3">
+            {CARRIER_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setCarrier(option.value)}
+                className={`relative p-4 rounded-lg border-2 transition-all text-left ${
+                  carrier === option.value
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover:border-primary/50 bg-secondary"
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xl">{option.icon}</span>
+                  <span className="font-medium">{option.label}</span>
+                </div>
+                <p className="text-xs text-muted-foreground">{option.description}</p>
+                {carrier === option.value && (
+                  <div className="absolute top-2 right-2">
+                    <Check className="h-4 w-4 text-primary" />
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+          {carrier === 2 && (
+            <p className="mt-2 text-xs text-yellow-600 bg-yellow-50 p-2 rounded-lg">
+              ⚠️ Stamps are permanent and cannot be pruned. They increase storage requirements for all Bitcoin nodes.
+            </p>
+          )}
+          {carrier === 3 && (
+            <p className="mt-2 text-xs text-blue-600 bg-blue-50 p-2 rounded-lg">
+              🔗 Taproot Annex transactions are valid but not relayed by standard nodes. They need libre relay nodes or direct miner submission.
+            </p>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -279,8 +333,13 @@ function ComposeForm() {
       {/* Info */}
       <div className="text-sm text-muted-foreground space-y-2">
         <p>
-          Messages are embedded in Bitcoin transactions using OP_RETURN outputs.
+          Messages are embedded in Bitcoin transactions using different data carriers:
         </p>
+        <ul className="list-disc list-inside space-y-1 text-xs">
+          <li><strong>OP_RETURN</strong> - Standard prunable output, 80 bytes (100KB in v30+)</li>
+          <li><strong>Inscription</strong> - Ordinals-style witness data, up to ~4MB with 75% fee discount</li>
+          <li><strong>Stamps</strong> - Permanent bare multisig, stored in UTXO set forever</li>
+        </ul>
         <p>
           If you provide a Parent TXID, your message will be anchored as a reply
           to that message.

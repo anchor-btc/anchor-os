@@ -120,6 +120,21 @@ impl AnchorMessageBuilder {
     pub fn to_script(self) -> ScriptBuf {
         create_anchor_script(&self.build())
     }
+
+    /// Get the anchors (without consuming the builder)
+    pub fn get_anchors(&self) -> Vec<Anchor> {
+        self.anchors.clone()
+    }
+
+    /// Get the body (without consuming the builder)
+    pub fn get_body(&self) -> Vec<u8> {
+        self.body.clone()
+    }
+
+    /// Get the kind (without consuming the builder)
+    pub fn get_kind(&self) -> AnchorKind {
+        self.kind
+    }
 }
 
 impl Default for AnchorMessageBuilder {

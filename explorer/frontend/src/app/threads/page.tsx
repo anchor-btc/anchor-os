@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useCallback, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { fetchRootsFiltered, type Message, type FilterOptions } from "@/lib/api";
+import { fetchRootsFiltered, type Message, type FilterOptions, CARRIER_INFO } from "@/lib/api";
 import { MessageCard } from "@/components/message-card";
 import Link from "next/link";
 import {
@@ -36,6 +36,15 @@ const KIND_OPTIONS = [
   { value: "4", label: "Image" },
 ];
 
+const CARRIER_OPTIONS = [
+  { value: "", label: "All Carriers" },
+  { value: "0", label: "📤 OP_RETURN" },
+  { value: "1", label: "🖼️ Inscription" },
+  { value: "2", label: "📍 Stamps" },
+  { value: "3", label: "🔗 Taproot Annex" },
+  { value: "4", label: "👁️ Witness Data" },
+];
+
 export default function ThreadsPage() {
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const [showFilters, setShowFilters] = useState(false);
@@ -49,6 +58,7 @@ export default function ThreadsPage() {
     if (filters.txid) count++;
     if (filters.block_height !== undefined || filters.block_min !== undefined || filters.block_max !== undefined) count++;
     if (filters.kind !== undefined) count++;
+    if (filters.carrier !== undefined) count++;
     if (filters.text) count++;
     if (filters.from_date || filters.to_date) count++;
     if (filters.min_size !== undefined || filters.max_size !== undefined) count++;
@@ -266,6 +276,24 @@ export default function ThreadsPage() {
               </select>
             </div>
 
+            {/* Carrier Type */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Carrier Type
+              </label>
+              <select
+                value={tempFilters.carrier?.toString() || ""}
+                onChange={(e) => updateTempFilter("carrier", e.target.value ? parseInt(e.target.value) : undefined)}
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none bg-white"
+              >
+                {CARRIER_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             {/* Block Height Range */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -405,6 +433,9 @@ export default function ThreadsPage() {
           )}
           {filters.kind !== undefined && (
             <FilterTag label={`Type: ${KIND_OPTIONS.find((k) => k.value === filters.kind?.toString())?.label}`} onRemove={() => setFilters({ ...filters, kind: undefined })} />
+          )}
+          {filters.carrier !== undefined && (
+            <FilterTag label={`Carrier: ${CARRIER_OPTIONS.find((c) => c.value === filters.carrier?.toString())?.label}`} onRemove={() => setFilters({ ...filters, carrier: undefined })} />
           )}
           {(filters.block_min !== undefined || filters.block_max !== undefined) && (
             <FilterTag 

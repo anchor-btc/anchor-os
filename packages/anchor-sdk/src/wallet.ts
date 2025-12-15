@@ -8,6 +8,7 @@ import {
   AnchorKind,
   AnchorError,
   AnchorErrorCode,
+  CarrierType,
   type WalletConfig as WalletConfigType,
   type Balance,
   type Utxo,
@@ -147,10 +148,14 @@ export class AnchorWallet {
   /**
    * Create a root message (new thread)
    */
-  async createRootMessage(text: string): Promise<TransactionResult> {
+  async createRootMessage(
+    text: string,
+    carrier?: CarrierType,
+  ): Promise<TransactionResult> {
     return this.createMessage({
       kind: AnchorKind.Text,
       body: text,
+      carrier,
     });
   }
 
@@ -161,19 +166,39 @@ export class AnchorWallet {
     text: string,
     parentTxid: string,
     parentVout: number = 0,
+    carrier?: CarrierType,
   ): Promise<TransactionResult> {
     return this.createMessage({
       kind: AnchorKind.Text,
       body: text,
       anchors: [{ txid: parentTxid, vout: parentVout }],
+      carrier,
     });
+  }
+
+  /**
+   * Create a permanent root message using Stamps carrier
+   */
+  async createPermanentMessage(text: string): Promise<TransactionResult> {
+    return this.createRootMessage(text, CarrierType.Stamps);
+  }
+
+  /**
+   * Create a permanent reply using Stamps carrier
+   */
+  async createPermanentReply(
+    text: string,
+    parentTxid: string,
+    parentVout: number = 0,
+  ): Promise<TransactionResult> {
+    return this.createReply(text, parentTxid, parentVout, CarrierType.Stamps);
   }
 
   /**
    * Create a message with custom options
    */
   async createMessage(
-    options: TransactionBuilderOptions["message"],
+    options: TransactionBuilderOptions["message"] & { carrier?: CarrierType },
   ): Promise<TransactionResult> {
     // Get UTXOs
     const utxos = await this.listUtxos(0);
@@ -184,11 +209,16 @@ export class AnchorWallet {
     // Get change address
     const changeAddress = await this.getNewAddress();
 
+    // For Stamps, we need more UTXOs
+    const inputCount =
+      options.carrier === CarrierType.Stamps ? Math.min(2, utxos.length) : 1;
+    const inputs = utxos.slice(0, inputCount);
+
     // Build transaction
     const { psbt, anchorVout } = buildTransaction({
       network: this.config.network,
       feeRate: this.config.feeRate,
-      inputs: [utxos[0]], // Use first UTXO (simple coin selection)
+      inputs,
       changeAddress,
       message: options,
     });
@@ -196,9 +226,13 @@ export class AnchorWallet {
     // Sign and broadcast
     const result = await this.signAndBroadcast(psbt);
 
+    // Determine carrier used
+    const carrier = options.carrier ?? CarrierType.OpReturn;
+
     return {
       ...result,
       vout: anchorVout,
+      carrier,
     };
   }
 

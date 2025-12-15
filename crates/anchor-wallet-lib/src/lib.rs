@@ -53,6 +53,25 @@ pub use anchor_core::{
     ANCHOR_MAGIC,
 };
 
+// Re-export carrier types
+pub use anchor_core::carrier::{
+    Carrier,
+    CarrierError,
+    CarrierInfo,
+    CarrierInput,
+    CarrierOutput,
+    CarrierPreferences,
+    CarrierResult,
+    CarrierSelector,
+    CarrierStatus,
+    CarrierType,
+    OpReturnCarrier,
+    InscriptionCarrier,
+    StampsCarrier,
+    AnnexCarrier,
+    WitnessCarrier,
+};
+
 pub use config::WalletConfig;
 pub use error::{WalletError, Result};
 pub use transaction::{AnchorTransaction, TransactionBuilder};

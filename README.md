@@ -4,7 +4,7 @@ A minimalist metaprotocol for recording chained messages on the Bitcoin blockcha
 
 ## Overview
 
-ANCHOR enables embedding messages in Bitcoin transactions (via OP_RETURN) that can reference previous messages through compact 64-bit anchors. This creates a graph of related messages that can be used for:
+ANCHOR enables embedding messages in Bitcoin transactions that can reference previous messages through compact 64-bit anchors. This creates a graph of related messages that can be used for:
 
 - Threaded conversations (forum/social network style)
 - Version history
@@ -150,7 +150,7 @@ Sample testnet output:
 
 ### Message Format
 
-Each ANCHOR message is embedded in an OP_RETURN output with the following structure:
+Each ANCHOR message has the following structure:
 
 ```
 ┌─────────────┬──────────┬──────────────────┬────────────────┬─────────────┐
@@ -163,6 +163,40 @@ Each ANCHOR message is embedded in an OP_RETURN output with the following struct
 - **Anchor Count**: Number of parent references (0-255)
 - **Anchors**: Each anchor is 9 bytes (8-byte txid prefix + 1-byte vout)
 - **Body**: Arbitrary message content
+
+### Multi-Carrier Support
+
+ANCHOR messages can be embedded using different Bitcoin transaction structures (carriers):
+
+| Carrier | Max Size | Prunable | UTXO Impact | Status |
+|---------|----------|----------|-------------|--------|
+| **OP_RETURN** | 80B-100KB | Yes | No | Active (default) |
+| **Inscription** | ~4MB | Yes | No | Active |
+| **Stamps** | ~8KB | **No** | **Yes** | Active |
+| **Taproot Annex** | 10KB | Yes | No | Reserved |
+| **Witness Data** | ~4MB | Yes | No | Active |
+
+#### Carrier Selection
+
+The SDK automatically selects the best carrier based on:
+- Payload size
+- Permanence requirements
+- Fee preferences
+
+```rust
+use anchor_core::carrier::{CarrierSelector, CarrierPreferences};
+
+let selector = CarrierSelector::new();
+
+// For permanent storage (Stamps)
+let prefs = CarrierPreferences::permanent();
+
+// For large data (Inscription/Witness)
+let prefs = CarrierPreferences::large_data();
+
+// Auto-select based on message
+let (carrier_type, output) = selector.encode(&message, &prefs)?;
+```
 
 ### Anchor Resolution
 

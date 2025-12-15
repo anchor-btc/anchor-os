@@ -100,18 +100,31 @@ async fn main() -> Result<()> {
                 let msg_type = if result.is_image {
                     "🖼️  image"
                 } else if result.is_reply {
-                    "reply"
+                    "↩️  reply"
                 } else {
-                    "root"
+                    "📝 root"
+                };
+                let carrier_icon = match result.carrier {
+                    generator::CarrierType::OpReturn => "📦",
+                    generator::CarrierType::Inscription => "✍️",
+                    generator::CarrierType::Stamps => "📮",
+                    generator::CarrierType::TaprootAnnex => "🌿",
+                    generator::CarrierType::WitnessData => "👁️",
                 };
                 info!(
-                    "📨 Created {} message: {}:{}",
+                    "📨 Created {} message via {} {}: {}:{}",
                     msg_type,
+                    carrier_icon,
+                    result.carrier.as_str(),
                     &result.txid[..16],
                     result.vout
                 );
                 if let Some(parent) = &result.parent_txid {
-                    info!("   ↳ Reply to: {}:{}", &parent[..16], result.parent_vout.unwrap_or(0));
+                    info!(
+                        "   ↳ Reply to: {}:{}",
+                        &parent[..16],
+                        result.parent_vout.unwrap_or(0)
+                    );
                 }
             }
             Err(e) => {
