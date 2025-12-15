@@ -1,0 +1,86 @@
+version: "3.8"
+
+services:
+  # PostgreSQL Database (shared with main stack)
+  # Use the main postgres from the root docker-compose.yml
+  # or uncomment below for standalone deployment
+  # postgres:
+  #   image: postgres:16-alpine
+  #   environment:
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: postgres
+  #     POSTGRES_DB: anchor
+  #   volumes:
+  #     - anchormap_postgres_data:/var/lib/postgresql/data
+  #     - ../../docker/postgres/migrations:/docker-entrypoint-initdb.d:ro
+  #   ports:
+  #     - "5432:5432"
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U postgres"]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 5
+
+  # AnchorMap Backend
+  anchormap-backend:
+    build:
+      context: ../..
+      dockerfile: apps/anchormap/backend/Dockerfile
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/anchor
+      BITCOIN_RPC_URL: http://bitcoin:18443
+      BITCOIN_RPC_USER: user
+      BITCOIN_RPC_PASSWORD: pass
+      WALLET_URL: http://anchor-wallet:3001
+      HOST: 0.0.0.0
+      PORT: 3004
+      POLL_INTERVAL_SECS: 5
+      RUST_LOG: anchormap_backend=debug,tower_http=debug
+    ports:
+      - "3004:3004"
+    depends_on:
+      - postgres
+      - bitcoin
+    restart: unless-stopped
+    networks:
+      - anchor-network
+
+  # AnchorMap Frontend
+  anchormap-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3004
+      NEXT_PUBLIC_WALLET_URL: http://localhost:3001
+    ports:
+      - "3005:3005"
+    depends_on:
+      - anchormap-backend
+    restart: unless-stopped
+    networks:
+      - anchor-network
+
+  # Reference to shared services from main docker-compose
+  postgres:
+    extends:
+      file: ../../docker-compose.yml
+      service: postgres
+
+  bitcoin:
+    extends:
+      file: ../../docker-compose.yml
+      service: bitcoin
+
+  anchor-wallet:
+    extends:
+      file: ../../docker-compose.yml
+      service: anchor-wallet
+
+networks:
+  anchor-network:
+    external: true
+
+# volumes:
+#   anchormap_postgres_data:
+
