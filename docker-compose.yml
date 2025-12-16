@@ -89,39 +89,6 @@ services:
   # TOOLS (tool-)
   # =============================================
 
-  tool-explorer-backend:
-    build:
-      context: .
-      dockerfile: ./tools/anchor-explorer/backend/Dockerfile
-    container_name: anchor-tool-explorer-backend
-    ports:
-      - "3002:3002"
-    environment:
-      DATABASE_URL: postgres://anchor:anchor@infra-postgres:5432/anchor
-      RUST_LOG: info
-    depends_on:
-      infra-postgres:
-        condition: service_healthy
-    networks:
-      - anchor-network
-
-  tool-explorer-frontend:
-    build:
-      context: ./tools/anchor-explorer/frontend
-      dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_API_URL: http://localhost:3002
-        NEXT_PUBLIC_WALLET_URL: http://localhost:3001
-        NEXT_PUBLIC_BTC_EXPLORER_URL: http://localhost:3003
-    container_name: anchor-tool-explorer-frontend
-    ports:
-      - "3000:3000"
-    depends_on:
-      - tool-explorer-backend
-      - infra-wallet
-    networks:
-      - anchor-network
-
   tool-testnet:
     build:
       context: .
@@ -213,6 +180,7 @@ services:
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_URL: http://localhost:3011
+        NEXT_PUBLIC_TESTNET_URL: http://localhost:3014
     container_name: anchor-tool-dashboard-frontend
     ports:
       - "3010:3010"
@@ -226,6 +194,40 @@ services:
   # =============================================
   # APPS (app-)
   # =============================================
+
+  # Anchor Threads - Social messaging on Bitcoin
+  app-threads-backend:
+    build:
+      context: .
+      dockerfile: ./apps/anchor-threads/backend/Dockerfile
+    container_name: anchor-app-threads-backend
+    ports:
+      - "3002:3002"
+    environment:
+      DATABASE_URL: postgres://anchor:anchor@infra-postgres:5432/anchor
+      RUST_LOG: info
+    depends_on:
+      infra-postgres:
+        condition: service_healthy
+    networks:
+      - anchor-network
+
+  app-threads-frontend:
+    build:
+      context: ./apps/anchor-threads/frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:3002
+        NEXT_PUBLIC_WALLET_URL: http://localhost:3001
+        NEXT_PUBLIC_BTC_EXPLORER_URL: http://localhost:3003
+    container_name: anchor-app-threads-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - app-threads-backend
+      - infra-wallet
+    networks:
+      - anchor-network
 
   # Anchor Pixel - Collaborative Bitcoin Canvas
   app-pixel-backend:

@@ -19,6 +19,7 @@ import {
   Globe,
   FileCheck,
   Wallet,
+  MessageSquare,
 } from "lucide-react";
 
 interface ServiceCardProps {
@@ -33,13 +34,13 @@ const serviceIcons: Record<string, React.ElementType> = {
   "anchor-infra-indexer": Search,
   "anchor-infra-wallet": Wallet,
   // Tools
-  "anchor-tool-explorer-backend": Server,
-  "anchor-tool-explorer-frontend": Search,
   "anchor-tool-testnet": Pickaxe,
   "anchor-tool-btc-explorer": Bitcoin,
   "anchor-tool-dashboard-backend": Server,
   "anchor-tool-dashboard-frontend": Server,
   // Apps
+  "anchor-app-threads-backend": Server,
+  "anchor-app-threads-frontend": MessageSquare,
   "anchor-app-pixel-backend": Grid3X3,
   "anchor-app-pixel-frontend": Grid3X3,
   "anchor-app-map-backend": Map,

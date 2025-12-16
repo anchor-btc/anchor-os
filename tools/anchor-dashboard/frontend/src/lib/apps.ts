@@ -19,15 +19,15 @@ export const apps: App[] = [
   // TOOLS (tool-)
   // =============================================
   {
-    id: "tool-explorer",
-    name: "Anchor Explorer",
-    description: "Browse messages, threads and transactions on the ANCHOR protocol",
-    icon: "Search",
+    id: "app-threads",
+    name: "Anchor Threads",
+    description: "Social threads and messaging on Bitcoin using the ANCHOR protocol",
+    icon: "MessageSquare",
     color: "orange",
     url: "http://localhost:3000",
     port: 3000,
-    containers: ["anchor-tool-explorer-frontend", "anchor-tool-explorer-backend"],
-    category: "tool",
+    containers: ["anchor-app-threads-frontend", "anchor-app-threads-backend"],
+    category: "app",
     featured: true,
   },
   {

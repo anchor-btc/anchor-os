@@ -1,13 +1,13 @@
 [package]
-name = "explorer-backend"
+name = "threads-backend"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 authors.workspace = true
-description = "REST API backend for the ANCHOR explorer"
+description = "REST API backend for ANCHOR Threads"
 
 [[bin]]
-name = "explorer-backend"
+name = "threads-backend"
 path = "src/main.rs"
 
 [dependencies]

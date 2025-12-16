@@ -23,6 +23,7 @@ import {
   Terminal,
   Wrench,
   Zap,
+  MessageSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apps, getAppStatus } from "@/lib/apps";
@@ -48,6 +49,7 @@ const iconMap: Record<string, React.ElementType> = {
   Globe,
   FileCheck,
   Server,
+  MessageSquare,
 };
 
 export function Sidebar() {

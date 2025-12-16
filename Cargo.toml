@@ -6,7 +6,7 @@ members = [
     "crates/anchor-wallet",
     "crates/anchor-testnet",
     "crates/anchor-wallet-lib",
-    "tools/anchor-explorer/backend",
+    "apps/anchor-threads/backend",
     "tools/anchor-dashboard/backend",
     "apps/anchor-pixel/backend",
     "apps/anchor-map/backend",

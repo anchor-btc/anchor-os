@@ -17,7 +17,7 @@ COPY crates/anchor-indexer ./crates/anchor-indexer
 RUN mkdir -p crates/anchor-wallet/src && echo "fn main() {}" > crates/anchor-wallet/src/main.rs
 RUN mkdir -p crates/anchor-testnet/src && echo "fn main() {}" > crates/anchor-testnet/src/main.rs
 RUN mkdir -p crates/anchor-wallet-lib/src && echo "" > crates/anchor-wallet-lib/src/lib.rs
-RUN mkdir -p tools/anchor-explorer/backend/src && echo "fn main() {}" > tools/anchor-explorer/backend/src/main.rs
+RUN mkdir -p apps/anchor-threads/backend/src && echo "fn main() {}" > apps/anchor-threads/backend/src/main.rs
 RUN mkdir -p tools/anchor-dashboard/backend/src && echo "fn main() {}" > tools/anchor-dashboard/backend/src/main.rs
 RUN mkdir -p apps/anchor-pixel/backend/src && echo "fn main() {}" > apps/anchor-pixel/backend/src/main.rs
 RUN mkdir -p apps/anchor-map/backend/src && echo "fn main() {}" > apps/anchor-map/backend/src/main.rs
@@ -26,7 +26,7 @@ RUN mkdir -p apps/anchor-proof/backend/src && echo "fn main() {}" > apps/anchor-
 COPY crates/anchor-wallet/Cargo.toml ./crates/anchor-wallet/
 COPY crates/anchor-testnet/Cargo.toml ./crates/anchor-testnet/
 COPY crates/anchor-wallet-lib/Cargo.toml ./crates/anchor-wallet-lib/
-COPY tools/anchor-explorer/backend/Cargo.toml ./tools/anchor-explorer/backend/
+COPY apps/anchor-threads/backend/Cargo.toml ./apps/anchor-threads/backend/
 COPY tools/anchor-dashboard/backend/Cargo.toml ./tools/anchor-dashboard/backend/
 COPY apps/anchor-pixel/backend/Cargo.toml ./apps/anchor-pixel/backend/
 COPY apps/anchor-map/backend/Cargo.toml ./apps/anchor-map/backend/

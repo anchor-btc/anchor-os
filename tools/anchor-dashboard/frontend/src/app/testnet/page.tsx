@@ -46,8 +46,15 @@ export default function TestnetPage() {
 
   const updateMutation = useMutation({
     mutationFn: updateTestnetConfig,
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Config updated successfully:", data);
       queryClient.invalidateQueries({ queryKey: ["testnet-config"] });
+      // Sync local config with server response
+      setLocalConfig(data);
+    },
+    onError: (error) => {
+      console.error("Failed to update config:", error);
+      alert(`Failed to update config: ${error.message}`);
     },
   });
 
@@ -79,7 +86,10 @@ export default function TestnetPage() {
 
   const handleApplyConfig = () => {
     if (localConfig) {
+      console.log("Applying config:", localConfig);
       updateMutation.mutate(localConfig);
+    } else {
+      console.warn("No local config to apply");
     }
   };
 

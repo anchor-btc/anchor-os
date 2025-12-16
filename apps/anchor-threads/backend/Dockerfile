@@ -12,7 +12,7 @@ WORKDIR /app
 # Copy workspace files
 COPY Cargo.toml Cargo.lock* ./
 COPY crates/anchor-core ./crates/anchor-core
-COPY tools/anchor-explorer/backend ./tools/anchor-explorer/backend
+COPY apps/anchor-threads/backend ./apps/anchor-threads/backend
 
 # Create dummy files for other workspace members
 RUN mkdir -p crates/anchor-indexer/src && echo "fn main() {}" > crates/anchor-indexer/src/main.rs
@@ -34,8 +34,8 @@ COPY apps/anchor-map/backend/Cargo.toml ./apps/anchor-map/backend/
 COPY apps/anchor-dns/backend/Cargo.toml ./apps/anchor-dns/backend/
 COPY apps/anchor-proof/backend/Cargo.toml ./apps/anchor-proof/backend/
 
-# Build the explorer backend
-RUN cargo build --release -p explorer-backend
+# Build the threads backend
+RUN cargo build --release -p threads-backend
 
 # Runtime stage
 FROM debian:bookworm-slim
@@ -45,11 +45,11 @@ RUN apt-get update && apt-get install -y \
     libssl3 \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /app/target/release/explorer-backend /usr/local/bin/
+COPY --from=builder /app/target/release/threads-backend /usr/local/bin/
 
 ENV RUST_LOG=info
 ENV PORT=3002
 
 EXPOSE 3002
 
-CMD ["explorer-backend"]
+CMD ["threads-backend"]

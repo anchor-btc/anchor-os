@@ -22,6 +22,7 @@ import {
   Play,
   Square,
   Settings,
+  MessageSquare,
 } from "lucide-react";
 
 const iconMap: Record<string, React.ElementType> = {
@@ -34,6 +35,7 @@ const iconMap: Record<string, React.ElementType> = {
   Pickaxe,
   Globe,
   FileCheck,
+  MessageSquare,
 };
 
 const colorMap: Record<string, { bg: string; border: string; text: string; glow: string }> = {

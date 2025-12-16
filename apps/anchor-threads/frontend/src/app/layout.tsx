@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ANCHOR Explorer",
+  title: "ANCHOR Threads",
   description: "Explore ANCHOR protocol messages on Bitcoin",
 };
 
