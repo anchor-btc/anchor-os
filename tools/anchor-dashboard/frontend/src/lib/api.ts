@@ -123,6 +123,25 @@ export async function fetchContainerLogs(
   return res.json();
 }
 
+export interface ExecResponse {
+  container_id: string;
+  output: string;
+  exit_code: number | null;
+}
+
+export async function execContainer(
+  id: string,
+  command: string
+): Promise<ExecResponse> {
+  const res = await fetch(`${API_URL}/docker/containers/${id}/exec`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ command }),
+  });
+  if (!res.ok) throw new Error("Failed to execute command");
+  return res.json();
+}
+
 export async function fetchNodeStatus(): Promise<NodeStatus> {
   const res = await fetch(`${API_URL}/bitcoin/status`);
   if (!res.ok) throw new Error("Failed to fetch node status");

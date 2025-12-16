@@ -24,11 +24,14 @@ import {
   Wrench,
   Zap,
   MessageSquare,
+  ScrollText,
+  SquareTerminal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apps, getAppStatus } from "@/lib/apps";
 import { fetchContainers } from "@/lib/api";
 import { LogsModal } from "./logs-modal";
+import { TerminalModal } from "./terminal-modal";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -55,6 +58,7 @@ const iconMap: Record<string, React.ElementType> = {
 export function Sidebar() {
   const pathname = usePathname();
   const [logsContainer, setLogsContainer] = useState<string | null>(null);
+  const [terminalContainer, setTerminalContainer] = useState<string | null>(null);
 
   const { data: containersData } = useQuery({
     queryKey: ["containers"],
@@ -90,7 +94,7 @@ export function Sidebar() {
         <div className={cn("w-2 h-2 rounded-full shrink-0", statusColor)} />
         <Icon className="w-4 h-4 shrink-0" />
         <span className="truncate flex-1">{app.name}</span>
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
             onClick={(e) => {
               e.preventDefault();
@@ -100,7 +104,18 @@ export function Sidebar() {
             className="p-1 hover:bg-muted rounded transition-colors"
             title="View Logs"
           >
-            <Terminal className="w-3 h-3" />
+            <ScrollText className="w-3 h-3" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setTerminalContainer(mainContainer);
+            }}
+            className="p-1 hover:bg-muted rounded transition-colors"
+            title="Open Terminal"
+          >
+            <SquareTerminal className="w-3 h-3" />
           </button>
           {hasExternalUrl && <ExternalLink className="w-3 h-3" />}
         </div>
@@ -235,6 +250,12 @@ export function Sidebar() {
       <LogsModal
         containerName={logsContainer}
         onClose={() => setLogsContainer(null)}
+      />
+
+      {/* Terminal Modal */}
+      <TerminalModal
+        containerName={terminalContainer}
+        onClose={() => setTerminalContainer(null)}
       />
     </>
   );

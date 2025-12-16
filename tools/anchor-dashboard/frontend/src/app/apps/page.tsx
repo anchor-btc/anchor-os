@@ -6,11 +6,13 @@ import { fetchContainers } from "@/lib/api";
 import { apps } from "@/lib/apps";
 import { AppCard } from "@/components/app-card";
 import { LogsModal } from "@/components/logs-modal";
+import { TerminalModal } from "@/components/terminal-modal";
 import { Loader2, AppWindow, Wrench, Server, Settings } from "lucide-react";
 import Link from "next/link";
 
 export default function AppsPage() {
   const [logsContainer, setLogsContainer] = useState<string | null>(null);
+  const [terminalContainer, setTerminalContainer] = useState<string | null>(null);
 
   const {
     data: containersData,
@@ -73,6 +75,7 @@ export default function AppsPage() {
                 containers={containers}
                 onToggle={() => refetch()}
                 onShowLogs={(name) => setLogsContainer(name)}
+                onShowTerminal={(name) => setTerminalContainer(name)}
               />
             ))}
           </div>
@@ -96,6 +99,7 @@ export default function AppsPage() {
                   containers={containers}
                   onToggle={() => refetch()}
                   onShowLogs={(name) => setLogsContainer(name)}
+                  onShowTerminal={(name) => setTerminalContainer(name)}
                 />
               ))}
             </div>
@@ -119,6 +123,7 @@ export default function AppsPage() {
                 containers={containers}
                 onToggle={() => refetch()}
                 onShowLogs={(name) => setLogsContainer(name)}
+                onShowTerminal={(name) => setTerminalContainer(name)}
               />
             ))}
           </div>
@@ -129,6 +134,12 @@ export default function AppsPage() {
       <LogsModal
         containerName={logsContainer}
         onClose={() => setLogsContainer(null)}
+      />
+
+      {/* Terminal Modal */}
+      <TerminalModal
+        containerName={terminalContainer}
+        onClose={() => setTerminalContainer(null)}
       />
     </>
   );

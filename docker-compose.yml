@@ -67,15 +67,11 @@ services:
     networks:
       - anchor-network
 
-  # =============================================
-  # TOOLS (tool-)
-  # =============================================
-
-  tool-wallet:
+  infra-wallet:
     build:
       context: .
       dockerfile: ./crates/anchor-wallet/Dockerfile
-    container_name: anchor-tool-wallet
+    container_name: anchor-infra-wallet
     ports:
       - "3001:3001"
     environment:
@@ -95,15 +91,15 @@ services:
       timeout: 5s
       retries: 5
 
-  tool-testnet:
+  infra-testnet:
     build:
       context: .
       dockerfile: ./crates/anchor-testnet/Dockerfile
-    container_name: anchor-tool-testnet
+    container_name: anchor-infra-testnet
     ports:
       - "3014:3014"
     environment:
-      WALLET_URL: http://tool-wallet:3001
+      WALLET_URL: http://infra-wallet:3001
       API_PORT: 3014
       MIN_INTERVAL_SECS: 5
       MAX_INTERVAL_SECS: 15
@@ -111,7 +107,7 @@ services:
       INITIAL_BLOCKS: 101
       RUST_LOG: info
     depends_on:
-      - tool-wallet
+      - infra-wallet
       - infra-indexer
     networks:
       - anchor-network
@@ -121,6 +117,10 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+
+  # =============================================
+  # TOOLS (tool-)
+  # =============================================
 
   tool-mempool-db:
     image: mariadb:10.11
@@ -212,7 +212,7 @@ services:
     environment:
       HOST: 0.0.0.0
       PORT: 3011
-      WALLET_URL: http://tool-wallet:3001
+      WALLET_URL: http://infra-wallet:3001
       BITCOIN_RPC_URL: http://infra-bitcoin:18443
       BITCOIN_RPC_USER: anchor
       BITCOIN_RPC_PASSWORD: anchor
@@ -220,7 +220,7 @@ services:
     depends_on:
       infra-bitcoin:
         condition: service_healthy
-      tool-wallet:
+      infra-wallet:
         condition: service_healthy
     networks:
       - anchor-network
@@ -282,7 +282,7 @@ services:
       - "3000:3000"
     depends_on:
       - app-threads-backend
-      - tool-wallet
+      - infra-wallet
     networks:
       - anchor-network
 
@@ -301,7 +301,7 @@ services:
       BITCOIN_RPC_URL: http://infra-bitcoin:18443
       BITCOIN_RPC_USER: anchor
       BITCOIN_RPC_PASSWORD: anchor
-      WALLET_URL: http://tool-wallet:3001
+      WALLET_URL: http://infra-wallet:3001
       POLL_INTERVAL_SECS: 5
       RUST_LOG: pixelmap_backend=info
     depends_on:
@@ -309,7 +309,7 @@ services:
         condition: service_healthy
       infra-bitcoin:
         condition: service_healthy
-      tool-wallet:
+      infra-wallet:
         condition: service_healthy
     networks:
       - anchor-network
@@ -352,7 +352,7 @@ services:
       BITCOIN_RPC_URL: http://infra-bitcoin:18443
       BITCOIN_RPC_USER: anchor
       BITCOIN_RPC_PASSWORD: anchor
-      WALLET_URL: http://tool-wallet:3001
+      WALLET_URL: http://infra-wallet:3001
       POLL_INTERVAL_SECS: 5
       RUST_LOG: anchormap_backend=info
     depends_on:
@@ -360,7 +360,7 @@ services:
         condition: service_healthy
       infra-bitcoin:
         condition: service_healthy
-      tool-wallet:
+      infra-wallet:
         condition: service_healthy
     networks:
       - anchor-network
@@ -403,7 +403,7 @@ services:
       BITCOIN_RPC_URL: http://infra-bitcoin:18443
       BITCOIN_RPC_USER: anchor
       BITCOIN_RPC_PASSWORD: anchor
-      WALLET_URL: http://tool-wallet:3001
+      WALLET_URL: http://infra-wallet:3001
       POLL_INTERVAL_SECS: 5
       RUST_LOG: bitdns_backend=info
     depends_on:
@@ -411,7 +411,7 @@ services:
         condition: service_healthy
       infra-bitcoin:
         condition: service_healthy
-      tool-wallet:
+      infra-wallet:
         condition: service_healthy
     networks:
       - anchor-network
@@ -454,7 +454,7 @@ services:
       BITCOIN_RPC_URL: http://infra-bitcoin:18443
       BITCOIN_RPC_USER: anchor
       BITCOIN_RPC_PASSWORD: anchor
-      WALLET_URL: http://tool-wallet:3001
+      WALLET_URL: http://infra-wallet:3001
       POLL_INTERVAL_SECS: 5
       RUST_LOG: anchorproof_backend=info
     depends_on:
@@ -462,7 +462,7 @@ services:
         condition: service_healthy
       infra-bitcoin:
         condition: service_healthy
-      tool-wallet:
+      infra-wallet:
         condition: service_healthy
     networks:
       - anchor-network

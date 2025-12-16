@@ -30,8 +30,14 @@ export function LogsModal({ containerName, onClose }: LogsModalProps) {
   if (!containerName) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="w-full max-w-5xl max-h-[85vh] bg-card border border-border rounded-2xl overflow-hidden shadow-2xl flex flex-col">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div 
+        className="w-full max-w-5xl max-h-[85vh] bg-card border border-border rounded-2xl overflow-hidden shadow-2xl flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border bg-secondary">
           <div className="flex items-center gap-3">

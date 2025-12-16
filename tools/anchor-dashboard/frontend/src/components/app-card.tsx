@@ -18,7 +18,8 @@ import {
   ExternalLink,
   Loader2,
   Power,
-  Terminal,
+  ScrollText,
+  SquareTerminal,
   Play,
   Square,
   Settings,
@@ -94,10 +95,11 @@ interface AppCardProps {
   containers: Container[];
   onToggle?: () => void;
   onShowLogs?: (containerName: string) => void;
+  onShowTerminal?: (containerName: string) => void;
   featured?: boolean;
 }
 
-export function AppCard({ app, containers, onToggle, onShowLogs, featured }: AppCardProps) {
+export function AppCard({ app, containers, onToggle, onShowLogs, onShowTerminal, featured }: AppCardProps) {
   const [loading, setLoading] = useState(false);
   const Icon = iconMap[app.icon] || Search;
   const colors = colorMap[app.color] || colorMap.orange;
@@ -235,9 +237,20 @@ export function AppCard({ app, containers, onToggle, onShowLogs, featured }: App
           <button
             onClick={() => onShowLogs?.(mainContainer)}
             className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-medium bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+            title="View Logs"
           >
-            <Terminal className="w-4 h-4" />
-            View Logs
+            <ScrollText className="w-4 h-4" />
+            Logs
+          </button>
+
+          {/* Terminal button */}
+          <button
+            onClick={() => onShowTerminal?.(mainContainer)}
+            className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-medium bg-muted/50 hover:bg-emerald-500/10 text-muted-foreground hover:text-emerald-500 transition-colors"
+            title="Open Terminal"
+          >
+            <SquareTerminal className="w-4 h-4" />
+            Terminal
           </button>
 
           {/* Stop button (when running) */}
@@ -246,6 +259,7 @@ export function AppCard({ app, containers, onToggle, onShowLogs, featured }: App
               onClick={handleToggle}
               disabled={loading}
               className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-medium bg-muted/50 hover:bg-error/10 text-muted-foreground hover:text-error transition-colors"
+              title="Stop Container"
             >
               {loading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

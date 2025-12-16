@@ -281,3 +281,100 @@ pub async fn get_container_logs(
     }))
 }
 
+/// Execute command request
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct ExecRequest {
+    pub command: String,
+}
+
+/// Execute command response
+#[derive(Debug, Serialize, ToSchema)]
+pub struct ExecResponse {
+    pub container_id: String,
+    pub output: String,
+    pub exit_code: Option<i64>,
+}
+
+/// Execute a command in a container
+#[utoipa::path(
+    post,
+    path = "/docker/containers/{id}/exec",
+    tag = "Docker",
+    params(
+        ("id" = String, Path, description = "Container ID or name")
+    ),
+    request_body = ExecRequest,
+    responses(
+        (status = 200, description = "Command executed", body = ExecResponse),
+        (status = 500, description = "Internal server error")
+    )
+)]
+pub async fn exec_container(
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<String>,
+    Json(req): Json<ExecRequest>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    use bollard::exec::{CreateExecOptions, StartExecResults};
+    use futures::StreamExt;
+
+    info!("Executing command in container {}: {}", id, req.command);
+
+    // Parse command - split by spaces but respect quotes
+    let cmd: Vec<&str> = req.command.split_whitespace().collect();
+    
+    if cmd.is_empty() {
+        return Err((StatusCode::BAD_REQUEST, "Empty command".to_string()));
+    }
+
+    // Create exec instance
+    let exec_options = CreateExecOptions {
+        attach_stdout: Some(true),
+        attach_stderr: Some(true),
+        cmd: Some(cmd),
+        ..Default::default()
+    };
+
+    let exec = match state.docker.create_exec(&id, exec_options).await {
+        Ok(exec) => exec,
+        Err(e) => {
+            error!("Failed to create exec: {}", e);
+            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+        }
+    };
+
+    // Start exec and collect output
+    let start_result = match state.docker.start_exec(&exec.id, None).await {
+        Ok(result) => result,
+        Err(e) => {
+            error!("Failed to start exec: {}", e);
+            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+        }
+    };
+
+    let mut output = String::new();
+
+    if let StartExecResults::Attached { output: mut stream, .. } = start_result {
+        while let Some(result) = stream.next().await {
+            match result {
+                Ok(chunk) => {
+                    output.push_str(&chunk.to_string());
+                }
+                Err(e) => {
+                    error!("Error reading exec output: {}", e);
+                    break;
+                }
+            }
+        }
+    }
+
+    // Get exit code
+    let inspect = state.docker.inspect_exec(&exec.id).await.ok();
+    let exit_code = inspect.and_then(|i| i.exit_code);
+
+    Ok(Json(ExecResponse {
+        container_id: id,
+        output,
+        exit_code,
+    }))
+}
+
