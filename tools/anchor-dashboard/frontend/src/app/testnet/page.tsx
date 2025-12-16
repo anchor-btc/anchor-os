@@ -13,6 +13,8 @@ import {
   Clock,
   BarChart3,
   RefreshCw,
+  Check,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -27,6 +29,7 @@ import {
 export default function TestnetPage() {
   const queryClient = useQueryClient();
   const [localConfig, setLocalConfig] = useState<TestnetConfig | null>(null);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle");
 
   const {
     data: config,
@@ -51,10 +54,14 @@ export default function TestnetPage() {
       queryClient.invalidateQueries({ queryKey: ["testnet-config"] });
       // Sync local config with server response
       setLocalConfig(data);
+      // Show success feedback
+      setSaveStatus("success");
+      setTimeout(() => setSaveStatus("idle"), 3000);
     },
     onError: (error) => {
       console.error("Failed to update config:", error);
-      alert(`Failed to update config: ${error.message}`);
+      setSaveStatus("error");
+      setTimeout(() => setSaveStatus("idle"), 3000);
     },
   });
 
@@ -367,18 +374,47 @@ export default function TestnetPage() {
       </div>
 
       {/* Apply Button */}
-      <div className="flex justify-end">
+      <div className="flex items-center justify-end gap-4">
+        {saveStatus === "success" && (
+          <div className="flex items-center gap-2 text-success animate-in fade-in">
+            <Check className="w-5 h-5" />
+            <span className="text-sm font-medium">Configuration saved!</span>
+          </div>
+        )}
+        {saveStatus === "error" && (
+          <div className="flex items-center gap-2 text-error animate-in fade-in">
+            <X className="w-5 h-5" />
+            <span className="text-sm font-medium">Failed to save</span>
+          </div>
+        )}
         <button
           onClick={handleApplyConfig}
           disabled={updateMutation.isPending}
-          className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+          className={cn(
+            "flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all disabled:opacity-50",
+            saveStatus === "success"
+              ? "bg-success text-success-foreground"
+              : saveStatus === "error"
+              ? "bg-error text-error-foreground"
+              : "bg-primary text-primary-foreground hover:bg-primary/90"
+          )}
         >
           {updateMutation.isPending ? (
             <Loader2 className="w-4 h-4 animate-spin" />
+          ) : saveStatus === "success" ? (
+            <Check className="w-4 h-4" />
+          ) : saveStatus === "error" ? (
+            <X className="w-4 h-4" />
           ) : (
             <RefreshCw className="w-4 h-4" />
           )}
-          Apply Configuration
+          {updateMutation.isPending
+            ? "Saving..."
+            : saveStatus === "success"
+            ? "Saved!"
+            : saveStatus === "error"
+            ? "Try Again"
+            : "Apply Configuration"}
         </button>
       </div>
     </div>

@@ -376,7 +376,7 @@ impl WalletService {
         let total_dust = dust_per_output * scripts.len() as u64;
         // Estimate vbytes and calculate fee (rough estimate: 150 base + 40 per output)
         let estimated_vbytes = 150 + scripts.len() as u64 * 40;
-        let estimated_fee = std::cmp::max(500, estimated_vbytes * fee_rate);
+        let estimated_fee = std::cmp::max(15000, estimated_vbytes * fee_rate);
         let required = total_dust + estimated_fee;
 
         // Find UTXOs to cover the required amount
@@ -523,8 +523,8 @@ impl WalletService {
         // Reveal tx: ~100 base vbytes + witness data (gets 75% discount)
         let script_size = reveal_script.len();
         let reveal_vbytes = 100 + (script_size + 3) / 4; // witness weight / 4
-        let reveal_fee = std::cmp::max(500, reveal_vbytes as u64 * fee_rate);
-        let commit_fee = std::cmp::max(250, 150 * fee_rate); // Commit tx is ~150 vbytes
+        let reveal_fee = std::cmp::max(15000, reveal_vbytes as u64 * fee_rate);
+        let commit_fee = std::cmp::max(12000, 150 * fee_rate); // Commit tx is ~150 vbytes
         
         debug!("Inscription fees: reveal_script={} bytes, reveal_vbytes={}, reveal_fee={} sats", 
                script_size, reveal_vbytes, reveal_fee);
@@ -724,8 +724,8 @@ impl WalletService {
         // Annex is in witness, so it gets the discount too
         let annex_size = annex_data.len();
         let reveal_vbytes = 150 + (annex_size + 64 + 3) / 4; // 64 for schnorr sig
-        let reveal_fee = std::cmp::max(500, reveal_vbytes as u64 * fee_rate);
-        let commit_fee = std::cmp::max(250, 150 * fee_rate); // Commit tx is ~150 vbytes
+        let reveal_fee = std::cmp::max(15000, reveal_vbytes as u64 * fee_rate);
+        let commit_fee = std::cmp::max(12000, 150 * fee_rate); // Commit tx is ~150 vbytes
         
         debug!("Annex fees: annex_size={} bytes, reveal_vbytes={}, reveal_fee={} sats", 
                annex_size, reveal_vbytes, reveal_fee);
@@ -944,8 +944,8 @@ impl WalletService {
         // Reveal tx: ~100 base vbytes + witness data (gets 75% discount)
         let script_size = data_script.len();
         let reveal_vbytes = 100 + (script_size + 3) / 4; // witness weight / 4
-        let reveal_fee = std::cmp::max(500, reveal_vbytes as u64 * fee_rate);
-        let commit_fee = std::cmp::max(250, 150 * fee_rate); // Commit tx is ~150 vbytes
+        let reveal_fee = std::cmp::max(15000, reveal_vbytes as u64 * fee_rate);
+        let commit_fee = std::cmp::max(12000, 150 * fee_rate); // Commit tx is ~150 vbytes
         
         debug!("WitnessData fees: data_script={} bytes, reveal_vbytes={}, reveal_fee={} sats", 
                script_size, reveal_vbytes, reveal_fee);

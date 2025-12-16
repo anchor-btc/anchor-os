@@ -61,11 +61,15 @@ services:
     networks:
       - anchor-network
 
-  infra-wallet:
+  # =============================================
+  # TOOLS (tool-)
+  # =============================================
+
+  tool-wallet:
     build:
       context: .
       dockerfile: ./crates/anchor-wallet/Dockerfile
-    container_name: anchor-infra-wallet
+    container_name: anchor-tool-wallet
     ports:
       - "3001:3001"
     environment:
@@ -85,10 +89,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # =============================================
-  # TOOLS (tool-)
-  # =============================================
-
   tool-testnet:
     build:
       context: .
@@ -97,7 +97,7 @@ services:
     ports:
       - "3014:3014"
     environment:
-      WALLET_URL: http://infra-wallet:3001
+      WALLET_URL: http://tool-wallet:3001
       API_PORT: 3014
       MIN_INTERVAL_SECS: 5
       MAX_INTERVAL_SECS: 15
@@ -105,7 +105,7 @@ services:
       INITIAL_BLOCKS: 101
       RUST_LOG: info
     depends_on:
-      - infra-wallet
+      - tool-wallet
       - infra-indexer
     networks:
       - anchor-network
@@ -116,11 +116,62 @@ services:
       retries: 5
     restart: unless-stopped
 
+  tool-mempool-db:
+    image: mariadb:10.11
+    container_name: anchor-tool-mempool-db
+    environment:
+      MYSQL_DATABASE: mempool
+      MYSQL_USER: mempool
+      MYSQL_PASSWORD: mempool
+      MYSQL_ROOT_PASSWORD: admin
+    volumes:
+      - mempool-db-data:/var/lib/mysql
+    networks:
+      - anchor-network
+    restart: unless-stopped
+
+  tool-mempool-api:
+    image: mempool/backend:latest
+    container_name: anchor-tool-mempool-api
+    environment:
+      MEMPOOL_BACKEND: "none"
+      MEMPOOL_NETWORK: "regtest"
+      CORE_RPC_HOST: "infra-bitcoin"
+      CORE_RPC_PORT: "18443"
+      CORE_RPC_USERNAME: "anchor"
+      CORE_RPC_PASSWORD: "anchor"
+      DATABASE_ENABLED: "true"
+      DATABASE_HOST: "tool-mempool-db"
+      DATABASE_PORT: "3306"
+      DATABASE_DATABASE: "mempool"
+      DATABASE_USERNAME: "mempool"
+      DATABASE_PASSWORD: "mempool"
+    depends_on:
+      - tool-mempool-db
+      - infra-bitcoin
+    networks:
+      - anchor-network
+    restart: unless-stopped
+
+  tool-mempool-web:
+    image: mempool/frontend:latest
+    container_name: anchor-tool-mempool-web
+    ports:
+      - "3003:8080"
+    environment:
+      FRONTEND_HTTP_PORT: "8080"
+      BACKEND_MAINNET_HTTP_HOST: "tool-mempool-api"
+    depends_on:
+      - tool-mempool-api
+    networks:
+      - anchor-network
+    restart: unless-stopped
+
   tool-btc-explorer:
-    image: getumbrel/btc-rpc-explorer:v3.4.0
+    image: getumbrel/btc-rpc-explorer:v3.3.0
     container_name: anchor-tool-btc-explorer
     ports:
-      - "3003:3002"
+      - "3015:3002"
     environment:
       BTCEXP_HOST: 0.0.0.0
       BTCEXP_PORT: 3002
@@ -155,7 +206,7 @@ services:
     environment:
       HOST: 0.0.0.0
       PORT: 3011
-      WALLET_URL: http://infra-wallet:3001
+      WALLET_URL: http://tool-wallet:3001
       BITCOIN_RPC_URL: http://infra-bitcoin:18443
       BITCOIN_RPC_USER: anchor
       BITCOIN_RPC_PASSWORD: anchor
@@ -163,7 +214,7 @@ services:
     depends_on:
       infra-bitcoin:
         condition: service_healthy
-      infra-wallet:
+      tool-wallet:
         condition: service_healthy
     networks:
       - anchor-network
@@ -225,7 +276,7 @@ services:
       - "3000:3000"
     depends_on:
       - app-threads-backend
-      - infra-wallet
+      - tool-wallet
     networks:
       - anchor-network
 
@@ -244,7 +295,7 @@ services:
       BITCOIN_RPC_URL: http://infra-bitcoin:18443
       BITCOIN_RPC_USER: anchor
       BITCOIN_RPC_PASSWORD: anchor
-      WALLET_URL: http://infra-wallet:3001
+      WALLET_URL: http://tool-wallet:3001
       POLL_INTERVAL_SECS: 5
       RUST_LOG: pixelmap_backend=info
     depends_on:
@@ -252,7 +303,7 @@ services:
         condition: service_healthy
       infra-bitcoin:
         condition: service_healthy
-      infra-wallet:
+      tool-wallet:
         condition: service_healthy
     networks:
       - anchor-network
@@ -295,7 +346,7 @@ services:
       BITCOIN_RPC_URL: http://infra-bitcoin:18443
       BITCOIN_RPC_USER: anchor
       BITCOIN_RPC_PASSWORD: anchor
-      WALLET_URL: http://infra-wallet:3001
+      WALLET_URL: http://tool-wallet:3001
       POLL_INTERVAL_SECS: 5
       RUST_LOG: anchormap_backend=info
     depends_on:
@@ -303,7 +354,7 @@ services:
         condition: service_healthy
       infra-bitcoin:
         condition: service_healthy
-      infra-wallet:
+      tool-wallet:
         condition: service_healthy
     networks:
       - anchor-network
@@ -346,7 +397,7 @@ services:
       BITCOIN_RPC_URL: http://infra-bitcoin:18443
       BITCOIN_RPC_USER: anchor
       BITCOIN_RPC_PASSWORD: anchor
-      WALLET_URL: http://infra-wallet:3001
+      WALLET_URL: http://tool-wallet:3001
       POLL_INTERVAL_SECS: 5
       RUST_LOG: bitdns_backend=info
     depends_on:
@@ -354,7 +405,7 @@ services:
         condition: service_healthy
       infra-bitcoin:
         condition: service_healthy
-      infra-wallet:
+      tool-wallet:
         condition: service_healthy
     networks:
       - anchor-network
@@ -397,7 +448,7 @@ services:
       BITCOIN_RPC_URL: http://infra-bitcoin:18443
       BITCOIN_RPC_USER: anchor
       BITCOIN_RPC_PASSWORD: anchor
-      WALLET_URL: http://infra-wallet:3001
+      WALLET_URL: http://tool-wallet:3001
       POLL_INTERVAL_SECS: 5
       RUST_LOG: anchorproof_backend=info
     depends_on:
@@ -405,7 +456,7 @@ services:
         condition: service_healthy
       infra-bitcoin:
         condition: service_healthy
-      infra-wallet:
+      tool-wallet:
         condition: service_healthy
     networks:
       - anchor-network
@@ -436,6 +487,7 @@ services:
 volumes:
   bitcoin-data:
   postgres-data:
+  mempool-db-data:
 
 networks:
   anchor-network:

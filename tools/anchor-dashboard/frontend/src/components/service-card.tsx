@@ -32,10 +32,13 @@ const serviceIcons: Record<string, React.ElementType> = {
   "anchor-infra-bitcoin": Bitcoin,
   "anchor-infra-postgres": Database,
   "anchor-infra-indexer": Search,
-  "anchor-infra-wallet": Wallet,
   // Tools
+  "anchor-tool-wallet": Wallet,
   "anchor-tool-testnet": Pickaxe,
-  "anchor-tool-btc-explorer": Bitcoin,
+  "anchor-tool-mempool-web": Bitcoin,
+  "anchor-tool-mempool-api": Server,
+  "anchor-tool-mempool-db": Database,
+  "anchor-tool-btc-explorer": Search,
   "anchor-tool-dashboard-backend": Server,
   "anchor-tool-dashboard-frontend": Server,
   // Apps

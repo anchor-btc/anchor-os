@@ -129,7 +129,7 @@ pub struct CreateMessageRequest {
 }
 
 fn default_fee_rate() -> u64 {
-    1 // 1 sat/vbyte
+    50 // 50 sat/vbyte - higher for regtest compatibility
 }
 
 fn default_kind() -> u8 {
