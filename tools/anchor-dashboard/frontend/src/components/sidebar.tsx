@@ -22,6 +22,7 @@ import {
   Server,
   Terminal,
   Wrench,
+  Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apps, getAppStatus } from "@/lib/apps";
@@ -31,6 +32,7 @@ import { LogsModal } from "./logs-modal";
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Services", href: "/apps", icon: AppWindow },
+  { name: "Testnet Control", href: "/testnet", icon: Zap },
   { name: "Bitcoin Node", href: "/node", icon: Bitcoin },
   { name: "Wallet", href: "/wallet", icon: Wallet },
 ];
@@ -76,7 +78,8 @@ export function Sidebar() {
 
   const renderServiceItem = (app: typeof apps[0]) => {
     const Icon = iconMap[app.icon] || Server;
-    const hasUrl = !!app.url;
+    const hasExternalUrl = !!app.url;
+    const hasInternalUrl = !!app.internalUrl;
     const statusColor = getStatusColor(app.containers);
     const mainContainer = app.containers[0];
 
@@ -97,12 +100,26 @@ export function Sidebar() {
           >
             <Terminal className="w-3 h-3" />
           </button>
-          {hasUrl && <ExternalLink className="w-3 h-3" />}
+          {hasExternalUrl && <ExternalLink className="w-3 h-3" />}
         </div>
       </>
     );
 
-    if (hasUrl) {
+    // Internal dashboard link
+    if (hasInternalUrl) {
+      return (
+        <Link
+          key={app.id}
+          href={app.internalUrl!}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors group"
+        >
+          {content}
+        </Link>
+      );
+    }
+
+    // External link
+    if (hasExternalUrl) {
       return (
         <a
           key={app.id}

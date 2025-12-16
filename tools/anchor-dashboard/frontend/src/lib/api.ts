@@ -1,4 +1,5 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3011";
+const TESTNET_URL = process.env.NEXT_PUBLIC_TESTNET_URL || "http://localhost:3014";
 
 // Types
 export interface Container {
@@ -177,6 +178,82 @@ export async function mineBlocks(count: number = 1): Promise<{ blocks: string[] 
     body: JSON.stringify({ count }),
   });
   if (!res.ok) throw new Error("Failed to mine blocks");
+  return res.json();
+}
+
+// Testnet Types
+
+export interface TestnetConfig {
+  min_interval_secs: number;
+  max_interval_secs: number;
+  blocks_per_cycle: number;
+  enable_text: boolean;
+  enable_pixel: boolean;
+  enable_image: boolean;
+  enable_map: boolean;
+  enable_dns: boolean;
+  enable_proof: boolean;
+  weight_op_return: number;
+  weight_stamps: number;
+  weight_inscription: number;
+  weight_taproot_annex: number;
+  weight_witness_data: number;
+  paused: boolean;
+}
+
+export interface TestnetStats {
+  total_messages: number;
+  total_blocks: number;
+  text_count: number;
+  pixel_count: number;
+  image_count: number;
+  map_count: number;
+  dns_count: number;
+  proof_count: number;
+  carrier_op_return: number;
+  carrier_stamps: number;
+  carrier_inscription: number;
+  carrier_taproot_annex: number;
+  carrier_witness_data: number;
+}
+
+// Testnet API Functions
+
+export async function fetchTestnetConfig(): Promise<TestnetConfig> {
+  const res = await fetch(`${TESTNET_URL}/config`);
+  if (!res.ok) throw new Error("Failed to fetch testnet config");
+  return res.json();
+}
+
+export async function updateTestnetConfig(config: Partial<TestnetConfig>): Promise<TestnetConfig> {
+  const res = await fetch(`${TESTNET_URL}/config`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(config),
+  });
+  if (!res.ok) throw new Error("Failed to update testnet config");
+  return res.json();
+}
+
+export async function fetchTestnetStats(): Promise<TestnetStats> {
+  const res = await fetch(`${TESTNET_URL}/stats`);
+  if (!res.ok) throw new Error("Failed to fetch testnet stats");
+  return res.json();
+}
+
+export async function pauseTestnet(): Promise<{ paused: boolean }> {
+  const res = await fetch(`${TESTNET_URL}/pause`, {
+    method: "POST",
+  });
+  if (!res.ok) throw new Error("Failed to pause testnet");
+  return res.json();
+}
+
+export async function resumeTestnet(): Promise<{ paused: boolean }> {
+  const res = await fetch(`${TESTNET_URL}/resume`, {
+    method: "POST",
+  });
+  if (!res.ok) throw new Error("Failed to resume testnet");
   return res.json();
 }
 

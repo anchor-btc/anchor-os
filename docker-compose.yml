@@ -127,8 +127,11 @@ services:
       context: .
       dockerfile: ./crates/anchor-testnet/Dockerfile
     container_name: anchor-tool-testnet
+    ports:
+      - "3014:3014"
     environment:
       WALLET_URL: http://infra-wallet:3001
+      API_PORT: 3014
       MIN_INTERVAL_SECS: 5
       MAX_INTERVAL_SECS: 15
       BLOCKS_PER_CYCLE: 1
@@ -139,6 +142,11 @@ services:
       - infra-indexer
     networks:
       - anchor-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3014/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
   tool-btc-explorer:

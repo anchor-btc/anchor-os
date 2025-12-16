@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { App, getAppStatus } from "@/lib/apps";
 import { Container, startContainer, stopContainer } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -20,6 +21,7 @@ import {
   Terminal,
   Play,
   Square,
+  Settings,
 } from "lucide-react";
 
 const iconMap: Record<string, React.ElementType> = {
@@ -179,7 +181,20 @@ export function AppCard({ app, containers, onToggle, onShowLogs, featured }: App
       {/* Action Buttons - Verbose */}
       <div className="space-y-2">
         {/* Primary action: Open App (when running) or Start */}
-        {app.url && isRunning ? (
+        {app.internalUrl && isRunning ? (
+          <Link
+            href={app.internalUrl}
+            className={cn(
+              "flex items-center justify-center gap-2 w-full py-2.5 rounded-xl font-medium text-sm transition-all",
+              colors.bg,
+              colors.text,
+              "hover:opacity-80"
+            )}
+          >
+            <Settings className="w-4 h-4" />
+            Control Panel
+          </Link>
+        ) : app.url && isRunning ? (
           <a
             href={app.url}
             target="_blank"

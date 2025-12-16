@@ -1,5 +1,6 @@
 //! Message generator for testnet
 
+use crate::config::{GeneratorStats, MessageType, SharedConfig, SharedStats, TestnetConfig};
 use anyhow::{Context, Result};
 use rand::seq::SliceRandom;
 use rand::Rng;
@@ -43,10 +44,9 @@ const REPLY_PREFIXES: &[&str] = &[
 ];
 
 /// Sample images as hex-encoded PNG
-/// Includes 1x1 pixels (tiny, ~70 bytes) and a 16x16 Bitcoin icon (827 bytes)
 const SAMPLE_IMAGES: &[(&str, &str)] = &[
-    // 16x16 Bitcoin icon PNG (827 bytes) - from Bitcoin Core
-    ("bitcoin", "89504e470d0a1a0a0000000d49484452000000100000001008060000001ff3ff610000030249444154785e75935f689b5500c57ff77ef7cb9734b14b69dc0cddccb24ee69059edd6ceada373828f520404ec93802f453494591447652e7b1136b676137c338253a080742f054445541d0ad351d0c0e8ca2a13d7766dd224cdf7f75edb0045dd3cdcd773cfb9dcdfe13f1280dd9b6fcf5c3f3f5898ff60b0347f79a074fdfd4385deddc90c600382ff91045233e38787163e3c7eb5f9c971dffbf8b0f14a074df3a33e7fe152dff4ccdb0786801420b712ff692e4f0e9ec9775a058206c6ab12fa2e425858b104425a18a998bf174cec1f9b7d17a8035a0002682b4f1c2be63bf4a87157087c8fc06bb2bee3594c324bb2361bc5ddbb48e35ab079497861ff3b37c7817509a8a9933d032db3b786093caa1d4759eb3985f5f408ea89611ab9972c81b64c2b2f62775a8f7e36923b0228796c5f3a7da4bbed4d4c80c020e3ed24fd3fb1bb0ee1640f60c762c89d47a9ef388136068c4648c9c01e3536f058322d275fd9339c4972822884580a120fa384c60aaa98c622db7e398b539fa3fee4498287f6823120049d49f9dcc597b70fcb8e78d44fd850f87588028c0ed1ce36a2f4e344c26675e78be8c423c4dd3b282781b0dbc06800d51e377d121d08a210630c3a70716b2b34651a693b387f7d0b910be93cca5dc2360db013ad9fd146630cc8d5dafa4f3a0ac3d6f322977a472f61ff299452d877af11bf7d15ab718766e741b488c36690b40942c2e59afe59be7e65f1cabd7af435422005c48325acd532c2af52dbf72a6bcf9ca7696f47fdf105965f01bf8eef7b2cd5f55763534b9faaef6fae577e986b9e7ba127f93c2852b5dfa8dd9ed1815f95ba2d8bb3fc254eb54cbc3187712b04a14f181aaedd72cffd38d7ac6c81347b2657cc67ec514b00b164a81359dd8875f9e96639a5bd2a443e61a4f102c3ade5e0425f71a105d2bf50be713a57cc75da6f2825b09502d33a446148a80d7e68985f0e26facf2e6ca17cdf983e7f2d3bf47b3137bd32d9ed572f779bcaa5bd66f162b7bfd1707a6a247bdf981e38e7a7763999efdeea2adc78efd1d2afa773a56fc6ba0a3dbb9c07cef96fca8e63940fd069c40000000049454e44ae426082"),
+    // 16x16 Bitcoin icon PNG (827 bytes)
+    ("bitcoin", "89504e470d0a1a0a0000000d49484452000000100000001008060000001ff3ff610000030249444154785e75935f689b5500c57ff77ef7cb9734b14b69dc0cddccb24ee69059edd6ceada373828f520404ec93802f453494591447652e7b1136b676137c338253a080742f054445541d0ad351d0c0e8ca2a13d7766dd224cdf7f75edb0045dd3cdcd773cfb9dcdfe13f1280dd9b6fcf5c3f3f5898ff60b0347f79a074fdfd4385deddc90c600382ff91045233e38787163e3c7eb5f9c971dffbf8b0f14a074df3a33e7fe152dff4ccdb0786801420b712ff692e4f0e9ec9775a058206c6ab12fa2e425858b104425a18a998bf174cec1f9b7d17a8035a0002682b4f1c2be63bf4a87157087c8fc06bb2bee3594c324bb2361bc5ddbb48e35ab079497861ff3b37c7817509a8a9933d032db3b786093caa1d4759eb3985f5f408ea89611ab9972c81b64c2b2f62775a8f7e36923b0228796c5f3a7da4bded4d4c80c020e3ed24fd3fb1bb0ee1640f60c762c89d47a9ef388136068c4648c9c01e3536f058322d275fd9339c4972822884580a120fa384c60aaa98c622db7e398b539fa3fee4498287f6823120049d49f9dcc597b70fcb8e78d44fd850f87588028c0ed1ce36a2f4e344c26675e78be8c423c4dd3b282781b0dbc06800d51e377d121d08a210630c3a70716b2b34651a693b387f7d0b910be93cca5dc2360db013ad9fd146630cc8d5dafa4f3a0ac3d6f322977a472f61ff299452d877af11bf7d15ab718766e641b488c36690b40942c2e59afe59be7e65f1cabd7af435422005c48325acd532c2af52dbf72a6bcf9ca7696f47fdf105965f01bf8eef7b2cd5f55763534b9faaef6fae577e986b9e7ba127f93c2852b5dfa8dd9ed1815f95ba2d8bb3fc254eb54cbc3187712b04a14f181aaedd72cffd38d7ac6c81347b2657cc67ec514b00b164a81359dd8875f9e96639a5bd2a443e61a4f102c3ade5e0425f71a105d2bf50be713a57cc75da6f2825b09502d33a446148a80d7e68985f0e26facf2e6ca17cdf983e7f2d3bf47b3137bd32d9ed572f779bcaa5bd66f162b7bfd1707a6a247bdf981e38e7a7763999efdeea2adc78efd1d2afa773a56fc6ba0a3dbb9c07cef96fca8e63940fd069c40000000049454e44ae426082"),
     // 1x1 Orange pixel PNG (~70 bytes)
     ("orange", "89504e470d0a1a0a0000000d4948445200000001000000010802000000907753de0000000c4944415478da636cf8cf00000102010089d1c26a0000000049454e44ae426082"),
     // 1x1 Blue pixel PNG  
@@ -59,6 +59,34 @@ const SAMPLE_IMAGES: &[(&str, &str)] = &[
     ("yellow", "89504e470d0a1a0a0000000d4948445200000001000000010802000000907753de0000000c4944415478da63fcfc0b00000201010048e92b6f0000000049454e44ae426082"),
     // 1x1 Red pixel PNG
     ("red", "89504e470d0a1a0a0000000d4948445200000001000000010802000000907753de0000000c4944415478da63f8cf0000000201010078a834d00000000049454e44ae426082"),
+];
+
+/// Sample domain names for DNS
+const SAMPLE_DOMAINS: &[&str] = &[
+    "bitcoin",
+    "satoshi",
+    "anchor",
+    "crypto",
+    "web3",
+    "defi",
+    "nft",
+    "hodl",
+    "moon",
+    "stack",
+];
+
+/// Sample city names for map markers
+const SAMPLE_CITIES: &[(&str, f64, f64)] = &[
+    ("New York", 40.7128, -74.0060),
+    ("London", 51.5074, -0.1278),
+    ("Tokyo", 35.6762, 139.6503),
+    ("Paris", 48.8566, 2.3522),
+    ("Sydney", -33.8688, 151.2093),
+    ("São Paulo", -23.5505, -46.6333),
+    ("Dubai", 25.2048, 55.2708),
+    ("Singapore", 1.3521, 103.8198),
+    ("Berlin", 52.5200, 13.4050),
+    ("Toronto", 43.6532, -79.3832),
 ];
 
 /// Carrier types for transactions
@@ -81,6 +109,17 @@ impl CarrierType {
             CarrierType::WitnessData => "witness_data",
         }
     }
+
+    pub fn from_u8(val: u8) -> Self {
+        match val {
+            0 => CarrierType::OpReturn,
+            1 => CarrierType::Inscription,
+            2 => CarrierType::Stamps,
+            3 => CarrierType::TaprootAnnex,
+            4 => CarrierType::WitnessData,
+            _ => CarrierType::OpReturn,
+        }
+    }
 }
 
 /// Result of creating a message
@@ -88,8 +127,8 @@ impl CarrierType {
 pub struct MessageResult {
     pub txid: String,
     pub vout: u32,
+    pub message_type: MessageType,
     pub is_reply: bool,
-    pub is_image: bool,
     pub parent_txid: Option<String>,
     pub parent_vout: Option<u32>,
     pub carrier: CarrierType,
@@ -145,16 +184,20 @@ pub struct MessageGenerator {
     /// History of created messages for threading
     message_history: Vec<(String, u32)>, // (txid, vout)
     rng: rand::rngs::ThreadRng,
+    config: SharedConfig,
+    stats: SharedStats,
 }
 
 impl MessageGenerator {
     /// Create a new generator
-    pub fn new(wallet_url: &str) -> Self {
+    pub fn new(wallet_url: &str, config: SharedConfig, stats: SharedStats) -> Self {
         Self {
             client: reqwest::Client::new(),
             wallet_url: wallet_url.to_string(),
             message_history: Vec::new(),
             rng: rand::thread_rng(),
+            config,
+            stats,
         }
     }
 
@@ -197,58 +240,94 @@ impl MessageGenerator {
             .error_for_status()?
             .json()
             .await?;
+
+        // Update stats
+        {
+            let mut stats = self.stats.write().await;
+            stats.increment_blocks(response.blocks.len() as u64);
+        }
+
         Ok(response.blocks)
     }
 
-    /// Generate a random message (root, reply, or image) with random carrier
-    pub async fn generate_message(&mut self) -> Result<MessageResult> {
-        // Decide what type of message to create
-        let roll: f64 = self.rng.gen();
-
-        // Randomly select a carrier (mostly OP_RETURN, occasionally Stamps)
-        let carrier = self.random_carrier();
-
-        if roll < 0.15 {
-            // 15% chance to create an image
-            self.create_image(carrier).await
-        } else if !self.message_history.is_empty() && roll < 0.60 {
-            // 45% chance to reply (if we have history)
-            self.create_reply(carrier).await
-        } else {
-            // Otherwise create a root text message
-            self.create_root(carrier).await
-        }
+    /// Get current config
+    pub async fn get_config(&self) -> TestnetConfig {
+        self.config.read().await.clone()
     }
 
-    /// Select a random carrier type
-    fn random_carrier(&mut self) -> CarrierType {
-        // Weighted selection:
-        // 30% OP_RETURN (default, most efficient, prunable)
-        // 20% Stamps (permanent, unprunable)
-        // 20% Inscription (Ordinals-style, witness discount)
-        // 15% TaprootAnnex (witness data with annex, needs libre relay)
-        // 15% WitnessData (witness data with Tapscript)
-        let roll: f64 = self.rng.gen();
+    /// Generate a random message based on enabled types
+    pub async fn generate_message(&mut self) -> Result<Option<MessageResult>> {
+        let config = self.config.read().await.clone();
 
-        if roll < 0.30 {
-            CarrierType::OpReturn
-        } else if roll < 0.50 {
-            CarrierType::Stamps
-        } else if roll < 0.70 {
-            CarrierType::Inscription
-        } else if roll < 0.85 {
-            CarrierType::TaprootAnnex
-        } else {
-            CarrierType::WitnessData
+        // Check if paused
+        if config.paused {
+            return Ok(None);
         }
+
+        // Get enabled types
+        let enabled_types = config.enabled_types();
+        if enabled_types.is_empty() {
+            return Ok(None);
+        }
+
+        // Pick a random type
+        let msg_type = enabled_types
+            .choose(&mut self.rng)
+            .copied()
+            .unwrap_or(MessageType::Text);
+
+        // Pick a random carrier based on weights
+        let carrier = self.random_carrier(&config);
+
+        // Generate based on type
+        let result = match msg_type {
+            MessageType::Text => {
+                // 45% chance to reply if we have history
+                if !self.message_history.is_empty() && self.rng.gen_bool(0.45) {
+                    self.create_reply(carrier).await?
+                } else {
+                    self.create_text(carrier).await?
+                }
+            }
+            MessageType::Pixel => self.create_pixel(carrier).await?,
+            MessageType::Image => self.create_image(carrier).await?,
+            MessageType::Map => self.create_map_marker(carrier).await?,
+            MessageType::Dns => self.create_dns_record(carrier).await?,
+            MessageType::Proof => self.create_proof(carrier).await?,
+        };
+
+        // Update stats
+        {
+            let mut stats = self.stats.write().await;
+            stats.increment_type(result.message_type);
+            stats.increment_carrier(result.carrier as u8);
+        }
+
+        Ok(Some(result))
     }
 
-    /// Create a root message (new thread)
-    async fn create_root(&mut self, carrier: CarrierType) -> Result<MessageResult> {
+    /// Select a random carrier type based on config weights
+    fn random_carrier(&mut self, config: &TestnetConfig) -> CarrierType {
+        let weights = config.carrier_weights();
+        let roll: f64 = self.rng.gen();
+
+        let mut cumulative = 0.0;
+        for (i, weight) in weights.iter().enumerate() {
+            cumulative += weight;
+            if roll < cumulative {
+                return CarrierType::from_u8(i as u8);
+            }
+        }
+
+        CarrierType::OpReturn
+    }
+
+    /// Create a text message (Kind 1)
+    async fn create_text(&mut self, carrier: CarrierType) -> Result<MessageResult> {
         let body = self.random_message();
 
         let request = CreateMessageRequest {
-            kind: 1, // Text
+            kind: 1,
             body,
             body_is_hex: false,
             parent_txid: None,
@@ -257,38 +336,21 @@ impl MessageGenerator {
         };
 
         let response = self.send_create_message(&request).await?;
-
-        // Store in history
-        self.message_history.push((response.txid.clone(), response.vout));
-
-        // Keep history manageable
-        if self.message_history.len() > 100 {
-            self.message_history.remove(0);
-        }
-
-        let actual_carrier = match response.carrier {
-            0 => CarrierType::OpReturn,
-            1 => CarrierType::Inscription,
-            2 => CarrierType::Stamps,
-            3 => CarrierType::TaprootAnnex,
-            4 => CarrierType::WitnessData,
-            _ => CarrierType::OpReturn,
-        };
+        self.add_to_history(&response.txid, response.vout);
 
         Ok(MessageResult {
             txid: response.txid,
             vout: response.vout,
+            message_type: MessageType::Text,
             is_reply: false,
-            is_image: false,
             parent_txid: None,
             parent_vout: None,
-            carrier: actual_carrier,
+            carrier: CarrierType::from_u8(response.carrier),
         })
     }
 
-    /// Create a reply to an existing message
+    /// Create a reply message (Kind 1 with parent)
     async fn create_reply(&mut self, carrier: CarrierType) -> Result<MessageResult> {
-        // Pick a random parent from history
         let parent = self
             .message_history
             .choose(&mut self.rng)
@@ -298,7 +360,7 @@ impl MessageGenerator {
         let body = self.random_reply();
 
         let request = CreateMessageRequest {
-            kind: 1, // Text
+            kind: 1,
             body,
             body_is_hex: false,
             parent_txid: Some(parent.0.clone()),
@@ -307,47 +369,76 @@ impl MessageGenerator {
         };
 
         let response = self.send_create_message(&request).await?;
-
-        // Store in history
-        self.message_history.push((response.txid.clone(), response.vout));
-
-        // Keep history manageable
-        if self.message_history.len() > 100 {
-            self.message_history.remove(0);
-        }
-
-        let actual_carrier = match response.carrier {
-            0 => CarrierType::OpReturn,
-            1 => CarrierType::Inscription,
-            2 => CarrierType::Stamps,
-            3 => CarrierType::TaprootAnnex,
-            4 => CarrierType::WitnessData,
-            _ => CarrierType::OpReturn,
-        };
+        self.add_to_history(&response.txid, response.vout);
 
         Ok(MessageResult {
             txid: response.txid,
             vout: response.vout,
+            message_type: MessageType::Text,
             is_reply: true,
-            is_image: false,
             parent_txid: Some(parent.0),
             parent_vout: Some(parent.1),
-            carrier: actual_carrier,
+            carrier: CarrierType::from_u8(response.carrier),
         })
     }
 
-    /// Create an image message
+    /// Create a pixel message (Kind 2)
+    /// Encodes: x (2 bytes) | y (2 bytes) | r | g | b
+    async fn create_pixel(&mut self, carrier: CarrierType) -> Result<MessageResult> {
+        let x: u16 = self.rng.gen_range(0..1000);
+        let y: u16 = self.rng.gen_range(0..1000);
+        let r: u8 = self.rng.gen();
+        let g: u8 = self.rng.gen();
+        let b: u8 = self.rng.gen();
+
+        // Encode pixel data as hex
+        let mut data = Vec::with_capacity(7);
+        data.extend_from_slice(&x.to_be_bytes());
+        data.extend_from_slice(&y.to_be_bytes());
+        data.push(r);
+        data.push(g);
+        data.push(b);
+
+        let body = hex::encode(&data);
+
+        tracing::info!(
+            "Creating pixel at ({}, {}) with color #{:02x}{:02x}{:02x}",
+            x,
+            y,
+            r,
+            g,
+            b
+        );
+
+        let request = CreateMessageRequest {
+            kind: 2, // State/Pixel
+            body,
+            body_is_hex: true,
+            parent_txid: None,
+            parent_vout: None,
+            carrier: Some(carrier as u8),
+        };
+
+        let response = self.send_create_message(&request).await?;
+
+        Ok(MessageResult {
+            txid: response.txid,
+            vout: response.vout,
+            message_type: MessageType::Pixel,
+            is_reply: false,
+            parent_txid: None,
+            parent_vout: None,
+            carrier: CarrierType::from_u8(response.carrier),
+        })
+    }
+
+    /// Create an image message (Kind 4)
     async fn create_image(&mut self, carrier: CarrierType) -> Result<MessageResult> {
-        // Pick a random sample image
         let (color, hex_data) = SAMPLE_IMAGES
             .choose(&mut self.rng)
             .unwrap_or(&SAMPLE_IMAGES[0]);
 
-        tracing::info!(
-            "Creating {} pixel image message with {} carrier",
-            color,
-            carrier.as_str()
-        );
+        tracing::info!("Creating {} image message", color);
 
         let request = CreateMessageRequest {
             kind: 4, // Image
@@ -359,32 +450,152 @@ impl MessageGenerator {
         };
 
         let response = self.send_create_message(&request).await?;
-
-        // Store in history (images can also be replied to)
-        self.message_history.push((response.txid.clone(), response.vout));
-
-        // Keep history manageable
-        if self.message_history.len() > 100 {
-            self.message_history.remove(0);
-        }
-
-        let actual_carrier = match response.carrier {
-            0 => CarrierType::OpReturn,
-            1 => CarrierType::Inscription,
-            2 => CarrierType::Stamps,
-            3 => CarrierType::TaprootAnnex,
-            4 => CarrierType::WitnessData,
-            _ => CarrierType::OpReturn,
-        };
+        self.add_to_history(&response.txid, response.vout);
 
         Ok(MessageResult {
             txid: response.txid,
             vout: response.vout,
+            message_type: MessageType::Image,
             is_reply: false,
-            is_image: true,
             parent_txid: None,
             parent_vout: None,
-            carrier: actual_carrier,
+            carrier: CarrierType::from_u8(response.carrier),
+        })
+    }
+
+    /// Create a map marker message (Kind 5)
+    /// Encodes: lat (f64) | lng (f64) | label (string)
+    async fn create_map_marker(&mut self, carrier: CarrierType) -> Result<MessageResult> {
+        let (city, base_lat, base_lng) = SAMPLE_CITIES
+            .choose(&mut self.rng)
+            .unwrap_or(&SAMPLE_CITIES[0]);
+
+        // Add some random offset to make unique locations
+        let lat = base_lat + self.rng.gen_range(-0.1..0.1);
+        let lng = base_lng + self.rng.gen_range(-0.1..0.1);
+        let label = format!("{} #{}", city, self.rng.gen_range(1..1000));
+
+        // Encode as: lat_bytes (8) | lng_bytes (8) | label_bytes
+        let mut data = Vec::new();
+        data.extend_from_slice(&lat.to_be_bytes());
+        data.extend_from_slice(&lng.to_be_bytes());
+        data.extend_from_slice(label.as_bytes());
+
+        let body = hex::encode(&data);
+
+        tracing::info!("Creating map marker: {} at ({:.4}, {:.4})", label, lat, lng);
+
+        let request = CreateMessageRequest {
+            kind: 5, // Custom(5) for geo markers
+            body,
+            body_is_hex: true,
+            parent_txid: None,
+            parent_vout: None,
+            carrier: Some(carrier as u8),
+        };
+
+        let response = self.send_create_message(&request).await?;
+
+        Ok(MessageResult {
+            txid: response.txid,
+            vout: response.vout,
+            message_type: MessageType::Map,
+            is_reply: false,
+            parent_txid: None,
+            parent_vout: None,
+            carrier: CarrierType::from_u8(response.carrier),
+        })
+    }
+
+    /// Create a DNS record message (Kind 10)
+    /// Encodes based on BitDNS format: operation | name | records
+    async fn create_dns_record(&mut self, carrier: CarrierType) -> Result<MessageResult> {
+        let domain = SAMPLE_DOMAINS
+            .choose(&mut self.rng)
+            .unwrap_or(&"test");
+
+        let suffix = self.rng.gen_range(1..10000);
+        let full_domain = format!("{}{}", domain, suffix);
+
+        // Simple DNS registration payload
+        // Format: version(1) | operation(1) | name_len(1) | name | record_count(1) | record_type(1) | value_len(2) | value
+        let mut data = Vec::new();
+        data.push(1u8); // Version
+        data.push(0u8); // Operation: Register
+        data.push(full_domain.len() as u8); // Name length
+        data.extend_from_slice(full_domain.as_bytes()); // Name
+
+        // Add a TXT record
+        let txt_value = format!("Generated by Anchor Testnet");
+        data.push(1u8); // Record count
+        data.push(16u8); // TXT record type
+        data.extend_from_slice(&(txt_value.len() as u16).to_be_bytes()); // Value length
+        data.extend_from_slice(txt_value.as_bytes()); // Value
+
+        let body = hex::encode(&data);
+
+        tracing::info!("Creating DNS record for: {}.bit", full_domain);
+
+        let request = CreateMessageRequest {
+            kind: 10, // Custom(10) for DNS
+            body,
+            body_is_hex: true,
+            parent_txid: None,
+            parent_vout: None,
+            carrier: Some(carrier as u8),
+        };
+
+        let response = self.send_create_message(&request).await?;
+
+        Ok(MessageResult {
+            txid: response.txid,
+            vout: response.vout,
+            message_type: MessageType::Dns,
+            is_reply: false,
+            parent_txid: None,
+            parent_vout: None,
+            carrier: CarrierType::from_u8(response.carrier),
+        })
+    }
+
+    /// Create a proof of existence message (Kind 11)
+    /// Encodes: operation | algorithm | hash
+    async fn create_proof(&mut self, carrier: CarrierType) -> Result<MessageResult> {
+        // Generate a random "file hash" (SHA-256)
+        let mut hash = [0u8; 32];
+        self.rng.fill(&mut hash);
+
+        // Proof payload format: version(1) | operation(1) | algorithm(1) | hash(32)
+        let mut data = Vec::new();
+        data.push(1u8); // Version
+        data.push(0u8); // Operation: Stamp
+        data.push(0u8); // Algorithm: SHA-256
+        data.extend_from_slice(&hash);
+
+        let body = hex::encode(&data);
+        let hash_preview = hex::encode(&hash[..8]);
+
+        tracing::info!("Creating proof of existence: {}...", hash_preview);
+
+        let request = CreateMessageRequest {
+            kind: 11, // Custom(11) for Proof
+            body,
+            body_is_hex: true,
+            parent_txid: None,
+            parent_vout: None,
+            carrier: Some(carrier as u8),
+        };
+
+        let response = self.send_create_message(&request).await?;
+
+        Ok(MessageResult {
+            txid: response.txid,
+            vout: response.vout,
+            message_type: MessageType::Proof,
+            is_reply: false,
+            parent_txid: None,
+            parent_vout: None,
+            carrier: CarrierType::from_u8(response.carrier),
         })
     }
 
@@ -404,13 +615,20 @@ impl MessageGenerator {
         Ok(response)
     }
 
+    /// Add message to history
+    fn add_to_history(&mut self, txid: &str, vout: u32) {
+        self.message_history.push((txid.to_string(), vout));
+        if self.message_history.len() > 100 {
+            self.message_history.remove(0);
+        }
+    }
+
     /// Generate a random message body
     fn random_message(&mut self) -> String {
         let base = SAMPLE_MESSAGES
             .choose(&mut self.rng)
             .unwrap_or(&"Hello, ANCHOR!");
 
-        // Sometimes add a random number for variety
         if self.rng.gen_bool(0.3) {
             format!("{} #{}", base, self.rng.gen_range(1..1000))
         } else {

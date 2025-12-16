@@ -7,6 +7,7 @@ export interface App {
   icon: string;
   color: string;
   url?: string;
+  internalUrl?: string; // Internal dashboard route (e.g., /testnet)
   port?: number;
   containers: string[]; // container names that make up this app
   category: "app" | "tool" | "infrastructure";
@@ -47,8 +48,11 @@ export const apps: App[] = [
     description: "Automatically generates test transactions and mines blocks",
     icon: "Pickaxe",
     color: "amber",
+    internalUrl: "/testnet",
+    port: 3014,
     containers: ["anchor-tool-testnet"],
     category: "tool",
+    featured: true,
   },
 
   // =============================================

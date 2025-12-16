@@ -42,15 +42,19 @@ FROM debian:bookworm-slim
 RUN apt-get update && apt-get install -y \
     ca-certificates \
     libssl3 \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app/target/release/anchor-testnet /usr/local/bin/
 
 ENV RUST_LOG=info
 ENV WALLET_URL=http://infra-wallet:3001
+ENV API_PORT=3014
 ENV MIN_INTERVAL_SECS=3
 ENV MAX_INTERVAL_SECS=10
 ENV BLOCKS_PER_CYCLE=1
 ENV INITIAL_BLOCKS=101
+
+EXPOSE 3014
 
 CMD ["anchor-testnet"]
