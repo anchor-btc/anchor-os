@@ -1,0 +1,96 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 15, 23, 42;
+  --background-end-rgb: 15, 23, 42;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+  min-height: 100vh;
+}
+
+/* Print styles for certificate */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  #certificate-content {
+    border: 2px solid #10b981 !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 24px !important;
+  }
+  
+  #certificate-content * {
+    color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+  }
+  
+  .bg-emerald-50 {
+    background-color: #ecfdf5 !important;
+  }
+  
+  .bg-emerald-100 {
+    background-color: #d1fae5 !important;
+  }
+  
+  .bg-slate-50 {
+    background-color: #f8fafc !important;
+  }
+  
+  .bg-slate-100 {
+    background-color: #f1f5f9 !important;
+  }
+  
+  .text-emerald-600 {
+    color: #059669 !important;
+  }
+  
+  .border-emerald-500 {
+    border-color: #10b981 !important;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgb(30, 41, 59);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgb(71, 85, 105);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(100, 116, 139);
+}
+
+/* Selection */
+::selection {
+  background: rgba(16, 185, 129, 0.3);
+}
+
+/* Focus ring */
+*:focus-visible {
+  outline: 2px solid rgb(16, 185, 129);
+  outline-offset: 2px;
+}

@@ -270,6 +270,114 @@ services:
     restart: unless-stopped
 
   # =============================================
+  # BitDNS - Decentralized DNS on Bitcoin
+  # =============================================
+
+  bitdns-backend:
+    build:
+      context: .
+      dockerfile: apps/bitdns/backend/Dockerfile
+    container_name: anchor-bitdns-backend
+    ports:
+      - "3008:3006"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3006
+      DATABASE_URL: postgres://anchor:anchor@postgres:5432/anchor
+      BITCOIN_RPC_URL: http://bitcoin:18443
+      BITCOIN_RPC_USER: anchor
+      BITCOIN_RPC_PASSWORD: anchor
+      WALLET_URL: http://wallet:3001
+      POLL_INTERVAL_SECS: 5
+      RUST_LOG: bitdns_backend=info
+    depends_on:
+      postgres:
+        condition: service_healthy
+      bitcoin:
+        condition: service_healthy
+      wallet:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3006/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  bitdns-web:
+    build:
+      context: ./apps/bitdns/frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:3008
+        NEXT_PUBLIC_WALLET_URL: http://localhost:3001
+    container_name: anchor-bitdns-web
+    ports:
+      - "3009:3000"
+    depends_on:
+      bitdns-backend:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    restart: unless-stopped
+
+  # =============================================
+  # AnchorProof - Proof of Existence
+  # =============================================
+
+  anchorproof-backend:
+    build:
+      context: .
+      dockerfile: apps/anchorproof/backend/Dockerfile
+    container_name: anchor-anchorproof-backend
+    ports:
+      - "3012:3012"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3012
+      DATABASE_URL: postgres://anchor:anchor@postgres:5432/anchor
+      BITCOIN_RPC_URL: http://bitcoin:18443
+      BITCOIN_RPC_USER: anchor
+      BITCOIN_RPC_PASSWORD: anchor
+      WALLET_URL: http://wallet:3001
+      POLL_INTERVAL_SECS: 5
+      RUST_LOG: anchorproof_backend=info
+    depends_on:
+      postgres:
+        condition: service_healthy
+      bitcoin:
+        condition: service_healthy
+      wallet:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3012/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  anchorproof-web:
+    build:
+      context: ./apps/anchorproof/frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:3012
+        NEXT_PUBLIC_WALLET_URL: http://localhost:3001
+    container_name: anchor-anchorproof-web
+    ports:
+      - "3013:3011"
+    depends_on:
+      anchorproof-backend:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    restart: unless-stopped
+
+  # =============================================
   # Dashboard - Stack Control Panel
   # =============================================
 

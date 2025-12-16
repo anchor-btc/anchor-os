@@ -20,6 +20,8 @@ RUN mkdir -p crates/anchor-wallet-lib/src && echo "" > crates/anchor-wallet-lib/
 RUN mkdir -p explorer/backend/src && echo "fn main() {}" > explorer/backend/src/main.rs
 RUN mkdir -p apps/pixelmap/backend/src && echo "fn main() {}" > apps/pixelmap/backend/src/main.rs
 RUN mkdir -p apps/anchormap/backend/src && echo "fn main() {}" > apps/anchormap/backend/src/main.rs
+RUN mkdir -p apps/bitdns/backend/src && echo "fn main() {}" > apps/bitdns/backend/src/main.rs
+RUN mkdir -p apps/anchorproof/backend/src && echo "fn main() {}" > apps/anchorproof/backend/src/main.rs
 RUN mkdir -p dashboard/backend/src && echo "fn main() {}" > dashboard/backend/src/main.rs
 COPY crates/anchor-wallet/Cargo.toml ./crates/anchor-wallet/
 COPY crates/anchor-testnet/Cargo.toml ./crates/anchor-testnet/
@@ -27,6 +29,8 @@ COPY crates/anchor-wallet-lib/Cargo.toml ./crates/anchor-wallet-lib/
 COPY explorer/backend/Cargo.toml ./explorer/backend/
 COPY apps/pixelmap/backend/Cargo.toml ./apps/pixelmap/backend/
 COPY apps/anchormap/backend/Cargo.toml ./apps/anchormap/backend/
+COPY apps/bitdns/backend/Cargo.toml ./apps/bitdns/backend/
+COPY apps/anchorproof/backend/Cargo.toml ./apps/anchorproof/backend/
 COPY dashboard/backend/Cargo.toml ./dashboard/backend/
 
 # Build the indexer

@@ -1,0 +1,10 @@
+{
+  "name": "bitdns-extension",
+  "version": "1.0.0",
+  "description": "BitDNS Chrome Extension - Resolve .bit domains from Bitcoin blockchain",
+  "scripts": {
+    "build": "mkdir -p dist && cp -r manifest.json background.js popup.html popup.js icons dist/",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {}
+}

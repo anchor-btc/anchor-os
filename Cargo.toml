@@ -9,6 +9,8 @@ members = [
     "explorer/backend",
     "apps/pixelmap/backend",
     "apps/anchormap/backend",
+    "apps/bitdns/backend",
+    "apps/anchorproof/backend",
     "dashboard/backend",
 ]
 

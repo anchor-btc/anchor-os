@@ -14,6 +14,8 @@ import {
   Search,
   AppWindow,
   Settings,
+  Globe,
+  FileCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -29,6 +31,8 @@ const externalLinks = [
   { name: "BTC Explorer", href: "http://localhost:3003", icon: Bitcoin },
   { name: "PixelMap", href: "http://localhost:3005", icon: Grid3X3 },
   { name: "AnchorMap", href: "http://localhost:3007", icon: Map },
+  { name: "BitDNS", href: "http://localhost:3009", icon: Globe },
+  { name: "AnchorProof", href: "http://localhost:3013", icon: FileCheck },
 ];
 
 export function Sidebar() {
