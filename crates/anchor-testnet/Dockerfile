@@ -17,21 +17,21 @@ COPY crates/anchor-testnet ./crates/anchor-testnet
 RUN mkdir -p crates/anchor-indexer/src && echo "fn main() {}" > crates/anchor-indexer/src/main.rs
 RUN mkdir -p crates/anchor-wallet/src && echo "fn main() {}" > crates/anchor-wallet/src/main.rs
 RUN mkdir -p crates/anchor-wallet-lib/src && echo "" > crates/anchor-wallet-lib/src/lib.rs
-RUN mkdir -p explorer/backend/src && echo "fn main() {}" > explorer/backend/src/main.rs
-RUN mkdir -p apps/pixelmap/backend/src && echo "fn main() {}" > apps/pixelmap/backend/src/main.rs
-RUN mkdir -p apps/anchormap/backend/src && echo "fn main() {}" > apps/anchormap/backend/src/main.rs
-RUN mkdir -p apps/bitdns/backend/src && echo "fn main() {}" > apps/bitdns/backend/src/main.rs
-RUN mkdir -p apps/anchorproof/backend/src && echo "fn main() {}" > apps/anchorproof/backend/src/main.rs
-RUN mkdir -p dashboard/backend/src && echo "fn main() {}" > dashboard/backend/src/main.rs
+RUN mkdir -p tools/anchor-explorer/backend/src && echo "fn main() {}" > tools/anchor-explorer/backend/src/main.rs
+RUN mkdir -p tools/anchor-dashboard/backend/src && echo "fn main() {}" > tools/anchor-dashboard/backend/src/main.rs
+RUN mkdir -p apps/anchor-pixel/backend/src && echo "fn main() {}" > apps/anchor-pixel/backend/src/main.rs
+RUN mkdir -p apps/anchor-map/backend/src && echo "fn main() {}" > apps/anchor-map/backend/src/main.rs
+RUN mkdir -p apps/anchor-dns/backend/src && echo "fn main() {}" > apps/anchor-dns/backend/src/main.rs
+RUN mkdir -p apps/anchor-proof/backend/src && echo "fn main() {}" > apps/anchor-proof/backend/src/main.rs
 COPY crates/anchor-indexer/Cargo.toml ./crates/anchor-indexer/
 COPY crates/anchor-wallet/Cargo.toml ./crates/anchor-wallet/
 COPY crates/anchor-wallet-lib/Cargo.toml ./crates/anchor-wallet-lib/
-COPY explorer/backend/Cargo.toml ./explorer/backend/
-COPY apps/pixelmap/backend/Cargo.toml ./apps/pixelmap/backend/
-COPY apps/anchormap/backend/Cargo.toml ./apps/anchormap/backend/
-COPY apps/bitdns/backend/Cargo.toml ./apps/bitdns/backend/
-COPY apps/anchorproof/backend/Cargo.toml ./apps/anchorproof/backend/
-COPY dashboard/backend/Cargo.toml ./dashboard/backend/
+COPY tools/anchor-explorer/backend/Cargo.toml ./tools/anchor-explorer/backend/
+COPY tools/anchor-dashboard/backend/Cargo.toml ./tools/anchor-dashboard/backend/
+COPY apps/anchor-pixel/backend/Cargo.toml ./apps/anchor-pixel/backend/
+COPY apps/anchor-map/backend/Cargo.toml ./apps/anchor-map/backend/
+COPY apps/anchor-dns/backend/Cargo.toml ./apps/anchor-dns/backend/
+COPY apps/anchor-proof/backend/Cargo.toml ./apps/anchor-proof/backend/
 
 # Build the testnet service
 RUN cargo build --release -p anchor-testnet
@@ -47,11 +47,10 @@ RUN apt-get update && apt-get install -y \
 COPY --from=builder /app/target/release/anchor-testnet /usr/local/bin/
 
 ENV RUST_LOG=info
-ENV WALLET_URL=http://wallet:3001
+ENV WALLET_URL=http://infra-wallet:3001
 ENV MIN_INTERVAL_SECS=3
 ENV MAX_INTERVAL_SECS=10
 ENV BLOCKS_PER_CYCLE=1
 ENV INITIAL_BLOCKS=101
 
 CMD ["anchor-testnet"]
-

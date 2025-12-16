@@ -12,6 +12,8 @@ import {
   Wallet,
   Database,
   Pickaxe,
+  Globe,
+  FileCheck,
   ExternalLink,
   Loader2,
   Power,
@@ -28,6 +30,8 @@ const iconMap: Record<string, React.ElementType> = {
   Wallet,
   Database,
   Pickaxe,
+  Globe,
+  FileCheck,
 };
 
 const colorMap: Record<string, { bg: string; border: string; text: string; glow: string }> = {
@@ -72,6 +76,12 @@ const colorMap: Record<string, { bg: string; border: string; text: string; glow:
     border: "border-amber-500/30",
     text: "text-amber-500",
     glow: "shadow-amber-500/20",
+  },
+  emerald: {
+    bg: "bg-emerald-500/10",
+    border: "border-emerald-500/30",
+    text: "text-emerald-500",
+    glow: "shadow-emerald-500/20",
   },
 };
 

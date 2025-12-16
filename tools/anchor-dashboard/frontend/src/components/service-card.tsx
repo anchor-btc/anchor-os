@@ -16,6 +16,9 @@ import {
   Pickaxe,
   Map,
   Grid3X3,
+  Globe,
+  FileCheck,
+  Wallet,
 } from "lucide-react";
 
 interface ServiceCardProps {
@@ -24,18 +27,27 @@ interface ServiceCardProps {
 }
 
 const serviceIcons: Record<string, React.ElementType> = {
-  "anchor-bitcoin": Bitcoin,
-  "anchor-postgres": Database,
-  "anchor-indexer": Search,
-  "anchor-wallet": Box,
-  "anchor-explorer-api": Server,
-  "anchor-explorer-web": Search,
-  "anchor-testnet": Pickaxe,
-  "anchor-btc-explorer": Bitcoin,
-  "anchor-pixelmap-backend": Grid3X3,
-  "anchor-pixelmap-web": Grid3X3,
-  "anchor-anchormap-backend": Map,
-  "anchor-anchormap-web": Map,
+  // Infrastructure
+  "anchor-infra-bitcoin": Bitcoin,
+  "anchor-infra-postgres": Database,
+  "anchor-infra-indexer": Search,
+  "anchor-infra-wallet": Wallet,
+  // Tools
+  "anchor-tool-explorer-backend": Server,
+  "anchor-tool-explorer-frontend": Search,
+  "anchor-tool-testnet": Pickaxe,
+  "anchor-tool-btc-explorer": Bitcoin,
+  "anchor-tool-dashboard-backend": Server,
+  "anchor-tool-dashboard-frontend": Server,
+  // Apps
+  "anchor-app-pixel-backend": Grid3X3,
+  "anchor-app-pixel-frontend": Grid3X3,
+  "anchor-app-map-backend": Map,
+  "anchor-app-map-frontend": Map,
+  "anchor-app-dns-backend": Globe,
+  "anchor-app-dns-frontend": Globe,
+  "anchor-app-proof-backend": FileCheck,
+  "anchor-app-proof-frontend": FileCheck,
 };
 
 export function ServiceCard({ container, onAction }: ServiceCardProps) {
@@ -97,7 +109,7 @@ export function ServiceCard({ container, onAction }: ServiceCardProps) {
           </div>
           <div>
             <h3 className="font-medium text-foreground">
-              {container.name.replace("anchor-", "")}
+              {container.name.replace("anchor-", "").replace(/^(infra|tool|app)-/, "")}
             </h3>
             <p className="text-xs text-muted-foreground font-mono">
               {container.image.split(":")[0].split("/").pop()}

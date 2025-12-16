@@ -18,20 +18,20 @@ COPY crates/anchor-wallet-lib ./crates/anchor-wallet-lib
 # Create dummy files for other workspace members
 RUN mkdir -p crates/anchor-indexer/src && echo "fn main() {}" > crates/anchor-indexer/src/main.rs
 RUN mkdir -p crates/anchor-testnet/src && echo "fn main() {}" > crates/anchor-testnet/src/main.rs
-RUN mkdir -p explorer/backend/src && echo "fn main() {}" > explorer/backend/src/main.rs
-RUN mkdir -p apps/pixelmap/backend/src && echo "fn main() {}" > apps/pixelmap/backend/src/main.rs
-RUN mkdir -p apps/anchormap/backend/src && echo "fn main() {}" > apps/anchormap/backend/src/main.rs
-RUN mkdir -p apps/bitdns/backend/src && echo "fn main() {}" > apps/bitdns/backend/src/main.rs
-RUN mkdir -p apps/anchorproof/backend/src && echo "fn main() {}" > apps/anchorproof/backend/src/main.rs
-RUN mkdir -p dashboard/backend/src && echo "fn main() {}" > dashboard/backend/src/main.rs
+RUN mkdir -p tools/anchor-explorer/backend/src && echo "fn main() {}" > tools/anchor-explorer/backend/src/main.rs
+RUN mkdir -p tools/anchor-dashboard/backend/src && echo "fn main() {}" > tools/anchor-dashboard/backend/src/main.rs
+RUN mkdir -p apps/anchor-pixel/backend/src && echo "fn main() {}" > apps/anchor-pixel/backend/src/main.rs
+RUN mkdir -p apps/anchor-map/backend/src && echo "fn main() {}" > apps/anchor-map/backend/src/main.rs
+RUN mkdir -p apps/anchor-dns/backend/src && echo "fn main() {}" > apps/anchor-dns/backend/src/main.rs
+RUN mkdir -p apps/anchor-proof/backend/src && echo "fn main() {}" > apps/anchor-proof/backend/src/main.rs
 COPY crates/anchor-indexer/Cargo.toml ./crates/anchor-indexer/
 COPY crates/anchor-testnet/Cargo.toml ./crates/anchor-testnet/
-COPY explorer/backend/Cargo.toml ./explorer/backend/
-COPY apps/pixelmap/backend/Cargo.toml ./apps/pixelmap/backend/
-COPY apps/anchormap/backend/Cargo.toml ./apps/anchormap/backend/
-COPY apps/bitdns/backend/Cargo.toml ./apps/bitdns/backend/
-COPY apps/anchorproof/backend/Cargo.toml ./apps/anchorproof/backend/
-COPY dashboard/backend/Cargo.toml ./dashboard/backend/
+COPY tools/anchor-explorer/backend/Cargo.toml ./tools/anchor-explorer/backend/
+COPY tools/anchor-dashboard/backend/Cargo.toml ./tools/anchor-dashboard/backend/
+COPY apps/anchor-pixel/backend/Cargo.toml ./apps/anchor-pixel/backend/
+COPY apps/anchor-map/backend/Cargo.toml ./apps/anchor-map/backend/
+COPY apps/anchor-dns/backend/Cargo.toml ./apps/anchor-dns/backend/
+COPY apps/anchor-proof/backend/Cargo.toml ./apps/anchor-proof/backend/
 
 # Build the wallet
 RUN cargo build --release -p anchor-wallet
@@ -53,4 +53,3 @@ ENV PORT=3001
 EXPOSE 3001
 
 CMD ["anchor-wallet"]
-

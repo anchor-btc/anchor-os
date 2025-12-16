@@ -5,9 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchContainers } from "@/lib/api";
 import { apps } from "@/lib/apps";
 import { AppCard } from "@/components/app-card";
-import { InfraCard } from "@/components/infra-card";
 import { LogsModal } from "@/components/logs-modal";
-import { Loader2, Sparkles, Server, Settings } from "lucide-react";
+import { Loader2, AppWindow, Wrench, Server, Settings } from "lucide-react";
 import Link from "next/link";
 
 export default function AppsPage() {
@@ -25,8 +24,8 @@ export default function AppsPage() {
 
   const containers = containersData?.containers || [];
 
-  const featuredApps = apps.filter((app) => app.category === "app" && app.featured);
-  const otherApps = apps.filter((app) => app.category === "app" && !app.featured);
+  const appsList = apps.filter((app) => app.category === "app");
+  const toolApps = apps.filter((app) => app.category === "tool");
   const infrastructureApps = apps.filter((app) => app.category === "infrastructure");
 
   if (isLoading) {
@@ -43,9 +42,9 @@ export default function AppsPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Apps</h1>
+            <h1 className="text-3xl font-bold text-foreground">Services</h1>
             <p className="text-muted-foreground mt-1">
-              Manage your Bitcoin applications
+              Manage your Anchor Bitcoin stack
             </p>
           </div>
           <Link
@@ -57,35 +56,40 @@ export default function AppsPage() {
           </Link>
         </div>
 
-        {/* Featured Apps */}
+        {/* Apps */}
         <section>
           <div className="flex items-center gap-2 mb-4">
-            <Sparkles className="w-5 h-5 text-primary" />
-            <h2 className="text-xl font-semibold text-foreground">Featured Apps</h2>
+            <AppWindow className="w-5 h-5 text-primary" />
+            <h2 className="text-xl font-semibold text-foreground">Apps</h2>
+            <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
+              Bitcoin applications
+            </span>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {featuredApps.map((app) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {appsList.map((app) => (
               <AppCard
                 key={app.id}
                 app={app}
                 containers={containers}
                 onToggle={() => refetch()}
                 onShowLogs={(name) => setLogsContainer(name)}
-                featured
               />
             ))}
           </div>
         </section>
 
-        {/* Other Apps */}
-        {otherApps.length > 0 && (
+        {/* Tools */}
+        {toolApps.length > 0 && (
           <section>
             <div className="flex items-center gap-2 mb-4">
-              <Server className="w-5 h-5 text-muted-foreground" />
+              <Wrench className="w-5 h-5 text-muted-foreground" />
               <h2 className="text-xl font-semibold text-foreground">Tools</h2>
+              <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                Explorers & utilities
+              </span>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {otherApps.map((app) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {toolApps.map((app) => (
                 <AppCard
                   key={app.id}
                   app={app}
@@ -107,9 +111,9 @@ export default function AppsPage() {
               Core services
             </span>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {infrastructureApps.map((app) => (
-              <InfraCard
+              <AppCard
                 key={app.id}
                 app={app}
                 containers={containers}

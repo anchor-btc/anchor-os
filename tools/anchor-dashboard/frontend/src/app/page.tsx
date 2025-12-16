@@ -24,8 +24,11 @@ export default function DashboardPage() {
   const runningCount = containers.filter((c) => c.state === "running").length;
   const stoppedCount = containers.filter((c) => c.state !== "running").length;
 
-  // Get app statuses
-  const featuredApps = apps.filter((app) => app.category === "app" && app.featured);
+  // Get app statuses - include both apps and featured tools
+  const featuredApps = apps.filter((app) => 
+    (app.category === "app" && app.featured) || 
+    (app.category === "tool" && app.featured)
+  );
 
   return (
     <div className="space-y-8">
