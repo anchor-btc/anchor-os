@@ -3,14 +3,20 @@ services:
   # INFRASTRUCTURE (infra-)
   # =============================================
 
+  # Bitcoin Core Node (default - always available)
   infra-bitcoin:
     build:
-      context: ./docker/bitcoin
+      context: ./docker/bitcoin-core
       dockerfile: Dockerfile
+      args:
+        BITCOIN_VERSION: "30.0"
+        NETWORK: regtest
     container_name: anchor-infra-bitcoin
     ports:
-      - "18443:18443"  # RPC
-      - "18444:18444"  # P2P
+      - "18443:18443"  # RPC (regtest)
+      - "18444:18444"  # P2P (regtest)
+      - "8332:8332"    # RPC (mainnet)
+      - "8333:8333"    # P2P (mainnet)
     volumes:
       - bitcoin-data:/home/bitcoin/.bitcoin
     healthcheck:

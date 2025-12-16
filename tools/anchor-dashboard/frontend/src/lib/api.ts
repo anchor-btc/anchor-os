@@ -181,6 +181,54 @@ export async function mineBlocks(count: number = 1): Promise<{ blocks: string[] 
   return res.json();
 }
 
+// Node Management Types
+
+export interface VersionInfo {
+  version: string;
+  is_default: boolean;
+  release_date: string;
+  features: string[];
+}
+
+export interface NodeConfig {
+  current_version: string | null;
+  current_network: string;
+  is_running: boolean;
+  available_versions: VersionInfo[];
+}
+
+export interface SwitchVersionResponse {
+  success: boolean;
+  message: string;
+  version: string;
+  network: string;
+  requires_rebuild: boolean;
+}
+
+// Node Management API Functions
+
+export async function fetchNodeConfig(): Promise<NodeConfig> {
+  const res = await fetch(`${API_URL}/node/config`);
+  if (!res.ok) throw new Error("Failed to fetch node config");
+  return res.json();
+}
+
+export async function switchNodeVersion(version: string, network: string): Promise<SwitchVersionResponse> {
+  const res = await fetch(`${API_URL}/node/switch`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ version, network }),
+  });
+  if (!res.ok) throw new Error("Failed to switch node version");
+  return res.json();
+}
+
+export async function fetchNodeVersions(): Promise<VersionInfo[]> {
+  const res = await fetch(`${API_URL}/node/versions`);
+  if (!res.ok) throw new Error("Failed to fetch node versions");
+  return res.json();
+}
+
 // Testnet Types
 
 export interface TestnetConfig {

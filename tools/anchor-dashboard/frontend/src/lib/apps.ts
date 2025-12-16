@@ -125,7 +125,7 @@ export const apps: App[] = [
   {
     id: "infra-bitcoin",
     name: "Bitcoin Node",
-    description: "Bitcoin Core node running in regtest mode",
+    description: "Bitcoin Core - full-featured node with mining support",
     icon: "Bitcoin",
     color: "orange",
     port: 18443,

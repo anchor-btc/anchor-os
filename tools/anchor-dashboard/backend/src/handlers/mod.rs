@@ -2,6 +2,7 @@
 
 pub mod bitcoin;
 pub mod docker;
+pub mod node;
 pub mod wallet;
 
 use axum::Json;

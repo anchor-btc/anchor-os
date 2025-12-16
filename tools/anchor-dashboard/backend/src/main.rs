@@ -52,6 +52,9 @@ pub struct AppState {
         handlers::wallet::list_utxos,
         handlers::wallet::get_transactions,
         handlers::wallet::mine_blocks,
+        handlers::node::get_node_config,
+        handlers::node::switch_node,
+        handlers::node::get_node_versions,
     ),
     components(schemas(
         handlers::HealthResponse,
@@ -72,12 +75,17 @@ pub struct AppState {
         handlers::wallet::TransactionInfo,
         handlers::wallet::MineRequest,
         handlers::wallet::MineResponse,
+        handlers::node::NodeConfig,
+        handlers::node::VersionInfo,
+        handlers::node::SwitchVersionRequest,
+        handlers::node::SwitchVersionResponse,
     )),
     tags(
         (name = "System", description = "System health endpoints"),
         (name = "Docker", description = "Docker container management"),
         (name = "Bitcoin", description = "Bitcoin node information"),
         (name = "Wallet", description = "Wallet operations"),
+        (name = "Node", description = "Node type management"),
     )
 )]
 struct ApiDoc;
@@ -152,6 +160,10 @@ async fn main() -> Result<()> {
             get(handlers::wallet::get_transactions),
         )
         .route("/wallet/mine", post(handlers::wallet::mine_blocks))
+        // Node management
+        .route("/node/config", get(handlers::node::get_node_config))
+        .route("/node/switch", post(handlers::node::switch_node))
+        .route("/node/versions", get(handlers::node::get_node_versions))
         .with_state(state)
         .layer(TraceLayer::new_for_http())
         .layer(
