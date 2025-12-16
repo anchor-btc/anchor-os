@@ -9,6 +9,7 @@ members = [
     "explorer/backend",
     "apps/pixelmap/backend",
     "apps/anchormap/backend",
+    "dashboard/backend",
 ]
 
 [workspace.package]

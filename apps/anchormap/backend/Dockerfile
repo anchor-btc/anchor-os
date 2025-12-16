@@ -16,6 +16,7 @@ COPY crates ./crates
 COPY apps ./apps
 COPY packages ./packages
 COPY explorer ./explorer
+COPY dashboard ./dashboard
 
 # Force rebuild (change this to force rebuild)
 ARG CACHE_BUST=v2

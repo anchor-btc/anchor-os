@@ -19,11 +19,15 @@ RUN mkdir -p crates/anchor-wallet/src && echo "fn main() {}" > crates/anchor-wal
 RUN mkdir -p crates/anchor-wallet-lib/src && echo "" > crates/anchor-wallet-lib/src/lib.rs
 RUN mkdir -p explorer/backend/src && echo "fn main() {}" > explorer/backend/src/main.rs
 RUN mkdir -p apps/pixelmap/backend/src && echo "fn main() {}" > apps/pixelmap/backend/src/main.rs
+RUN mkdir -p apps/anchormap/backend/src && echo "fn main() {}" > apps/anchormap/backend/src/main.rs
+RUN mkdir -p dashboard/backend/src && echo "fn main() {}" > dashboard/backend/src/main.rs
 COPY crates/anchor-indexer/Cargo.toml ./crates/anchor-indexer/
 COPY crates/anchor-wallet/Cargo.toml ./crates/anchor-wallet/
 COPY crates/anchor-wallet-lib/Cargo.toml ./crates/anchor-wallet-lib/
 COPY explorer/backend/Cargo.toml ./explorer/backend/
 COPY apps/pixelmap/backend/Cargo.toml ./apps/pixelmap/backend/
+COPY apps/anchormap/backend/Cargo.toml ./apps/anchormap/backend/
+COPY dashboard/backend/Cargo.toml ./dashboard/backend/
 
 # Build the testnet service
 RUN cargo build --release -p anchor-testnet

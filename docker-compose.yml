@@ -269,6 +269,57 @@ services:
       - anchor-network
     restart: unless-stopped
 
+  # =============================================
+  # Dashboard - Stack Control Panel
+  # =============================================
+
+  dashboard-api:
+    build:
+      context: .
+      dockerfile: dashboard/backend/Dockerfile
+    container_name: anchor-dashboard-api
+    ports:
+      - "3011:3011"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3011
+      WALLET_URL: http://wallet:3001
+      BITCOIN_RPC_URL: http://bitcoin:18443
+      BITCOIN_RPC_USER: anchor
+      BITCOIN_RPC_PASSWORD: anchor
+      RUST_LOG: dashboard_backend=info
+    depends_on:
+      bitcoin:
+        condition: service_healthy
+      wallet:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3011/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  dashboard-web:
+    build:
+      context: ./dashboard/frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:3011
+    container_name: anchor-dashboard-web
+    ports:
+      - "3010:3010"
+    depends_on:
+      dashboard-api:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    restart: unless-stopped
+
 volumes:
   bitcoin-data:
   postgres-data:
