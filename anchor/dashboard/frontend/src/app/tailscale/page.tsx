@@ -47,8 +47,10 @@ export default function TailscalePage() {
     refetchInterval: 5000,
   });
 
+  const TAILSCALE_CONTAINER = "anchor-networking-tailscale";
+  
   const tailscaleContainer = containersData?.containers?.find(
-    (c) => c.name === "anchor-tool-tailscale"
+    (c) => c.name === TAILSCALE_CONTAINER
   );
   const isContainerRunning = tailscaleContainer?.state === "running";
 
@@ -68,7 +70,7 @@ export default function TailscalePage() {
   });
 
   const startMutation = useMutation({
-    mutationFn: () => startContainer("anchor-tool-tailscale"),
+    mutationFn: () => startContainer(TAILSCALE_CONTAINER),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["containers"] });
       queryClient.invalidateQueries({ queryKey: ["tailscale-status"] });
@@ -76,7 +78,7 @@ export default function TailscalePage() {
   });
 
   const stopMutation = useMutation({
-    mutationFn: () => stopContainer("anchor-tool-tailscale"),
+    mutationFn: () => stopContainer(TAILSCALE_CONTAINER),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["containers"] });
       queryClient.invalidateQueries({ queryKey: ["tailscale-status"] });

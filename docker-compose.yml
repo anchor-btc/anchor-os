@@ -235,14 +235,14 @@ services:
     restart: unless-stopped
 
   # =============================================
-  # TOOLS (tool-) - Dashboard only
+  # ANCHOR DASHBOARD (anchor-)
   # =============================================
 
-  tool-dashboard-backend:
+  anchor-dashboard-backend:
     build:
       context: .
       dockerfile: anchor/dashboard/backend/Dockerfile
-    container_name: anchor-tool-dashboard-backend
+    container_name: anchor-dashboard-backend
     ports:
       - "3011:3011"
     volumes:
@@ -269,18 +269,18 @@ services:
       retries: 5
     restart: unless-stopped
 
-  tool-dashboard-frontend:
+  anchor-dashboard-frontend:
     build:
       context: ./anchor/dashboard/frontend
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_URL: http://localhost:3011
         NEXT_PUBLIC_TESTNET_URL: http://localhost:3014
-    container_name: anchor-tool-dashboard-frontend
+    container_name: anchor-dashboard-frontend
     ports:
       - "3010:3010"
     depends_on:
-      tool-dashboard-backend:
+      anchor-dashboard-backend:
         condition: service_healthy
     networks:
       - anchor-network

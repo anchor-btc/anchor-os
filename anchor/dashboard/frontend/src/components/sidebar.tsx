@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Anchor,
   LayoutDashboard,
@@ -27,10 +27,13 @@ import {
   SquareTerminal,
   Network,
   Cloud,
+  Play,
+  Pause,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apps, getAppStatus } from "@/lib/apps";
-import { fetchContainers } from "@/lib/api";
+import { fetchContainers, startContainer, stopContainer } from "@/lib/api";
 import { LogsModal } from "./logs-modal";
 import { TerminalModal } from "./terminal-modal";
 
@@ -60,8 +63,10 @@ const iconMap: Record<string, React.ElementType> = {
 
 export function Sidebar() {
   const pathname = usePathname();
+  const queryClient = useQueryClient();
   const [logsContainer, setLogsContainer] = useState<string | null>(null);
   const [terminalContainer, setTerminalContainer] = useState<string | null>(null);
+  const [pendingContainers, setPendingContainers] = useState<Set<string>>(new Set());
 
   const { data: containersData } = useQuery({
     queryKey: ["containers"],
@@ -71,31 +76,151 @@ export function Sidebar() {
 
   const containers = containersData?.containers || [];
 
+  const startMutation = useMutation({
+    mutationFn: startContainer,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["containers"] });
+    },
+  });
+
+  const stopMutation = useMutation({
+    mutationFn: stopContainer,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["containers"] });
+    },
+  });
+
+  const handleToggleService = async (
+    e: React.MouseEvent,
+    containerNames: string[],
+    isRunning: boolean
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Add all containers to pending state
+    setPendingContainers((prev) => {
+      const next = new Set(prev);
+      containerNames.forEach((name) => next.add(name));
+      return next;
+    });
+
+    try {
+      // Start/stop all containers in parallel
+      if (isRunning) {
+        await Promise.all(
+          containerNames.map((name) => stopMutation.mutateAsync(name).catch(() => {}))
+        );
+      } else {
+        // Start containers sequentially to respect dependencies
+        for (const name of containerNames) {
+          try {
+            await startMutation.mutateAsync(name);
+          } catch {
+            console.error(`Failed to start ${name}`);
+          }
+        }
+      }
+    } finally {
+      setPendingContainers((prev) => {
+        const next = new Set(prev);
+        containerNames.forEach((name) => next.delete(name));
+        return next;
+      });
+    }
+  };
+
   const appsList = apps.filter((app) => app.category === "app");
   const explorersList = apps.filter((app) => app.category === "explorer");
   const networkingList = apps.filter((app) => app.category === "networking");
   const coreList = apps.filter((app) => app.category === "core");
 
-  const getStatusColor = (appContainers: string[]) => {
+  const getAppStatusInfo = (appContainers: string[]) => {
     const status = getAppStatus(
       appContainers,
       containers.map((c) => ({ name: c.name, state: c.state }))
     );
-    if (status === "running") return "bg-success";
-    if (status === "partial") return "bg-warning";
-    return "bg-slate-500"; // Gray dot for stopped services
+    return {
+      status,
+      isRunning: status === "running" || status === "partial",
+      color: status === "running" ? "bg-success" : status === "partial" ? "bg-warning" : "bg-slate-500",
+    };
+  };
+
+  // Status control button component with its own hover state
+  const StatusControl = ({
+    containerNames,
+    isRunning,
+    color,
+    isPending,
+  }: {
+    containerNames: string[];
+    isRunning: boolean;
+    color: string;
+    isPending: boolean;
+  }) => {
+    const [isHovered, setIsHovered] = useState(false);
+
+    if (isPending) {
+      return (
+        <div className="w-4 h-4 flex items-center justify-center shrink-0">
+          <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
+        </div>
+      );
+    }
+
+    return (
+      <div
+        className="relative w-4 h-4 flex items-center justify-center shrink-0 cursor-pointer"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        onClick={(e) => handleToggleService(e, containerNames, isRunning)}
+        title={isRunning ? "Stop Service" : "Start Service"}
+      >
+        {/* Status dot - visible by default, hidden on hover */}
+        <div
+          className={cn(
+            "w-2 h-2 rounded-full transition-all duration-150",
+            color,
+            isHovered && "opacity-0 scale-0"
+          )}
+        />
+        {/* Play/Pause button - hidden by default, visible on hover */}
+        <div
+          className={cn(
+            "absolute inset-0 flex items-center justify-center transition-all duration-150",
+            isRunning ? "text-destructive" : "text-success",
+            isHovered ? "opacity-100 scale-100" : "opacity-0 scale-75"
+          )}
+        >
+          {isRunning ? (
+            <Pause className="w-3.5 h-3.5 fill-current" />
+          ) : (
+            <Play className="w-3.5 h-3.5 fill-current" />
+          )}
+        </div>
+      </div>
+    );
   };
 
   const renderServiceItem = (app: typeof apps[0]) => {
     const Icon = iconMap[app.icon] || Server;
     const hasExternalUrl = !!app.url;
     const hasInternalUrl = !!app.internalUrl;
-    const statusColor = getStatusColor(app.containers);
     const mainContainer = app.containers[0];
+    const { isRunning, color } = getAppStatusInfo(app.containers);
+    // Check if any container of this app is pending
+    const isPending = app.containers.some((c) => pendingContainers.has(c));
 
     const content = (
       <>
-        <div className={cn("w-2 h-2 rounded-full shrink-0", statusColor)} />
+        {/* Status indicator with hover control */}
+        <StatusControl
+          containerNames={app.containers}
+          isRunning={isRunning}
+          color={color}
+          isPending={isPending}
+        />
         <Icon className="w-4 h-4 shrink-0" />
         <span className="truncate flex-1">{app.name}</span>
         <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">

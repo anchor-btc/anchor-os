@@ -6,7 +6,8 @@ use axum::{
     response::IntoResponse,
     Json,
 };
-use bollard::container::{ListContainersOptions, RestartContainerOptions, StartContainerOptions, StopContainerOptions};
+use bollard::container::{ListContainersOptions, RestartContainerOptions, StartContainerOptions, StopContainerOptions, StatsOptions};
+use futures::StreamExt;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -375,6 +376,188 @@ pub async fn exec_container(
         container_id: id,
         output,
         exit_code,
+    }))
+}
+
+/// Container stats response
+#[derive(Debug, Serialize, ToSchema)]
+pub struct ContainerStats {
+    pub name: String,
+    pub cpu_percent: f64,
+    pub memory_usage: u64,
+    pub memory_limit: u64,
+    pub memory_percent: f64,
+    pub network_rx: u64,
+    pub network_tx: u64,
+    pub block_read: u64,
+    pub block_write: u64,
+}
+
+/// Aggregate stats response
+#[derive(Debug, Serialize, ToSchema)]
+pub struct AggregateStats {
+    pub timestamp: i64,
+    pub total_cpu_percent: f64,
+    pub total_memory_usage: u64,
+    pub total_memory_limit: u64,
+    pub total_memory_percent: f64,
+    pub total_network_rx: u64,
+    pub total_network_tx: u64,
+    pub total_block_read: u64,
+    pub total_block_write: u64,
+    pub container_count: usize,
+    pub containers: Vec<ContainerStats>,
+}
+
+/// Get Docker container stats
+#[utoipa::path(
+    get,
+    path = "/docker/stats",
+    tag = "Docker",
+    responses(
+        (status = 200, description = "Container stats", body = AggregateStats),
+        (status = 500, description = "Internal server error")
+    )
+)]
+pub async fn get_docker_stats(
+    State(state): State<Arc<AppState>>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    // First get list of running anchor containers
+    let mut filters = HashMap::new();
+    filters.insert("name", vec!["anchor-"]);
+    filters.insert("status", vec!["running"]);
+
+    let options = Some(ListContainersOptions {
+        all: false,
+        filters,
+        ..Default::default()
+    });
+
+    let containers = match state.docker.list_containers(options).await {
+        Ok(c) => c,
+        Err(e) => {
+            error!("Failed to list containers: {}", e);
+            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+        }
+    };
+
+    let mut container_stats = Vec::new();
+    let mut total_cpu = 0.0;
+    let mut total_memory_usage = 0u64;
+    let mut total_memory_limit = 0u64;
+    let mut total_network_rx = 0u64;
+    let mut total_network_tx = 0u64;
+    let mut total_block_read = 0u64;
+    let mut total_block_write = 0u64;
+
+    for container in containers.iter() {
+        let id = match &container.id {
+            Some(id) => id.clone(),
+            None => continue,
+        };
+
+        let name = container
+            .names
+            .as_ref()
+            .and_then(|n| n.first())
+            .map(|n| n.trim_start_matches('/').to_string())
+            .unwrap_or_default();
+
+        // Get one-shot stats
+        let stats_options = Some(StatsOptions {
+            stream: false,
+            one_shot: true,
+        });
+
+        let mut stats_stream = state.docker.stats(&id, stats_options);
+        
+        if let Some(Ok(stats)) = stats_stream.next().await {
+            // Calculate CPU percentage
+            let cpu_delta = stats.cpu_stats.cpu_usage.total_usage as f64
+                - stats.precpu_stats.cpu_usage.total_usage as f64;
+            let system_delta = stats.cpu_stats.system_cpu_usage.unwrap_or(0) as f64
+                - stats.precpu_stats.system_cpu_usage.unwrap_or(0) as f64;
+            let num_cpus = stats.cpu_stats.online_cpus.unwrap_or(1) as f64;
+            
+            let cpu_percent = if system_delta > 0.0 && cpu_delta > 0.0 {
+                (cpu_delta / system_delta) * num_cpus * 100.0
+            } else {
+                0.0
+            };
+
+            // Memory stats
+            let memory_usage = stats.memory_stats.usage.unwrap_or(0);
+            let memory_limit = stats.memory_stats.limit.unwrap_or(1);
+            let memory_percent = (memory_usage as f64 / memory_limit as f64) * 100.0;
+
+            // Network stats
+            let (network_rx, network_tx) = stats
+                .networks
+                .as_ref()
+                .map(|nets| {
+                    nets.values().fold((0u64, 0u64), |(rx, tx), net| {
+                        (rx + net.rx_bytes, tx + net.tx_bytes)
+                    })
+                })
+                .unwrap_or((0, 0));
+
+            // Block I/O stats
+            let (block_read, block_write) = stats
+                .blkio_stats
+                .io_service_bytes_recursive
+                .as_ref()
+                .map(|ios| {
+                    ios.iter().fold((0u64, 0u64), |(r, w), io| {
+                        let op_str: &str = &io.op;
+                        match op_str {
+                            "read" | "Read" => (r + io.value, w),
+                            "write" | "Write" => (r, w + io.value),
+                            _ => (r, w),
+                        }
+                    })
+                })
+                .unwrap_or((0, 0));
+
+            total_cpu += cpu_percent;
+            total_memory_usage += memory_usage;
+            total_memory_limit = memory_limit; // Use single container limit as reference
+            total_network_rx += network_rx;
+            total_network_tx += network_tx;
+            total_block_read += block_read;
+            total_block_write += block_write;
+
+            container_stats.push(ContainerStats {
+                name,
+                cpu_percent,
+                memory_usage,
+                memory_limit,
+                memory_percent,
+                network_rx,
+                network_tx,
+                block_read,
+                block_write,
+            });
+        }
+    }
+
+    let total_memory_percent = if total_memory_limit > 0 {
+        (total_memory_usage as f64 / total_memory_limit as f64) * 100.0
+    } else {
+        0.0
+    };
+
+    Ok(Json(AggregateStats {
+        timestamp: chrono::Utc::now().timestamp_millis(),
+        total_cpu_percent: total_cpu,
+        total_memory_usage,
+        total_memory_limit,
+        total_memory_percent,
+        total_network_rx,
+        total_network_tx,
+        total_block_read,
+        total_block_write,
+        container_count: container_stats.len(),
+        containers: container_stats,
     }))
 }
 

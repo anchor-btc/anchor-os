@@ -3,6 +3,7 @@
 pub mod bitcoin;
 pub mod cloudflare;
 pub mod docker;
+pub mod indexer;
 pub mod node;
 pub mod tailscale;
 pub mod wallet;

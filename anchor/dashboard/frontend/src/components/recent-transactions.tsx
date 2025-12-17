@@ -32,7 +32,7 @@ export function RecentTransactions() {
     );
   }
 
-  const recentTxs = (transactions || []).slice(0, 5);
+  const recentTxs = (transactions || []).slice(0, 3);
 
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden">

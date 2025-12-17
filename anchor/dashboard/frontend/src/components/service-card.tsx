@@ -40,8 +40,8 @@ const serviceIcons: Record<string, React.ElementType> = {
   "anchor-explorer-mempool-db": Database,
   "anchor-explorer-btc-rpc": Search,
   // Dashboard
-  "anchor-tool-dashboard-backend": Server,
-  "anchor-tool-dashboard-frontend": Server,
+  "anchor-dashboard-backend": Server,
+  "anchor-dashboard-frontend": Server,
   // Apps
   "anchor-app-threads-backend": Server,
   "anchor-app-threads-frontend": MessageSquare,

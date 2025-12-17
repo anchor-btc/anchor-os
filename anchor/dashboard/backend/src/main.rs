@@ -44,6 +44,7 @@ pub struct AppState {
         handlers::docker::restart_container,
         handlers::docker::get_container_logs,
         handlers::docker::exec_container,
+        handlers::docker::get_docker_stats,
         handlers::bitcoin::get_blockchain_info,
         handlers::bitcoin::get_mempool_info,
         handlers::bitcoin::get_network_info,
@@ -63,6 +64,7 @@ pub struct AppState {
         handlers::cloudflare::connect_cloudflare,
         handlers::cloudflare::disconnect_cloudflare,
         handlers::cloudflare::get_exposable_services,
+        handlers::indexer::get_indexer_stats,
     ),
     components(schemas(
         handlers::HealthResponse,
@@ -97,6 +99,8 @@ pub struct AppState {
         handlers::cloudflare::CloudflareActionResponse,
         handlers::cloudflare::ExposableService,
         handlers::cloudflare::ExposableServicesResponse,
+        handlers::indexer::IndexerStats,
+        handlers::indexer::MessageKindCount,
     )),
     tags(
         (name = "System", description = "System health endpoints"),
@@ -106,6 +110,7 @@ pub struct AppState {
         (name = "Node", description = "Node type management"),
         (name = "Tailscale", description = "Tailscale VPN management"),
         (name = "Cloudflare", description = "Cloudflare Tunnel management"),
+        (name = "Indexer", description = "Anchor indexer statistics"),
     )
 )]
 struct ApiDoc;
@@ -164,6 +169,7 @@ async fn main() -> Result<()> {
             "/docker/containers/:id/exec",
             post(handlers::docker::exec_container),
         )
+        .route("/docker/stats", get(handlers::docker::get_docker_stats))
         // Bitcoin
         .route("/bitcoin/info", get(handlers::bitcoin::get_blockchain_info))
         .route(
@@ -197,6 +203,8 @@ async fn main() -> Result<()> {
         .route("/cloudflare/connect", post(handlers::cloudflare::connect_cloudflare))
         .route("/cloudflare/disconnect", post(handlers::cloudflare::disconnect_cloudflare))
         .route("/cloudflare/services", get(handlers::cloudflare::get_exposable_services))
+        // Indexer
+        .route("/indexer/stats", get(handlers::indexer::get_indexer_stats))
         .with_state(state)
         .layer(TraceLayer::new_for_http())
         .layer(
