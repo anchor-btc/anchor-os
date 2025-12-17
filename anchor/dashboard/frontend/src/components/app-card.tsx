@@ -26,6 +26,7 @@ import {
   MessageSquare,
   Network,
   Cloud,
+  Coins,
 } from "lucide-react";
 
 const iconMap: Record<string, React.ElementType> = {
@@ -41,6 +42,7 @@ const iconMap: Record<string, React.ElementType> = {
   MessageSquare,
   Network,
   Cloud,
+  Coins,
 };
 
 const colorMap: Record<string, { bg: string; border: string; text: string; glow: string }> = {
@@ -98,8 +100,8 @@ interface AppCardProps {
   app: App;
   containers: Container[];
   onToggle?: () => void;
-  onShowLogs?: (containerName: string) => void;
-  onShowTerminal?: (containerName: string) => void;
+  onShowLogs?: (containerNames: string[]) => void;
+  onShowTerminal?: (containerNames: string[]) => void;
   featured?: boolean;
 }
 
@@ -134,8 +136,7 @@ export function AppCard({ app, containers, onToggle, onShowLogs, onShowTerminal,
     }
   };
 
-  // Get the main container for logs (first one, usually the backend or main service)
-  const mainContainer = app.containers[0];
+  // Pass all containers for logs/terminal (will show tabs if multiple)
 
   return (
     <div
@@ -164,20 +165,36 @@ export function AppCard({ app, containers, onToggle, onShowLogs, onShowTerminal,
                 "w-2.5 h-2.5 rounded-full shrink-0",
                 isRunning && "bg-success",
                 isPartial && "bg-warning",
-                !isRunning && !isPartial && "bg-muted-foreground/30"
+                !isRunning && !isPartial && "bg-slate-500"
               )}
             />
           </div>
-          {app.port && (
-            <span className={cn(
-              "inline-block px-2 py-0.5 rounded text-xs font-mono font-medium",
-              isRunning 
-                ? `${colors.bg} ${colors.text}` 
-                : "bg-muted text-muted-foreground"
-            )}>
-              localhost:{app.port}
-            </span>
-          )}
+          <div className="flex flex-wrap gap-1.5 mt-0.5">
+            {app.port && (
+              <span className={cn(
+                "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium border",
+                isRunning 
+                  ? `${colors.bg} ${colors.text} ${colors.border}` 
+                  : "bg-muted text-muted-foreground border-transparent"
+              )}>
+                <span className="opacity-60">Port</span>
+                <span className="font-mono font-semibold">{app.port}</span>
+              </span>
+            )}
+            {app.backendPort && (
+              <span className={cn(
+                "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium border",
+                isRunning 
+                  ? "bg-violet-500/10 text-violet-400 border-violet-500/30" 
+                  : "bg-muted text-muted-foreground border-transparent"
+              )}
+              title="Backend API port"
+              >
+                <span className="opacity-60">API</span>
+                <span className="font-mono font-semibold">{app.backendPort}</span>
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -239,7 +256,7 @@ export function AppCard({ app, containers, onToggle, onShowLogs, onShowTerminal,
         <div className="flex items-center gap-2">
           {/* Logs button */}
           <button
-            onClick={() => onShowLogs?.(mainContainer)}
+            onClick={() => onShowLogs?.(app.containers)}
             className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-medium bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
             title="View Logs"
           >
@@ -249,7 +266,7 @@ export function AppCard({ app, containers, onToggle, onShowLogs, onShowTerminal,
 
           {/* Terminal button */}
           <button
-            onClick={() => onShowTerminal?.(mainContainer)}
+            onClick={() => onShowTerminal?.(app.containers)}
             className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-medium bg-muted/50 hover:bg-emerald-500/10 text-muted-foreground hover:text-emerald-500 transition-colors"
             title="Open Terminal"
           >

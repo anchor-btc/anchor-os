@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y \
 # Copy workspace files
 COPY Cargo.toml Cargo.lock ./
 COPY crates/anchor-core ./crates/anchor-core
-COPY tools/anchor-dashboard/backend ./tools/anchor-dashboard/backend
+COPY anchor/dashboard/backend ./anchor/dashboard/backend
 
 # Create dummy files for other workspace members
 RUN mkdir -p crates/anchor-indexer/src && echo "fn main() {}" > crates/anchor-indexer/src/main.rs
@@ -25,6 +25,7 @@ RUN mkdir -p apps/anchor-pixel/backend/src && echo "fn main() {}" > apps/anchor-
 RUN mkdir -p apps/anchor-map/backend/src && echo "fn main() {}" > apps/anchor-map/backend/src/main.rs
 RUN mkdir -p apps/anchor-dns/backend/src && echo "fn main() {}" > apps/anchor-dns/backend/src/main.rs
 RUN mkdir -p apps/anchor-proof/backend/src && echo "fn main() {}" > apps/anchor-proof/backend/src/main.rs
+RUN mkdir -p apps/anchor-tokens/backend/src && echo "fn main() {}" > apps/anchor-tokens/backend/src/main.rs
 COPY crates/anchor-indexer/Cargo.toml ./crates/anchor-indexer/
 COPY crates/anchor-wallet/Cargo.toml ./crates/anchor-wallet/
 COPY crates/anchor-testnet/Cargo.toml ./crates/anchor-testnet/
@@ -34,6 +35,7 @@ COPY apps/anchor-pixel/backend/Cargo.toml ./apps/anchor-pixel/backend/
 COPY apps/anchor-map/backend/Cargo.toml ./apps/anchor-map/backend/
 COPY apps/anchor-dns/backend/Cargo.toml ./apps/anchor-dns/backend/
 COPY apps/anchor-proof/backend/Cargo.toml ./apps/anchor-proof/backend/
+COPY apps/anchor-tokens/backend/Cargo.toml ./apps/anchor-tokens/backend/
 
 # Build the dashboard backend
 RUN cargo build --release --package dashboard-backend

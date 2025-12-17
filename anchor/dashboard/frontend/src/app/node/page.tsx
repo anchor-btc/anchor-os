@@ -189,7 +189,7 @@ export default function NodePage() {
                 </span>
                 <button
                   onClick={() => copyCommand(
-                    `docker compose build --build-arg BITCOIN_VERSION=${switchMutation.data?.version} infra-bitcoin && docker compose up -d infra-bitcoin`
+                    `docker compose build --build-arg BITCOIN_VERSION=${switchMutation.data?.version} core-bitcoin && docker compose up -d core-bitcoin`
                   )}
                   className="p-1.5 hover:bg-muted rounded"
                 >
@@ -198,10 +198,10 @@ export default function NodePage() {
               </div>
               <pre className="text-sm text-muted-foreground font-mono bg-background p-3 rounded overflow-x-auto">
 {`# Build with new version
-docker compose build --build-arg BITCOIN_VERSION=${switchMutation.data.version} infra-bitcoin
+docker compose build --build-arg BITCOIN_VERSION=${switchMutation.data.version} core-bitcoin
 
 # Restart the node
-docker compose up -d infra-bitcoin`}
+docker compose up -d core-bitcoin`}
               </pre>
             </div>
           )}
@@ -395,7 +395,7 @@ docker compose up -d infra-bitcoin`}
             Node Not Running
           </h2>
           <p className="text-muted-foreground mb-4">
-            Start the Bitcoin node with: <code className="bg-muted px-2 py-1 rounded">docker compose up -d infra-bitcoin</code>
+            Start the Bitcoin node with: <code className="bg-muted px-2 py-1 rounded">docker compose up -d core-bitcoin</code>
           </p>
         </div>
       )}

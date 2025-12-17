@@ -1,5 +1,11 @@
 // App definitions - groups containers into logical apps
 
+export interface ContainerConfig {
+  name: string;
+  label: string; // Display label (e.g., "Frontend", "Backend", "API", "Database")
+  port?: number;
+}
+
 export interface App {
   id: string;
   name: string;
@@ -8,9 +14,11 @@ export interface App {
   color: string;
   url?: string;
   internalUrl?: string; // Internal dashboard route (e.g., /testnet)
-  port?: number;
+  port?: number; // Main frontend port
+  backendPort?: number; // Backend API port (if separate)
   containers: string[]; // container names that make up this app
-  category: "app" | "tool" | "infrastructure";
+  containerConfigs?: ContainerConfig[]; // Detailed container configuration with labels
+  category: "app" | "explorer" | "networking" | "core";
   featured?: boolean;
 }
 
@@ -26,7 +34,12 @@ export const apps: App[] = [
     color: "cyan",
     url: "http://localhost:3009",
     port: 3009,
+    backendPort: 3010,
     containers: ["anchor-app-dns-frontend", "anchor-app-dns-backend"],
+    containerConfigs: [
+      { name: "anchor-app-dns-frontend", label: "Frontend", port: 3009 },
+      { name: "anchor-app-dns-backend", label: "Backend", port: 3010 },
+    ],
     category: "app",
     featured: true,
   },
@@ -38,7 +51,12 @@ export const apps: App[] = [
     color: "blue",
     url: "http://localhost:3007",
     port: 3007,
+    backendPort: 3008,
     containers: ["anchor-app-map-frontend", "anchor-app-map-backend"],
+    containerConfigs: [
+      { name: "anchor-app-map-frontend", label: "Frontend", port: 3007 },
+      { name: "anchor-app-map-backend", label: "Backend", port: 3008 },
+    ],
     category: "app",
     featured: true,
   },
@@ -50,7 +68,12 @@ export const apps: App[] = [
     color: "purple",
     url: "http://localhost:3005",
     port: 3005,
+    backendPort: 3006,
     containers: ["anchor-app-pixel-frontend", "anchor-app-pixel-backend"],
+    containerConfigs: [
+      { name: "anchor-app-pixel-frontend", label: "Frontend", port: 3005 },
+      { name: "anchor-app-pixel-backend", label: "Backend", port: 3006 },
+    ],
     category: "app",
     featured: true,
   },
@@ -62,7 +85,12 @@ export const apps: App[] = [
     color: "emerald",
     url: "http://localhost:3013",
     port: 3013,
+    backendPort: 3012,
     containers: ["anchor-app-proof-frontend", "anchor-app-proof-backend"],
+    containerConfigs: [
+      { name: "anchor-app-proof-frontend", label: "Frontend", port: 3013 },
+      { name: "anchor-app-proof-backend", label: "Backend", port: 3012 },
+    ],
     category: "app",
     featured: true,
   },
@@ -74,7 +102,12 @@ export const apps: App[] = [
     color: "orange",
     url: "http://localhost:3000",
     port: 3000,
+    backendPort: 3002,
     containers: ["anchor-app-threads-frontend", "anchor-app-threads-backend"],
+    containerConfigs: [
+      { name: "anchor-app-threads-frontend", label: "Frontend", port: 3000 },
+      { name: "anchor-app-threads-backend", label: "Backend", port: 3002 },
+    ],
     category: "app",
     featured: true,
   },
@@ -86,87 +119,102 @@ export const apps: App[] = [
     color: "amber",
     url: "http://localhost:3017",
     port: 3017,
+    backendPort: 3018,
     containers: ["anchor-app-tokens-frontend", "anchor-app-tokens-backend"],
+    containerConfigs: [
+      { name: "anchor-app-tokens-frontend", label: "Frontend", port: 3017 },
+      { name: "anchor-app-tokens-backend", label: "Backend", port: 3018 },
+    ],
     category: "app",
     featured: true,
   },
 
   // =============================================
-  // TOOLS (alphabetical)
+  // EXPLORERS (alphabetical)
   // =============================================
   {
-    id: "tool-btc-explorer",
+    id: "explorer-btc-rpc",
     name: "BTC RPC Explorer",
     description: "Simple and lightweight Bitcoin block explorer",
     icon: "Search",
     color: "yellow",
     url: "http://localhost:3015",
     port: 3015,
-    containers: ["anchor-tool-btc-explorer"],
-    category: "tool",
+    containers: ["anchor-explorer-btc-rpc"],
+    category: "explorer",
     featured: false,
   },
   {
-    id: "tool-cloudflare",
-    name: "Cloudflare Tunnel",
-    description: "Expose Anchor services to the internet via Cloudflare",
-    icon: "Cloud",
-    color: "orange",
-    internalUrl: "/cloudflare",
-    containers: ["anchor-tool-cloudflare"],
-    category: "tool",
-    featured: false,
-  },
-  {
-    id: "tool-mempool",
+    id: "explorer-mempool",
     name: "Mempool Explorer",
     description: "Full Bitcoin block explorer powered by mempool.space",
     icon: "Bitcoin",
     color: "orange",
     url: "http://localhost:3003",
     port: 3003,
-    containers: ["anchor-tool-mempool-web", "anchor-tool-mempool-api", "anchor-tool-mempool-db"],
-    category: "tool",
+    containers: ["anchor-explorer-mempool-web", "anchor-explorer-mempool-api", "anchor-explorer-mempool-db"],
+    containerConfigs: [
+      { name: "anchor-explorer-mempool-web", label: "Web", port: 3003 },
+      { name: "anchor-explorer-mempool-api", label: "API", port: 8999 },
+      { name: "anchor-explorer-mempool-db", label: "Database" },
+    ],
+    category: "explorer",
     featured: true,
   },
+
+  // =============================================
+  // NETWORKING (alphabetical)
+  // =============================================
   {
-    id: "tool-tailscale",
+    id: "networking-cloudflare",
+    name: "Cloudflare Tunnel",
+    description: "Expose Anchor services to the internet via Cloudflare",
+    icon: "Cloud",
+    color: "orange",
+    internalUrl: "/cloudflare",
+    containers: ["anchor-networking-cloudflare"],
+    category: "networking",
+    featured: false,
+  },
+  {
+    id: "networking-tailscale",
     name: "Tailscale VPN",
     description: "Connect your Anchor stack to your Tailscale network",
     icon: "Network",
     color: "blue",
     internalUrl: "/tailscale",
-    containers: ["anchor-tool-tailscale"],
-    category: "tool",
+    containers: ["anchor-networking-tailscale"],
+    category: "networking",
     featured: false,
   },
 
   // =============================================
-  // INFRASTRUCTURE (alphabetical)
+  // CORE (alphabetical)
   // =============================================
   {
-    id: "infra-indexer",
+    id: "core-indexer",
     name: "Anchor Indexer",
     description: "Indexes ANCHOR messages from the blockchain",
     icon: "Search",
     color: "cyan",
-    containers: ["anchor-infra-indexer"],
-    category: "infrastructure",
+    internalUrl: "/indexer",
+    containers: ["anchor-core-indexer"],
+    category: "core",
   },
   {
-    id: "infra-testnet",
+    id: "core-testnet",
     name: "Anchor Testnet",
     description: "Automatically generates test transactions and mines blocks",
     icon: "Pickaxe",
     color: "amber",
     internalUrl: "/testnet",
     port: 3014,
-    containers: ["anchor-infra-testnet"],
-    category: "infrastructure",
+    containers: ["anchor-core-testnet"],
+    category: "core",
     featured: true,
   },
   {
-    id: "infra-wallet",
+    id: "core-wallet",
     name: "Anchor Wallet",
     description: "REST API for creating and broadcasting transactions",
     icon: "Wallet",
@@ -174,29 +222,30 @@ export const apps: App[] = [
     url: "http://localhost:3001/swagger-ui",
     internalUrl: "/wallet",
     port: 3001,
-    containers: ["anchor-infra-wallet"],
-    category: "infrastructure",
+    containers: ["anchor-core-wallet"],
+    category: "core",
   },
   {
-    id: "infra-bitcoin",
+    id: "core-bitcoin",
     name: "Bitcoin Node",
     description: "Bitcoin Core - full-featured node with mining support",
     icon: "Bitcoin",
     color: "orange",
     internalUrl: "/node",
     port: 18443,
-    containers: ["anchor-infra-bitcoin"],
-    category: "infrastructure",
+    containers: ["anchor-core-bitcoin"],
+    category: "core",
   },
   {
-    id: "infra-postgres",
+    id: "core-postgres",
     name: "Database",
     description: "PostgreSQL database for storing indexed data",
     icon: "Database",
     color: "blue",
+    internalUrl: "/database",
     port: 5432,
-    containers: ["anchor-infra-postgres"],
-    category: "infrastructure",
+    containers: ["anchor-core-postgres"],
+    category: "core",
   },
 ];
 

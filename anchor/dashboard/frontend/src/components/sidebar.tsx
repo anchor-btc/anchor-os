@@ -14,7 +14,6 @@ import {
   Grid3X3,
   Search,
   AppWindow,
-  Settings,
   Globe,
   FileCheck,
   Database,
@@ -73,8 +72,9 @@ export function Sidebar() {
   const containers = containersData?.containers || [];
 
   const appsList = apps.filter((app) => app.category === "app");
-  const toolsList = apps.filter((app) => app.category === "tool");
-  const infraList = apps.filter((app) => app.category === "infrastructure");
+  const explorersList = apps.filter((app) => app.category === "explorer");
+  const networkingList = apps.filter((app) => app.category === "networking");
+  const coreList = apps.filter((app) => app.category === "core");
 
   const getStatusColor = (appContainers: string[]) => {
     const status = getAppStatus(
@@ -83,7 +83,7 @@ export function Sidebar() {
     );
     if (status === "running") return "bg-success";
     if (status === "partial") return "bg-warning";
-    return "bg-muted-foreground/30";
+    return "bg-slate-500"; // Gray dot for stopped services
   };
 
   const renderServiceItem = (app: typeof apps[0]) => {
@@ -214,40 +214,33 @@ export function Sidebar() {
             {appsList.map(renderServiceItem)}
           </div>
 
-          {/* Tools */}
+          {/* Explorers */}
           <div className="pt-4">
             <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-3 mb-2 flex items-center gap-2">
-              <Wrench className="w-3 h-3" />
-              Tools
+              <Search className="w-3 h-3" />
+              Explorers
             </p>
-            {toolsList.map(renderServiceItem)}
+            {explorersList.map(renderServiceItem)}
           </div>
 
-          {/* Infrastructure */}
+          {/* Networking */}
+          <div className="pt-4">
+            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-3 mb-2 flex items-center gap-2">
+              <Network className="w-3 h-3" />
+              Networking
+            </p>
+            {networkingList.map(renderServiceItem)}
+          </div>
+
+          {/* Core */}
           <div className="pt-4">
             <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-3 mb-2 flex items-center gap-2">
               <Server className="w-3 h-3" />
-              Infrastructure
+              Core
             </p>
-            {infraList.map(renderServiceItem)}
+            {coreList.map(renderServiceItem)}
           </div>
         </nav>
-
-        {/* Advanced */}
-        <div className="p-3 border-t border-border shrink-0">
-          <Link
-            href="/services"
-            className={cn(
-              "flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-colors",
-              pathname === "/services"
-                ? "bg-muted text-foreground"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-            )}
-          >
-            <Settings className="w-4 h-4" />
-            Advanced Services
-          </Link>
-        </div>
       </aside>
 
       {/* Logs Modal */}

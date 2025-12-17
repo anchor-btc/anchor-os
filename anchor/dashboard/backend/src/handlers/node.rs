@@ -109,7 +109,7 @@ pub async fn get_node_config(
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     // Check if Bitcoin node container is running
     let mut filters = HashMap::new();
-    filters.insert("name", vec!["anchor-infra-bitcoin"]);
+    filters.insert("name", vec!["anchor-core-bitcoin"]);
 
     let options = Some(ListContainersOptions {
         all: true,
@@ -187,8 +187,8 @@ pub async fn switch_node(
         success: true,
         message: format!(
             "To switch to Bitcoin Core v{}, run:\n\
-            docker compose build --build-arg BITCOIN_VERSION={} infra-bitcoin\n\
-            docker compose up -d infra-bitcoin",
+            docker compose build --build-arg BITCOIN_VERSION={} core-bitcoin\n\
+            docker compose up -d core-bitcoin",
             req.version, req.version
         ),
         version: req.version,

@@ -28,17 +28,18 @@ interface ServiceCardProps {
 }
 
 const serviceIcons: Record<string, React.ElementType> = {
-  // Infrastructure
-  "anchor-infra-bitcoin": Bitcoin,
-  "anchor-infra-postgres": Database,
-  "anchor-infra-indexer": Search,
-  "anchor-infra-wallet": Wallet,
-  "anchor-infra-testnet": Pickaxe,
-  // Tools
-  "anchor-tool-mempool-web": Bitcoin,
-  "anchor-tool-mempool-api": Server,
-  "anchor-tool-mempool-db": Database,
-  "anchor-tool-btc-explorer": Search,
+  // Core
+  "anchor-core-bitcoin": Bitcoin,
+  "anchor-core-postgres": Database,
+  "anchor-core-indexer": Search,
+  "anchor-core-wallet": Wallet,
+  "anchor-core-testnet": Pickaxe,
+  // Explorers
+  "anchor-explorer-mempool-web": Bitcoin,
+  "anchor-explorer-mempool-api": Server,
+  "anchor-explorer-mempool-db": Database,
+  "anchor-explorer-btc-rpc": Search,
+  // Dashboard
   "anchor-tool-dashboard-backend": Server,
   "anchor-tool-dashboard-frontend": Server,
   // Apps
