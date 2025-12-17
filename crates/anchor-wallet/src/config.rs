@@ -31,7 +31,7 @@ impl Config {
             wallet_name: env::var("WALLET_NAME")
                 .unwrap_or_else(|_| "anchor_wallet".to_string()),
             port: env::var("PORT")
-                .unwrap_or_else(|_| "3001".to_string())
+                .unwrap_or_else(|_| "8001".to_string())
                 .parse()
                 .context("Invalid PORT")?,
         })

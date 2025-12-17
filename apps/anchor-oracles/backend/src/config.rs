@@ -20,7 +20,7 @@ impl Config {
         Self {
             host: env::var("HOST").unwrap_or_else(|_| "0.0.0.0".to_string()),
             port: env::var("PORT")
-                .unwrap_or_else(|_| "3020".to_string())
+                .unwrap_or_else(|_| "3701".to_string())
                 .parse()
                 .expect("PORT must be a number"),
             database_url: env::var("DATABASE_URL")
@@ -32,7 +32,7 @@ impl Config {
             bitcoin_rpc_password: env::var("BITCOIN_RPC_PASSWORD")
                 .unwrap_or_else(|_| "bitcoin".to_string()),
             wallet_service_url: env::var("WALLET_SERVICE_URL")
-                .unwrap_or_else(|_| "http://localhost:3001".to_string()),
+                .unwrap_or_else(|_| "http://localhost:8001".to_string()),
         }
     }
 }

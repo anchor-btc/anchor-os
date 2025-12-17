@@ -17,7 +17,7 @@ impl Config {
         Ok(Self {
             host: std::env::var("HOST").unwrap_or_else(|_| "0.0.0.0".to_string()),
             port: std::env::var("PORT")
-                .unwrap_or_else(|_| "3011".to_string())
+                .unwrap_or_else(|_| "8010".to_string())
                 .parse()
                 .context("Invalid PORT")?,
             wallet_url: std::env::var("WALLET_URL")

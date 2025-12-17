@@ -76,12 +76,14 @@ services:
       dockerfile: ./crates/anchor-wallet/Dockerfile
     container_name: anchor-core-wallet
     ports:
-      - "3001:3001"
+      - "8001:8001"
     environment:
       BITCOIN_RPC_URL: http://core-bitcoin:18443
       BITCOIN_RPC_USER: anchor
       BITCOIN_RPC_PASSWORD: anchor
       WALLET_NAME: anchor_wallet
+      HOST: 0.0.0.0
+      PORT: 8001
       RUST_LOG: info
     depends_on:
       core-bitcoin:
@@ -89,7 +91,7 @@ services:
     networks:
       - anchor-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -100,10 +102,10 @@ services:
       dockerfile: ./crates/anchor-testnet/Dockerfile
     container_name: anchor-core-testnet
     ports:
-      - "3014:3014"
+      - "8002:8002"
     environment:
-      WALLET_URL: http://core-wallet:3001
-      API_PORT: 3014
+      WALLET_URL: http://core-wallet:8001
+      API_PORT: 8002
       MIN_INTERVAL_SECS: 5
       MAX_INTERVAL_SECS: 15
       BLOCKS_PER_CYCLE: 1
@@ -115,7 +117,7 @@ services:
     networks:
       - anchor-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3014/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -194,7 +196,7 @@ services:
     image: mempool/frontend:latest
     container_name: anchor-explorer-mempool-web
     ports:
-      - "3003:8080"
+      - "4000:8080"
     environment:
       FRONTEND_HTTP_PORT: "8080"
       BACKEND_MAINNET_HTTP_HOST: "explorer-mempool-api"
@@ -208,7 +210,7 @@ services:
     image: getumbrel/btc-rpc-explorer:v3.3.0
     container_name: anchor-explorer-btc-rpc
     ports:
-      - "3015:3002"
+      - "4010:3002"
     environment:
       BTCEXP_HOST: 0.0.0.0
       BTCEXP_PORT: 3002
@@ -262,7 +264,7 @@ services:
       BACKEND_HOST: "explorer-bitfeed-api"
       BACKEND_PORT: "5000"
     ports:
-      - "3018:80"
+      - "4020:80"
     depends_on:
       - explorer-bitfeed-api
     networks:
@@ -313,13 +315,13 @@ services:
       dockerfile: anchor/dashboard/backend/Dockerfile
     container_name: anchor-dashboard-backend
     ports:
-      - "3011:3011"
+      - "8010:8010"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       HOST: 0.0.0.0
-      PORT: 3011
-      WALLET_URL: http://core-wallet:3001
+      PORT: 8010
+      WALLET_URL: http://core-wallet:8001
       BITCOIN_RPC_URL: http://core-bitcoin:18443
       BITCOIN_RPC_USER: anchor
       BITCOIN_RPC_PASSWORD: anchor
@@ -332,7 +334,7 @@ services:
     networks:
       - anchor-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3011/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8010/health"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -343,11 +345,11 @@ services:
       context: ./anchor/dashboard/frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: http://localhost:3011
-        NEXT_PUBLIC_TESTNET_URL: http://localhost:3014
+        NEXT_PUBLIC_API_URL: http://localhost:8010
+        NEXT_PUBLIC_TESTNET_URL: http://localhost:8002
     container_name: anchor-dashboard-frontend
     ports:
-      - "3010:3010"
+      - "8000:8000"
     depends_on:
       anchor-dashboard-backend:
         condition: service_healthy
@@ -366,8 +368,10 @@ services:
       dockerfile: ./apps/anchor-threads/backend/Dockerfile
     container_name: anchor-app-threads-backend
     ports:
-      - "3002:3002"
+      - "3101:3101"
     environment:
+      HOST: 0.0.0.0
+      PORT: 3101
       DATABASE_URL: postgres://anchor:anchor@core-postgres:5432/anchor
       RUST_LOG: info
     depends_on:
@@ -381,12 +385,12 @@ services:
       context: ./apps/anchor-threads/frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: http://localhost:3002
-        NEXT_PUBLIC_WALLET_URL: http://localhost:3001
-        NEXT_PUBLIC_BTC_EXPLORER_URL: http://localhost:3003
+        NEXT_PUBLIC_API_URL: http://localhost:3101
+        NEXT_PUBLIC_WALLET_URL: http://localhost:8001
+        NEXT_PUBLIC_BTC_EXPLORER_URL: http://localhost:4000
     container_name: anchor-app-threads-frontend
     ports:
-      - "3000:3000"
+      - "3100:3100"
     depends_on:
       - app-threads-backend
       - core-wallet
@@ -400,15 +404,15 @@ services:
       dockerfile: apps/anchor-pixel/backend/Dockerfile
     container_name: anchor-app-pixel-backend
     ports:
-      - "3004:3003"
+      - "3201:3201"
     environment:
       HOST: 0.0.0.0
-      PORT: 3003
+      PORT: 3201
       DATABASE_URL: postgres://anchor:anchor@core-postgres:5432/anchor
       BITCOIN_RPC_URL: http://core-bitcoin:18443
       BITCOIN_RPC_USER: anchor
       BITCOIN_RPC_PASSWORD: anchor
-      WALLET_URL: http://core-wallet:3001
+      WALLET_URL: http://core-wallet:8001
       POLL_INTERVAL_SECS: 5
       RUST_LOG: pixelmap_backend=info
     depends_on:
@@ -421,7 +425,7 @@ services:
     networks:
       - anchor-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3003/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:3201/health"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -432,11 +436,11 @@ services:
       context: ./apps/anchor-pixel/frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: http://localhost:3004
-        NEXT_PUBLIC_WALLET_URL: http://localhost:3001
+        NEXT_PUBLIC_API_URL: http://localhost:3201
+        NEXT_PUBLIC_WALLET_URL: http://localhost:8001
     container_name: anchor-app-pixel-frontend
     ports:
-      - "3005:3004"
+      - "3200:3200"
     depends_on:
       app-pixel-backend:
         condition: service_healthy
@@ -451,15 +455,15 @@ services:
       dockerfile: apps/anchor-map/backend/Dockerfile
     container_name: anchor-app-map-backend
     ports:
-      - "3006:3004"
+      - "3301:3301"
     environment:
       HOST: 0.0.0.0
-      PORT: 3004
+      PORT: 3301
       DATABASE_URL: postgres://anchor:anchor@core-postgres:5432/anchor
       BITCOIN_RPC_URL: http://core-bitcoin:18443
       BITCOIN_RPC_USER: anchor
       BITCOIN_RPC_PASSWORD: anchor
-      WALLET_URL: http://core-wallet:3001
+      WALLET_URL: http://core-wallet:8001
       POLL_INTERVAL_SECS: 5
       RUST_LOG: anchormap_backend=info
     depends_on:
@@ -472,7 +476,7 @@ services:
     networks:
       - anchor-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3004/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:3301/health"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -483,11 +487,11 @@ services:
       context: ./apps/anchor-map/frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: http://localhost:3006
-        NEXT_PUBLIC_WALLET_URL: http://localhost:3001
+        NEXT_PUBLIC_API_URL: http://localhost:3301
+        NEXT_PUBLIC_WALLET_URL: http://localhost:8001
     container_name: anchor-app-map-frontend
     ports:
-      - "3007:3005"
+      - "3300:3300"
     depends_on:
       app-map-backend:
         condition: service_healthy
@@ -502,15 +506,15 @@ services:
       dockerfile: apps/anchor-dns/backend/Dockerfile
     container_name: anchor-app-dns-backend
     ports:
-      - "3008:3006"
+      - "3401:3401"
     environment:
       HOST: 0.0.0.0
-      PORT: 3006
+      PORT: 3401
       DATABASE_URL: postgres://anchor:anchor@core-postgres:5432/anchor
       BITCOIN_RPC_URL: http://core-bitcoin:18443
       BITCOIN_RPC_USER: anchor
       BITCOIN_RPC_PASSWORD: anchor
-      WALLET_URL: http://core-wallet:3001
+      WALLET_URL: http://core-wallet:8001
       POLL_INTERVAL_SECS: 5
       RUST_LOG: bitdns_backend=info
     depends_on:
@@ -523,7 +527,7 @@ services:
     networks:
       - anchor-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3006/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:3401/health"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -534,11 +538,11 @@ services:
       context: ./apps/anchor-dns/frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: http://localhost:3008
-        NEXT_PUBLIC_WALLET_URL: http://localhost:3001
+        NEXT_PUBLIC_API_URL: http://localhost:3401
+        NEXT_PUBLIC_WALLET_URL: http://localhost:8001
     container_name: anchor-app-dns-frontend
     ports:
-      - "3009:3000"
+      - "3400:3400"
     depends_on:
       app-dns-backend:
         condition: service_healthy
@@ -553,15 +557,15 @@ services:
       dockerfile: apps/anchor-proof/backend/Dockerfile
     container_name: anchor-app-proof-backend
     ports:
-      - "3012:3012"
+      - "3501:3501"
     environment:
       HOST: 0.0.0.0
-      PORT: 3012
+      PORT: 3501
       DATABASE_URL: postgres://anchor:anchor@core-postgres:5432/anchor
       BITCOIN_RPC_URL: http://core-bitcoin:18443
       BITCOIN_RPC_USER: anchor
       BITCOIN_RPC_PASSWORD: anchor
-      WALLET_URL: http://core-wallet:3001
+      WALLET_URL: http://core-wallet:8001
       POLL_INTERVAL_SECS: 5
       RUST_LOG: anchorproof_backend=info
     depends_on:
@@ -574,7 +578,7 @@ services:
     networks:
       - anchor-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3012/api/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:3501/api/health"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -585,11 +589,11 @@ services:
       context: ./apps/anchor-proof/frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: http://localhost:3012
-        NEXT_PUBLIC_WALLET_URL: http://localhost:3001
+        NEXT_PUBLIC_API_URL: http://localhost:3501
+        NEXT_PUBLIC_WALLET_URL: http://localhost:8001
     container_name: anchor-app-proof-frontend
     ports:
-      - "3013:3011"
+      - "3500:3500"
     depends_on:
       app-proof-backend:
         condition: service_healthy
@@ -604,15 +608,15 @@ services:
       dockerfile: apps/anchor-tokens/backend/Dockerfile
     container_name: anchor-app-tokens-backend
     ports:
-      - "3016:3006"
+      - "3601:3601"
     environment:
       HOST: 0.0.0.0
-      PORT: 3006
+      PORT: 3601
       DATABASE_URL: postgres://anchor:anchor@core-postgres:5432/anchor
       BITCOIN_RPC_URL: http://core-bitcoin:18443
       BITCOIN_RPC_USER: anchor
       BITCOIN_RPC_PASSWORD: anchor
-      WALLET_URL: http://core-wallet:3001
+      WALLET_URL: http://core-wallet:8001
       POLL_INTERVAL_SECS: 5
       RUST_LOG: anchor_tokens_backend=info
     depends_on:
@@ -625,7 +629,7 @@ services:
     networks:
       - anchor-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3006/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:3601/health"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -636,11 +640,11 @@ services:
       context: ./apps/anchor-tokens/frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: http://localhost:3016
-        NEXT_PUBLIC_WALLET_URL: http://localhost:3001
+        NEXT_PUBLIC_API_URL: http://localhost:3601
+        NEXT_PUBLIC_WALLET_URL: http://localhost:8001
     container_name: anchor-app-tokens-frontend
     ports:
-      - "3017:3000"
+      - "3600:3600"
     depends_on:
       app-tokens-backend:
         condition: service_healthy
@@ -674,15 +678,15 @@ services:
       dockerfile: apps/anchor-oracles/backend/Dockerfile
     container_name: anchor-app-oracles-backend
     ports:
-      - "3020:3020"
+      - "3701:3701"
     environment:
       HOST: 0.0.0.0
-      PORT: 3020
+      PORT: 3701
       DATABASE_URL: postgres://anchor:anchor@app-oracles-postgres:5432/anchor_oracles
       BITCOIN_RPC_URL: http://core-bitcoin:18443
       BITCOIN_RPC_USER: anchor
       BITCOIN_RPC_PASSWORD: anchor
-      WALLET_SERVICE_URL: http://core-wallet:3001
+      WALLET_SERVICE_URL: http://core-wallet:8001
       RUST_LOG: anchor_oracles_backend=info
     depends_on:
       app-oracles-postgres:
@@ -692,7 +696,7 @@ services:
     networks:
       - anchor-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3020/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:3701/health"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -703,10 +707,10 @@ services:
       context: ./apps/anchor-oracles/frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: http://localhost:3020
+        NEXT_PUBLIC_API_URL: http://localhost:3701
     container_name: anchor-app-oracles-frontend
     ports:
-      - "3019:3000"
+      - "3700:3700"
     depends_on:
       app-oracles-backend:
         condition: service_healthy
@@ -740,16 +744,16 @@ services:
       dockerfile: apps/anchor-lottery/backend/Dockerfile
     container_name: anchor-app-lottery-backend
     ports:
-      - "3022:3022"
+      - "3801:3801"
     environment:
       HOST: 0.0.0.0
-      PORT: 3022
+      PORT: 3801
       DATABASE_URL: postgres://anchor:anchor@app-lottery-postgres:5432/anchor_lottery
       BITCOIN_RPC_URL: http://core-bitcoin:18443
       BITCOIN_RPC_USER: anchor
       BITCOIN_RPC_PASSWORD: anchor
-      WALLET_SERVICE_URL: http://core-wallet:3001
-      ORACLE_SERVICE_URL: http://app-oracles-backend:3020
+      WALLET_SERVICE_URL: http://core-wallet:8001
+      ORACLE_SERVICE_URL: http://app-oracles-backend:3701
       RUST_LOG: anchor_lottery_backend=info
     depends_on:
       app-lottery-postgres:
@@ -761,7 +765,7 @@ services:
     networks:
       - anchor-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3022/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:3801/health"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -772,10 +776,10 @@ services:
       context: ./apps/anchor-lottery/frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: http://localhost:3022
+        NEXT_PUBLIC_API_URL: http://localhost:3801
     container_name: anchor-app-lottery-frontend
     ports:
-      - "3021:3000"
+      - "3800:3800"
     depends_on:
       app-lottery-backend:
         condition: service_healthy

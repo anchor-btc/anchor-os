@@ -82,7 +82,7 @@ fn default_host() -> String {
 }
 
 fn default_port() -> u16 {
-    3012
+    3501
 }
 
 fn default_bitcoin_rpc_url() -> String {
@@ -98,7 +98,7 @@ fn default_bitcoin_rpc_password() -> String {
 }
 
 fn default_wallet_url() -> String {
-    "http://localhost:3001".to_string()
+    "http://localhost:8001".to_string()
 }
 
 fn default_confirmations() -> u32 {

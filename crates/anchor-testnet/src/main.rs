@@ -48,9 +48,9 @@ async fn main() -> Result<()> {
     dotenvy::dotenv().ok();
     let wallet_url = env::var("WALLET_URL").unwrap_or_else(|_| "http://localhost:3001".to_string());
     let api_port: u16 = env::var("API_PORT")
-        .unwrap_or_else(|_| "3014".to_string())
+        .unwrap_or_else(|_| "8002".to_string())
         .parse()
-        .unwrap_or(3014);
+        .unwrap_or(8002);
 
     // Create shared state
     let config: SharedConfig = Arc::new(RwLock::new(TestnetConfig::from_env()));

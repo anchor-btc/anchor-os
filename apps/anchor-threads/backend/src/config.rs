@@ -19,7 +19,7 @@ impl Config {
             database_url: env::var("DATABASE_URL")
                 .context("DATABASE_URL must be set")?,
             port: env::var("PORT")
-                .unwrap_or_else(|_| "3002".to_string())
+                .unwrap_or_else(|_| "3101".to_string())
                 .parse()
                 .context("Invalid PORT")?,
         })

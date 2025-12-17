@@ -4,8 +4,8 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Build arguments for environment variables
-ARG NEXT_PUBLIC_API_URL=http://localhost:3016
-ARG NEXT_PUBLIC_WALLET_URL=http://localhost:3001
+ARG NEXT_PUBLIC_API_URL=http://localhost:3601
+ARG NEXT_PUBLIC_WALLET_URL=http://localhost:8001
 
 # Set environment variables for build
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
@@ -36,7 +36,10 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
 # Expose port
-EXPOSE 3000
+EXPOSE 3600
+
+ENV PORT=3600
+ENV HOSTNAME="0.0.0.0"
 
 # Start the application
 CMD ["node", "server.js"]

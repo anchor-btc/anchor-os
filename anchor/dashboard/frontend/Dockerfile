@@ -13,8 +13,8 @@ RUN npm install
 COPY . .
 
 # Build-time environment variables for Next.js
-ARG NEXT_PUBLIC_API_URL=http://localhost:3011
-ARG NEXT_PUBLIC_TESTNET_URL=http://localhost:3014
+ARG NEXT_PUBLIC_API_URL=http://localhost:8010
+ARG NEXT_PUBLIC_TESTNET_URL=http://localhost:8002
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_TESTNET_URL=$NEXT_PUBLIC_TESTNET_URL
 
@@ -39,9 +39,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 USER nextjs
 
-EXPOSE 3010
+EXPOSE 8000
 
-ENV PORT=3010
+ENV PORT=8000
 ENV HOSTNAME="0.0.0.0"
 
 CMD ["node", "server.js"]

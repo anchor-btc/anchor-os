@@ -24,6 +24,8 @@ RUN mkdir -p apps/anchor-map/backend/src && echo "fn main() {}" > apps/anchor-ma
 RUN mkdir -p apps/anchor-dns/backend/src && echo "fn main() {}" > apps/anchor-dns/backend/src/main.rs
 RUN mkdir -p apps/anchor-proof/backend/src && echo "fn main() {}" > apps/anchor-proof/backend/src/main.rs
 RUN mkdir -p apps/anchor-tokens/backend/src && echo "fn main() {}" > apps/anchor-tokens/backend/src/main.rs
+RUN mkdir -p apps/anchor-oracles/backend/src && echo "fn main() {}" > apps/anchor-oracles/backend/src/main.rs
+RUN mkdir -p apps/anchor-lottery/backend/src && echo "fn main() {}" > apps/anchor-lottery/backend/src/main.rs
 COPY crates/anchor-indexer/Cargo.toml ./crates/anchor-indexer/
 COPY crates/anchor-wallet/Cargo.toml ./crates/anchor-wallet/
 COPY crates/anchor-wallet-lib/Cargo.toml ./crates/anchor-wallet-lib/
@@ -34,6 +36,8 @@ COPY apps/anchor-map/backend/Cargo.toml ./apps/anchor-map/backend/
 COPY apps/anchor-dns/backend/Cargo.toml ./apps/anchor-dns/backend/
 COPY apps/anchor-proof/backend/Cargo.toml ./apps/anchor-proof/backend/
 COPY apps/anchor-tokens/backend/Cargo.toml ./apps/anchor-tokens/backend/
+COPY apps/anchor-oracles/backend/Cargo.toml ./apps/anchor-oracles/backend/
+COPY apps/anchor-lottery/backend/Cargo.toml ./apps/anchor-lottery/backend/
 
 # Build the testnet service
 RUN cargo build --release -p anchor-testnet

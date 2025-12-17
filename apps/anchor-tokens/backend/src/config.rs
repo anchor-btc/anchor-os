@@ -37,11 +37,11 @@ impl Config {
             bitcoin_rpc_password: env::var("BITCOIN_RPC_PASSWORD")
                 .unwrap_or_else(|_| "pass".to_string()),
             wallet_url: env::var("WALLET_URL")
-                .unwrap_or_else(|_| "http://localhost:3001".to_string()),
+                .unwrap_or_else(|_| "http://localhost:8001".to_string()),
             port: env::var("PORT")
                 .ok()
                 .and_then(|p| p.parse().ok())
-                .unwrap_or(3006),
+                .unwrap_or(3601),
             confirmations: env::var("CONFIRMATIONS")
                 .ok()
                 .and_then(|c| c.parse().ok())
