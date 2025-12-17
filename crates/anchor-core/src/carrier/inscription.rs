@@ -80,6 +80,16 @@ impl InscriptionCarrier {
             AnchorKind::State => "application/json",
             AnchorKind::Vote => "application/json",
             AnchorKind::Image => "image/png",
+            // Oracle types - use binary format
+            AnchorKind::Oracle => "application/octet-stream",
+            AnchorKind::OracleAttestation => "application/octet-stream",
+            AnchorKind::OracleDispute => "application/octet-stream",
+            AnchorKind::OracleSlash => "application/octet-stream",
+            // Lottery types - use binary format
+            AnchorKind::LotteryCreate => "application/octet-stream",
+            AnchorKind::LotteryTicket => "application/octet-stream",
+            AnchorKind::LotteryDraw => "application/octet-stream",
+            AnchorKind::LotteryClaim => "application/octet-stream",
             AnchorKind::Custom(_) => "application/octet-stream",
         }
     }

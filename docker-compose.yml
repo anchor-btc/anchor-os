@@ -579,11 +579,148 @@ services:
       - anchor-network
     restart: unless-stopped
 
+  # Anchor Oracles - Decentralized Oracle Network
+  app-oracles-postgres:
+    image: postgres:16-alpine
+    container_name: anchor-app-oracles-postgres
+    environment:
+      POSTGRES_USER: anchor
+      POSTGRES_PASSWORD: anchor
+      POSTGRES_DB: anchor_oracles
+    volumes:
+      - oracles-postgres-data:/var/lib/postgresql/data
+      - ./apps/anchor-oracles/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U anchor -d anchor_oracles"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - anchor-network
+    restart: unless-stopped
+
+  app-oracles-backend:
+    build:
+      context: .
+      dockerfile: apps/anchor-oracles/backend/Dockerfile
+    container_name: anchor-app-oracles-backend
+    ports:
+      - "3020:3020"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3020
+      DATABASE_URL: postgres://anchor:anchor@app-oracles-postgres:5432/anchor_oracles
+      BITCOIN_RPC_URL: http://core-bitcoin:18443
+      BITCOIN_RPC_USER: anchor
+      BITCOIN_RPC_PASSWORD: anchor
+      WALLET_SERVICE_URL: http://core-wallet:3001
+      RUST_LOG: anchor_oracles_backend=info
+    depends_on:
+      app-oracles-postgres:
+        condition: service_healthy
+      core-bitcoin:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3020/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  app-oracles-frontend:
+    build:
+      context: ./apps/anchor-oracles/frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:3020
+    container_name: anchor-app-oracles-frontend
+    ports:
+      - "3019:3000"
+    depends_on:
+      app-oracles-backend:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    restart: unless-stopped
+
+  # Anchor Lottery - Trustless Lottery with DLC Payouts
+  app-lottery-postgres:
+    image: postgres:16-alpine
+    container_name: anchor-app-lottery-postgres
+    environment:
+      POSTGRES_USER: anchor
+      POSTGRES_PASSWORD: anchor
+      POSTGRES_DB: anchor_lottery
+    volumes:
+      - lottery-postgres-data:/var/lib/postgresql/data
+      - ./apps/anchor-lottery/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U anchor -d anchor_lottery"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - anchor-network
+    restart: unless-stopped
+
+  app-lottery-backend:
+    build:
+      context: .
+      dockerfile: apps/anchor-lottery/backend/Dockerfile
+    container_name: anchor-app-lottery-backend
+    ports:
+      - "3022:3022"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3022
+      DATABASE_URL: postgres://anchor:anchor@app-lottery-postgres:5432/anchor_lottery
+      BITCOIN_RPC_URL: http://core-bitcoin:18443
+      BITCOIN_RPC_USER: anchor
+      BITCOIN_RPC_PASSWORD: anchor
+      WALLET_SERVICE_URL: http://core-wallet:3001
+      ORACLE_SERVICE_URL: http://app-oracles-backend:3020
+      RUST_LOG: anchor_lottery_backend=info
+    depends_on:
+      app-lottery-postgres:
+        condition: service_healthy
+      core-bitcoin:
+        condition: service_healthy
+      app-oracles-backend:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3022/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  app-lottery-frontend:
+    build:
+      context: ./apps/anchor-lottery/frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:3022
+    container_name: anchor-app-lottery-frontend
+    ports:
+      - "3021:3000"
+    depends_on:
+      app-lottery-backend:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    restart: unless-stopped
+
 volumes:
   bitcoin-data:
   postgres-data:
   mempool-db-data:
   tailscale-data:
+  oracles-postgres-data:
+  lottery-postgres-data:
 
 networks:
   anchor-network:

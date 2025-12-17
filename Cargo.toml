@@ -13,6 +13,8 @@ members = [
     "apps/anchor-dns/backend",
     "apps/anchor-proof/backend",
     "apps/anchor-tokens/backend",
+    "apps/anchor-oracles/backend",
+    "apps/anchor-lottery/backend",
 ]
 
 [workspace.package]
