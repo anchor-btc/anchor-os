@@ -191,11 +191,11 @@ export default function AppsPage() {
           </section>
         )}
 
-        {/* Core */}
+        {/* Kernel */}
         <section>
           <div className="flex items-center gap-2 mb-4">
             <Server className="w-5 h-5 text-muted-foreground" />
-            <h2 className="text-xl font-semibold text-foreground">Core</h2>
+            <h2 className="text-xl font-semibold text-foreground">Kernel</h2>
             <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
               Essential services
             </span>

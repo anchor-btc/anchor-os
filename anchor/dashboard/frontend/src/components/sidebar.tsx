@@ -9,7 +9,6 @@ import {
   LayoutDashboard,
   Bitcoin,
   Wallet,
-  ExternalLink,
   Map,
   Grid3X3,
   Search,
@@ -246,7 +245,6 @@ export function Sidebar() {
           >
             <SquareTerminal className="w-3 h-3" />
           </button>
-          {hasExternalUrl && <ExternalLink className="w-3 h-3" />}
         </div>
       </>
     );
@@ -299,8 +297,8 @@ export function Sidebar() {
               <Anchor className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <h1 className="font-bold text-lg text-foreground">ANCHOR</h1>
-              <p className="text-xs text-muted-foreground">Dashboard</p>
+              <h1 className="font-bold text-lg text-foreground">ANCHOR OS</h1>
+              <span className="text-[10px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded">beta</span>
             </div>
           </Link>
         </div>
@@ -357,11 +355,11 @@ export function Sidebar() {
             {networkingList.map(renderServiceItem)}
           </div>
 
-          {/* Core */}
+          {/* Kernel */}
           <div className="pt-4">
             <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-3 mb-2 flex items-center gap-2">
               <Server className="w-3 h-3" />
-              Core
+              Kernel
             </p>
             {coreList.map(renderServiceItem)}
           </div>

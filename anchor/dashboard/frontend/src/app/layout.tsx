@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ANCHOR Dashboard",
-  description: "Control panel for the Anchor Bitcoin stack",
+  title: "ANCHOR OS",
+  description: "Operating System for the Anchor Bitcoin stack",
 };
 
 export default function RootLayout({
