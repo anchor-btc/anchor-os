@@ -27,6 +27,7 @@ import {
   ScrollText,
   SquareTerminal,
   Network,
+  Cloud,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apps, getAppStatus } from "@/lib/apps";
@@ -55,6 +56,7 @@ const iconMap: Record<string, React.ElementType> = {
   Server,
   MessageSquare,
   Network,
+  Cloud,
 };
 
 export function Sidebar() {

@@ -1,6 +1,7 @@
 //! HTTP request handlers
 
 pub mod bitcoin;
+pub mod cloudflare;
 pub mod docker;
 pub mod node;
 pub mod tailscale;

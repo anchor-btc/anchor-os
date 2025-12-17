@@ -373,6 +373,67 @@ export async function disconnectTailscale(): Promise<TailscaleActionResponse> {
   return res.json();
 }
 
+// Cloudflare Types
+
+export interface CloudflareStatus {
+  running: boolean;
+  connected: boolean;
+  container_status: string | null;
+  tunnel_info: string | null;
+}
+
+export interface CloudflareConnectRequest {
+  token: string;
+}
+
+export interface CloudflareActionResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface ExposableService {
+  name: string;
+  description: string;
+  local_url: string;
+  port: number;
+}
+
+export interface ExposableServicesResponse {
+  services: ExposableService[];
+}
+
+// Cloudflare API Functions
+
+export async function fetchCloudflareStatus(): Promise<CloudflareStatus> {
+  const res = await fetch(`${API_URL}/cloudflare/status`);
+  if (!res.ok) throw new Error("Failed to fetch Cloudflare status");
+  return res.json();
+}
+
+export async function connectCloudflare(req: CloudflareConnectRequest): Promise<CloudflareActionResponse> {
+  const res = await fetch(`${API_URL}/cloudflare/connect`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(req),
+  });
+  if (!res.ok) throw new Error("Failed to connect to Cloudflare");
+  return res.json();
+}
+
+export async function disconnectCloudflare(): Promise<CloudflareActionResponse> {
+  const res = await fetch(`${API_URL}/cloudflare/disconnect`, {
+    method: "POST",
+  });
+  if (!res.ok) throw new Error("Failed to disconnect from Cloudflare");
+  return res.json();
+}
+
+export async function fetchExposableServices(): Promise<ExposableServicesResponse> {
+  const res = await fetch(`${API_URL}/cloudflare/services`);
+  if (!res.ok) throw new Error("Failed to fetch services");
+  return res.json();
+}
+
 // Utility functions
 export function formatSats(sats: number): string {
   return (sats / 100_000_000).toFixed(8);

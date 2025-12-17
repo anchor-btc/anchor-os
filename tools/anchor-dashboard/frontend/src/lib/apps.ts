@@ -95,6 +95,17 @@ export const apps: App[] = [
     featured: false,
   },
   {
+    id: "tool-cloudflare",
+    name: "Cloudflare Tunnel",
+    description: "Expose Anchor services to the internet via Cloudflare",
+    icon: "Cloud",
+    color: "orange",
+    internalUrl: "/cloudflare",
+    containers: ["anchor-tool-cloudflare"],
+    category: "tool",
+    featured: false,
+  },
+  {
     id: "tool-mempool",
     name: "Mempool Explorer",
     description: "Full Bitcoin block explorer powered by mempool.space",

@@ -508,6 +508,17 @@ services:
       - anchor-network
     restart: unless-stopped
 
+  # Cloudflare Tunnel
+  tool-cloudflare:
+    image: cloudflare/cloudflared:latest
+    container_name: anchor-tool-cloudflare
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN:-}
+    networks:
+      - anchor-network
+    restart: unless-stopped
+
 volumes:
   bitcoin-data:
   postgres-data:

@@ -59,6 +59,10 @@ pub struct AppState {
         handlers::tailscale::get_tailscale_status,
         handlers::tailscale::connect_tailscale,
         handlers::tailscale::disconnect_tailscale,
+        handlers::cloudflare::get_cloudflare_status,
+        handlers::cloudflare::connect_cloudflare,
+        handlers::cloudflare::disconnect_cloudflare,
+        handlers::cloudflare::get_exposable_services,
     ),
     components(schemas(
         handlers::HealthResponse,
@@ -88,6 +92,11 @@ pub struct AppState {
         handlers::tailscale::TailscaleStatus,
         handlers::tailscale::TailscaleAuthRequest,
         handlers::tailscale::TailscaleActionResponse,
+        handlers::cloudflare::CloudflareStatus,
+        handlers::cloudflare::CloudflareConnectRequest,
+        handlers::cloudflare::CloudflareActionResponse,
+        handlers::cloudflare::ExposableService,
+        handlers::cloudflare::ExposableServicesResponse,
     )),
     tags(
         (name = "System", description = "System health endpoints"),
@@ -96,6 +105,7 @@ pub struct AppState {
         (name = "Wallet", description = "Wallet operations"),
         (name = "Node", description = "Node type management"),
         (name = "Tailscale", description = "Tailscale VPN management"),
+        (name = "Cloudflare", description = "Cloudflare Tunnel management"),
     )
 )]
 struct ApiDoc;
@@ -182,6 +192,11 @@ async fn main() -> Result<()> {
         .route("/tailscale/status", get(handlers::tailscale::get_tailscale_status))
         .route("/tailscale/connect", post(handlers::tailscale::connect_tailscale))
         .route("/tailscale/disconnect", post(handlers::tailscale::disconnect_tailscale))
+        // Cloudflare
+        .route("/cloudflare/status", get(handlers::cloudflare::get_cloudflare_status))
+        .route("/cloudflare/connect", post(handlers::cloudflare::connect_cloudflare))
+        .route("/cloudflare/disconnect", post(handlers::cloudflare::disconnect_cloudflare))
+        .route("/cloudflare/services", get(handlers::cloudflare::get_exposable_services))
         .with_state(state)
         .layer(TraceLayer::new_for_http())
         .layer(
