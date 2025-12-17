@@ -26,6 +26,7 @@ import {
   MessageSquare,
   ScrollText,
   SquareTerminal,
+  Network,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apps, getAppStatus } from "@/lib/apps";
@@ -53,6 +54,7 @@ const iconMap: Record<string, React.ElementType> = {
   FileCheck,
   Server,
   MessageSquare,
+  Network,
 };
 
 export function Sidebar() {

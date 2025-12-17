@@ -324,6 +324,55 @@ export async function resumeTestnet(): Promise<{ paused: boolean }> {
   return res.json();
 }
 
+// Tailscale Types
+
+export interface TailscaleStatus {
+  running: boolean;
+  logged_in: boolean;
+  hostname: string | null;
+  ip_address: string | null;
+  tailnet: string | null;
+  version: string | null;
+  backend_state: string | null;
+}
+
+export interface TailscaleAuthRequest {
+  auth_key: string;
+  hostname?: string;
+  advertise_routes?: string;
+}
+
+export interface TailscaleActionResponse {
+  success: boolean;
+  message: string;
+}
+
+// Tailscale API Functions
+
+export async function fetchTailscaleStatus(): Promise<TailscaleStatus> {
+  const res = await fetch(`${API_URL}/tailscale/status`);
+  if (!res.ok) throw new Error("Failed to fetch Tailscale status");
+  return res.json();
+}
+
+export async function connectTailscale(req: TailscaleAuthRequest): Promise<TailscaleActionResponse> {
+  const res = await fetch(`${API_URL}/tailscale/connect`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(req),
+  });
+  if (!res.ok) throw new Error("Failed to connect to Tailscale");
+  return res.json();
+}
+
+export async function disconnectTailscale(): Promise<TailscaleActionResponse> {
+  const res = await fetch(`${API_URL}/tailscale/disconnect`, {
+    method: "POST",
+  });
+  if (!res.ok) throw new Error("Failed to disconnect from Tailscale");
+  return res.json();
+}
+
 // Utility functions
 export function formatSats(sats: number): string {
   return (sats / 100_000_000).toFixed(8);

@@ -210,32 +210,32 @@ docker compose up -d infra-bitcoin`}
 
       {/* Main Stats Grid - only show when node is running */}
       {nodeRunning && blockchain && network && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard
-            icon={<Blocks className="w-5 h-5" />}
-            label="Block Height"
-            value={blockchain.blocks.toLocaleString()}
-            color="orange"
-          />
-          <StatCard
-            icon={<Network className="w-5 h-5" />}
-            label="Connections"
-            value={`${network.connections} (${network.connections_in}↓ ${network.connections_out}↑)`}
-            color="blue"
-          />
-          <StatCard
-            icon={<HardDrive className="w-5 h-5" />}
-            label="Disk Usage"
-            value={`${(blockchain.size_on_disk / 1024 / 1024).toFixed(1)} MB`}
-            color="purple"
-          />
-          <StatCard
-            icon={<Shield className="w-5 h-5" />}
-            label="Difficulty"
-            value={blockchain.difficulty.toExponential(2)}
-            color="green"
-          />
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          icon={<Blocks className="w-5 h-5" />}
+          label="Block Height"
+          value={blockchain.blocks.toLocaleString()}
+          color="orange"
+        />
+        <StatCard
+          icon={<Network className="w-5 h-5" />}
+          label="Connections"
+          value={`${network.connections} (${network.connections_in}↓ ${network.connections_out}↑)`}
+          color="blue"
+        />
+        <StatCard
+          icon={<HardDrive className="w-5 h-5" />}
+          label="Disk Usage"
+          value={`${(blockchain.size_on_disk / 1024 / 1024).toFixed(1)} MB`}
+          color="purple"
+        />
+        <StatCard
+          icon={<Shield className="w-5 h-5" />}
+          label="Difficulty"
+          value={blockchain.difficulty.toExponential(2)}
+          color="green"
+        />
+      </div>
       )}
 
       {/* Mining Section (for regtest) */}
@@ -297,93 +297,93 @@ docker compose up -d infra-bitcoin`}
       {/* Detailed Info - only show when node is running */}
       {nodeRunning && blockchain && mempool && network && (
         <>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Blockchain Info */}
-            <div className="bg-card border border-border rounded-xl p-6">
-              <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-                <Database className="w-5 h-5 text-muted-foreground" />
-                Blockchain Info
-              </h2>
-              <div className="space-y-3">
-                <InfoRow label="Chain" value={blockchain.chain} />
-                <InfoRow label="Blocks" value={blockchain.blocks.toLocaleString()} />
-                <InfoRow label="Headers" value={blockchain.headers.toLocaleString()} />
-                <InfoRow
-                  label="Best Block"
-                  value={shortenHash(blockchain.bestblockhash, 12)}
-                  mono
-                />
-                <InfoRow
-                  label="Verification Progress"
-                  value={`${(blockchain.verificationprogress * 100).toFixed(2)}%`}
-                />
-                <InfoRow label="Pruned" value={blockchain.pruned ? "Yes" : "No"} />
-              </div>
-            </div>
-
-            {/* Mempool Info */}
-            <div className="bg-card border border-border rounded-xl p-6">
-              <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-                <Zap className="w-5 h-5 text-muted-foreground" />
-                Mempool Info
-              </h2>
-              <div className="space-y-3">
-                <InfoRow label="Loaded" value={mempool.loaded ? "Yes" : "No"} />
-                <InfoRow label="Transactions" value={mempool.size.toLocaleString()} />
-                <InfoRow
-                  label="Size"
-                  value={`${(mempool.bytes / 1024).toFixed(2)} KB`}
-                />
-                <InfoRow
-                  label="Memory Usage"
-                  value={`${(mempool.usage / 1024 / 1024).toFixed(2)} MB`}
-                />
-                <InfoRow
-                  label="Total Fees"
-                  value={`${mempool.total_fee.toFixed(8)} BTC`}
-                />
-                <InfoRow
-                  label="Min Relay Fee"
-                  value={`${(mempool.minrelaytxfee * 100000000).toFixed(0)} sat/kB`}
-                />
-              </div>
-            </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Blockchain Info */}
+        <div className="bg-card border border-border rounded-xl p-6">
+          <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+            <Database className="w-5 h-5 text-muted-foreground" />
+            Blockchain Info
+          </h2>
+          <div className="space-y-3">
+            <InfoRow label="Chain" value={blockchain.chain} />
+            <InfoRow label="Blocks" value={blockchain.blocks.toLocaleString()} />
+            <InfoRow label="Headers" value={blockchain.headers.toLocaleString()} />
+            <InfoRow
+              label="Best Block"
+              value={shortenHash(blockchain.bestblockhash, 12)}
+              mono
+            />
+            <InfoRow
+              label="Verification Progress"
+              value={`${(blockchain.verificationprogress * 100).toFixed(2)}%`}
+            />
+            <InfoRow label="Pruned" value={blockchain.pruned ? "Yes" : "No"} />
           </div>
+        </div>
 
-          {/* Network Info */}
-          <div className="bg-card border border-border rounded-xl p-6">
-            <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-              <Network className="w-5 h-5 text-muted-foreground" />
-              Network Info
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <InfoRow label="Version" value={network.version.toString()} />
-              <InfoRow
-                label="Subversion"
-                value={network.subversion.replace(/\//g, "")}
-              />
-              <InfoRow
-                label="Protocol Version"
-                value={network.protocolversion.toString()}
-              />
-              <InfoRow
-                label="Connections"
-                value={network.connections.toString()}
-              />
-              <InfoRow
-                label="Inbound"
-                value={network.connections_in.toString()}
-              />
-              <InfoRow
-                label="Outbound"
-                value={network.connections_out.toString()}
-              />
-              <InfoRow
-                label="Network Active"
-                value={network.networkactive ? "Yes" : "No"}
-              />
-            </div>
+        {/* Mempool Info */}
+        <div className="bg-card border border-border rounded-xl p-6">
+          <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+            <Zap className="w-5 h-5 text-muted-foreground" />
+            Mempool Info
+          </h2>
+          <div className="space-y-3">
+            <InfoRow label="Loaded" value={mempool.loaded ? "Yes" : "No"} />
+            <InfoRow label="Transactions" value={mempool.size.toLocaleString()} />
+            <InfoRow
+              label="Size"
+              value={`${(mempool.bytes / 1024).toFixed(2)} KB`}
+            />
+            <InfoRow
+              label="Memory Usage"
+              value={`${(mempool.usage / 1024 / 1024).toFixed(2)} MB`}
+            />
+            <InfoRow
+              label="Total Fees"
+              value={`${mempool.total_fee.toFixed(8)} BTC`}
+            />
+            <InfoRow
+              label="Min Relay Fee"
+              value={`${(mempool.minrelaytxfee * 100000000).toFixed(0)} sat/kB`}
+            />
           </div>
+        </div>
+      </div>
+
+      {/* Network Info */}
+      <div className="bg-card border border-border rounded-xl p-6">
+        <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+          <Network className="w-5 h-5 text-muted-foreground" />
+          Network Info
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <InfoRow label="Version" value={network.version.toString()} />
+          <InfoRow
+            label="Subversion"
+            value={network.subversion.replace(/\//g, "")}
+          />
+          <InfoRow
+            label="Protocol Version"
+            value={network.protocolversion.toString()}
+          />
+          <InfoRow
+            label="Connections"
+            value={network.connections.toString()}
+          />
+          <InfoRow
+            label="Inbound"
+            value={network.connections_in.toString()}
+          />
+          <InfoRow
+            label="Outbound"
+            value={network.connections_out.toString()}
+          />
+          <InfoRow
+            label="Network Active"
+            value={network.networkactive ? "Yes" : "No"}
+          />
+        </div>
+      </div>
         </>
       )}
 

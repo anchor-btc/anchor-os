@@ -56,6 +56,9 @@ pub struct AppState {
         handlers::node::get_node_config,
         handlers::node::switch_node,
         handlers::node::get_node_versions,
+        handlers::tailscale::get_tailscale_status,
+        handlers::tailscale::connect_tailscale,
+        handlers::tailscale::disconnect_tailscale,
     ),
     components(schemas(
         handlers::HealthResponse,
@@ -82,6 +85,9 @@ pub struct AppState {
         handlers::node::VersionInfo,
         handlers::node::SwitchVersionRequest,
         handlers::node::SwitchVersionResponse,
+        handlers::tailscale::TailscaleStatus,
+        handlers::tailscale::TailscaleAuthRequest,
+        handlers::tailscale::TailscaleActionResponse,
     )),
     tags(
         (name = "System", description = "System health endpoints"),
@@ -89,6 +95,7 @@ pub struct AppState {
         (name = "Bitcoin", description = "Bitcoin node information"),
         (name = "Wallet", description = "Wallet operations"),
         (name = "Node", description = "Node type management"),
+        (name = "Tailscale", description = "Tailscale VPN management"),
     )
 )]
 struct ApiDoc;
@@ -171,6 +178,10 @@ async fn main() -> Result<()> {
         .route("/node/config", get(handlers::node::get_node_config))
         .route("/node/switch", post(handlers::node::switch_node))
         .route("/node/versions", get(handlers::node::get_node_versions))
+        // Tailscale
+        .route("/tailscale/status", get(handlers::tailscale::get_tailscale_status))
+        .route("/tailscale/connect", post(handlers::tailscale::connect_tailscale))
+        .route("/tailscale/disconnect", post(handlers::tailscale::disconnect_tailscale))
         .with_state(state)
         .layer(TraceLayer::new_for_http())
         .layer(

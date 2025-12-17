@@ -106,6 +106,17 @@ export const apps: App[] = [
     category: "tool",
     featured: true,
   },
+  {
+    id: "tool-tailscale",
+    name: "Tailscale VPN",
+    description: "Connect your Anchor stack to your Tailscale network",
+    icon: "Network",
+    color: "blue",
+    internalUrl: "/tailscale",
+    containers: ["anchor-tool-tailscale"],
+    category: "tool",
+    featured: false,
+  },
 
   // =============================================
   // INFRASTRUCTURE (alphabetical)

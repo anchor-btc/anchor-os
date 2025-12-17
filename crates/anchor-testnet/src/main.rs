@@ -63,7 +63,7 @@ async fn main() -> Result<()> {
 
     {
         let cfg = config.read().await;
-        info!("📡 Wallet URL: {}", wallet_url);
+    info!("📡 Wallet URL: {}", wallet_url);
         info!("🌐 API Port: {}", api_port);
         info!("⏱️  Interval: {}s - {}s", cfg.min_interval_secs, cfg.max_interval_secs);
         info!("⛏️  Blocks per cycle: {}", cfg.blocks_per_cycle);

@@ -285,7 +285,7 @@ impl MessageGenerator {
                 // 45% chance to reply if we have history
                 if !self.message_history.is_empty() && self.rng.gen_bool(0.45) {
                     self.create_reply(carrier).await?
-                } else {
+        } else {
                     self.create_text(carrier).await?
                 }
             }

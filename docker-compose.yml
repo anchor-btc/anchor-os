@@ -490,10 +490,29 @@ services:
       - anchor-network
     restart: unless-stopped
 
+  # Tailscale VPN
+  tool-tailscale:
+    image: tailscale/tailscale:latest
+    container_name: anchor-tool-tailscale
+    hostname: anchor-stack
+    environment:
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+    volumes:
+      - tailscale-data:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    networks:
+      - anchor-network
+    restart: unless-stopped
+
 volumes:
   bitcoin-data:
   postgres-data:
   mempool-db-data:
+  tailscale-data:
 
 networks:
   anchor-network:
