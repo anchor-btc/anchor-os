@@ -126,6 +126,21 @@ pub struct CreateMessageRequest {
     /// Fee rate in sat/vbyte (default: 1)
     #[serde(default = "default_fee_rate")]
     pub fee_rate: u64,
+    /// Required inputs - UTXOs that MUST be spent as inputs (for token transfers)
+    #[serde(default)]
+    pub required_inputs: Vec<AnchorRef>,
+    /// Custom outputs to create (for token transfers)
+    #[serde(default)]
+    pub outputs: Vec<OutputSpec>,
+}
+
+/// Output specification for custom transaction outputs
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct OutputSpec {
+    /// Recipient Bitcoin address
+    pub address: String,
+    /// Amount in satoshis
+    pub value: u64,
 }
 
 fn default_fee_rate() -> u64 {
@@ -194,16 +209,32 @@ pub async fn create_message(
         .map(|a| (a.txid, a.vout))
         .collect();
 
+    // Convert required inputs
+    let required_inputs: Vec<(String, u32)> = req
+        .required_inputs
+        .into_iter()
+        .map(|a| (a.txid, a.vout as u32))
+        .collect();
+
+    // Convert custom outputs
+    let custom_outputs: Vec<(String, u64)> = req
+        .outputs
+        .into_iter()
+        .map(|o| (o.address, o.value))
+        .collect();
+
     info!(
-        "Creating ANCHOR message: kind={}, body_len={}, parent={:?}, carrier={:?}, fee_rate={}",
+        "Creating ANCHOR message: kind={}, body_len={}, parent={:?}, carrier={:?}, fee_rate={}, required_inputs={}, outputs={}",
         req.kind,
         body.len(),
         req.parent_txid,
         req.carrier,
-        req.fee_rate
+        req.fee_rate,
+        required_inputs.len(),
+        custom_outputs.len()
     );
 
-    match state.wallet.create_anchor_transaction(
+    match state.wallet.create_anchor_transaction_advanced(
         req.kind,
         body,
         req.parent_txid,
@@ -211,6 +242,8 @@ pub async fn create_message(
         additional_anchors,
         req.carrier,
         req.fee_rate,
+        required_inputs,
+        custom_outputs,
     ) {
         Ok(result) => {
             info!(

@@ -5,6 +5,7 @@ import {
   Bitcoin,
   Grid3X3,
   Map,
+  Coins,
   ExternalLink,
   ArrowRight,
 } from "lucide-react";
@@ -16,6 +17,13 @@ const links = [
     href: "http://localhost:3000",
     icon: Search,
     color: "orange",
+  },
+  {
+    name: "Anchor Tokens",
+    description: "UTXO-based tokens like Runes",
+    href: "http://localhost:3017",
+    icon: Coins,
+    color: "amber",
   },
   {
     name: "BTC Explorer",
@@ -45,6 +53,11 @@ const colorClasses: Record<string, { bg: string; text: string; hover: string }> 
     bg: "bg-orange-500/10",
     text: "text-orange-500",
     hover: "hover:border-orange-500/30",
+  },
+  amber: {
+    bg: "bg-amber-500/10",
+    text: "text-amber-500",
+    hover: "hover:border-amber-500/30",
   },
   yellow: {
     bg: "bg-yellow-500/10",

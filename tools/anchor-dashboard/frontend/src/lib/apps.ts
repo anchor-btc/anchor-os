@@ -78,6 +78,18 @@ export const apps: App[] = [
     category: "app",
     featured: true,
   },
+  {
+    id: "app-tokens",
+    name: "Anchor Tokens",
+    description: "UTXO-based tokens on Bitcoin - deploy, mint, transfer like Runes",
+    icon: "Coins",
+    color: "amber",
+    url: "http://localhost:3017",
+    port: 3017,
+    containers: ["anchor-app-tokens-frontend", "anchor-app-tokens-backend"],
+    category: "app",
+    featured: true,
+  },
 
   // =============================================
   // TOOLS (alphabetical)

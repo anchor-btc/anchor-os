@@ -490,6 +490,57 @@ services:
       - anchor-network
     restart: unless-stopped
 
+  # Anchor Tokens - UTXO-based Token Protocol
+  app-tokens-backend:
+    build:
+      context: .
+      dockerfile: apps/anchor-tokens/backend/Dockerfile
+    container_name: anchor-app-tokens-backend
+    ports:
+      - "3016:3006"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3006
+      DATABASE_URL: postgres://anchor:anchor@infra-postgres:5432/anchor
+      BITCOIN_RPC_URL: http://infra-bitcoin:18443
+      BITCOIN_RPC_USER: anchor
+      BITCOIN_RPC_PASSWORD: anchor
+      WALLET_URL: http://infra-wallet:3001
+      POLL_INTERVAL_SECS: 5
+      RUST_LOG: anchor_tokens_backend=info
+    depends_on:
+      infra-postgres:
+        condition: service_healthy
+      infra-bitcoin:
+        condition: service_healthy
+      infra-wallet:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3006/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  app-tokens-frontend:
+    build:
+      context: ./apps/anchor-tokens/frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:3016
+        NEXT_PUBLIC_WALLET_URL: http://localhost:3001
+    container_name: anchor-app-tokens-frontend
+    ports:
+      - "3017:3000"
+    depends_on:
+      app-tokens-backend:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    restart: unless-stopped
+
   # Tailscale VPN
   tool-tailscale:
     image: tailscale/tailscale:latest
@@ -498,6 +549,7 @@ services:
     environment:
       - TS_STATE_DIR=/var/lib/tailscale
       - TS_USERSPACE=false
+      - TS_EXTRA_ARGS=--reset --accept-dns=false
     volumes:
       - tailscale-data:/var/lib/tailscale
       - /dev/net/tun:/dev/net/tun

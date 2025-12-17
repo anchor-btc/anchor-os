@@ -12,6 +12,7 @@ members = [
     "apps/anchor-map/backend",
     "apps/anchor-dns/backend",
     "apps/anchor-proof/backend",
+    "apps/anchor-tokens/backend",
 ]
 
 [workspace.package]

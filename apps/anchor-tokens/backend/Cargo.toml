@@ -1,0 +1,36 @@
+[package]
+name = "anchor-tokens-backend"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Backend API and indexer for Anchor Tokens - UTXO-based token protocol on Bitcoin"
+
+[[bin]]
+name = "anchor-tokens-backend"
+path = "src/main.rs"
+
+[dependencies]
+anchor-core.workspace = true
+bitcoin.workspace = true
+bitcoincore-rpc.workspace = true
+tokio.workspace = true
+axum.workspace = true
+tower.workspace = true
+tower-http.workspace = true
+sqlx.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+anyhow.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+chrono.workspace = true
+hex.workspace = true
+dotenvy.workspace = true
+utoipa.workspace = true
+utoipa-swagger-ui.workspace = true
+
+# HTTP client for wallet service
+reqwest = { version = "0.12", features = ["json"] }
+
