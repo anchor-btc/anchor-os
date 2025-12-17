@@ -17,6 +17,9 @@ services:
       - "18444:18444"  # P2P (regtest)
       - "8332:8332"    # RPC (mainnet)
       - "8333:8333"    # P2P (mainnet)
+      - "29000:29000"  # ZMQ rawblock
+      - "29001:29001"  # ZMQ rawtx
+      - "29002:29002"  # ZMQ sequence
     volumes:
       - bitcoin-data:/home/bitcoin/.bitcoin
     healthcheck:
@@ -227,6 +230,41 @@ services:
         condition: service_healthy
       core-electrs:
         condition: service_started
+    networks:
+      - anchor-network
+    restart: unless-stopped
+
+  # Bitfeed - Real-time Bitcoin Transaction Visualizer
+  explorer-bitfeed-api:
+    image: ghcr.io/bitfeed-project/bitfeed-server:v2.1.2
+    container_name: anchor-explorer-bitfeed-api
+    environment:
+      PORT: "5000"
+      BITCOIN_HOST: "core-bitcoin"
+      BITCOIN_ZMQ_RAWBLOCK_PORT: "29000"
+      BITCOIN_ZMQ_RAWTX_PORT: "29001"
+      BITCOIN_ZMQ_SEQUENCE_PORT: "29002"
+      BITCOIN_RPC_PORT: "18443"
+      BITCOIN_RPC_USER: "anchor"
+      BITCOIN_RPC_PASS: "anchor"
+    depends_on:
+      core-bitcoin:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    restart: unless-stopped
+
+  explorer-bitfeed-web:
+    image: ghcr.io/bitfeed-project/bitfeed-client:v2.1.2
+    container_name: anchor-explorer-bitfeed-web
+    environment:
+      TARGET: "docker"
+      BACKEND_HOST: "explorer-bitfeed-api"
+      BACKEND_PORT: "5000"
+    ports:
+      - "3018:80"
+    depends_on:
+      - explorer-bitfeed-api
     networks:
       - anchor-network
     restart: unless-stopped

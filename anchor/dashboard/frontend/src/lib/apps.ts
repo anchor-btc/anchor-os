@@ -169,6 +169,22 @@ export const apps: App[] = [
   // EXPLORERS (alphabetical)
   // =============================================
   {
+    id: "explorer-bitfeed",
+    name: "Bitfeed",
+    description: "Real-time Bitcoin transaction visualizer",
+    icon: "Activity",
+    color: "pink",
+    url: "http://localhost:3018",
+    port: 3018,
+    containers: ["anchor-explorer-bitfeed-web", "anchor-explorer-bitfeed-api"],
+    containerConfigs: [
+      { name: "anchor-explorer-bitfeed-web", label: "Web", port: 3018 },
+      { name: "anchor-explorer-bitfeed-api", label: "API" },
+    ],
+    category: "explorer",
+    featured: true,
+  },
+  {
     id: "explorer-btc-rpc",
     name: "BTC RPC Explorer",
     description: "Simple and lightweight Bitcoin block explorer",

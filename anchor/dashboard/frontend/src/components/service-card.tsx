@@ -21,6 +21,7 @@ import {
   Wallet,
   MessageSquare,
   Zap,
+  Activity,
 } from "lucide-react";
 
 interface ServiceCardProps {
@@ -37,6 +38,8 @@ const serviceIcons: Record<string, React.ElementType> = {
   "anchor-core-wallet": Wallet,
   "anchor-core-testnet": Pickaxe,
   // Explorers
+  "anchor-explorer-bitfeed-web": Activity,
+  "anchor-explorer-bitfeed-api": Server,
   "anchor-explorer-mempool-web": Bitcoin,
   "anchor-explorer-mempool-api": Server,
   "anchor-explorer-mempool-db": Database,

@@ -31,7 +31,7 @@ COPY --chown=bitcoin:bitcoin bitcoin.conf /home/bitcoin/.bitcoin/bitcoin.conf
 # Store network in environment for runtime
 ENV BITCOIN_NETWORK=${NETWORK}
 
-EXPOSE 8332 8333 18332 18333 18443 18444 38332 38333
+EXPOSE 8332 8333 18332 18333 18443 18444 38332 38333 29000 29001 29002
 
 # Use shell form to allow variable expansion
 CMD bitcoind -${BITCOIN_NETWORK} -printtoconsole
