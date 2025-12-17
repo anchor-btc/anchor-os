@@ -20,6 +20,7 @@ import {
   FileCheck,
   Wallet,
   MessageSquare,
+  Zap,
 } from "lucide-react";
 
 interface ServiceCardProps {
@@ -30,6 +31,7 @@ interface ServiceCardProps {
 const serviceIcons: Record<string, React.ElementType> = {
   // Core
   "anchor-core-bitcoin": Bitcoin,
+  "anchor-core-electrs": Zap,
   "anchor-core-postgres": Database,
   "anchor-core-indexer": Search,
   "anchor-core-wallet": Wallet,

@@ -118,6 +118,30 @@ services:
       retries: 5
     restart: unless-stopped
 
+  # Electrs - Electrum Server for address indexing
+  core-electrs:
+    build:
+      context: ./docker/electrs
+      dockerfile: Dockerfile
+    container_name: anchor-core-electrs
+    environment:
+      ELECTRS_NETWORK: regtest
+      ELECTRS_DAEMON_RPC_ADDR: core-bitcoin:18443
+      ELECTRS_DAEMON_P2P_ADDR: core-bitcoin:18444
+      ELECTRS_ELECTRUM_RPC_ADDR: 0.0.0.0:50001
+      ELECTRS_AUTH: anchor:anchor
+      ELECTRS_DB_DIR: /data
+    volumes:
+      - electrs-data:/data
+    ports:
+      - "50001:50001"
+    depends_on:
+      core-bitcoin:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    restart: unless-stopped
+
   # =============================================
   # EXPLORERS (explorer-)
   # =============================================
@@ -140,12 +164,15 @@ services:
     image: mempool/backend:latest
     container_name: anchor-explorer-mempool-api
     environment:
-      MEMPOOL_BACKEND: "none"
+      MEMPOOL_BACKEND: "electrum"
       MEMPOOL_NETWORK: "regtest"
       CORE_RPC_HOST: "core-bitcoin"
       CORE_RPC_PORT: "18443"
       CORE_RPC_USERNAME: "anchor"
       CORE_RPC_PASSWORD: "anchor"
+      ELECTRUM_HOST: "core-electrs"
+      ELECTRUM_PORT: "50001"
+      ELECTRUM_TLS_ENABLED: "false"
       DATABASE_ENABLED: "true"
       DATABASE_HOST: "explorer-mempool-db"
       DATABASE_PORT: "3306"
@@ -155,6 +182,7 @@ services:
     depends_on:
       - explorer-mempool-db
       - core-bitcoin
+      - core-electrs
     networks:
       - anchor-network
     restart: unless-stopped
@@ -186,7 +214,8 @@ services:
       BTCEXP_BITCOIND_USER: anchor
       BTCEXP_BITCOIND_PASS: anchor
       BTCEXP_BITCOIND_RPC_TIMEOUT: 10000
-      BTCEXP_ADDRESS_API: ""
+      BTCEXP_ADDRESS_API: electrum
+      BTCEXP_ELECTRUM_SERVERS: tcp://core-electrs:50001
       BTCEXP_SLOW_DEVICE_MODE: "false"
       BTCEXP_NO_INMEMORY_RPC_CACHE: "false"
       BTCEXP_PRIVACY_MODE: "false"
@@ -196,6 +225,8 @@ services:
     depends_on:
       core-bitcoin:
         condition: service_healthy
+      core-electrs:
+        condition: service_started
     networks:
       - anchor-network
     restart: unless-stopped
@@ -721,6 +752,7 @@ volumes:
   tailscale-data:
   oracles-postgres-data:
   lottery-postgres-data:
+  electrs-data:
 
 networks:
   anchor-network:

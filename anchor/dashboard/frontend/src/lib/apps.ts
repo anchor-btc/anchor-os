@@ -228,6 +228,17 @@ export const apps: App[] = [
   // CORE (alphabetical)
   // =============================================
   {
+    id: "core-electrs",
+    name: "Electrs",
+    description: "Electrum Server - efficient address and UTXO indexing",
+    icon: "Zap",
+    color: "yellow",
+    internalUrl: "/electrs",
+    port: 50001,
+    containers: ["anchor-core-electrs"],
+    category: "core",
+  },
+  {
     id: "core-indexer",
     name: "Anchor Indexer",
     description: "Indexes ANCHOR messages from the blockchain",
