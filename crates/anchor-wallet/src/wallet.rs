@@ -243,37 +243,43 @@ impl WalletService {
 
     /// Get wallet balance
     pub fn get_balance(&self) -> Result<Balance> {
-        let balances = self.rpc.get_balances()?;
-        
-        let confirmed = balances.mine.trusted.to_btc();
-        let unconfirmed = balances.mine.untrusted_pending.to_btc();
-        
-        Ok(Balance {
-            confirmed,
-            unconfirmed,
-            total: confirmed + unconfirmed,
+        self.with_wallet_check(|| {
+            let balances = self.rpc.get_balances()?;
+            
+            let confirmed = balances.mine.trusted.to_btc();
+            let unconfirmed = balances.mine.untrusted_pending.to_btc();
+            
+            Ok(Balance {
+                confirmed,
+                unconfirmed,
+                total: confirmed + unconfirmed,
+            })
         })
     }
 
     /// Get a new receiving address
     pub fn get_new_address(&self) -> Result<String> {
-        let address = self.rpc.get_new_address(None, None)?;
-        Ok(address.assume_checked().to_string())
+        self.with_wallet_check(|| {
+            let address = self.rpc.get_new_address(None, None)?;
+            Ok(address.assume_checked().to_string())
+        })
     }
 
     /// List unspent outputs
     pub fn list_utxos(&self) -> Result<Vec<Utxo>> {
-        let utxos = self.rpc.list_unspent(None, None, None, None, None)?;
-        
-        Ok(utxos
-            .into_iter()
-            .map(|u| Utxo {
-                txid: u.txid.to_string(),
-                vout: u.vout,
-                amount: u.amount.to_btc(),
-                confirmations: u.confirmations,
-            })
-            .collect())
+        self.with_wallet_check(|| {
+            let utxos = self.rpc.list_unspent(None, None, None, None, None)?;
+            
+            Ok(utxos
+                .into_iter()
+                .map(|u| Utxo {
+                    txid: u.txid.to_string(),
+                    vout: u.vout,
+                    amount: u.amount.to_btc(),
+                    confirmations: u.confirmations,
+                })
+                .collect())
+        })
     }
 
     /// Create and broadcast an ANCHOR message transaction
@@ -1652,38 +1658,44 @@ impl WalletService {
 
     /// Mine blocks (regtest only)
     pub fn mine_blocks(&self, count: u32) -> Result<Vec<String>> {
-        let address = self.rpc.get_new_address(None, None)?;
-        let hashes = self.rpc.generate_to_address(count as u64, &address.assume_checked())?;
-        Ok(hashes.into_iter().map(|h| h.to_string()).collect())
+        self.with_wallet_check(|| {
+            let address = self.rpc.get_new_address(None, None)?;
+            let hashes = self.rpc.generate_to_address(count as u64, &address.assume_checked())?;
+            Ok(hashes.into_iter().map(|h| h.to_string()).collect())
+        })
     }
 
     /// Broadcast a raw transaction
     pub fn broadcast(&self, tx_hex: &str) -> Result<String> {
-        let txid: String = self.rpc.call(
-            "sendrawtransaction",
-            &[serde_json::json!(tx_hex)],
-        )?;
-        Ok(txid)
+        self.with_wallet_check(|| {
+            let txid: String = self.rpc.call(
+                "sendrawtransaction",
+                &[serde_json::json!(tx_hex)],
+            )?;
+            Ok(txid)
+        })
     }
 
     /// Get raw transaction by txid
     pub fn get_raw_transaction(&self, txid: &str) -> Result<(String, serde_json::Value, Option<u64>)> {
-        // Get raw hex
-        let hex: String = self.rpc.call(
-            "getrawtransaction",
-            &[serde_json::json!(txid)],
-        )?;
+        self.with_wallet_check(|| {
+            // Get raw hex
+            let hex: String = self.rpc.call(
+                "getrawtransaction",
+                &[serde_json::json!(txid)],
+            )?;
 
-        // Get decoded transaction
-        let decoded: serde_json::Value = self.rpc.call(
-            "getrawtransaction",
-            &[serde_json::json!(txid), serde_json::json!(true)],
-        )?;
+            // Get decoded transaction
+            let decoded: serde_json::Value = self.rpc.call(
+                "getrawtransaction",
+                &[serde_json::json!(txid), serde_json::json!(true)],
+            )?;
 
-        // Calculate fee by summing input values and subtracting output values
-        let fee = self.calculate_tx_fee(&decoded);
+            // Calculate fee by summing input values and subtracting output values
+            let fee = self.calculate_tx_fee(&decoded);
 
-        Ok((hex, decoded, fee))
+            Ok((hex, decoded, fee))
+        })
     }
 
     /// Calculate transaction fee by fetching input values
