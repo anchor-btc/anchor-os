@@ -18,6 +18,7 @@ import {
   Loader2,
   Play,
   Square,
+  Layers,
 } from "lucide-react";
 
 const iconMap: Record<string, React.ElementType> = {
@@ -28,6 +29,7 @@ const iconMap: Record<string, React.ElementType> = {
   Wallet,
   Database,
   Pickaxe,
+  Layers,
 };
 
 interface InfraCardProps {

@@ -33,6 +33,7 @@ import {
   HardDrive,
   Settings,
   Shield,
+  Layers,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apps, getAppStatus } from "@/lib/apps";
@@ -65,6 +66,7 @@ const iconMap: Record<string, React.ElementType> = {
   Network,
   Cloud,
   Shield,
+  Layers,
 };
 
 export function Sidebar() {
@@ -271,6 +273,21 @@ export function Sidebar() {
         >
           {content}
         </Link>
+      );
+    }
+
+    // External app that doesn't support iframe - open in new tab directly
+    if (hasExternalUrl && app.supportsIframe === false) {
+      return (
+        <a
+          key={app.id}
+          href={app.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors group"
+        >
+          {content}
+        </a>
       );
     }
 

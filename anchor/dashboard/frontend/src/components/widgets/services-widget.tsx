@@ -25,6 +25,7 @@ import {
   Eye,
   Ticket,
   Activity,
+  Layers,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -47,6 +48,7 @@ const iconMap: Record<string, React.ElementType> = {
   Eye,
   Ticket,
   Activity,
+  Layers,
 };
 
 const colorMap: Record<string, string> = {

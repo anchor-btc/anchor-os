@@ -17,6 +17,7 @@ import {
   Loader2,
   ArrowRight,
   ExternalLink,
+  Layers,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -32,6 +33,7 @@ const iconMap: Record<string, React.ElementType> = {
   Bitcoin,
   Cloud,
   Network,
+  Layers,
 };
 
 const bgColorMap: Record<string, string> = {

@@ -96,6 +96,41 @@ export function IframeView({ appId }: IframeViewProps) {
     );
   }
 
+  // Handle apps that don't support iframe embedding
+  if (app.supportsIframe === false) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-8rem)] gap-6">
+        <div className="flex flex-col items-center gap-3 text-center max-w-md">
+          <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center">
+            <ExternalLink className="w-8 h-8 text-muted-foreground" />
+          </div>
+          <h2 className="text-xl font-semibold text-foreground">{app.name}</h2>
+          <p className="text-muted-foreground">
+            This app doesn&apos;t support embedded viewing due to security restrictions.
+            Click below to open it in a new tab.
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={() => router.push("/")}
+            className="px-4 py-2 bg-muted text-muted-foreground hover:bg-muted/80 rounded-lg transition-colors"
+          >
+            Back to Dashboard
+          </button>
+          <a
+            href={app.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg flex items-center gap-2 transition-colors"
+          >
+            <ExternalLink className="w-4 h-4" />
+            Open {app.name}
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   const navigateTo = useCallback((url: string, addToHistory = true) => {
     // Ensure URL has protocol
     let finalUrl = url;

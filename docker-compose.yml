@@ -267,6 +267,24 @@ services:
       - anchor-network
     restart: unless-stopped
 
+  # Esplora - Blockstream Block Explorer
+  explorer-esplora:
+    image: blockstream/esplora:latest
+    container_name: anchor-explorer-esplora
+    ports:
+      - "4030:80"      # Web UI
+    environment:
+      - DEBUG=info
+    volumes:
+      - esplora-data:/data
+    command: ["/srv/explorer/run.sh", "bitcoin-regtest", "explorer"]
+    depends_on:
+      core-bitcoin:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    restart: unless-stopped
+
   # Bitfeed - Real-time Bitcoin Transaction Visualizer
   explorer-bitfeed-api:
     image: ghcr.io/bitfeed-project/bitfeed-server:v2.1.2
@@ -885,6 +903,7 @@ volumes:
   oracles-postgres-data:
   lottery-postgres-data:
   electrs-data:
+  esplora-data:
   backup-data:
   netdata-config:
   netdata-lib:

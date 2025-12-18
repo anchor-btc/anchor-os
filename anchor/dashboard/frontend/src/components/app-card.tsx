@@ -28,6 +28,7 @@ import {
   Network,
   Cloud,
   Coins,
+  Layers,
 } from "lucide-react";
 
 const iconMap: Record<string, React.ElementType> = {
@@ -44,6 +45,7 @@ const iconMap: Record<string, React.ElementType> = {
   Network,
   Cloud,
   Coins,
+  Layers,
 };
 
 const colorMap: Record<string, { bg: string; border: string; text: string; glow: string }> = {
