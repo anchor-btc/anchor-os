@@ -67,6 +67,11 @@ pub struct AppState {
         handlers::cloudflare::disconnect_cloudflare,
         handlers::cloudflare::get_exposable_services,
         handlers::indexer::get_indexer_stats,
+        handlers::tor::get_tor_status,
+        handlers::tor::get_onion_addresses_handler,
+        handlers::tor::new_tor_circuit,
+        handlers::tor::enable_tor,
+        handlers::tor::disable_tor,
     ),
     components(schemas(
         handlers::HealthResponse,
@@ -103,6 +108,9 @@ pub struct AppState {
         handlers::cloudflare::ExposableServicesResponse,
         handlers::indexer::IndexerStats,
         handlers::indexer::MessageKindCount,
+        handlers::tor::TorStatus,
+        handlers::tor::TorActionResponse,
+        handlers::tor::OnionAddresses,
     )),
     tags(
         (name = "System", description = "System health endpoints"),
@@ -112,6 +120,7 @@ pub struct AppState {
         (name = "Node", description = "Node type management"),
         (name = "Tailscale", description = "Tailscale VPN management"),
         (name = "Cloudflare", description = "Cloudflare Tunnel management"),
+        (name = "Tor", description = "Tor network management"),
         (name = "Indexer", description = "Anchor indexer statistics"),
     )
 )]
@@ -147,8 +156,15 @@ async fn main() -> Result<()> {
                     .execute(&pool)
                     .await
                 {
-                    Ok(_) => info!("Database migrations applied"),
-                    Err(e) => info!("Migrations may already exist: {}", e),
+                    Ok(_) => info!("Database migration 001 applied"),
+                    Err(e) => info!("Migration 001 may already exist: {}", e),
+                }
+                match sqlx::query(include_str!("../migrations/002_tor_settings.sql"))
+                    .execute(&pool)
+                    .await
+                {
+                    Ok(_) => info!("Database migration 002 applied"),
+                    Err(e) => info!("Migration 002 may already exist: {}", e),
                 }
                 Some(pool)
             }
@@ -231,6 +247,12 @@ async fn main() -> Result<()> {
         .route("/cloudflare/connect", post(handlers::cloudflare::connect_cloudflare))
         .route("/cloudflare/disconnect", post(handlers::cloudflare::disconnect_cloudflare))
         .route("/cloudflare/services", get(handlers::cloudflare::get_exposable_services))
+        // Tor
+        .route("/tor/status", get(handlers::tor::get_tor_status))
+        .route("/tor/onion-addresses", get(handlers::tor::get_onion_addresses_handler))
+        .route("/tor/new-circuit", post(handlers::tor::new_tor_circuit))
+        .route("/tor/enable", post(handlers::tor::enable_tor))
+        .route("/tor/disable", post(handlers::tor::disable_tor))
         // Indexer
         .route("/indexer/stats", get(handlers::indexer::get_indexer_stats))
         // Settings

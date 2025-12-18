@@ -8,6 +8,7 @@ pub mod indexer;
 pub mod node;
 pub mod settings;
 pub mod tailscale;
+pub mod tor;
 pub mod wallet;
 
 use axum::Json;

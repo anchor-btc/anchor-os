@@ -32,6 +32,7 @@ import {
   Loader2,
   HardDrive,
   Settings,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apps, getAppStatus } from "@/lib/apps";
@@ -63,6 +64,7 @@ const iconMap: Record<string, React.ElementType> = {
   MessageSquare,
   Network,
   Cloud,
+  Shield,
 };
 
 export function Sidebar() {

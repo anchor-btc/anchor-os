@@ -239,6 +239,17 @@ export const apps: App[] = [
     category: "networking",
     featured: false,
   },
+  {
+    id: "networking-tor",
+    name: "Tor Network",
+    description: "Privacy network for anonymous Bitcoin connections and hidden services",
+    icon: "Shield",
+    color: "purple",
+    internalUrl: "/tor",
+    containers: ["anchor-networking-tor"],
+    category: "networking",
+    featured: false,
+  },
 
   // =============================================
   // CORE (alphabetical)

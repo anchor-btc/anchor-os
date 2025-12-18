@@ -1,0 +1,47 @@
+# ===========================================
+# TOR CONFIGURATION FOR ANCHOR OS
+# ===========================================
+
+# SOCKS Proxy - Allow connections from Docker network
+SocksPort 0.0.0.0:9050
+SocksPolicy accept *
+
+# Control Port for applications to control Tor
+ControlPort 9051
+HashedControlPassword 16:872860B76453A77D60CA2BB8C1A7042072093276A3D701AD684053EC4C
+
+# Logging
+Log notice stdout
+
+# Performance tuning
+CircuitBuildTimeout 30
+LearnCircuitBuildTimeout 0
+NumEntryGuards 8
+
+# ===========================================
+# HIDDEN SERVICE - Bitcoin Node
+# ===========================================
+# Expose Bitcoin node as a .onion address
+# Peers can connect to your node privately
+
+HiddenServiceDir /var/lib/tor/bitcoin-node/
+HiddenServicePort 8333 core-bitcoin:8333
+HiddenServicePort 18333 core-bitcoin:18333
+HiddenServicePort 18444 core-bitcoin:18444
+
+# ===========================================
+# HIDDEN SERVICE - Electrs
+# ===========================================
+# Expose Electrum server as a .onion address
+# Wallets can connect privately
+
+HiddenServiceDir /var/lib/tor/electrs/
+HiddenServicePort 50001 core-electrs:50001
+
+# ===========================================
+# HIDDEN SERVICE - Dashboard
+# ===========================================
+# Access Dashboard via Tor Browser
+
+HiddenServiceDir /var/lib/tor/dashboard/
+HiddenServicePort 80 anchor-dashboard-frontend:8000

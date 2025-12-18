@@ -434,6 +434,67 @@ export async function fetchExposableServices(): Promise<ExposableServicesRespons
   return res.json();
 }
 
+// Tor Types
+
+export interface OnionAddresses {
+  bitcoin?: string;
+  electrs?: string;
+  dashboard?: string;
+}
+
+export interface TorStatus {
+  running: boolean;
+  connected: boolean;
+  container_status: string | null;
+  tor_version: string | null;
+  circuit_established: boolean;
+  external_ip: string | null;
+  onion_addresses: OnionAddresses;
+}
+
+export interface TorActionResponse {
+  success: boolean;
+  message: string;
+}
+
+// Tor API Functions
+
+export async function fetchTorStatus(): Promise<TorStatus> {
+  const res = await fetch(`${API_URL}/tor/status`);
+  if (!res.ok) throw new Error("Failed to fetch Tor status");
+  return res.json();
+}
+
+export async function fetchOnionAddresses(): Promise<OnionAddresses> {
+  const res = await fetch(`${API_URL}/tor/onion-addresses`);
+  if (!res.ok) throw new Error("Failed to fetch onion addresses");
+  return res.json();
+}
+
+export async function enableTor(): Promise<TorActionResponse> {
+  const res = await fetch(`${API_URL}/tor/enable`, {
+    method: "POST",
+  });
+  if (!res.ok) throw new Error("Failed to enable Tor");
+  return res.json();
+}
+
+export async function disableTor(): Promise<TorActionResponse> {
+  const res = await fetch(`${API_URL}/tor/disable`, {
+    method: "POST",
+  });
+  if (!res.ok) throw new Error("Failed to disable Tor");
+  return res.json();
+}
+
+export async function newTorCircuit(): Promise<TorActionResponse> {
+  const res = await fetch(`${API_URL}/tor/new-circuit`, {
+    method: "POST",
+  });
+  if (!res.ok) throw new Error("Failed to create new Tor circuit");
+  return res.json();
+}
+
 // Utility functions
 export function formatSats(sats: number): string {
   return (sats / 100_000_000).toFixed(8);

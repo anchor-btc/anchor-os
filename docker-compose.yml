@@ -336,6 +336,28 @@ services:
       - anchor-network
     restart: unless-stopped
 
+  # Tor Proxy - Privacy network for Bitcoin
+  networking-tor:
+    image: dperson/torproxy:latest
+    container_name: anchor-networking-tor
+    ports:
+      - "9050:9050"   # SOCKS5 Proxy
+      - "9051:9051"   # Control Port
+    environment:
+      - TOR_NewCircuitPeriod=30
+      - PASSWORD=anchor
+    volumes:
+      - tor-data:/var/lib/tor
+    networks:
+      - anchor-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s --socks5-hostname localhost:9050 https://check.torproject.org/api/ip | grep -q IsTor || exit 1"]
+      interval: 60s
+      timeout: 30s
+      retries: 3
+      start_period: 120s
+
   # =============================================
   # ANCHOR DASHBOARD (anchor-)
   # =============================================
@@ -827,6 +849,7 @@ volumes:
   postgres-data:
   mempool-db-data:
   tailscale-data:
+  tor-data:
   oracles-postgres-data:
   lottery-postgres-data:
   electrs-data:
