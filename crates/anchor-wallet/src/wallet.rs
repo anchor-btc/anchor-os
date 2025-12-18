@@ -212,7 +212,7 @@ impl WalletService {
     /// Wrapper to ensure wallet is loaded before RPC operations
     fn with_wallet_check<T, F>(&self, operation: F) -> Result<T>
     where
-        F: FnOnce() -> Result<T>,
+        F: Fn() -> Result<T>,
     {
         // Ensure wallet is loaded
         if !self.ensure_wallet_loaded() {
@@ -293,6 +293,11 @@ impl WalletService {
         carrier: Option<u8>,
         fee_rate: u64, // sat/vbyte
     ) -> Result<CreatedTransaction> {
+        // Ensure wallet is loaded before proceeding
+        if !self.ensure_wallet_loaded() {
+            anyhow::bail!("Wallet is not available and could not be recovered");
+        }
+
         // Build the ANCHOR message
         let mut builder = AnchorMessageBuilder::new().kind(AnchorKind::from(kind));
 
@@ -409,6 +414,11 @@ impl WalletService {
         required_inputs: Vec<(String, u32)>,
         custom_outputs: Vec<(String, u64)>,
     ) -> Result<CreatedTransaction> {
+        // Ensure wallet is loaded before proceeding
+        if !self.ensure_wallet_loaded() {
+            anyhow::bail!("Wallet is not available and could not be recovered");
+        }
+
         // If no required inputs or custom outputs, use the simple version
         if required_inputs.is_empty() && custom_outputs.is_empty() {
             return self.create_anchor_transaction(
