@@ -369,6 +369,20 @@
     "notRunningMsg": "Electrsが実行されていません",
     "startWith": "Electrsを起動するには"
   },
+  "electrum": {
+    "title": "Electrumサーバー",
+    "subtitle": "Electrumサーバーを選択・管理",
+    "electrs": "Electrs",
+    "electrsDesc": "軽量、高速同期、低リソース使用",
+    "fulcrum": "Fulcrum",
+    "fulcrumDesc": "フル機能、高速クエリ、高リソース使用",
+    "switching": "サーバー切り替え中...",
+    "switchingDesc": "依存サービスを再起動中...",
+    "switchConfirm": "依存サービス（Mempool、BTC RPC Explorer）が再起動されます。続行しますか？",
+    "confirmSwitch": "サーバーを切り替えますか？",
+    "switch": "切り替え",
+    "activeServer": "アクティブサーバー"
+  },
   "tailscale": {
     "title": "Tailscale VPN",
     "subtitle": "AnchorスタックをTailscaleネットワークに接続",

@@ -369,6 +369,20 @@
     "notRunningMsg": "Electrs 未运行",
     "startWith": "使用以下命令启动 Electrs"
   },
+  "electrum": {
+    "title": "Electrum 服务器",
+    "subtitle": "选择和管理您的 Electrum 服务器",
+    "electrs": "Electrs",
+    "electrsDesc": "轻量级，快速同步，低资源占用",
+    "fulcrum": "Fulcrum",
+    "fulcrumDesc": "功能齐全，查询更快，资源占用较高",
+    "switching": "正在切换服务器...",
+    "switchingDesc": "正在重启依赖服务...",
+    "switchConfirm": "这将重启依赖服务（Mempool、BTC RPC Explorer）。是否继续？",
+    "confirmSwitch": "切换服务器？",
+    "switch": "切换",
+    "activeServer": "活动服务器"
+  },
   "tailscale": {
     "title": "Tailscale VPN",
     "subtitle": "将您的 Anchor 堆栈连接到 Tailscale 网络",

@@ -166,6 +166,13 @@ async fn main() -> Result<()> {
                     Ok(_) => info!("Database migration 002 applied"),
                     Err(e) => info!("Migration 002 may already exist: {}", e),
                 }
+                match sqlx::query(include_str!("../migrations/003_electrum_setting.sql"))
+                    .execute(&pool)
+                    .await
+                {
+                    Ok(_) => info!("Database migration 003 applied"),
+                    Err(e) => info!("Migration 003 may already exist: {}", e),
+                }
                 Some(pool)
             }
             Err(e) => {
@@ -253,6 +260,10 @@ async fn main() -> Result<()> {
         .route("/tor/new-circuit", post(handlers::tor::new_tor_circuit))
         .route("/tor/enable", post(handlers::tor::enable_tor))
         .route("/tor/disable", post(handlers::tor::disable_tor))
+        // Electrum (Electrs/Fulcrum switching)
+        .route("/electrum/status", get(handlers::electrum::get_electrum_status))
+        .route("/electrum/switch", post(handlers::electrum::switch_electrum_server))
+        .route("/electrum/info", get(handlers::electrum::get_electrum_info))
         // Indexer
         .route("/indexer/stats", get(handlers::indexer::get_indexer_stats))
         // Settings

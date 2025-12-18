@@ -495,6 +495,55 @@ export async function newTorCircuit(): Promise<TorActionResponse> {
   return res.json();
 }
 
+// Electrum Types (Electrs/Fulcrum switching)
+
+export type ElectrumServer = "electrs" | "fulcrum";
+
+export interface ElectrumStatus {
+  configured_server: ElectrumServer;
+  active_server: ElectrumServer | null;
+  electrs_status: string | null;
+  fulcrum_status: string | null;
+  port_available: boolean;
+  sync_status: string | null;
+}
+
+export interface ElectrumSwitchRequest {
+  server: ElectrumServer;
+}
+
+export interface ElectrumActionResponse {
+  success: boolean;
+  message: string;
+  active_server: ElectrumServer | null;
+}
+
+// Electrum API Functions
+
+export async function fetchElectrumStatus(): Promise<ElectrumStatus> {
+  const res = await fetch(`${API_URL}/electrum/status`);
+  if (!res.ok) throw new Error("Failed to fetch Electrum status");
+  return res.json();
+}
+
+export async function switchElectrumServer(
+  server: ElectrumServer
+): Promise<ElectrumActionResponse> {
+  const res = await fetch(`${API_URL}/electrum/switch`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ server }),
+  });
+  if (!res.ok) throw new Error("Failed to switch Electrum server");
+  return res.json();
+}
+
+export async function fetchElectrumInfo(): Promise<ElectrumStatus> {
+  const res = await fetch(`${API_URL}/electrum/info`);
+  if (!res.ok) throw new Error("Failed to fetch Electrum info");
+  return res.json();
+}
+
 // Utility functions
 export function formatSats(sats: number): string {
   return (sats / 100_000_000).toFixed(8);

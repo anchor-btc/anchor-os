@@ -369,6 +369,20 @@
     "notRunningMsg": "Electrs가 실행 중이 아닙니다",
     "startWith": "Electrs를 시작하려면"
   },
+  "electrum": {
+    "title": "Electrum 서버",
+    "subtitle": "Electrum 서버 선택 및 관리",
+    "electrs": "Electrs",
+    "electrsDesc": "경량, 빠른 동기화, 낮은 리소스 사용",
+    "fulcrum": "Fulcrum",
+    "fulcrumDesc": "완전한 기능, 빠른 쿼리, 높은 리소스 사용",
+    "switching": "서버 전환 중...",
+    "switchingDesc": "의존 서비스 재시작 중...",
+    "switchConfirm": "의존 서비스(Mempool, BTC RPC Explorer)가 재시작됩니다. 계속하시겠습니까?",
+    "confirmSwitch": "서버를 전환하시겠습니까?",
+    "switch": "전환",
+    "activeServer": "활성 서버"
+  },
   "tailscale": {
     "title": "Tailscale VPN",
     "subtitle": "Anchor 스택을 Tailscale 네트워크에 연결",

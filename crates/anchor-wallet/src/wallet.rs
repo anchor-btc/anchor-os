@@ -13,6 +13,7 @@ use bitcoin::{
 use bitcoincore_rpc::{Auth, Client, RpcApi};
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
+use std::sync::atomic::{AtomicBool, Ordering};
 use tracing::{debug, info, warn};
 
 use anchor_core::{AnchorKind, AnchorMessageBuilder};
@@ -61,21 +62,22 @@ fn carrier_name(carrier: u8) -> &'static str {
 /// The wallet service wrapping Bitcoin Core RPC
 pub struct WalletService {
     rpc: Client,
-    #[allow(dead_code)]
+    base_rpc: Client,
     wallet_name: String,
+    wallet_loaded: AtomicBool,
 }
 
 impl WalletService {
     /// Create a new wallet service
     pub fn new(config: &Config) -> Result<Self> {
-        let rpc = Client::new(
+        let base_rpc = Client::new(
             &config.bitcoin_rpc_url,
             Auth::UserPass(config.bitcoin_rpc_user.clone(), config.bitcoin_rpc_password.clone()),
         )
         .context("Failed to connect to Bitcoin RPC")?;
 
         // Verify connection
-        let blockchain_info = rpc.get_blockchain_info()?;
+        let blockchain_info = base_rpc.get_blockchain_info()?;
         info!(
             "Connected to Bitcoin node: chain={}, blocks={}",
             blockchain_info.chain, blockchain_info.blocks
@@ -97,7 +99,7 @@ impl WalletService {
             }
             Err(_) => {
                 // Wallet not loaded, try to load it
-                match rpc.load_wallet(&wallet_name) {
+                match base_rpc.load_wallet(&wallet_name) {
                     Ok(_) => {
                         info!("Loaded existing wallet: {}", wallet_name);
                     }
@@ -107,8 +109,8 @@ impl WalletService {
                         if error_str.contains("already exists") || error_str.contains("already loaded") {
                             info!("Wallet already exists, trying alternative load: {}", wallet_name);
                             // Try unloading and reloading
-                            let _ = rpc.unload_wallet(Some(&wallet_name));
-                            match rpc.load_wallet(&wallet_name) {
+                            let _ = base_rpc.unload_wallet(Some(&wallet_name));
+                            match base_rpc.load_wallet(&wallet_name) {
                                 Ok(_) => info!("Reloaded wallet: {}", wallet_name),
                                 Err(e2) => {
                                     warn!("Could not reload wallet, continuing anyway: {}", e2);
@@ -117,7 +119,7 @@ impl WalletService {
                         } else {
                             // Wallet doesn't exist, create it
                             info!("Creating new wallet: {}", wallet_name);
-                            rpc.create_wallet(&wallet_name, None, None, None, None)?;
+                            base_rpc.create_wallet(&wallet_name, None, None, None, None)?;
                         }
                     }
                 }
@@ -133,8 +135,110 @@ impl WalletService {
 
         Ok(Self {
             rpc: wallet_rpc,
+            base_rpc,
             wallet_name,
+            wallet_loaded: AtomicBool::new(true),
         })
+    }
+
+    /// Ensure the wallet is loaded, attempting to reload if necessary
+    /// Returns true if wallet is available, false otherwise
+    fn ensure_wallet_loaded(&self) -> bool {
+        // Quick check - if we think wallet is loaded, verify it
+        if self.wallet_loaded.load(Ordering::Relaxed) {
+            // Try a simple RPC call to verify
+            if self.rpc.get_wallet_info().is_ok() {
+                return true;
+            }
+            // Wallet is not responding, mark as not loaded
+            self.wallet_loaded.store(false, Ordering::Relaxed);
+            warn!("Wallet {} became unresponsive, attempting recovery...", self.wallet_name);
+        }
+
+        // Attempt to reload the wallet
+        info!("Attempting to reload wallet: {}", self.wallet_name);
+        
+        // First try to load it directly
+        match self.base_rpc.load_wallet(&self.wallet_name) {
+            Ok(_) => {
+                info!("Successfully reloaded wallet: {}", self.wallet_name);
+                self.wallet_loaded.store(true, Ordering::Relaxed);
+                return true;
+            }
+            Err(e) => {
+                let error_str = e.to_string();
+                if error_str.contains("already loaded") {
+                    // Wallet is already loaded, our check just failed temporarily
+                    info!("Wallet was already loaded: {}", self.wallet_name);
+                    self.wallet_loaded.store(true, Ordering::Relaxed);
+                    return true;
+                } else if error_str.contains("not found") || error_str.contains("does not exist") {
+                    // Wallet doesn't exist, try to create it
+                    warn!("Wallet not found, creating new wallet: {}", self.wallet_name);
+                    match self.base_rpc.create_wallet(&self.wallet_name, None, None, None, None) {
+                        Ok(_) => {
+                            info!("Created new wallet: {}", self.wallet_name);
+                            self.wallet_loaded.store(true, Ordering::Relaxed);
+                            return true;
+                        }
+                        Err(e2) => {
+                            warn!("Failed to create wallet: {}", e2);
+                        }
+                    }
+                } else {
+                    warn!("Failed to load wallet: {}", e);
+                }
+            }
+        }
+
+        // Last resort: try unload + reload
+        info!("Attempting unload/reload cycle for wallet: {}", self.wallet_name);
+        let _ = self.base_rpc.unload_wallet(Some(&self.wallet_name));
+        std::thread::sleep(std::time::Duration::from_millis(500));
+        
+        match self.base_rpc.load_wallet(&self.wallet_name) {
+            Ok(_) => {
+                info!("Successfully reloaded wallet after unload: {}", self.wallet_name);
+                self.wallet_loaded.store(true, Ordering::Relaxed);
+                true
+            }
+            Err(e) => {
+                warn!("All wallet recovery attempts failed: {}", e);
+                false
+            }
+        }
+    }
+
+    /// Wrapper to ensure wallet is loaded before RPC operations
+    fn with_wallet_check<T, F>(&self, operation: F) -> Result<T>
+    where
+        F: FnOnce() -> Result<T>,
+    {
+        // Ensure wallet is loaded
+        if !self.ensure_wallet_loaded() {
+            anyhow::bail!("Wallet is not available and could not be recovered");
+        }
+        
+        // Try the operation
+        match operation() {
+            Ok(result) => Ok(result),
+            Err(e) => {
+                let error_str = e.to_string();
+                // Check if the error is wallet-related
+                if error_str.contains("wallet does not exist") || 
+                   error_str.contains("not loaded") ||
+                   error_str.contains("code: -18") {
+                    // Mark wallet as not loaded for next attempt
+                    self.wallet_loaded.store(false, Ordering::Relaxed);
+                    
+                    // Try one more time after recovery
+                    if self.ensure_wallet_loaded() {
+                        return operation();
+                    }
+                }
+                Err(e)
+            }
+        }
     }
 
     /// Get wallet balance

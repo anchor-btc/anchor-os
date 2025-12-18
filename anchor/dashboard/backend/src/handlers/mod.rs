@@ -4,6 +4,7 @@ pub mod auth;
 pub mod bitcoin;
 pub mod cloudflare;
 pub mod docker;
+pub mod electrum;
 pub mod indexer;
 pub mod node;
 pub mod settings;

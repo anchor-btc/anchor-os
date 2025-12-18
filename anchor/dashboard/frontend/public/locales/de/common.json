@@ -369,6 +369,20 @@
     "notRunningMsg": "Electrs läuft nicht",
     "startWith": "Starten Sie Electrs mit"
   },
+  "electrum": {
+    "title": "Electrum Server",
+    "subtitle": "Wählen und verwalten Sie Ihren Electrum Server",
+    "electrs": "Electrs",
+    "electrsDesc": "Leichtgewichtig, schnelle Synchronisation, geringer Ressourcenverbrauch",
+    "fulcrum": "Fulcrum",
+    "fulcrumDesc": "Voll ausgestattet, schnellere Abfragen, höherer Ressourcenverbrauch",
+    "switching": "Server werden gewechselt...",
+    "switchingDesc": "Abhängige Dienste werden neu gestartet...",
+    "switchConfirm": "Dies wird abhängige Dienste neu starten (Mempool, BTC RPC Explorer). Fortfahren?",
+    "confirmSwitch": "Server wechseln?",
+    "switch": "Wechseln",
+    "activeServer": "Aktiver Server"
+  },
   "tailscale": {
     "title": "Tailscale VPN",
     "subtitle": "Verbinden Sie Ihren Anchor Stack mit Ihrem Tailscale-Netzwerk",

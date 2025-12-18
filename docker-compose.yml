@@ -154,7 +154,7 @@ services:
       retries: 5
     restart: unless-stopped
 
-  # Electrs - Electrum Server for address indexing
+  # Electrs - Electrum Server for address indexing (default)
   core-electrs:
     build:
       context: ./docker/electrs
@@ -177,6 +177,25 @@ services:
     networks:
       - anchor-network
     restart: unless-stopped
+
+  # Fulcrum - High-performance Electrum Server (alternative)
+  core-fulcrum:
+    image: cculianu/fulcrum:latest
+    container_name: anchor-core-fulcrum
+    command: ["Fulcrum", "/data/fulcrum.conf"]
+    volumes:
+      - fulcrum-data:/data
+      - ./docker/fulcrum/fulcrum.conf:/data/fulcrum.conf:ro
+    ports:
+      - "50001:50001"
+    depends_on:
+      core-bitcoin:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    restart: unless-stopped
+    profiles:
+      - fulcrum
 
   # =============================================
   # EXPLORERS (explorer-)
@@ -903,6 +922,7 @@ volumes:
   oracles-postgres-data:
   lottery-postgres-data:
   electrs-data:
+  fulcrum-data:
   esplora-data:
   backup-data:
   netdata-config:
