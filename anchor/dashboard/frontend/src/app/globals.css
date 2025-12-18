@@ -241,3 +241,33 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* iOS-style widget wiggle animation - subtle version */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(-0.3deg) scale(1);
+  }
+  50% {
+    transform: rotate(0.3deg) scale(1.002);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.8s ease-in-out infinite;
+}
+
+/* Masonry grid layout */
+.masonry-grid {
+  display: flex;
+  margin-left: -16px; /* gutter size offset */
+  width: auto;
+}
+
+.masonry-grid-column {
+  padding-left: 16px; /* gutter size */
+  background-clip: padding-box;
+}
+
+.masonry-grid-column > div {
+  margin-bottom: 16px;
+}

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Providers } from "./providers";
 import { Header } from "@/components/header";
 import "./globals.css";
@@ -20,6 +21,7 @@ export default function RootLayout({
           <Header />
           <main className="container mx-auto px-4 py-8">{children}</main>
         </Providers>
+        <Script src="http://localhost:8000/anchor-os-bridge.js" strategy="afterInteractive" />
       </body>
     </html>
   );

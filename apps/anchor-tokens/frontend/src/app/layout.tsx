@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 import { Providers } from "./providers";
 
@@ -16,6 +17,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="antialiased min-h-screen">
         <Providers>{children}</Providers>
+        <Script src="http://localhost:8000/anchor-os-bridge.js" strategy="afterInteractive" />
       </body>
     </html>
   );

@@ -9,6 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@tanstack/react-query": "^5.62.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -18,6 +21,7 @@
     "qrcode.react": "^4.0.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-masonry-css": "^1.0.16",
     "recharts": "^3.6.0",
     "tailwind-merge": "^2.5.5"
   },

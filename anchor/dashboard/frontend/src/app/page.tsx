@@ -1,43 +1,34 @@
 "use client";
 
-import { WalletWidget } from "@/components/wallet-widget";
-import { NodeStats } from "@/components/node-stats";
-import { RecentTransactions } from "@/components/recent-transactions";
-import { ResourceCharts } from "@/components/resource-charts";
-import { QuickLaunch } from "@/components/quick-launch";
-import { IndexerStatsWidget } from "@/components/indexer-stats";
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import { DashboardWidgets } from "@/components/widgets/dashboard-widgets";
+import { IframeView } from "@/components/iframe-view";
+import { Loader2 } from "lucide-react";
+
+function DashboardContent() {
+  const searchParams = useSearchParams();
+  const appId = searchParams.get("app");
+
+  // If an app is selected via query param, show iframe view
+  if (appId) {
+    return <IframeView appId={appId} />;
+  }
+
+  // Otherwise show the widget dashboard
+  return <DashboardWidgets />;
+}
 
 export default function DashboardPage() {
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Overview of your Anchor Bitcoin stack
-        </p>
-      </div>
-
-      {/* Quick Launch - iPhone style icons */}
-      <QuickLaunch />
-
-      {/* Resource Monitor */}
-      <ResourceCharts />
-
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left Column */}
-        <div className="space-y-6">
-          <WalletWidget />
-          <RecentTransactions />
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
         </div>
-
-        {/* Right Column */}
-        <div className="space-y-6">
-          <NodeStats />
-          <IndexerStatsWidget />
-        </div>
-      </div>
-    </div>
+      }
+    >
+      <DashboardContent />
+    </Suspense>
   );
 }

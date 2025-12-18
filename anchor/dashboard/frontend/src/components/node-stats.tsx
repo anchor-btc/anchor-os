@@ -14,9 +14,9 @@ export function NodeStats() {
 
   if (isLoading) {
     return (
-      <div className="bg-card border border-border rounded-xl p-6 card-hover">
-        <div className="flex items-center justify-center h-24">
-          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      <div className="bg-card border border-border rounded-xl p-4">
+        <div className="flex items-center justify-center h-14">
+          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
         </div>
       </div>
     );
@@ -24,9 +24,9 @@ export function NodeStats() {
 
   if (error || !status) {
     return (
-      <div className="bg-card border border-border rounded-xl p-6 card-hover">
+      <div className="bg-card border border-border rounded-xl p-4">
         <div className="flex items-center gap-3 text-error">
-          <Bitcoin className="w-5 h-5" />
+          <Bitcoin className="w-4 h-4" />
           <span className="text-sm">Node unavailable</span>
         </div>
       </div>
@@ -37,42 +37,42 @@ export function NodeStats() {
 
   return (
     <Link href="/node" className="block">
-      <div className="bg-card border border-border rounded-xl p-6 card-hover">
-        <div className="flex items-center justify-between mb-4">
+      <div className="bg-card border border-border rounded-xl p-4 card-hover">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
-              <Bitcoin className="w-5 h-5 text-orange-500" />
+            <div className="w-9 h-9 rounded-lg bg-orange-500/10 flex items-center justify-center">
+              <Bitcoin className="w-4 h-4 text-orange-500" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Bitcoin Node</p>
-              <p className="text-xs text-muted-foreground font-mono">
+              <p className="text-xs text-muted-foreground">Bitcoin Node</p>
+              <p className="text-[10px] text-muted-foreground font-mono">
                 {network.subversion.replace(/\//g, "")}
               </p>
             </div>
           </div>
-          <span className="px-2 py-1 text-xs font-medium bg-primary/10 text-primary rounded-md uppercase">
+          <span className="px-1.5 py-0.5 text-[10px] font-medium bg-primary/10 text-primary rounded uppercase">
             {blockchain.chain}
           </span>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border">
           <StatItem
-            icon={<Blocks className="w-4 h-4" />}
+            icon={<Blocks className="w-3.5 h-3.5" />}
             label="Block Height"
             value={blockchain.blocks.toLocaleString()}
           />
           <StatItem
-            icon={<Network className="w-4 h-4" />}
+            icon={<Network className="w-3.5 h-3.5" />}
             label="Connections"
             value={network.connections.toString()}
           />
           <StatItem
-            icon={<HardDrive className="w-4 h-4" />}
+            icon={<HardDrive className="w-3.5 h-3.5" />}
             label="Mempool"
             value={`${mempool.size} txs`}
           />
           <StatItem
-            icon={<Clock className="w-4 h-4" />}
+            icon={<Clock className="w-3.5 h-3.5" />}
             label="Best Block"
             value={shortenHash(blockchain.bestblockhash, 4)}
           />
@@ -95,10 +95,9 @@ function StatItem({
     <div className="flex items-center gap-2">
       <div className="text-muted-foreground">{icon}</div>
       <div>
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="text-sm font-medium font-tabular text-foreground">{value}</p>
+        <p className="text-[10px] text-muted-foreground">{label}</p>
+        <p className="text-xs font-medium font-tabular text-foreground">{value}</p>
       </div>
     </div>
   );
 }
-

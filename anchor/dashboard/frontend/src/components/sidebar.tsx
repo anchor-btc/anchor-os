@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Anchor,
@@ -30,6 +30,7 @@ import {
   Pause,
   Loader2,
   HardDrive,
+  ExternalLink,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apps, getAppStatus } from "@/lib/apps";
@@ -64,6 +65,8 @@ const iconMap: Record<string, React.ElementType> = {
 
 export function Sidebar() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentAppId = searchParams.get("app");
   const queryClient = useQueryClient();
   const [logsContainer, setLogsContainer] = useState<string | null>(null);
   const [terminalContainer, setTerminalContainer] = useState<string | null>(null);
@@ -212,6 +215,8 @@ export function Sidebar() {
     const { isRunning, color } = getAppStatusInfo(app.containers);
     // Check if any container of this app is pending
     const isPending = app.containers.some((c) => pendingContainers.has(c));
+    // Check if this app is currently active in iframe
+    const isActiveInIframe = currentAppId === app.id;
 
     const content = (
       <>
@@ -225,6 +230,18 @@ export function Sidebar() {
         <Icon className="w-4 h-4 shrink-0" />
         <span className="truncate flex-1">{app.name}</span>
         <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+          {hasExternalUrl && (
+            <a
+              href={app.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="p-1 hover:bg-muted rounded transition-colors"
+              title="Open in new tab"
+            >
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          )}
           <button
             onClick={(e) => {
               e.preventDefault();
@@ -264,18 +281,21 @@ export function Sidebar() {
       );
     }
 
-    // External link
+    // External app/explorer - use iframe view with query param
     if (hasExternalUrl) {
       return (
-        <a
+        <Link
           key={app.id}
-          href={app.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors group"
+          href={`/?app=${app.id}`}
+          className={cn(
+            "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors group",
+            isActiveInIframe
+              ? "bg-primary/10 text-primary"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted"
+          )}
         >
           {content}
-        </a>
+        </Link>
       );
     }
 
@@ -312,7 +332,10 @@ export function Sidebar() {
             Menu
           </p>
           {navigation.map((item) => {
-            const isActive = pathname === item.href;
+            // Dashboard is active when pathname is "/" AND no app is selected in iframe
+            const isActive = item.href === "/" 
+              ? pathname === "/" && !currentAppId
+              : pathname === item.href;
             return (
               <Link
                 key={item.name}

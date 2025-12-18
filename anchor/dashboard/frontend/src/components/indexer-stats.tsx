@@ -100,9 +100,9 @@ export function IndexerStatsWidget() {
 
   if (isLoading) {
     return (
-      <div className="bg-card border border-border rounded-xl p-6">
-        <div className="flex items-center justify-center h-32">
-          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      <div className="bg-card border border-border rounded-xl p-4">
+        <div className="flex items-center justify-center h-20">
+          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
         </div>
       </div>
     );
@@ -111,19 +111,16 @@ export function IndexerStatsWidget() {
   if (error || !stats) {
     return (
       <Link href="/indexer" className="block">
-        <div className="bg-card border border-border rounded-xl p-6 hover:border-primary/30 transition-colors">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center">
-              <Search className="w-5 h-5 text-cyan-500" />
+        <div className="bg-card border border-border rounded-xl p-4 card-hover">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-cyan-500/10 flex items-center justify-center">
+              <Search className="w-4 h-4 text-cyan-500" />
             </div>
             <div>
-              <h3 className="font-semibold text-foreground">Anchor Indexer</h3>
-              <p className="text-xs text-muted-foreground">Click to view details</p>
+              <p className="text-xs text-muted-foreground">Anchor Indexer</p>
+              <p className="text-sm text-muted-foreground">Unavailable</p>
             </div>
           </div>
-          <p className="text-sm text-muted-foreground">
-            Unable to fetch indexer stats
-          </p>
         </div>
       </Link>
     );
@@ -135,21 +132,21 @@ export function IndexerStatsWidget() {
 
   return (
     <Link href="/indexer" className="block">
-      <div className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/30 transition-colors">
+      <div className="bg-card border border-border rounded-xl overflow-hidden card-hover">
         {/* Header */}
-        <div className="p-4 border-b border-border">
+        <div className="px-4 py-3 border-b border-border">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center">
-                <Search className="w-5 h-5 text-cyan-500" />
+              <div className="w-9 h-9 rounded-lg bg-cyan-500/10 flex items-center justify-center">
+                <Search className="w-4 h-4 text-cyan-500" />
               </div>
               <div>
-                <h3 className="font-semibold text-foreground">Anchor Indexer</h3>
-                <p className="text-xs text-muted-foreground">Protocol Messages</p>
+                <p className="text-xs text-muted-foreground">Anchor Indexer</p>
+                <p className="text-sm font-medium text-foreground">Protocol Messages</p>
               </div>
             </div>
-            <div className="flex items-center gap-1 text-xs text-success">
-              <Activity className="w-3 h-3 animate-pulse" />
+            <div className="flex items-center gap-1 text-[10px] text-success">
+              <Activity className="w-2.5 h-2.5 animate-pulse" />
               Live
             </div>
           </div>
@@ -157,32 +154,32 @@ export function IndexerStatsWidget() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-3 divide-x divide-border">
-          <div className="p-3 text-center">
-            <p className="text-lg font-bold font-tabular text-foreground">
+          <div className="py-2 px-3 text-center">
+            <p className="text-sm font-bold font-tabular text-foreground">
               {totalMessages.toLocaleString()}
             </p>
-            <p className="text-xs text-muted-foreground">Messages</p>
+            <p className="text-[10px] text-muted-foreground">Messages</p>
           </div>
-          <div className="p-3 text-center">
-            <p className="text-lg font-bold font-tabular text-foreground">
+          <div className="py-2 px-3 text-center">
+            <p className="text-sm font-bold font-tabular text-foreground">
               {stats.total_blocks_with_messages.toLocaleString()}
             </p>
-            <p className="text-xs text-muted-foreground">Blocks</p>
+            <p className="text-[10px] text-muted-foreground">Blocks</p>
           </div>
-          <div className="p-3 text-center">
-            <p className="text-lg font-bold font-tabular text-foreground">
+          <div className="py-2 px-3 text-center">
+            <p className="text-sm font-bold font-tabular text-foreground">
               {stats.last_indexed_block?.toLocaleString() || "-"}
             </p>
-            <p className="text-xs text-muted-foreground">Last Block</p>
+            <p className="text-[10px] text-muted-foreground">Last Block</p>
           </div>
         </div>
 
-        {/* Two Column Layout: Message Types + Carriers */}
+        {/* Two Column Layout */}
         <div className="grid grid-cols-2 divide-x divide-border border-t border-border">
           {/* Message Types */}
           <div className="p-3">
-            <div className="flex items-center gap-1 mb-2 text-xs text-muted-foreground">
-              <TrendingUp className="w-3 h-3" />
+            <div className="flex items-center gap-1 mb-2 text-[10px] text-muted-foreground">
+              <TrendingUp className="w-2.5 h-2.5" />
               Message Types
             </div>
             <div className="space-y-1">
@@ -192,13 +189,13 @@ export function IndexerStatsWidget() {
                 
                 return (
                   <div key={kind.kind} className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1">
                       <div className={cn("w-4 h-4 rounded flex items-center justify-center", colorClass)}>
                         <Icon className="w-2.5 h-2.5" />
                       </div>
-                      <span className="text-[11px] text-foreground">{kind.kind_name}</span>
+                      <span className="text-[10px] text-foreground">{kind.kind_name}</span>
                     </div>
-                    <span className="text-[11px] text-muted-foreground font-tabular">
+                    <span className="text-[10px] text-muted-foreground font-tabular">
                       {kind.count.toLocaleString()}
                     </span>
                   </div>
@@ -209,8 +206,8 @@ export function IndexerStatsWidget() {
 
           {/* Carrier Types */}
           <div className="p-3">
-            <div className="flex items-center gap-1 mb-2 text-xs text-muted-foreground">
-              <Box className="w-3 h-3" />
+            <div className="flex items-center gap-1 mb-2 text-[10px] text-muted-foreground">
+              <Box className="w-2.5 h-2.5" />
               Carrier Types
             </div>
             <div className="space-y-1">
@@ -223,15 +220,15 @@ export function IndexerStatsWidget() {
                 
                 return (
                   <div key={carrier.carrier} className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1">
                       <div className={cn("w-4 h-4 rounded flex items-center justify-center", colorClass)}>
                         <Icon className="w-2.5 h-2.5" />
                       </div>
-                      <span className="text-[11px] text-foreground">{carrier.carrier_name}</span>
+                      <span className="text-[10px] text-foreground">{carrier.carrier_name}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <span className="text-[10px] text-muted-foreground">{percentage}%</span>
-                      <span className="text-[11px] text-muted-foreground font-tabular">
+                      <span className="text-[9px] text-muted-foreground">{percentage}%</span>
+                      <span className="text-[10px] text-muted-foreground font-tabular">
                         {carrier.count.toLocaleString()}
                       </span>
                     </div>
