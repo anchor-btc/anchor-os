@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import Link from "next/link";
 import { App, getAppStatus } from "@/lib/apps";
 import { Container, startContainer, stopContainer } from "@/lib/api";
@@ -106,6 +107,7 @@ interface AppCardProps {
 }
 
 export function AppCard({ app, containers, onToggle, onShowLogs, onShowTerminal, featured }: AppCardProps) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const Icon = iconMap[app.icon] || Search;
   const colors = colorMap[app.color] || colorMap.orange;
@@ -217,7 +219,7 @@ export function AppCard({ app, containers, onToggle, onShowLogs, onShowTerminal,
             )}
           >
             <Settings className="w-4 h-4" />
-            Control Panel
+            {t("appCard.controlPanel")}
           </Link>
         ) : app.url && isRunning ? (
           <a
@@ -232,7 +234,7 @@ export function AppCard({ app, containers, onToggle, onShowLogs, onShowTerminal,
             )}
           >
             <ExternalLink className="w-4 h-4" />
-            Open App
+            {t("appCard.openApp")}
           </a>
         ) : !isRunning && !isPartial ? (
           <button
@@ -248,7 +250,7 @@ export function AppCard({ app, containers, onToggle, onShowLogs, onShowTerminal,
             ) : (
               <Play className="w-4 h-4" />
             )}
-            Start App
+            {t("appCard.startApp")}
           </button>
         ) : null}
 
@@ -258,20 +260,20 @@ export function AppCard({ app, containers, onToggle, onShowLogs, onShowTerminal,
           <button
             onClick={() => onShowLogs?.(app.containers)}
             className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-medium bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-            title="View Logs"
+            title={t("services.logs")}
           >
             <ScrollText className="w-4 h-4" />
-            Logs
+            {t("services.logs")}
           </button>
 
           {/* Terminal button */}
           <button
             onClick={() => onShowTerminal?.(app.containers)}
             className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-medium bg-muted/50 hover:bg-emerald-500/10 text-muted-foreground hover:text-emerald-500 transition-colors"
-            title="Open Terminal"
+            title={t("services.terminal")}
           >
             <SquareTerminal className="w-4 h-4" />
-            Terminal
+            {t("services.terminal")}
           </button>
 
           {/* Stop button (when running) */}
@@ -280,14 +282,14 @@ export function AppCard({ app, containers, onToggle, onShowLogs, onShowTerminal,
               onClick={handleToggle}
               disabled={loading}
               className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-medium bg-muted/50 hover:bg-error/10 text-muted-foreground hover:text-error transition-colors"
-              title="Stop Container"
+              title={t("services.stop")}
             >
               {loading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <Square className="w-4 h-4" />
               )}
-              Stop
+              {t("services.stop")}
             </button>
           )}
         </div>

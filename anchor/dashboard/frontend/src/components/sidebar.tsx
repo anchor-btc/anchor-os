@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Anchor,
@@ -30,7 +31,7 @@ import {
   Pause,
   Loader2,
   HardDrive,
-  ExternalLink,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apps, getAppStatus } from "@/lib/apps";
@@ -39,12 +40,13 @@ import { LogsModal } from "./logs-modal";
 import { TerminalModal } from "./terminal-modal";
 
 const navigation = [
-  { name: "Dashboard", href: "/", icon: LayoutDashboard },
-  { name: "Services", href: "/apps", icon: AppWindow },
-  { name: "Testnet Control", href: "/testnet", icon: Zap },
-  { name: "Bitcoin Node", href: "/node", icon: Bitcoin },
-  { name: "Wallet", href: "/wallet", icon: Wallet },
-  { name: "Backup", href: "/backup", icon: HardDrive },
+  { nameKey: "nav.dashboard", href: "/", icon: LayoutDashboard },
+  { nameKey: "nav.services", href: "/apps", icon: AppWindow },
+  { nameKey: "nav.testnetControl", href: "/testnet", icon: Zap },
+  { nameKey: "nav.bitcoinNode", href: "/node", icon: Bitcoin },
+  { nameKey: "nav.wallet", href: "/wallet", icon: Wallet },
+  { nameKey: "nav.backup", href: "/backup", icon: HardDrive },
+  { nameKey: "nav.settings", href: "/settings", icon: Settings },
 ];
 
 const iconMap: Record<string, React.ElementType> = {
@@ -64,6 +66,7 @@ const iconMap: Record<string, React.ElementType> = {
 };
 
 export function Sidebar() {
+  const { t } = useTranslation();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentAppId = searchParams.get("app");
@@ -230,18 +233,6 @@ export function Sidebar() {
         <Icon className="w-4 h-4 shrink-0" />
         <span className="truncate flex-1">{app.name}</span>
         <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-          {hasExternalUrl && (
-            <a
-              href={app.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="p-1 hover:bg-muted rounded transition-colors"
-              title="Open in new tab"
-            >
-              <ExternalLink className="w-3 h-3" />
-            </a>
-          )}
           <button
             onClick={(e) => {
               e.preventDefault();
@@ -329,7 +320,7 @@ export function Sidebar() {
         <nav className="flex-1 overflow-y-auto p-3 space-y-1">
           {/* Menu */}
           <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-3 mb-2">
-            Menu
+            {t("sidebar.menu")}
           </p>
           {navigation.map((item) => {
             // Dashboard is active when pathname is "/" AND no app is selected in iframe
@@ -338,7 +329,7 @@ export function Sidebar() {
               : pathname === item.href;
             return (
               <Link
-                key={item.name}
+                key={item.nameKey}
                 href={item.href}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
@@ -348,7 +339,7 @@ export function Sidebar() {
                 )}
               >
                 <item.icon className="w-4 h-4" />
-                {item.name}
+                {t(item.nameKey)}
               </Link>
             );
           })}
@@ -357,7 +348,7 @@ export function Sidebar() {
           <div className="pt-4">
             <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-3 mb-2 flex items-center gap-2">
               <AppWindow className="w-3 h-3" />
-              Apps
+              {t("sidebar.apps")}
             </p>
             {appsList.map(renderServiceItem)}
           </div>
@@ -366,7 +357,7 @@ export function Sidebar() {
           <div className="pt-4">
             <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-3 mb-2 flex items-center gap-2">
               <Search className="w-3 h-3" />
-              Explorers
+              {t("sidebar.explorers")}
             </p>
             {explorersList.map(renderServiceItem)}
           </div>
@@ -375,7 +366,7 @@ export function Sidebar() {
           <div className="pt-4">
             <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-3 mb-2 flex items-center gap-2">
               <Network className="w-3 h-3" />
-              Networking
+              {t("sidebar.networking")}
             </p>
             {networkingList.map(renderServiceItem)}
           </div>
@@ -384,7 +375,7 @@ export function Sidebar() {
           <div className="pt-4">
             <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-3 mb-2 flex items-center gap-2">
               <Server className="w-3 h-3" />
-              Kernel
+              {t("sidebar.kernel")}
             </p>
             {coreList.map(renderServiceItem)}
           </div>

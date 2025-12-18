@@ -2,8 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  /* Clean light theme with Bitcoin orange accent - matching Explorer */
+/* ==========================================
+   THEME: Bitcoin Orange (Default - Light)
+   ========================================== */
+:root,
+[data-theme="bitcoin-orange"] {
   --background: #fafafa;
   --foreground: #171717;
   
@@ -27,6 +30,169 @@
   --success: #22c55e;
   --warning: #eab308;
   --error: #ef4444;
+  
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+}
+
+/* ==========================================
+   THEME: Dark Mode
+   ========================================== */
+[data-theme="dark"] {
+  --background: #0a0a0a;
+  --foreground: #fafafa;
+  
+  --primary: #f7931a;
+  --primary-foreground: #0a0a0a;
+  
+  --secondary: #1a1a1a;
+  --secondary-foreground: #fafafa;
+  
+  --muted: #262626;
+  --muted-foreground: #a3a3a3;
+  
+  --accent: #f7931a;
+  --accent-foreground: #0a0a0a;
+  
+  --border: #262626;
+  
+  --card: #141414;
+  --card-foreground: #fafafa;
+  
+  --success: #22c55e;
+  --warning: #eab308;
+  --error: #ef4444;
+  
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+}
+
+/* ==========================================
+   THEME: Midnight Blue
+   ========================================== */
+[data-theme="midnight-blue"] {
+  --background: #0f172a;
+  --foreground: #f1f5f9;
+  
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+  
+  --secondary: #1e293b;
+  --secondary-foreground: #f1f5f9;
+  
+  --muted: #334155;
+  --muted-foreground: #94a3b8;
+  
+  --accent: #3b82f6;
+  --accent-foreground: #ffffff;
+  
+  --border: #334155;
+  
+  --card: #1e293b;
+  --card-foreground: #f1f5f9;
+  
+  --success: #22c55e;
+  --warning: #eab308;
+  --error: #ef4444;
+  
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+}
+
+/* ==========================================
+   THEME: Light Clean
+   ========================================== */
+[data-theme="light-clean"] {
+  --background: #ffffff;
+  --foreground: #18181b;
+  
+  --primary: #18181b;
+  --primary-foreground: #ffffff;
+  
+  --secondary: #f4f4f5;
+  --secondary-foreground: #18181b;
+  
+  --muted: #e4e4e7;
+  --muted-foreground: #71717a;
+  
+  --accent: #18181b;
+  --accent-foreground: #ffffff;
+  
+  --border: #e4e4e7;
+  
+  --card: #ffffff;
+  --card-foreground: #18181b;
+  
+  --success: #22c55e;
+  --warning: #eab308;
+  --error: #ef4444;
+  
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+}
+
+/* ==========================================
+   THEME: Hacker Green (Matrix)
+   ========================================== */
+[data-theme="hacker-green"] {
+  --background: #0d1117;
+  --foreground: #c9d1d9;
+  
+  --primary: #00ff41;
+  --primary-foreground: #0d1117;
+  
+  --secondary: #161b22;
+  --secondary-foreground: #c9d1d9;
+  
+  --muted: #21262d;
+  --muted-foreground: #8b949e;
+  
+  --accent: #00ff41;
+  --accent-foreground: #0d1117;
+  
+  --border: #30363d;
+  
+  --card: #161b22;
+  --card-foreground: #c9d1d9;
+  
+  --success: #00ff41;
+  --warning: #d29922;
+  --error: #f85149;
+  
+  --destructive: #f85149;
+  --destructive-foreground: #ffffff;
+}
+
+/* ==========================================
+   THEME: Dracula
+   ========================================== */
+[data-theme="dracula"] {
+  --background: #282a36;
+  --foreground: #f8f8f2;
+  
+  --primary: #bd93f9;
+  --primary-foreground: #282a36;
+  
+  --secondary: #44475a;
+  --secondary-foreground: #f8f8f2;
+  
+  --muted: #44475a;
+  --muted-foreground: #6272a4;
+  
+  --accent: #ff79c6;
+  --accent-foreground: #282a36;
+  
+  --border: #44475a;
+  
+  --card: #21222c;
+  --card-foreground: #f8f8f2;
+  
+  --success: #50fa7b;
+  --warning: #f1fa8c;
+  --error: #ff5555;
+  
+  --destructive: #ff5555;
+  --destructive-foreground: #f8f8f2;
 }
 
 body {

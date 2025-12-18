@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchTailscaleStatus,
@@ -29,6 +30,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export default function TailscalePage() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [authKey, setAuthKey] = useState("");
   const [hostname, setHostname] = useState("anchor-stack");
@@ -115,16 +117,16 @@ export default function TailscalePage() {
         <div>
           <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
             <Network className="w-8 h-8 text-blue-500" />
-            Tailscale VPN
+            {t("tailscale.title")}
           </h1>
           <p className="text-muted-foreground mt-1">
-            Connect your Anchor stack to your Tailscale network
+            {t("tailscale.subtitle")}
           </p>
         </div>
         <button
           onClick={() => refetch()}
           className="p-2 hover:bg-muted rounded-lg transition-colors"
-          title="Refresh status"
+          title={t("common.refresh")}
         >
           <RefreshCw className="w-5 h-5 text-muted-foreground" />
         </button>
@@ -133,24 +135,24 @@ export default function TailscalePage() {
       {/* Status Card */}
       <div className="bg-card border border-border rounded-2xl p-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-foreground">Connection Status</h2>
+          <h2 className="text-lg font-semibold text-foreground">{t("tailscale.connectionStatus")}</h2>
           <div className="flex items-center gap-2">
             {isContainerRunning ? (
               isConnected ? (
                 <span className="flex items-center gap-2 text-sm text-success">
                   <CheckCircle2 className="w-4 h-4" />
-                  Connected
+                  {t("tailscale.connected")}
                 </span>
               ) : (
                 <span className="flex items-center gap-2 text-sm text-warning">
                   <AlertCircle className="w-4 h-4" />
-                  Not logged in
+                  {t("tailscale.notLoggedIn")}
                 </span>
               )
             ) : (
               <span className="flex items-center gap-2 text-sm text-muted-foreground">
                 <XCircle className="w-4 h-4" />
-                Container stopped
+                {t("tailscale.containerStopped")}
               </span>
             )}
           </div>
@@ -161,33 +163,33 @@ export default function TailscalePage() {
           <div className="bg-muted/50 rounded-xl p-4">
             <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
               <Server className="w-4 h-4" />
-              Container
+              {t("tailscale.container")}
             </div>
             <div className={cn(
               "font-medium",
               isContainerRunning ? "text-success" : "text-muted-foreground"
             )}>
-              {isContainerRunning ? "Running" : "Stopped"}
+              {isContainerRunning ? t("tailscale.running") : t("tailscale.stopped")}
             </div>
           </div>
 
           <div className="bg-muted/50 rounded-xl p-4">
             <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
               <Wifi className="w-4 h-4" />
-              Status
+              {t("tailscale.status")}
             </div>
             <div className={cn(
               "font-medium",
               isConnected ? "text-success" : "text-muted-foreground"
             )}>
-              {status?.backend_state || "Unknown"}
+              {status?.backend_state || t("tailscale.unknown")}
             </div>
           </div>
 
           <div className="bg-muted/50 rounded-xl p-4">
             <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
               <Globe className="w-4 h-4" />
-              IP Address
+              {t("tailscale.ipAddress")}
             </div>
             <div className="font-medium font-mono text-foreground">
               {status?.ip_address || "-"}
@@ -197,7 +199,7 @@ export default function TailscalePage() {
           <div className="bg-muted/50 rounded-xl p-4">
             <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
               <Network className="w-4 h-4" />
-              Tailnet
+              {t("tailscale.tailnet")}
             </div>
             <div className="font-medium text-foreground truncate">
               {status?.tailnet || "-"}
@@ -211,9 +213,9 @@ export default function TailscalePage() {
             <div className="flex items-start gap-3">
               <CheckCircle2 className="w-5 h-5 text-success mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-success">Connected to Tailscale</p>
+                <p className="text-sm font-medium text-success">{t("tailscale.connectedToTailscale")}</p>
                 <p className="text-sm text-success/80 mt-1">
-                  Your Anchor stack is accessible at{" "}
+                  {t("tailscale.accessibleAt")}{" "}
                   <code className="bg-success/20 px-1.5 py-0.5 rounded font-mono">
                     {status.hostname}.{status.tailnet}
                   </code>
@@ -236,7 +238,7 @@ export default function TailscalePage() {
               ) : (
                 <Square className="w-4 h-4" />
               )}
-              Stop Container
+              {t("tailscale.stopContainer")}
             </button>
           ) : (
             <button
@@ -249,7 +251,7 @@ export default function TailscalePage() {
               ) : (
                 <Play className="w-4 h-4" />
               )}
-              Start Container
+              {t("tailscale.startContainer")}
             </button>
           )}
 
@@ -264,7 +266,7 @@ export default function TailscalePage() {
               ) : (
                 <WifiOff className="w-4 h-4" />
               )}
-              Disconnect
+              {t("tailscale.disconnect")}
             </button>
           )}
         </div>
@@ -275,13 +277,13 @@ export default function TailscalePage() {
         <div className="bg-card border border-border rounded-2xl p-6">
           <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
             <Key className="w-5 h-5 text-blue-500" />
-            Connect to Tailscale
+            {t("tailscale.connectToTailscale")}
           </h2>
 
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                Auth Key
+                {t("tailscale.authKey")}
               </label>
               <input
                 type="password"
@@ -291,14 +293,14 @@ export default function TailscalePage() {
                 className="w-full px-4 py-3 bg-muted border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
               />
               <p className="text-xs text-muted-foreground mt-2">
-                Generate an auth key at{" "}
+                {t("tailscale.generateAuthKey")}{" "}
                 <a
                   href="https://login.tailscale.com/admin/settings/keys"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-500 hover:underline inline-flex items-center gap-1"
                 >
-                  Tailscale Admin Console
+                  {t("tailscale.adminConsole")}
                   <ExternalLink className="w-3 h-3" />
                 </a>
               </p>
@@ -306,7 +308,7 @@ export default function TailscalePage() {
 
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                Hostname
+                {t("tailscale.hostname")}
               </label>
               <input
                 type="text"
@@ -316,7 +318,7 @@ export default function TailscalePage() {
                 className="w-full px-4 py-3 bg-muted border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               />
               <p className="text-xs text-muted-foreground mt-2">
-                The hostname for this machine on your tailnet
+                {t("tailscale.hostnameDesc")}
               </p>
             </div>
 
@@ -325,13 +327,13 @@ export default function TailscalePage() {
               onClick={() => setShowAdvanced(!showAdvanced)}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              {showAdvanced ? "Hide" : "Show"} advanced options
+              {showAdvanced ? t("tailscale.hideAdvanced") : t("tailscale.showAdvanced")}
             </button>
 
             {showAdvanced && (
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
-                  Advertise Routes (optional)
+                  {t("tailscale.advertiseRoutes")}
                 </label>
                 <input
                   type="text"
@@ -341,14 +343,14 @@ export default function TailscalePage() {
                   className="w-full px-4 py-3 bg-muted border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono"
                 />
                 <p className="text-xs text-muted-foreground mt-2">
-                  Comma-separated list of routes to advertise to your tailnet
+                  {t("tailscale.advertiseRoutesDesc")}
                 </p>
               </div>
             )}
 
             {connectMutation.isError && (
               <div className="bg-error/10 border border-error/20 text-error text-sm p-3 rounded-xl">
-                Failed to connect. Please check your auth key and try again.
+                {t("tailscale.connectError")}
               </div>
             )}
 
@@ -366,12 +368,12 @@ export default function TailscalePage() {
               {connectMutation.isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Connecting...
+                  {t("tailscale.connecting")}
                 </>
               ) : (
                 <>
                   <Wifi className="w-4 h-4" />
-                  Connect to Tailscale
+                  {t("tailscale.connectToTailscale")}
                 </>
               )}
             </button>
@@ -381,13 +383,13 @@ export default function TailscalePage() {
 
       {/* Help Section */}
       <div className="bg-muted/30 border border-border rounded-2xl p-6">
-        <h3 className="font-semibold text-foreground mb-3">How to use Tailscale</h3>
+        <h3 className="font-semibold text-foreground mb-3">{t("tailscale.howToUse")}</h3>
         <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
-          <li>Create a Tailscale account at <a href="https://tailscale.com" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">tailscale.com</a></li>
-          <li>Go to the <a href="https://login.tailscale.com/admin/settings/keys" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Admin Console</a> and generate an auth key</li>
-          <li>For persistent connections, create a reusable auth key</li>
-          <li>Paste the auth key above and click Connect</li>
-          <li>Your Anchor stack will be accessible from any device on your tailnet</li>
+          <li>{t("tailscale.step1")} <a href="https://tailscale.com" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">tailscale.com</a></li>
+          <li>{t("tailscale.step2")} <a href="https://login.tailscale.com/admin/settings/keys" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">{t("tailscale.adminConsole")}</a></li>
+          <li>{t("tailscale.step3")}</li>
+          <li>{t("tailscale.step4")}</li>
+          <li>{t("tailscale.step5")}</li>
         </ol>
       </div>
     </div>

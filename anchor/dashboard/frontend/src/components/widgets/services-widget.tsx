@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { fetchContainers } from "@/lib/api";
 import { apps, getAppStatus, App } from "@/lib/apps";
 import Link from "next/link";
@@ -137,6 +138,7 @@ interface ServicesWidgetProps {
 }
 
 export function ServicesWidget({ category = "all", title }: ServicesWidgetProps) {
+  const { t } = useTranslation();
   const { data: containersData, isLoading } = useQuery({
     queryKey: ["containers"],
     queryFn: fetchContainers,
@@ -179,11 +181,11 @@ export function ServicesWidget({ category = "all", title }: ServicesWidgetProps)
   const totalCount = appsWithStatus.length;
 
   const categoryTitles: Record<string, string> = {
-    app: "Apps",
-    explorer: "Explorers",
-    networking: "Networking",
-    core: "Kernel",
-    all: "All Services",
+    app: t("widgets.apps"),
+    explorer: t("widgets.explorers"),
+    networking: t("widgets.networking"),
+    core: t("widgets.kernel"),
+    all: t("widgets.allServices"),
   };
 
   if (isLoading) {
@@ -225,17 +227,17 @@ export function ServicesWidget({ category = "all", title }: ServicesWidgetProps)
 
 // Specialized widgets for each category
 export function AppsWidget() {
-  return <ServicesWidget category="app" title="Apps" />;
+  return <ServicesWidget category="app" />;
 }
 
 export function ExplorersWidget() {
-  return <ServicesWidget category="explorer" title="Explorers" />;
+  return <ServicesWidget category="explorer" />;
 }
 
 export function NetworkingWidget() {
-  return <ServicesWidget category="networking" title="Networking" />;
+  return <ServicesWidget category="networking" />;
 }
 
 export function KernelWidget() {
-  return <ServicesWidget category="core" title="Kernel" />;
+  return <ServicesWidget category="core" />;
 }

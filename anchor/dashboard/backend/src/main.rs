@@ -7,10 +7,11 @@ mod handlers;
 
 use anyhow::Result;
 use axum::{
-    routing::{get, post},
+    routing::{get, post, put, delete},
     Router,
 };
 use bollard::Docker;
+use sqlx::PgPool;
 use std::sync::Arc;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
@@ -26,6 +27,7 @@ pub struct AppState {
     pub config: Config,
     pub docker: Docker,
     pub http_client: reqwest::Client,
+    pub db_pool: Option<PgPool>,
 }
 
 #[derive(OpenApi)]
@@ -135,11 +137,37 @@ async fn main() -> Result<()> {
     // Create HTTP client
     let http_client = reqwest::Client::new();
 
+    // Connect to PostgreSQL (optional - settings features won't work without it)
+    let db_pool = if let Ok(database_url) = std::env::var("DATABASE_URL") {
+        match PgPool::connect(&database_url).await {
+            Ok(pool) => {
+                info!("Connected to PostgreSQL database");
+                // Run migrations
+                match sqlx::query(include_str!("../migrations/001_system_settings.sql"))
+                    .execute(&pool)
+                    .await
+                {
+                    Ok(_) => info!("Database migrations applied"),
+                    Err(e) => info!("Migrations may already exist: {}", e),
+                }
+                Some(pool)
+            }
+            Err(e) => {
+                info!("PostgreSQL not available (settings features disabled): {}", e);
+                None
+            }
+        }
+    } else {
+        info!("DATABASE_URL not set, settings features disabled");
+        None
+    };
+
     // Create application state
     let state = Arc::new(AppState {
         config: config.clone(),
         docker,
         http_client,
+        db_pool,
     });
 
     // Build router
@@ -205,6 +233,19 @@ async fn main() -> Result<()> {
         .route("/cloudflare/services", get(handlers::cloudflare::get_exposable_services))
         // Indexer
         .route("/indexer/stats", get(handlers::indexer::get_indexer_stats))
+        // Settings
+        .route("/settings", get(handlers::settings::get_all_settings))
+        .route("/settings/export", get(handlers::settings::export_settings))
+        .route("/settings/import", post(handlers::settings::import_settings))
+        .route("/settings/{key}", get(handlers::settings::get_setting))
+        .route("/settings/{key}", put(handlers::settings::update_setting))
+        // Auth
+        .route("/auth/status", get(handlers::auth::get_auth_status))
+        .route("/auth/setup", post(handlers::auth::setup_password))
+        .route("/auth/login", post(handlers::auth::login))
+        .route("/auth/verify", post(handlers::auth::verify_token))
+        .route("/auth/change-password", post(handlers::auth::change_password))
+        .route("/auth/disable", delete(handlers::auth::disable_auth))
         .with_state(state)
         .layer(TraceLayer::new_for_http())
         .layer(

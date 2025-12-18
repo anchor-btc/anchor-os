@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import {
   Search,
@@ -28,7 +30,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fetchContainers, fetchContainerLogs } from "@/lib/api";
-import { useState } from "react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3011";
 
@@ -100,6 +101,7 @@ const carrierColors: Record<string, string> = {
 };
 
 export default function IndexerPage() {
+  const { t } = useTranslation();
   const [showFullLogs, setShowFullLogs] = useState(false);
 
   const {
@@ -149,12 +151,12 @@ export default function IndexerPage() {
         <div>
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-3">
             <Search className="w-7 h-7 text-cyan-500" />
-            Anchor Indexer
+            {t("indexer.title")}
           </h1>
           <p className="text-muted-foreground">
             {isRunning
-              ? "Indexing ANCHOR protocol messages from the blockchain"
-              : "Indexer not running"}
+              ? t("indexer.subtitle")
+              : t("indexer.notRunning")}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -184,25 +186,25 @@ export default function IndexerPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <StatCard
             icon={<MessageSquare className="w-5 h-5" />}
-            label="Total Messages"
+            label={t("indexer.totalMessages")}
             value={stats.total_messages.toLocaleString()}
             color="cyan"
           />
           <StatCard
             icon={<Blocks className="w-5 h-5" />}
-            label="Blocks with Messages"
+            label={t("indexer.blocksWithMessages")}
             value={stats.total_blocks_with_messages.toLocaleString()}
             color="orange"
           />
           <StatCard
             icon={<Clock className="w-5 h-5" />}
-            label="Last Indexed Block"
+            label={t("indexer.lastIndexedBlock")}
             value={stats.last_indexed_block?.toLocaleString() || "-"}
             color="purple"
           />
           <StatCard
             icon={<Zap className="w-5 h-5" />}
-            label="Recent (Last 144 blocks)"
+            label={t("indexer.recentBlocks")}
             value={stats.recent_messages_24h.toLocaleString()}
             color="green"
           />
@@ -219,9 +221,9 @@ export default function IndexerPage() {
                 <TrendingUp className="w-5 h-5 text-orange-500" />
               </div>
               <div>
-                <h2 className="font-semibold text-foreground">Message Types</h2>
+                <h2 className="font-semibold text-foreground">{t("indexer.messageTypes")}</h2>
                 <p className="text-sm text-muted-foreground">
-                  Distribution by ANCHOR message kind
+                  {t("indexer.distributionByKind")}
                 </p>
               </div>
             </div>
@@ -265,9 +267,9 @@ export default function IndexerPage() {
                 <Box className="w-5 h-5 text-blue-500" />
               </div>
               <div>
-                <h2 className="font-semibold text-foreground">Carrier Types</h2>
+                <h2 className="font-semibold text-foreground">{t("indexer.carrierTypes")}</h2>
                 <p className="text-sm text-muted-foreground">
-                  How messages are embedded in transactions
+                  {t("indexer.howEmbedded")}
                 </p>
               </div>
             </div>
@@ -306,8 +308,7 @@ export default function IndexerPage() {
             {/* Carrier explanation */}
             <div className="mt-5 pt-4 border-t border-border">
               <p className="text-xs text-muted-foreground">
-                <strong>Carriers</strong> are different methods to embed ANCHOR data in Bitcoin transactions:
-                OP_RETURN (standard), Inscriptions (ordinals), Stamps (multisig), Taproot Annex, or Witness Data.
+                {t("indexer.carriersExplained")}
               </p>
             </div>
           </div>
@@ -319,7 +320,7 @@ export default function IndexerPage() {
         <div className="bg-card border border-border rounded-xl p-8">
           <div className="flex items-center justify-center">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-            <span className="ml-2 text-muted-foreground">Loading statistics...</span>
+            <span className="ml-2 text-muted-foreground">{t("indexer.loadingStats")}</span>
           </div>
         </div>
       )}
@@ -331,9 +332,9 @@ export default function IndexerPage() {
             <Database className="w-5 h-5 text-emerald-500" />
           </div>
           <div>
-            <h2 className="font-semibold text-foreground">Storage</h2>
+            <h2 className="font-semibold text-foreground">{t("indexer.storage")}</h2>
             <p className="text-sm text-muted-foreground">
-              All indexed data is stored in PostgreSQL
+              {t("indexer.storedInPostgres")}
             </p>
           </div>
         </div>
@@ -344,15 +345,15 @@ export default function IndexerPage() {
             <p className="font-medium text-foreground font-mono text-sm">anchor</p>
           </div>
           <div className="p-3 bg-muted/50 rounded-lg">
-            <p className="text-xs text-muted-foreground mb-1">Container</p>
+            <p className="text-xs text-muted-foreground mb-1">{t("indexer.container")}</p>
             <p className="font-medium text-foreground font-mono text-sm">core-postgres</p>
           </div>
           <div className="p-3 bg-muted/50 rounded-lg">
-            <p className="text-xs text-muted-foreground mb-1">Main Table</p>
+            <p className="text-xs text-muted-foreground mb-1">{t("indexer.mainTable")}</p>
             <p className="font-medium text-foreground font-mono text-sm">messages</p>
           </div>
           <div className="p-3 bg-muted/50 rounded-lg">
-            <p className="text-xs text-muted-foreground mb-1">Port</p>
+            <p className="text-xs text-muted-foreground mb-1">{t("database.port")}</p>
             <p className="font-medium text-foreground font-mono text-sm">5432</p>
           </div>
         </div>
@@ -366,15 +367,15 @@ export default function IndexerPage() {
               <ScrollText className="w-5 h-5 text-slate-400" />
             </div>
             <div>
-              <h2 className="font-semibold text-foreground">Recent Activity</h2>
-              <p className="text-sm text-muted-foreground">Latest indexer logs</p>
+              <h2 className="font-semibold text-foreground">{t("indexer.recentActivity")}</h2>
+              <p className="text-sm text-muted-foreground">{t("indexer.latestLogs")}</p>
             </div>
           </div>
           <button
             onClick={() => setShowFullLogs(!showFullLogs)}
             className="px-3 py-1.5 text-xs bg-muted hover:bg-muted/80 rounded-lg transition-colors"
           >
-            {showFullLogs ? "Show Less" : "Show More"}
+            {showFullLogs ? t("common.showLess") : t("common.showMore")}
           </button>
         </div>
 
@@ -393,7 +394,7 @@ export default function IndexerPage() {
         ) : (
           <div className="text-center py-8 text-muted-foreground">
             <Terminal className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p>No recent logs available</p>
+            <p>{t("indexer.noLogs")}</p>
           </div>
         )}
       </div>
@@ -403,10 +404,10 @@ export default function IndexerPage() {
         <div className="bg-card border border-border rounded-xl p-8 text-center">
           <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-foreground mb-2">
-            Indexer Not Running
+            {t("indexer.notRunningMsg")}
           </h2>
           <p className="text-muted-foreground mb-4">
-            Start the indexer with:{" "}
+            {t("indexer.startWith")}:{" "}
             <code className="bg-muted px-2 py-1 rounded">
               docker compose up -d anchor-core-indexer
             </code>

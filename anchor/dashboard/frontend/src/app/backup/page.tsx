@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   HardDrive,
@@ -62,7 +63,7 @@ function formatBytes(bytes: number | null): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 }
 
-function formatTimeAgo(dateStr: string): string {
+function formatTimeAgo(dateStr: string, t: (key: string) => string): string {
   const date = new Date(dateStr);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -70,10 +71,10 @@ function formatTimeAgo(dateStr: string): string {
   const diffHours = Math.floor(diffMins / 60);
   const diffDays = Math.floor(diffHours / 24);
 
-  if (diffMins < 1) return "just now";
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  return `${diffDays}d ago`;
+  if (diffMins < 1) return t("time.justNow");
+  if (diffMins < 60) return `${diffMins}m`;
+  if (diffHours < 24) return `${diffHours}h`;
+  return `${diffDays}d`;
 }
 
 function StatusIcon({ status }: { status: string }) {
@@ -103,6 +104,7 @@ function TargetIcon({ type }: { type: string }) {
 }
 
 export default function BackupPage() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const { data: status, isLoading: statusLoading } = useQuery<BackupStatus>({
@@ -160,17 +162,15 @@ export default function BackupPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Backup</h1>
-          <p className="text-muted-foreground">
-            Manage backups for your ANCHOR OS data
-          </p>
+          <h1 className="text-2xl font-bold text-foreground">{t("backup.title")}</h1>
+          <p className="text-muted-foreground">{t("backup.subtitle")}</p>
         </div>
         <Link
           href="/backup/settings"
           className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
         >
           <Settings className="w-4 h-4" />
-          Settings
+          {t("nav.settings")}
         </Link>
       </div>
 
@@ -180,22 +180,25 @@ export default function BackupPage() {
         <div className="bg-card border border-border rounded-xl p-4">
           <div className="flex items-center gap-2 text-muted-foreground mb-2">
             <Clock className="w-4 h-4" />
-            <span className="text-sm font-medium">Last Backup</span>
+            <span className="text-sm font-medium">{t("backup.lastBackup")}</span>
           </div>
           {status?.last_backup ? (
             <div>
               <p className="text-2xl font-bold text-foreground">
-                {formatTimeAgo(status.last_backup.completed_at || status.last_backup.started_at)}
+                {formatTimeAgo(
+                  status.last_backup.completed_at || status.last_backup.started_at,
+                  t
+                )}
               </p>
               <div className="flex items-center gap-2 mt-1">
                 <StatusIcon status={status.last_backup.status} />
                 <span className="text-sm text-muted-foreground capitalize">
-                  {status.last_backup.status}
+                  {t(`backup.${status.last_backup.status}`)}
                 </span>
               </div>
             </div>
           ) : (
-            <p className="text-lg text-muted-foreground">No backups yet</p>
+            <p className="text-lg text-muted-foreground">{t("backup.noBackupsYet")}</p>
           )}
         </div>
 
@@ -203,19 +206,22 @@ export default function BackupPage() {
         <div className="bg-card border border-border rounded-xl p-4">
           <div className="flex items-center gap-2 text-muted-foreground mb-2">
             <Calendar className="w-4 h-4" />
-            <span className="text-sm font-medium">Next Scheduled</span>
+            <span className="text-sm font-medium">{t("backup.nextScheduled")}</span>
           </div>
           {status?.next_scheduled ? (
             <div>
               <p className="text-xl font-bold text-foreground">
-                {new Date(status.next_scheduled).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {new Date(status.next_scheduled).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
               </p>
               <p className="text-sm text-muted-foreground">
                 {new Date(status.next_scheduled).toLocaleDateString()}
               </p>
             </div>
           ) : (
-            <p className="text-lg text-muted-foreground">Not scheduled</p>
+            <p className="text-lg text-muted-foreground">{t("backup.notScheduled")}</p>
           )}
         </div>
 
@@ -223,7 +229,7 @@ export default function BackupPage() {
         <div className="bg-card border border-border rounded-xl p-4">
           <div className="flex items-center gap-2 text-muted-foreground mb-2">
             <Database className="w-4 h-4" />
-            <span className="text-sm font-medium">Storage Used</span>
+            <span className="text-sm font-medium">{t("backup.storageUsed")}</span>
           </div>
           {targets?.targets?.[0] ? (
             <div>
@@ -232,7 +238,7 @@ export default function BackupPage() {
               </p>
               {targets.targets[0].total_bytes && (
                 <p className="text-sm text-muted-foreground">
-                  of {formatBytes(targets.targets[0].total_bytes)}
+                  {t("wallet.of")} {formatBytes(targets.targets[0].total_bytes)}
                 </p>
               )}
             </div>
@@ -254,14 +260,14 @@ export default function BackupPage() {
           ) : (
             <Play className="w-4 h-4" />
           )}
-          {isRunning ? "Backup in Progress..." : "Backup Now"}
+          {isRunning ? t("backup.backupInProgress") : t("backup.backupNow")}
         </button>
         <button
           disabled={isRunning}
           className="flex items-center gap-2 px-4 py-2 bg-muted text-foreground rounded-lg font-medium hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           <RotateCcw className="w-4 h-4" />
-          Restore
+          {t("backup.restore")}
         </button>
       </div>
 
@@ -271,9 +277,10 @@ export default function BackupPage() {
           <div className="flex items-center gap-3">
             <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
             <div>
-              <p className="font-medium text-foreground">Backup in progress</p>
+              <p className="font-medium text-foreground">{t("backup.backupProgress")}</p>
               <p className="text-sm text-muted-foreground">
-                Started {formatTimeAgo(status.current_job.started_at)} • Target:{" "}
+                {t("backup.started")}{" "}
+                {formatTimeAgo(status.current_job.started_at, t)} • {t("backup.target")}:{" "}
                 {status.current_job.target}
               </p>
             </div>
@@ -284,7 +291,7 @@ export default function BackupPage() {
       {/* Storage Targets */}
       <div>
         <h2 className="text-lg font-semibold text-foreground mb-4">
-          Backup Targets
+          {t("backup.backupTargets")}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {targets?.targets?.map((target) => (
@@ -309,17 +316,15 @@ export default function BackupPage() {
                 <div>
                   <p className="font-medium text-foreground">{target.name}</p>
                   <p className="text-sm text-muted-foreground">
-                    {target.configured ? "Configured" : "Not configured"}
+                    {target.configured ? t("backup.configured") : t("backup.notConfigured")}
                   </p>
                 </div>
               </div>
               {target.configured && target.used_bytes !== null && (
                 <div className="mt-2">
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="text-muted-foreground">Used</span>
-                    <span className="text-foreground">
-                      {formatBytes(target.used_bytes)}
-                    </span>
+                    <span className="text-muted-foreground">{t("backup.used")}</span>
+                    <span className="text-foreground">{formatBytes(target.used_bytes)}</span>
                   </div>
                   {target.total_bytes && (
                     <div className="w-full bg-muted rounded-full h-2">
@@ -345,13 +350,13 @@ export default function BackupPage() {
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-foreground">
-            Recent Backups
+            {t("backup.recentBackups")}
           </h2>
           <Link
             href="/backup/history"
             className="text-sm text-primary hover:underline flex items-center gap-1"
           >
-            View all <ArrowRight className="w-3 h-3" />
+            {t("backup.viewAll")} <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
         <div className="bg-card border border-border rounded-xl overflow-hidden">
@@ -359,22 +364,22 @@ export default function BackupPage() {
             <thead>
               <tr className="border-b border-border bg-muted/50">
                 <th className="text-left p-3 text-sm font-medium text-muted-foreground">
-                  Date
+                  {t("backup.date")}
                 </th>
                 <th className="text-left p-3 text-sm font-medium text-muted-foreground">
-                  Type
+                  {t("backup.type")}
                 </th>
                 <th className="text-left p-3 text-sm font-medium text-muted-foreground">
-                  Target
+                  {t("backup.target")}
                 </th>
                 <th className="text-left p-3 text-sm font-medium text-muted-foreground">
-                  Size
+                  {t("backup.size")}
                 </th>
                 <th className="text-left p-3 text-sm font-medium text-muted-foreground">
-                  Status
+                  {t("backup.status")}
                 </th>
                 <th className="text-right p-3 text-sm font-medium text-muted-foreground">
-                  Actions
+                  {t("backup.actions")}
                 </th>
               </tr>
             </thead>
@@ -391,12 +396,12 @@ export default function BackupPage() {
                   </td>
                   <td className="p-3">
                     <span className="text-sm text-muted-foreground capitalize">
-                      {backup.backup_type}
+                      {t(`backup.${backup.backup_type}`)}
                     </span>
                   </td>
                   <td className="p-3">
                     <span className="text-sm text-muted-foreground capitalize">
-                      {backup.target}
+                      {t(`backup.${backup.target}`)}
                     </span>
                   </td>
                   <td className="p-3">
@@ -407,13 +412,15 @@ export default function BackupPage() {
                   <td className="p-3">
                     <div className="flex items-center gap-2">
                       <StatusIcon status={backup.status} />
-                      <span className="text-sm capitalize">{backup.status}</span>
+                      <span className="text-sm capitalize">
+                        {t(`backup.${backup.status}`)}
+                      </span>
                     </div>
                   </td>
                   <td className="p-3 text-right">
                     {backup.status === "completed" && (
                       <button className="text-sm text-primary hover:underline">
-                        Restore
+                        {t("backup.restore")}
                       </button>
                     )}
                   </td>
@@ -421,12 +428,8 @@ export default function BackupPage() {
               ))}
               {(!history?.backups || history.backups.length === 0) && (
                 <tr>
-                  <td
-                    colSpan={6}
-                    className="p-8 text-center text-muted-foreground"
-                  >
-                    No backups yet. Click "Backup Now" to create your first
-                    backup.
+                  <td colSpan={6} className="p-8 text-center text-muted-foreground">
+                    {t("backup.noBackupsCreate")}
                   </td>
                 </tr>
               )}

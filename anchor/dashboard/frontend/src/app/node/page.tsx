@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchNodeStatus,
@@ -31,6 +32,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export default function NodePage() {
+  const { t } = useTranslation();
   const [blocksToMine, setBlocksToMine] = useState(1);
   const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
   const [showCommand, setShowCommand] = useState(false);
@@ -108,11 +110,11 @@ export default function NodePage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Bitcoin Node</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t("node.title")}</h1>
           <p className="text-muted-foreground">
             {nodeRunning && network
               ? `${network.subversion.replace(/\//g, "")} on ${blockchain?.chain}`
-              : "Node not running"}
+              : t("node.nodeNotRunning")}
           </p>
         </div>
         <button
@@ -137,9 +139,9 @@ export default function NodePage() {
               <Settings className="w-5 h-5 text-orange-500" />
             </div>
             <div>
-              <h2 className="font-semibold text-foreground">Bitcoin Core Version</h2>
+              <h2 className="font-semibold text-foreground">{t("node.version")}</h2>
               <p className="text-sm text-muted-foreground">
-                Select the version to run
+                {t("node.selectVersion")}
               </p>
             </div>
           </div>
@@ -155,6 +157,7 @@ export default function NodePage() {
                 isActive={nodeConfig.current_version === ver.version && nodeConfig.is_running}
                 isSelected={selectedVersion === ver.version}
                 onSelect={() => setSelectedVersion(ver.version)}
+                t={t}
               />
             ))}
           </div>
@@ -170,12 +173,12 @@ export default function NodePage() {
               ) : (
                 <Terminal className="w-4 h-4" />
               )}
-              Get Build Command
+              {t("node.getBuildCommand")}
             </button>
 
             {selectedVersion !== nodeConfig.current_version && (
               <span className="text-sm text-muted-foreground">
-                Switching versions requires rebuilding the Docker image
+                {t("node.switchRequiresRebuild")}
               </span>
             )}
           </div>
@@ -213,25 +216,25 @@ docker compose up -d core-bitcoin`}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           icon={<Blocks className="w-5 h-5" />}
-          label="Block Height"
+          label={t("node.blockHeight")}
           value={blockchain.blocks.toLocaleString()}
           color="orange"
         />
         <StatCard
           icon={<Network className="w-5 h-5" />}
-          label="Connections"
+          label={t("node.connections")}
           value={`${network.connections} (${network.connections_in}↓ ${network.connections_out}↑)`}
           color="blue"
         />
         <StatCard
           icon={<HardDrive className="w-5 h-5" />}
-          label="Disk Usage"
+          label={t("node.diskUsage")}
           value={`${(blockchain.size_on_disk / 1024 / 1024).toFixed(1)} MB`}
           color="purple"
         />
         <StatCard
           icon={<Shield className="w-5 h-5" />}
-          label="Difficulty"
+          label={t("node.difficulty")}
           value={blockchain.difficulty.toExponential(2)}
           color="green"
         />
@@ -246,9 +249,9 @@ docker compose up -d core-bitcoin`}
               <Pickaxe className="w-5 h-5 text-warning" />
             </div>
             <div>
-              <h2 className="font-semibold text-foreground">Mine Blocks</h2>
+              <h2 className="font-semibold text-foreground">{t("node.mineBlocks")}</h2>
               <p className="text-sm text-muted-foreground">
-                Generate new blocks on regtest
+                {t("node.generateBlocks")}
               </p>
             </div>
           </div>
@@ -282,13 +285,13 @@ docker compose up -d core-bitcoin`}
               ) : (
                 <Pickaxe className="w-4 h-4" />
               )}
-              Mine {blocksToMine} Block{blocksToMine > 1 ? "s" : ""}
+              {t("node.mineBlocks")} ({blocksToMine})
             </button>
           </div>
 
           {mineMutation.isSuccess && (
             <p className="mt-4 text-sm text-success">
-              Successfully mined {mineMutation.data?.blocks.length} block(s)!
+              {t("node.successMined", { count: mineMutation.data?.blocks.length || 0 })}
             </p>
           )}
         </div>
@@ -302,22 +305,22 @@ docker compose up -d core-bitcoin`}
         <div className="bg-card border border-border rounded-xl p-6">
           <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
             <Database className="w-5 h-5 text-muted-foreground" />
-            Blockchain Info
+            {t("node.blockchainInfo")}
           </h2>
           <div className="space-y-3">
-            <InfoRow label="Chain" value={blockchain.chain} />
-            <InfoRow label="Blocks" value={blockchain.blocks.toLocaleString()} />
-            <InfoRow label="Headers" value={blockchain.headers.toLocaleString()} />
+            <InfoRow label={t("node.chain")} value={blockchain.chain} />
+            <InfoRow label={t("node.blocks")} value={blockchain.blocks.toLocaleString()} />
+            <InfoRow label={t("node.headers")} value={blockchain.headers.toLocaleString()} />
             <InfoRow
-              label="Best Block"
+              label={t("node.bestBlock")}
               value={shortenHash(blockchain.bestblockhash, 12)}
               mono
             />
             <InfoRow
-              label="Verification Progress"
+              label={t("node.verificationProgress")}
               value={`${(blockchain.verificationprogress * 100).toFixed(2)}%`}
             />
-            <InfoRow label="Pruned" value={blockchain.pruned ? "Yes" : "No"} />
+            <InfoRow label={t("node.pruned")} value={blockchain.pruned ? t("common.yes") : t("common.no")} />
           </div>
         </div>
 
@@ -325,25 +328,25 @@ docker compose up -d core-bitcoin`}
         <div className="bg-card border border-border rounded-xl p-6">
           <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
             <Zap className="w-5 h-5 text-muted-foreground" />
-            Mempool Info
+            {t("node.mempoolInfo")}
           </h2>
           <div className="space-y-3">
-            <InfoRow label="Loaded" value={mempool.loaded ? "Yes" : "No"} />
-            <InfoRow label="Transactions" value={mempool.size.toLocaleString()} />
+            <InfoRow label={t("node.loaded")} value={mempool.loaded ? t("common.yes") : t("common.no")} />
+            <InfoRow label={t("wallet.transactions")} value={mempool.size.toLocaleString()} />
             <InfoRow
-              label="Size"
+              label={t("node.size")}
               value={`${(mempool.bytes / 1024).toFixed(2)} KB`}
             />
             <InfoRow
-              label="Memory Usage"
+              label={t("node.memoryUsage")}
               value={`${(mempool.usage / 1024 / 1024).toFixed(2)} MB`}
             />
             <InfoRow
-              label="Total Fees"
+              label={t("node.totalFees")}
               value={`${mempool.total_fee.toFixed(8)} BTC`}
             />
             <InfoRow
-              label="Min Relay Fee"
+              label={t("node.minRelayFee")}
               value={`${(mempool.minrelaytxfee * 100000000).toFixed(0)} sat/kB`}
             />
           </div>
@@ -354,33 +357,33 @@ docker compose up -d core-bitcoin`}
       <div className="bg-card border border-border rounded-xl p-6">
         <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
           <Network className="w-5 h-5 text-muted-foreground" />
-          Network Info
+          {t("node.networkInfo")}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <InfoRow label="Version" value={network.version.toString()} />
+          <InfoRow label={t("node.version")} value={network.version.toString()} />
           <InfoRow
-            label="Subversion"
+            label={t("node.subversion")}
             value={network.subversion.replace(/\//g, "")}
           />
           <InfoRow
-            label="Protocol Version"
+            label={t("node.protocolVersion")}
             value={network.protocolversion.toString()}
           />
           <InfoRow
-            label="Connections"
+            label={t("node.connections")}
             value={network.connections.toString()}
           />
           <InfoRow
-            label="Inbound"
+            label={t("node.inbound")}
             value={network.connections_in.toString()}
           />
           <InfoRow
-            label="Outbound"
+            label={t("node.outbound")}
             value={network.connections_out.toString()}
           />
           <InfoRow
-            label="Network Active"
-            value={network.networkactive ? "Yes" : "No"}
+            label={t("node.networkActive")}
+            value={network.networkactive ? t("common.yes") : t("common.no")}
           />
         </div>
       </div>
@@ -392,10 +395,10 @@ docker compose up -d core-bitcoin`}
         <div className="bg-card border border-border rounded-xl p-8 text-center">
           <Bitcoin className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-foreground mb-2">
-            Node Not Running
+            {t("node.notRunning")}
           </h2>
           <p className="text-muted-foreground mb-4">
-            Start the Bitcoin node with: <code className="bg-muted px-2 py-1 rounded">docker compose up -d core-bitcoin</code>
+            {t("node.startNodeCmd")}: <code className="bg-muted px-2 py-1 rounded">docker compose up -d core-bitcoin</code>
           </p>
         </div>
       )}
@@ -471,6 +474,7 @@ function VersionCard({
   isActive,
   isSelected,
   onSelect,
+  t,
 }: {
   version: string;
   releaseDate: string;
@@ -479,6 +483,7 @@ function VersionCard({
   isActive: boolean;
   isSelected: boolean;
   onSelect: () => void;
+  t: (key: string) => string;
 }) {
   return (
     <button
@@ -507,13 +512,13 @@ function VersionCard({
         <span className="text-xs text-muted-foreground">{releaseDate}</span>
         {isDefault && (
           <span className="text-xs bg-orange-500/10 text-orange-500 px-2 py-0.5 rounded">
-            Default
+            {t("node.default")}
           </span>
         )}
         {isActive && (
           <span className="text-xs bg-success/10 text-success px-2 py-0.5 rounded flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-success" />
-            Running
+            {t("node.running")}
           </span>
         )}
       </div>

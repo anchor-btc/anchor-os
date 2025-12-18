@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchCloudflareStatus,
@@ -28,6 +29,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export default function CloudflarePage() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [token, setToken] = useState("");
   const [copied, setCopied] = useState<string | null>(null);
@@ -93,16 +95,16 @@ export default function CloudflarePage() {
         <div>
           <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
             <Cloud className="w-8 h-8 text-orange-500" />
-            Cloudflare Tunnel
+            {t("cloudflare.title")}
           </h1>
           <p className="text-muted-foreground mt-1">
-            Expose your Anchor services to the internet securely
+            {t("cloudflare.subtitle")}
           </p>
         </div>
         <button
           onClick={() => refetch()}
           className="p-2 hover:bg-muted rounded-lg transition-colors"
-          title="Refresh status"
+          title={t("common.refresh")}
         >
           <RefreshCw className="w-5 h-5 text-muted-foreground" />
         </button>
@@ -111,22 +113,22 @@ export default function CloudflarePage() {
       {/* Status Card */}
       <div className="bg-card border border-border rounded-2xl p-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-foreground">Connection Status</h2>
+          <h2 className="text-lg font-semibold text-foreground">{t("cloudflare.connectionStatus")}</h2>
           <div className="flex items-center gap-2">
             {isConnected ? (
               <span className="flex items-center gap-2 text-sm text-success">
                 <CheckCircle2 className="w-4 h-4" />
-                Connected
+                {t("cloudflare.connected")}
               </span>
             ) : isRunning ? (
               <span className="flex items-center gap-2 text-sm text-warning">
                 <AlertCircle className="w-4 h-4" />
-                Connecting...
+                {t("cloudflare.connecting")}
               </span>
             ) : (
               <span className="flex items-center gap-2 text-sm text-muted-foreground">
                 <XCircle className="w-4 h-4" />
-                Not running
+                {t("cloudflare.notRunning")}
               </span>
             )}
           </div>
@@ -137,33 +139,33 @@ export default function CloudflarePage() {
           <div className="bg-muted/50 rounded-xl p-4">
             <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
               <Server className="w-4 h-4" />
-              Container
+              {t("cloudflare.container")}
             </div>
             <div className={cn(
               "font-medium",
               isRunning ? "text-success" : "text-muted-foreground"
             )}>
-              {isRunning ? "Running" : "Stopped"}
+              {isRunning ? t("cloudflare.running") : t("cloudflare.stopped")}
             </div>
           </div>
 
           <div className="bg-muted/50 rounded-xl p-4">
             <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
               <Cloud className="w-4 h-4" />
-              Tunnel
+              {t("cloudflare.tunnel")}
             </div>
             <div className={cn(
               "font-medium",
               isConnected ? "text-success" : "text-muted-foreground"
             )}>
-              {isConnected ? "Connected" : isRunning ? "Connecting..." : "Disconnected"}
+              {isConnected ? t("cloudflare.connected") : isRunning ? t("cloudflare.connecting") : t("cloudflare.disconnected")}
             </div>
           </div>
 
           <div className="bg-muted/50 rounded-xl p-4">
             <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
               <Globe className="w-4 h-4" />
-              Status
+              {t("cloudflare.status")}
             </div>
             <div className="font-medium text-foreground text-sm">
               {status?.container_status || "-"}
@@ -177,9 +179,9 @@ export default function CloudflarePage() {
             <div className="flex items-start gap-3">
               <CheckCircle2 className="w-5 h-5 text-success mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-success">Tunnel Connected</p>
+                <p className="text-sm font-medium text-success">{t("cloudflare.tunnelConnected")}</p>
                 <p className="text-sm text-success/80 mt-1">
-                  {status?.tunnel_info || "Your tunnel is connected to Cloudflare. Configure public hostnames in the Cloudflare dashboard."}
+                  {status?.tunnel_info || t("cloudflare.tunnelInfo")}
                 </p>
               </div>
             </div>
@@ -199,7 +201,7 @@ export default function CloudflarePage() {
               ) : (
                 <Square className="w-4 h-4" />
               )}
-              Stop Tunnel
+              {t("cloudflare.stopTunnel")}
             </button>
           ) : null}
         </div>
@@ -210,13 +212,13 @@ export default function CloudflarePage() {
         <div className="bg-card border border-border rounded-2xl p-6">
           <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
             <Key className="w-5 h-5 text-orange-500" />
-            Connect to Cloudflare
+            {t("cloudflare.connectToCloudflare")}
           </h2>
 
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                Tunnel Token
+                {t("cloudflare.tunnelToken")}
               </label>
               <input
                 type="password"
@@ -226,14 +228,14 @@ export default function CloudflarePage() {
                 className="w-full px-4 py-3 bg-muted border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 font-mono text-sm"
               />
               <p className="text-xs text-muted-foreground mt-2">
-                Get your tunnel token from the{" "}
+                {t("cloudflare.getToken")}{" "}
                 <a
                   href="https://one.dash.cloudflare.com/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-orange-500 hover:underline inline-flex items-center gap-1"
                 >
-                  Cloudflare Zero Trust Dashboard
+                  {t("cloudflare.zeroTrustDashboard")}
                   <ExternalLink className="w-3 h-3" />
                 </a>
               </p>
@@ -241,7 +243,7 @@ export default function CloudflarePage() {
 
             {connectMutation.isError && (
               <div className="bg-error/10 border border-error/20 text-error text-sm p-3 rounded-xl">
-                Failed to connect. Please check your token and try again.
+                {t("cloudflare.connectError")}
               </div>
             )}
 
@@ -259,12 +261,12 @@ export default function CloudflarePage() {
               {connectMutation.isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Connecting...
+                  {t("cloudflare.connecting")}
                 </>
               ) : (
                 <>
                   <Play className="w-4 h-4" />
-                  Start Tunnel
+                  {t("cloudflare.startTunnel")}
                 </>
               )}
             </button>
@@ -276,19 +278,19 @@ export default function CloudflarePage() {
       <div className="bg-card border border-border rounded-2xl p-6">
         <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
           <Server className="w-5 h-5 text-muted-foreground" />
-          Available Services
+          {t("cloudflare.availableServices")}
         </h2>
         <p className="text-sm text-muted-foreground mb-4">
-          Configure public hostnames for these services in the{" "}
+          {t("cloudflare.configureHostnames")}{" "}
           <a
             href="https://one.dash.cloudflare.com/"
             target="_blank"
             rel="noopener noreferrer"
             className="text-orange-500 hover:underline"
           >
-            Cloudflare dashboard
+            {t("cloudflare.cloudflareDashboard")}
           </a>
-          . Use the internal URLs below when setting up your tunnel routes.
+          . {t("cloudflare.useInternalUrls")}
         </p>
 
         <div className="space-y-3">
@@ -308,7 +310,7 @@ export default function CloudflarePage() {
                 <button
                   onClick={() => copyToClipboard(service.local_url, service.name)}
                   className="p-1.5 hover:bg-muted rounded transition-colors"
-                  title="Copy URL"
+                  title={t("cloudflare.copyUrl")}
                 >
                   {copied === service.name ? (
                     <Check className="w-3.5 h-3.5 text-success" />
@@ -324,14 +326,14 @@ export default function CloudflarePage() {
 
       {/* Help Section */}
       <div className="bg-muted/30 border border-border rounded-2xl p-6">
-        <h3 className="font-semibold text-foreground mb-3">How to use Cloudflare Tunnel</h3>
+        <h3 className="font-semibold text-foreground mb-3">{t("cloudflare.howToUse")}</h3>
         <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
-          <li>Go to <a href="https://one.dash.cloudflare.com/" target="_blank" rel="noopener noreferrer" className="text-orange-500 hover:underline">Cloudflare Zero Trust Dashboard</a></li>
-          <li>Navigate to Networks → Tunnels and create a new tunnel</li>
-          <li>Copy the tunnel token (starts with eyJ...)</li>
-          <li>Paste the token above and click "Start Tunnel"</li>
-          <li>In Cloudflare, add public hostnames and point them to the internal service URLs listed above</li>
-          <li>Your services will be accessible via your configured domains</li>
+          <li>{t("cloudflare.step1")} <a href="https://one.dash.cloudflare.com/" target="_blank" rel="noopener noreferrer" className="text-orange-500 hover:underline">{t("cloudflare.zeroTrustDashboard")}</a></li>
+          <li>{t("cloudflare.step2")}</li>
+          <li>{t("cloudflare.step3")}</li>
+          <li>{t("cloudflare.step4")}</li>
+          <li>{t("cloudflare.step5")}</li>
+          <li>{t("cloudflare.step6")}</li>
         </ol>
       </div>
     </div>

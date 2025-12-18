@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Loader2, Bitcoin } from "lucide-react";
 
 interface PriceData {
@@ -16,6 +17,7 @@ async function fetchBitcoinPrice(): Promise<PriceData> {
 }
 
 export function BitcoinPriceWidget() {
+  const { t } = useTranslation();
   const { data, isLoading, error } = useQuery({
     queryKey: ["bitcoin-price"],
     queryFn: fetchBitcoinPrice,
@@ -40,8 +42,8 @@ export function BitcoinPriceWidget() {
             <Bitcoin className="w-4 h-4 text-orange-500" />
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">BTC Price</p>
-            <p className="text-sm text-muted-foreground">Unavailable</p>
+            <p className="text-xs text-muted-foreground">{t("widgets.btcPrice")}</p>
+            <p className="text-sm text-muted-foreground">{t("widgets.unavailable")}</p>
           </div>
         </div>
       </div>
@@ -65,7 +67,7 @@ export function BitcoinPriceWidget() {
             <Bitcoin className="w-4 h-4 text-orange-500" />
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">Bitcoin Price</p>
+            <p className="text-xs text-muted-foreground">{t("widgets.bitcoinPrice")}</p>
             <p className="text-lg font-bold text-foreground">
               {formatPrice(data.USD)}
             </p>

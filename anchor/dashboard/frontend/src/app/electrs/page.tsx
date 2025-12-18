@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import {
   Zap,
@@ -19,6 +20,7 @@ import { fetchContainers, fetchContainerLogs } from "@/lib/api";
 import { useState } from "react";
 
 export default function ElectrsPage() {
+  const { t } = useTranslation();
   const [showFullLogs, setShowFullLogs] = useState(false);
 
   const {
@@ -69,12 +71,12 @@ export default function ElectrsPage() {
         <div>
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-3">
             <Zap className="w-7 h-7 text-yellow-500" />
-            Electrs
+            {t("electrs.title")}
           </h1>
           <p className="text-muted-foreground">
             {isRunning
-              ? "Electrum Server - providing efficient address and UTXO indexing"
-              : "Electrs not running"}
+              ? t("electrs.subtitle")
+              : t("electrs.notRunning")}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -103,27 +105,31 @@ export default function ElectrsPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard
           icon={<Server className="w-5 h-5" />}
-          label="Status"
-          value={isRunning ? "Running" : "Stopped"}
+          label={t("node.status")}
+          value={isRunning ? t("node.running") : t("node.stopped")}
           color={isRunning ? "green" : "red"}
+          t={t}
         />
         <StatCard
           icon={<Link2 className="w-5 h-5" />}
-          label="Electrum Port"
+          label={t("electrs.electrumPort")}
           value="50001"
           color="yellow"
+          t={t}
         />
         <StatCard
           icon={<Blocks className="w-5 h-5" />}
-          label="Bitcoin Node"
-          value={bitcoinRunning ? "Connected" : "Disconnected"}
+          label={t("electrs.bitcoinNode")}
+          value={bitcoinRunning ? t("electrs.connected") : t("electrs.disconnected")}
           color={bitcoinRunning ? "green" : "red"}
+          t={t}
         />
         <StatCard
           icon={<Clock className="w-5 h-5" />}
-          label="Sync Status"
-          value={syncInfo.status}
+          label={t("electrs.syncStatus")}
+          value={syncInfo.synced ? t("electrs.synced") : t("electrs.syncing")}
           color={syncInfo.synced ? "green" : "yellow"}
+          t={t}
         />
       </div>
 
@@ -134,28 +140,28 @@ export default function ElectrsPage() {
             <Zap className="w-5 h-5 text-yellow-500" />
           </div>
           <div>
-            <h2 className="font-semibold text-foreground">Connection Details</h2>
+            <h2 className="font-semibold text-foreground">{t("electrs.connectionDetails")}</h2>
             <p className="text-sm text-muted-foreground">
-              Use these details to connect to the Electrum server
+              {t("electrs.useDetails")}
             </p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="p-4 bg-muted/50 rounded-lg">
-            <p className="text-xs text-muted-foreground mb-1">Internal Host (Docker)</p>
+            <p className="text-xs text-muted-foreground mb-1">{t("electrs.internalHost")}</p>
             <p className="font-medium text-foreground font-mono text-sm">core-electrs:50001</p>
           </div>
           <div className="p-4 bg-muted/50 rounded-lg">
-            <p className="text-xs text-muted-foreground mb-1">External Host</p>
+            <p className="text-xs text-muted-foreground mb-1">{t("electrs.externalHost")}</p>
             <p className="font-medium text-foreground font-mono text-sm">localhost:50001</p>
           </div>
           <div className="p-4 bg-muted/50 rounded-lg">
-            <p className="text-xs text-muted-foreground mb-1">Protocol</p>
+            <p className="text-xs text-muted-foreground mb-1">{t("electrs.protocol")}</p>
             <p className="font-medium text-foreground font-mono text-sm">TCP (Electrum Protocol)</p>
           </div>
           <div className="p-4 bg-muted/50 rounded-lg">
-            <p className="text-xs text-muted-foreground mb-1">Network</p>
+            <p className="text-xs text-muted-foreground mb-1">{t("electrs.network")}</p>
             <p className="font-medium text-foreground font-mono text-sm">regtest</p>
           </div>
         </div>
@@ -168,9 +174,9 @@ export default function ElectrsPage() {
             <Database className="w-5 h-5 text-blue-500" />
           </div>
           <div>
-            <h2 className="font-semibold text-foreground">Connected Services</h2>
+            <h2 className="font-semibold text-foreground">{t("electrs.connectedServices")}</h2>
             <p className="text-sm text-muted-foreground">
-              Services using Electrs for address and transaction lookups
+              {t("electrs.servicesUsing")}
             </p>
           </div>
         </div>
@@ -204,37 +210,37 @@ export default function ElectrsPage() {
             <Zap className="w-5 h-5 text-purple-500" />
           </div>
           <div>
-            <h2 className="font-semibold text-foreground">Electrs Features</h2>
+            <h2 className="font-semibold text-foreground">{t("electrs.features")}</h2>
             <p className="text-sm text-muted-foreground">
-              Capabilities provided by the Electrum server
+              {t("electrs.capabilities")}
             </p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <FeatureCard
-            title="Address Lookup"
-            description="Query transaction history for any Bitcoin address"
+            title={t("electrs.addressLookup")}
+            description={t("electrs.addressLookupDesc")}
           />
           <FeatureCard
-            title="UTXO Queries"
-            description="Get unspent transaction outputs for addresses"
+            title={t("electrs.utxoQueries")}
+            description={t("electrs.utxoQueriesDesc")}
           />
           <FeatureCard
-            title="Transaction Search"
-            description="Find transactions by hash or address"
+            title={t("electrs.transactionSearch")}
+            description={t("electrs.transactionSearchDesc")}
           />
           <FeatureCard
-            title="Balance Queries"
-            description="Get confirmed and unconfirmed balances"
+            title={t("electrs.balanceQueries")}
+            description={t("electrs.balanceQueriesDesc")}
           />
           <FeatureCard
-            title="Block Headers"
-            description="Efficient block header subscription"
+            title={t("electrs.blockHeaders")}
+            description={t("electrs.blockHeadersDesc")}
           />
           <FeatureCard
-            title="Merkle Proofs"
-            description="SPV proofs for transaction verification"
+            title={t("electrs.merkleProofs")}
+            description={t("electrs.merkleProofsDesc")}
           />
         </div>
       </div>
@@ -247,15 +253,15 @@ export default function ElectrsPage() {
               <ScrollText className="w-5 h-5 text-slate-400" />
             </div>
             <div>
-              <h2 className="font-semibold text-foreground">Recent Activity</h2>
-              <p className="text-sm text-muted-foreground">Latest Electrs logs</p>
+              <h2 className="font-semibold text-foreground">{t("electrs.recentActivity")}</h2>
+              <p className="text-sm text-muted-foreground">{t("electrs.latestLogs")}</p>
             </div>
           </div>
           <button
             onClick={() => setShowFullLogs(!showFullLogs)}
             className="px-3 py-1.5 text-xs bg-muted hover:bg-muted/80 rounded-lg transition-colors"
           >
-            {showFullLogs ? "Show Less" : "Show More"}
+            {showFullLogs ? t("common.showLess") : t("common.showMore")}
           </button>
         </div>
 
@@ -274,7 +280,7 @@ export default function ElectrsPage() {
         ) : (
           <div className="text-center py-8 text-muted-foreground">
             <Terminal className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p>No recent logs available</p>
+            <p>{t("electrs.noLogs")}</p>
           </div>
         )}
       </div>
@@ -284,10 +290,10 @@ export default function ElectrsPage() {
         <div className="bg-card border border-border rounded-xl p-8 text-center">
           <Zap className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-foreground mb-2">
-            Electrs Not Running
+            {t("electrs.notRunningMsg")}
           </h2>
           <p className="text-muted-foreground mb-4">
-            Start Electrs with:{" "}
+            {t("electrs.startWith")}:{" "}
             <code className="bg-muted px-2 py-1 rounded">
               docker compose up -d core-electrs
             </code>
@@ -308,6 +314,7 @@ function StatCard({
   label: string;
   value: string;
   color: "yellow" | "green" | "red" | "blue";
+  t?: (key: string) => string;
 }) {
   const colorClasses = {
     yellow: "bg-yellow-500/10 text-yellow-500",

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchWalletBalance,
@@ -34,6 +35,7 @@ type Tab = "transactions" | "utxos" | "receive";
 const UTXOS_PER_PAGE = 50;
 
 export default function WalletPage() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<Tab>("transactions");
   const [copied, setCopied] = useState(false);
   const [utxoPage, setUtxoPage] = useState(0);
@@ -74,14 +76,18 @@ export default function WalletPage() {
   // Balance is already in BTC
   const totalBtc = balance ? balance.total : 0;
 
+  const tabLabels: Record<Tab, string> = {
+    transactions: t("wallet.transactions"),
+    utxos: t("wallet.utxos"),
+    receive: t("wallet.receive"),
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Wallet</h1>
-        <p className="text-muted-foreground">
-          Manage your Bitcoin wallet
-        </p>
+        <h1 className="text-2xl font-bold text-foreground">{t("wallet.title")}</h1>
+        <p className="text-muted-foreground">{t("wallet.subtitle")}</p>
       </div>
 
       {/* Balance Card */}
@@ -91,7 +97,7 @@ export default function WalletPage() {
             <Wallet className="w-7 h-7 text-primary" />
           </div>
           <div>
-            <p className="text-sm text-muted-foreground">Total Balance</p>
+            <p className="text-sm text-muted-foreground">{t("wallet.totalBalance")}</p>
             {balanceLoading ? (
               <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
             ) : (
@@ -99,7 +105,7 @@ export default function WalletPage() {
                 <span className="text-4xl font-bold font-tabular text-foreground">
                   {totalBtc.toFixed(8)}
                 </span>
-                <span className="text-xl text-muted-foreground">BTC</span>
+                <span className="text-xl text-muted-foreground">{t("units.btc")}</span>
               </div>
             )}
           </div>
@@ -108,19 +114,22 @@ export default function WalletPage() {
         {balance && (
           <div className="grid grid-cols-3 gap-6 pt-6 border-t border-border">
             <BalanceItem
-              label="Confirmed"
+              label={t("wallet.confirmed")}
               value={formatBtc(balance.confirmed)}
               color="success"
+              t={t}
             />
             <BalanceItem
-              label="Unconfirmed"
+              label={t("wallet.unconfirmed")}
               value={formatBtc(balance.unconfirmed)}
               color="warning"
+              t={t}
             />
             <BalanceItem
-              label="Immature"
+              label={t("wallet.immature")}
               value={formatBtc(balance.immature || 0)}
               color="muted"
+              t={t}
             />
           </div>
         )}
@@ -133,13 +142,13 @@ export default function WalletPage() {
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={cn(
-              "px-4 py-2 text-sm font-medium rounded-md transition-colors capitalize",
+              "px-4 py-2 text-sm font-medium rounded-md transition-colors",
               activeTab === tab
                 ? "bg-card text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
-            {tab}
+            {tabLabels[tab]}
           </button>
         ))}
       </div>
@@ -148,7 +157,7 @@ export default function WalletPage() {
       {activeTab === "transactions" && (
         <div className="bg-card border border-border rounded-xl overflow-hidden">
           <div className="p-4 border-b border-border">
-            <h2 className="font-semibold text-foreground">Transaction History</h2>
+            <h2 className="font-semibold text-foreground">{t("wallet.transactionHistory")}</h2>
           </div>
           {txLoading ? (
             <div className="flex items-center justify-center h-48">
@@ -156,12 +165,12 @@ export default function WalletPage() {
             </div>
           ) : !transactions || transactions.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">
-              <p>No transactions yet</p>
+              <p>{t("wallet.noTransactions")}</p>
             </div>
           ) : (
             <div className="divide-y divide-border max-h-[500px] overflow-auto">
               {transactions.map((tx, i) => (
-                <TransactionRow key={`${tx.txid}-${i}`} transaction={tx} />
+                <TransactionRow key={`${tx.txid}-${i}`} transaction={tx} t={t} />
               ))}
             </div>
           )}
@@ -169,26 +178,23 @@ export default function WalletPage() {
       )}
 
       {activeTab === "utxos" && (
-        <UtxosSection 
-          utxos={utxos} 
-          isLoading={utxosLoading} 
-          page={utxoPage} 
-          setPage={setUtxoPage} 
+        <UtxosSection
+          utxos={utxos}
+          isLoading={utxosLoading}
+          page={utxoPage}
+          setPage={setUtxoPage}
+          t={t}
         />
       )}
 
       {activeTab === "receive" && (
         <div className="bg-card border border-border rounded-xl p-6">
-          <h2 className="font-semibold text-foreground mb-4">
-            Receive Bitcoin
-          </h2>
+          <h2 className="font-semibold text-foreground mb-4">{t("wallet.receiveBitcoin")}</h2>
 
           {!addressMutation.data ? (
             <div className="text-center py-8">
               <QrCode className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground mb-4">
-                Generate a new address to receive Bitcoin
-              </p>
+              <p className="text-muted-foreground mb-4">{t("wallet.generateToReceive")}</p>
               <button
                 onClick={handleGenerateAddress}
                 disabled={addressMutation.isPending}
@@ -199,7 +205,7 @@ export default function WalletPage() {
                 ) : (
                   <RefreshCw className="w-4 h-4" />
                 )}
-                Generate Address
+                {t("wallet.generateAddress")}
               </button>
             </div>
           ) : (
@@ -214,7 +220,7 @@ export default function WalletPage() {
 
               <div className="w-full max-w-md">
                 <label className="text-sm text-muted-foreground block mb-2">
-                  Bitcoin Address
+                  {t("wallet.bitcoinAddress")}
                 </label>
                 <div className="flex items-center gap-2">
                   <code className="flex-1 p-3 bg-muted rounded-lg text-sm font-mono text-foreground break-all">
@@ -238,7 +244,7 @@ export default function WalletPage() {
                 disabled={addressMutation.isPending}
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
-                Generate new address
+                {t("wallet.generateNewAddress")}
               </button>
             </div>
           )}
@@ -252,10 +258,12 @@ function BalanceItem({
   label,
   value,
   color,
+  t,
 }: {
   label: string;
   value: string;
   color: "success" | "warning" | "muted";
+  t: (key: string) => string;
 }) {
   const colorClasses = {
     success: "text-success",
@@ -267,13 +275,19 @@ function BalanceItem({
     <div>
       <p className="text-xs text-muted-foreground mb-1">{label}</p>
       <p className={cn("text-lg font-medium font-tabular", colorClasses[color])}>
-        {value} BTC
+        {value} {t("units.btc")}
       </p>
     </div>
   );
 }
 
-function TransactionRow({ transaction }: { transaction: Transaction }) {
+function TransactionRow({
+  transaction,
+  t,
+}: {
+  transaction: Transaction;
+  t: (key: string) => string;
+}) {
   const isReceive =
     transaction.category === "receive" ||
     transaction.category === "generate" ||
@@ -297,8 +311,8 @@ function TransactionRow({ transaction }: { transaction: Transaction }) {
         </div>
         <div>
           <p className="font-medium text-foreground">
-            {isReceive ? "Received" : "Sent"}
-            {transaction.category === "generate" && " (Mined)"}
+            {isReceive ? t("wallet.received") : t("wallet.sent")}
+            {transaction.category === "generate" && ` (${t("wallet.mined")})`}
           </p>
           <p className="text-xs text-muted-foreground font-mono">
             {shortenHash(transaction.txid, 8)}
@@ -314,14 +328,16 @@ function TransactionRow({ transaction }: { transaction: Transaction }) {
           )}
         >
           {isReceive ? "+" : "-"}
-          {Math.abs(transaction.amount).toFixed(8)} BTC
+          {Math.abs(transaction.amount).toFixed(8)} {t("units.btc")}
         </p>
         <div className="flex items-center justify-end gap-1 text-xs text-muted-foreground">
           <Clock className="w-3 h-3" />
           {isConfirmed ? (
-            <span>{transaction.confirmations} confirmations</span>
+            <span>
+              {transaction.confirmations} {t("wallet.confirmations").toLowerCase()}
+            </span>
           ) : (
-            <span className="text-warning">Pending</span>
+            <span className="text-warning">{t("wallet.pending")}</span>
           )}
         </div>
       </div>
@@ -329,20 +345,22 @@ function TransactionRow({ transaction }: { transaction: Transaction }) {
   );
 }
 
-function UtxosSection({ 
-  utxos, 
-  isLoading, 
-  page, 
-  setPage 
-}: { 
-  utxos?: Utxo[]; 
-  isLoading: boolean; 
-  page: number; 
+function UtxosSection({
+  utxos,
+  isLoading,
+  page,
+  setPage,
+  t,
+}: {
+  utxos?: Utxo[];
+  isLoading: boolean;
+  page: number;
   setPage: (page: number) => void;
+  t: (key: string) => string;
 }) {
   const totalCount = utxos?.length || 0;
   const totalPages = Math.ceil(totalCount / UTXOS_PER_PAGE);
-  
+
   const paginatedUtxos = useMemo(() => {
     if (!utxos) return [];
     const start = page * UTXOS_PER_PAGE;
@@ -355,9 +373,9 @@ function UtxosSection({
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden">
       <div className="p-4 border-b border-border flex items-center justify-between">
-        <h2 className="font-semibold text-foreground">Unspent Outputs</h2>
+        <h2 className="font-semibold text-foreground">{t("wallet.unspentOutputs")}</h2>
         <span className="text-sm text-muted-foreground">
-          {totalCount.toLocaleString()} UTXOs
+          {totalCount.toLocaleString()} {t("wallet.utxos")}
         </span>
       </div>
       {isLoading ? (
@@ -366,19 +384,20 @@ function UtxosSection({
         </div>
       ) : !utxos || utxos.length === 0 ? (
         <div className="p-8 text-center text-muted-foreground">
-          <p>No UTXOs available</p>
+          <p>{t("wallet.noUtxos")}</p>
         </div>
       ) : (
         <>
           <div className="divide-y divide-border max-h-[500px] overflow-auto">
             {paginatedUtxos.map((utxo) => (
-              <UtxoRow key={`${utxo.txid}:${utxo.vout}`} utxo={utxo} />
+              <UtxoRow key={`${utxo.txid}:${utxo.vout}`} utxo={utxo} t={t} />
             ))}
           </div>
           {/* Pagination */}
           <div className="p-4 border-t border-border flex items-center justify-between">
             <span className="text-sm text-muted-foreground">
-              Showing {startItem.toLocaleString()}-{endItem.toLocaleString()} of {totalCount.toLocaleString()}
+              {t("wallet.showing")} {startItem.toLocaleString()}-{endItem.toLocaleString()}{" "}
+              {t("wallet.of")} {totalCount.toLocaleString()}
             </span>
             <div className="flex items-center gap-2">
               <button
@@ -389,7 +408,7 @@ function UtxosSection({
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <span className="text-sm text-muted-foreground px-2">
-                Page {page + 1} of {totalPages}
+                {t("wallet.page")} {page + 1} {t("wallet.of")} {totalPages}
               </span>
               <button
                 onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
@@ -406,7 +425,7 @@ function UtxosSection({
   );
 }
 
-function UtxoRow({ utxo }: { utxo: Utxo }) {
+function UtxoRow({ utxo, t }: { utxo: Utxo; t: (key: string) => string }) {
   return (
     <div className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
       <div className="flex items-center gap-3">
@@ -427,14 +446,15 @@ function UtxoRow({ utxo }: { utxo: Utxo }) {
 
       <div className="text-right">
         <p className="font-medium font-tabular text-foreground">
-          {utxo.amount.toFixed(8)} BTC
+          {utxo.amount.toFixed(8)} {t("units.btc")}
         </p>
         <div className="flex items-center justify-end gap-1 text-xs text-muted-foreground">
           <Hash className="w-3 h-3" />
-          <span>{utxo.confirmations} confs</span>
+          <span>
+            {utxo.confirmations} {t("wallet.confs")}
+          </span>
         </div>
       </div>
     </div>
   );
 }
-

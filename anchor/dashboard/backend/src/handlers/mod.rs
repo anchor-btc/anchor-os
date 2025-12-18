@@ -1,10 +1,12 @@
 //! HTTP request handlers
 
+pub mod auth;
 pub mod bitcoin;
 pub mod cloudflare;
 pub mod docker;
 pub mod indexer;
 pub mod node;
+pub mod settings;
 pub mod tailscale;
 pub mod wallet;
 

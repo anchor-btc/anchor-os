@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { fetchContainers, startContainer, stopContainer } from "@/lib/api";
 import { apps } from "@/lib/apps";
@@ -10,6 +11,7 @@ import { MultiTerminalModal } from "@/components/multi-terminal-modal";
 import { Loader2, AppWindow, Search, Network, Server, Play, Square } from "lucide-react";
 
 export default function AppsPage() {
+  const { t } = useTranslation();
   const [logsContainers, setLogsContainers] = useState<string[] | null>(null);
   const [terminalContainers, setTerminalContainers] = useState<string[] | null>(null);
 
@@ -85,9 +87,9 @@ export default function AppsPage() {
         {/* Header */}
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Services</h1>
+            <h1 className="text-3xl font-bold text-foreground">{t("apps.title")}</h1>
             <p className="text-muted-foreground mt-1">
-              Manage your Anchor Bitcoin stack
+              {t("apps.subtitle")}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -101,7 +103,7 @@ export default function AppsPage() {
               ) : (
                 <Play className="w-4 h-4" />
               )}
-              Start All
+              {t("apps.startAll")}
             </button>
             <button
               onClick={() => stopAllMutation.mutate()}
@@ -113,7 +115,7 @@ export default function AppsPage() {
               ) : (
                 <Square className="w-4 h-4" />
               )}
-              Stop All
+              {t("apps.stopAll")}
             </button>
           </div>
         </div>
@@ -122,9 +124,9 @@ export default function AppsPage() {
         <section>
           <div className="flex items-center gap-2 mb-4">
             <AppWindow className="w-5 h-5 text-primary" />
-            <h2 className="text-xl font-semibold text-foreground">Apps</h2>
+            <h2 className="text-xl font-semibold text-foreground">{t("sidebar.apps")}</h2>
             <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
-              Bitcoin applications
+              {t("apps.bitcoinApps")}
             </span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -146,9 +148,9 @@ export default function AppsPage() {
           <section>
             <div className="flex items-center gap-2 mb-4">
               <Search className="w-5 h-5 text-muted-foreground" />
-              <h2 className="text-xl font-semibold text-foreground">Explorers</h2>
+              <h2 className="text-xl font-semibold text-foreground">{t("sidebar.explorers")}</h2>
               <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
-                Blockchain explorers
+                {t("apps.blockchainExplorers")}
               </span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -171,9 +173,9 @@ export default function AppsPage() {
           <section>
             <div className="flex items-center gap-2 mb-4">
               <Network className="w-5 h-5 text-muted-foreground" />
-              <h2 className="text-xl font-semibold text-foreground">Networking</h2>
+              <h2 className="text-xl font-semibold text-foreground">{t("sidebar.networking")}</h2>
               <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
-                Tunnels & VPN
+                {t("apps.tunnelsVpn")}
               </span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -195,9 +197,9 @@ export default function AppsPage() {
         <section>
           <div className="flex items-center gap-2 mb-4">
             <Server className="w-5 h-5 text-muted-foreground" />
-            <h2 className="text-xl font-semibold text-foreground">Kernel</h2>
+            <h2 className="text-xl font-semibold text-foreground">{t("sidebar.kernel")}</h2>
             <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
-              Essential services
+              {t("apps.essentialServices")}
             </span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

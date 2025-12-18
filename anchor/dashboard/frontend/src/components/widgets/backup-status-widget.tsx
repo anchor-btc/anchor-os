@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { HardDrive, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import Link from "next/link";
 
@@ -32,7 +33,7 @@ function formatBytes(bytes: number): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
 }
 
-function formatTimeAgo(dateStr: string): string {
+function formatTimeAgo(dateStr: string, t: (key: string, opts?: Record<string, unknown>) => string): string {
   const date = new Date(dateStr);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -40,13 +41,14 @@ function formatTimeAgo(dateStr: string): string {
   const diffHours = Math.floor(diffMins / 60);
   const diffDays = Math.floor(diffHours / 24);
 
-  if (diffMins < 1) return "just now";
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  return `${diffDays}d ago`;
+  if (diffMins < 1) return t("time.justNow");
+  if (diffMins < 60) return t("time.minutesAgo", { count: diffMins });
+  if (diffHours < 24) return t("time.hoursAgo", { count: diffHours });
+  return t("time.daysAgo", { count: diffDays });
 }
 
 export function BackupStatusWidget() {
+  const { t } = useTranslation();
   const { data, isLoading, error } = useQuery({
     queryKey: ["backup-status"],
     queryFn: fetchBackupStatus,
@@ -72,8 +74,8 @@ export function BackupStatusWidget() {
               <AlertCircle className="w-4 h-4 text-destructive" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Backup</p>
-              <p className="text-sm text-muted-foreground">Unavailable</p>
+              <p className="text-xs text-muted-foreground">{t("widgets.backup")}</p>
+              <p className="text-sm text-muted-foreground">{t("widgets.unavailable")}</p>
             </div>
           </div>
         </div>
@@ -93,16 +95,16 @@ export function BackupStatusWidget() {
               <HardDrive className={`w-4 h-4 ${isHealthy ? "text-success" : "text-warning"}`} />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Backup Status</p>
+              <p className="text-xs text-muted-foreground">{t("widgets.backupStatus")}</p>
               {lastBackup ? (
                 <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
                   <CheckCircle2 className="w-3 h-3 text-success" />
-                  <span>{formatTimeAgo(lastBackup.completed_at)}</span>
+                  <span>{formatTimeAgo(lastBackup.completed_at, t)}</span>
                   <span className="text-muted-foreground">•</span>
                   <span className="text-muted-foreground font-normal">{formatBytes(lastBackup.size_bytes)}</span>
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">No backups yet</p>
+                <p className="text-sm text-muted-foreground">{t("widgets.noBackups")}</p>
               )}
             </div>
           </div>

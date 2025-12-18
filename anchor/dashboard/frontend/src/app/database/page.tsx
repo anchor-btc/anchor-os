@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import {
   Database,
@@ -17,7 +19,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fetchContainers } from "@/lib/api";
-import { useState } from "react";
 
 // Database connection details (from docker-compose.yml)
 const DB_CONFIG = {
@@ -29,6 +30,7 @@ const DB_CONFIG = {
 };
 
 export default function DatabasePage() {
+  const { t } = useTranslation();
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const {
@@ -69,11 +71,11 @@ export default function DatabasePage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Database</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t("database.title")}</h1>
           <p className="text-muted-foreground">
             {isRunning
-              ? "PostgreSQL 16 - Stores indexed ANCHOR data"
-              : "Database not running"}
+              ? t("database.subtitle")
+              : t("database.notRunning")}
           </p>
         </div>
         <button
@@ -108,7 +110,7 @@ export default function DatabasePage() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="font-semibold text-foreground">Database Status</h2>
+              <h2 className="font-semibold text-foreground">{t("database.databaseStatus")}</h2>
               <span
                 className={cn(
                   "px-2 py-0.5 rounded-full text-xs font-medium",
@@ -117,11 +119,11 @@ export default function DatabasePage() {
                     : "bg-muted text-muted-foreground"
                 )}
               >
-                {isRunning ? "Running" : "Stopped"}
+                {isRunning ? t("node.running") : t("node.stopped")}
               </span>
             </div>
             <p className="text-sm text-muted-foreground">
-              PostgreSQL database storing all indexed data
+              {t("database.storingData")}
             </p>
           </div>
         </div>
@@ -161,9 +163,9 @@ export default function DatabasePage() {
               <Lock className="w-5 h-5 text-blue-500" />
             </div>
             <div>
-              <h2 className="font-semibold text-foreground">Connection Credentials</h2>
+              <h2 className="font-semibold text-foreground">{t("database.connectionCredentials")}</h2>
               <p className="text-sm text-muted-foreground">
-                Use these to connect with any database client
+                {t("database.useToConnect")}
               </p>
             </div>
           </div>
@@ -171,17 +173,19 @@ export default function DatabasePage() {
           <div className="space-y-3">
             <CredentialRow
               icon={<Server className="w-4 h-4" />}
-              label="Host"
+              label={t("database.host")}
               value={DB_CONFIG.host}
               onCopy={() => copyToClipboard(DB_CONFIG.host, "host")}
               copied={copiedField === "host"}
+              t={t}
             />
             <CredentialRow
               icon={<Key className="w-4 h-4" />}
-              label="Port"
+              label={t("database.port")}
               value={DB_CONFIG.port}
               onCopy={() => copyToClipboard(DB_CONFIG.port, "port")}
               copied={copiedField === "port"}
+              t={t}
             />
             <CredentialRow
               icon={<Database className="w-4 h-4" />}
@@ -189,21 +193,24 @@ export default function DatabasePage() {
               value={DB_CONFIG.database}
               onCopy={() => copyToClipboard(DB_CONFIG.database, "database")}
               copied={copiedField === "database"}
+              t={t}
             />
             <CredentialRow
               icon={<User className="w-4 h-4" />}
-              label="User"
+              label={t("database.user")}
               value={DB_CONFIG.user}
               onCopy={() => copyToClipboard(DB_CONFIG.user, "user")}
               copied={copiedField === "user"}
+              t={t}
             />
             <CredentialRow
               icon={<Lock className="w-4 h-4" />}
-              label="Password"
+              label={t("database.password")}
               value={DB_CONFIG.password}
               onCopy={() => copyToClipboard(DB_CONFIG.password, "password")}
               copied={copiedField === "password"}
               isPassword
+              t={t}
             />
           </div>
 
@@ -211,7 +218,7 @@ export default function DatabasePage() {
           <div className="mt-6 p-4 bg-muted/50 rounded-lg">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium text-foreground">
-                Connection String
+                {t("database.connectionString")}
               </span>
               <button
                 onClick={() => copyToClipboard(connectionString, "connectionString")}
@@ -220,12 +227,12 @@ export default function DatabasePage() {
                 {copiedField === "connectionString" ? (
                   <>
                     <Check className="w-3 h-3 text-success" />
-                    Copied!
+                    {t("common.copied")}
                   </>
                 ) : (
                   <>
                     <Copy className="w-3 h-3" />
-                    Copy
+                    {t("database.copy")}
                   </>
                 )}
               </button>
@@ -245,17 +252,17 @@ export default function DatabasePage() {
               <Terminal className="w-5 h-5 text-slate-400" />
             </div>
             <div>
-              <h2 className="font-semibold text-foreground">Quick Commands</h2>
+              <h2 className="font-semibold text-foreground">{t("database.quickCommands")}</h2>
               <p className="text-sm text-muted-foreground">
-                Common database commands
+                {t("database.commonCommands")}
               </p>
             </div>
           </div>
 
           <div className="space-y-4">
             <CommandCard
-              title="Connect with psql"
-              description="Open a PostgreSQL shell inside the container"
+              title={t("database.connectPsql")}
+              description={t("database.openShell")}
               command="docker exec -it anchor-core-postgres psql -U anchor -d anchor"
               onCopy={() =>
                 copyToClipboard(
@@ -264,10 +271,11 @@ export default function DatabasePage() {
                 )
               }
               copied={copiedField === "psql"}
+              t={t}
             />
             <CommandCard
-              title="List Tables"
-              description="Show all tables in the database"
+              title={t("database.listTables")}
+              description={t("database.showAllTables")}
               command="docker exec -it anchor-core-postgres psql -U anchor -d anchor -c '\\dt'"
               onCopy={() =>
                 copyToClipboard(
@@ -276,10 +284,11 @@ export default function DatabasePage() {
                 )
               }
               copied={copiedField === "tables"}
+              t={t}
             />
             <CommandCard
-              title="Count Messages"
-              description="Count total ANCHOR messages indexed"
+              title={t("database.countMessages")}
+              description={t("database.countTotal")}
               command="docker exec -it anchor-core-postgres psql -U anchor -d anchor -c 'SELECT COUNT(*) FROM messages;'"
               onCopy={() =>
                 copyToClipboard(
@@ -288,6 +297,7 @@ export default function DatabasePage() {
                 )
               }
               copied={copiedField === "count"}
+              t={t}
             />
           </div>
         </div>
@@ -301,9 +311,9 @@ export default function DatabasePage() {
               <FileCode className="w-5 h-5 text-purple-500" />
             </div>
             <div>
-              <h2 className="font-semibold text-foreground">Compatible Database Clients</h2>
+              <h2 className="font-semibold text-foreground">{t("database.compatibleClients")}</h2>
               <p className="text-sm text-muted-foreground">
-                Popular tools to visualize and manage the database
+                {t("database.popularTools")}
               </p>
             </div>
           </div>
@@ -348,12 +358,12 @@ export default function DatabasePage() {
         <div className="bg-card border border-border rounded-xl p-8 text-center">
           <Database className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-foreground mb-2">
-            Database Not Running
+            {t("database.notRunningMsg")}
           </h2>
           <p className="text-muted-foreground mb-4">
-            Start the database with:{" "}
+            {t("database.startWith")}:{" "}
             <code className="bg-muted px-2 py-1 rounded">
-              docker compose up -d infra-postgres
+              docker compose up -d core-postgres
             </code>
           </p>
         </div>
@@ -369,6 +379,7 @@ function CredentialRow({
   onCopy,
   copied,
   isPassword = false,
+  t,
 }: {
   icon: React.ReactNode;
   label: string;
@@ -376,6 +387,7 @@ function CredentialRow({
   onCopy: () => void;
   copied: boolean;
   isPassword?: boolean;
+  t: (key: string) => string;
 }) {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -392,7 +404,7 @@ function CredentialRow({
             onClick={() => setShowPassword(!showPassword)}
             className="text-xs text-muted-foreground hover:text-foreground"
           >
-            {showPassword ? "Hide" : "Show"}
+            {showPassword ? t("database.hide") : t("database.show")}
           </button>
         )}
       </div>
@@ -416,12 +428,14 @@ function CommandCard({
   command,
   onCopy,
   copied,
+  t,
 }: {
   title: string;
   description: string;
   command: string;
   onCopy: () => void;
   copied: boolean;
+  t: (key: string) => string;
 }) {
   return (
     <div className="p-4 bg-muted/50 rounded-lg">
@@ -437,12 +451,12 @@ function CommandCard({
           {copied ? (
             <>
               <Check className="w-3 h-3 text-success" />
-              Copied!
+              {t("common.copied")}
             </>
           ) : (
             <>
               <Copy className="w-3 h-3" />
-              Copy
+              {t("database.copy")}
             </>
           )}
         </button>

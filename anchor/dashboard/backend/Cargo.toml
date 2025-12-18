@@ -35,3 +35,12 @@ bollard = "0.18"
 # Futures for async streams
 futures = "0.3"
 
+# Database
+sqlx = { version = "0.8", features = ["runtime-tokio", "postgres", "json", "chrono"] }
+
+# Password hashing
+argon2 = "0.5"
+
+# JWT
+jsonwebtoken = "9"
+

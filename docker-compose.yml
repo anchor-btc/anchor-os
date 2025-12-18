@@ -356,8 +356,11 @@ services:
       BITCOIN_RPC_URL: http://core-bitcoin:18443
       BITCOIN_RPC_USER: anchor
       BITCOIN_RPC_PASSWORD: anchor
+      DATABASE_URL: postgres://anchor:anchor@core-postgres:5432/anchor
       RUST_LOG: dashboard_backend=info
     depends_on:
+      core-postgres:
+        condition: service_healthy
       core-bitcoin:
         condition: service_healthy
       core-wallet:

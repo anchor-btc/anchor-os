@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
   CheckCircle,
@@ -15,7 +16,6 @@ import {
   RotateCcw,
   Trash2,
   Search,
-  Filter,
   Calendar,
 } from "lucide-react";
 import Link from "next/link";
@@ -47,8 +47,8 @@ function formatBytes(bytes: number | null): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 }
 
-function formatDuration(startStr: string, endStr: string | null): string {
-  if (!endStr) return "In progress...";
+function formatDuration(startStr: string, endStr: string | null, t: (key: string) => string): string {
+  if (!endStr) return t("backupHistory.inProgress");
   const start = new Date(startStr);
   const end = new Date(endStr);
   const diffMs = end.getTime() - start.getTime();
@@ -86,6 +86,7 @@ function TargetIcon({ type }: { type: string }) {
 }
 
 export default function BackupHistoryPage() {
+  const { t } = useTranslation();
   const [filter, setFilter] = useState<"all" | "completed" | "failed">("all");
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -125,9 +126,9 @@ export default function BackupHistoryPage() {
           <ArrowLeft className="w-5 h-5 text-muted-foreground" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Backup History</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t("backupHistory.title")}</h1>
           <p className="text-muted-foreground">
-            View and manage all backup jobs
+            {t("backupHistory.subtitle")}
           </p>
         </div>
       </div>
@@ -137,21 +138,21 @@ export default function BackupHistoryPage() {
         <div className="bg-card border border-border rounded-xl p-4">
           <div className="flex items-center gap-2 text-muted-foreground mb-1">
             <Calendar className="w-4 h-4" />
-            <span className="text-sm font-medium">Total Backups</span>
+            <span className="text-sm font-medium">{t("backupHistory.totalBackups")}</span>
           </div>
           <p className="text-2xl font-bold text-foreground">{stats.total}</p>
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
           <div className="flex items-center gap-2 text-green-500 mb-1">
             <CheckCircle className="w-4 h-4" />
-            <span className="text-sm font-medium">Successful</span>
+            <span className="text-sm font-medium">{t("backupHistory.successful")}</span>
           </div>
           <p className="text-2xl font-bold text-foreground">{stats.completed}</p>
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
           <div className="flex items-center gap-2 text-red-500 mb-1">
             <XCircle className="w-4 h-4" />
-            <span className="text-sm font-medium">Failed</span>
+            <span className="text-sm font-medium">{t("backupHistory.failed")}</span>
           </div>
           <p className="text-2xl font-bold text-foreground">{stats.failed}</p>
         </div>
@@ -163,7 +164,7 @@ export default function BackupHistoryPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Search by backup ID..."
+            placeholder={t("backupHistory.searchPlaceholder")}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground"
@@ -178,7 +179,7 @@ export default function BackupHistoryPage() {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            All
+            {t("backupHistory.all")}
           </button>
           <button
             onClick={() => setFilter("completed")}
@@ -188,7 +189,7 @@ export default function BackupHistoryPage() {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            Completed
+            {t("backupHistory.completed")}
           </button>
           <button
             onClick={() => setFilter("failed")}
@@ -198,7 +199,7 @@ export default function BackupHistoryPage() {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            Failed
+            {t("backupHistory.failed")}
           </button>
         </div>
       </div>
@@ -209,28 +210,28 @@ export default function BackupHistoryPage() {
           <thead>
             <tr className="border-b border-border bg-muted/50">
               <th className="text-left p-3 text-sm font-medium text-muted-foreground">
-                Status
+                {t("backupHistory.status")}
               </th>
               <th className="text-left p-3 text-sm font-medium text-muted-foreground">
-                Date & Time
+                {t("backupHistory.dateTime")}
               </th>
               <th className="text-left p-3 text-sm font-medium text-muted-foreground">
-                ID
+                {t("backupHistory.id")}
               </th>
               <th className="text-left p-3 text-sm font-medium text-muted-foreground">
-                Type
+                {t("backupHistory.type")}
               </th>
               <th className="text-left p-3 text-sm font-medium text-muted-foreground">
-                Target
+                {t("backupHistory.target")}
               </th>
               <th className="text-left p-3 text-sm font-medium text-muted-foreground">
-                Size
+                {t("backupHistory.size")}
               </th>
               <th className="text-left p-3 text-sm font-medium text-muted-foreground">
-                Duration
+                {t("backupHistory.duration")}
               </th>
               <th className="text-right p-3 text-sm font-medium text-muted-foreground">
-                Actions
+                {t("backupHistory.actions")}
               </th>
             </tr>
           </thead>
@@ -281,7 +282,7 @@ export default function BackupHistoryPage() {
                   </td>
                   <td className="p-3">
                     <span className="text-sm text-muted-foreground">
-                      {formatDuration(backup.started_at, backup.completed_at)}
+                      {formatDuration(backup.started_at, backup.completed_at, t)}
                     </span>
                   </td>
                   <td className="p-3">
@@ -290,13 +291,13 @@ export default function BackupHistoryPage() {
                         <>
                           <button
                             className="p-1.5 hover:bg-muted rounded-md transition-colors"
-                            title="Restore"
+                            title={t("backupHistory.restore")}
                           >
                             <RotateCcw className="w-4 h-4 text-muted-foreground" />
                           </button>
                           <button
                             className="p-1.5 hover:bg-muted rounded-md transition-colors"
-                            title="Download"
+                            title={t("backupHistory.download")}
                           >
                             <Download className="w-4 h-4 text-muted-foreground" />
                           </button>
@@ -304,7 +305,7 @@ export default function BackupHistoryPage() {
                       )}
                       <button
                         className="p-1.5 hover:bg-red-500/10 rounded-md transition-colors"
-                        title="Delete"
+                        title={t("backupHistory.delete")}
                       >
                         <Trash2 className="w-4 h-4 text-red-500" />
                       </button>
@@ -319,8 +320,8 @@ export default function BackupHistoryPage() {
                   className="p-8 text-center text-muted-foreground"
                 >
                   {filter !== "all"
-                    ? `No ${filter} backups found.`
-                    : "No backups yet. Start your first backup from the main page."}
+                    ? t("backupHistory.noFilteredBackups", { filter: t(`backupHistory.${filter}`) })
+                    : t("backupHistory.noBackupsYet")}
                 </td>
               </tr>
             )}
@@ -332,20 +333,20 @@ export default function BackupHistoryPage() {
       {filteredBackups && filteredBackups.length > 0 && (
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>
-            Showing {filteredBackups.length} of {history?.total || 0} backups
+            {t("backupHistory.showing", { count: filteredBackups.length, total: history?.total || 0 })}
           </span>
           <div className="flex items-center gap-2">
             <button
               disabled
               className="px-3 py-1.5 bg-muted rounded-md disabled:opacity-50"
             >
-              Previous
+              {t("backupHistory.previous")}
             </button>
             <button
               disabled
               className="px-3 py-1.5 bg-muted rounded-md disabled:opacity-50"
             >
-              Next
+              {t("backupHistory.next")}
             </button>
           </div>
         </div>

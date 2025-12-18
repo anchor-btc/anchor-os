@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
   HardDrive,
@@ -18,7 +19,6 @@ import {
   File,
   RefreshCw,
   FolderOpen,
-  ExternalLink,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -88,6 +88,7 @@ function formatDate(dateStr: string | null): string {
 }
 
 export default function BackupSettingsPage() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const { data: settings, isLoading: settingsLoading } = useQuery<BackupSettings>({
@@ -173,12 +174,12 @@ export default function BackupSettingsPage() {
   });
 
   const schedulePresets = [
-    { label: "Daily at 3 AM", value: "0 3 * * *" },
-    { label: "Daily at midnight", value: "0 0 * * *" },
-    { label: "Every 6 hours", value: "0 */6 * * *" },
-    { label: "Every 12 hours", value: "0 */12 * * *" },
-    { label: "Weekly (Sunday)", value: "0 3 * * 0" },
-    { label: "Monthly (1st)", value: "0 3 1 * *" },
+    { labelKey: "backupSettings.dailyAt3AM", value: "0 3 * * *" },
+    { labelKey: "backupSettings.dailyAtMidnight", value: "0 0 * * *" },
+    { labelKey: "backupSettings.every6Hours", value: "0 */6 * * *" },
+    { labelKey: "backupSettings.every12Hours", value: "0 */12 * * *" },
+    { labelKey: "backupSettings.weeklySunday", value: "0 3 * * 0" },
+    { labelKey: "backupSettings.monthlyFirst", value: "0 3 1 * *" },
   ];
 
   if (settingsLoading) {
@@ -200,9 +201,9 @@ export default function BackupSettingsPage() {
           <ArrowLeft className="w-5 h-5 text-muted-foreground" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Backup Settings</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t("backupSettings.title")}</h1>
           <p className="text-muted-foreground">
-            Configure backup targets and scheduling
+            {t("backupSettings.subtitle")}
           </p>
         </div>
       </div>
@@ -216,7 +217,7 @@ export default function BackupSettingsPage() {
             </div>
             <div>
               <h2 className="text-lg font-semibold text-foreground">
-                Local Storage
+                {t("backupSettings.localStorage")}
               </h2>
               <p className="text-sm text-muted-foreground font-mono">
                 {localFiles?.host_path || localFiles?.path || "/backups"}
@@ -225,21 +226,19 @@ export default function BackupSettingsPage() {
           </div>
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">
-              Total: {formatBytes(localFiles?.total_size || 0)}
+              {t("backupSettings.total")}: {formatBytes(localFiles?.total_size || 0)}
             </span>
             {localFiles?.host_path && (
               <button
                 onClick={() => {
-                  // Copy path to clipboard and show instruction
                   navigator.clipboard.writeText(localFiles.host_path!);
-                  // Open file:// URL (works on some browsers)
                   window.open(`file://${localFiles.host_path}`, '_blank');
                 }}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary/20 rounded-lg text-sm font-medium transition-colors"
-                title="Open in Finder"
+                title={t("backupSettings.openFolder")}
               >
                 <FolderOpen className="w-4 h-4" />
-                Open Folder
+                {t("backupSettings.openFolder")}
               </button>
             )}
             <button
@@ -255,9 +254,9 @@ export default function BackupSettingsPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-border bg-muted/50">
-                <th className="text-left p-3 text-sm font-medium text-muted-foreground">Name</th>
-                <th className="text-left p-3 text-sm font-medium text-muted-foreground">Size</th>
-                <th className="text-left p-3 text-sm font-medium text-muted-foreground">Modified</th>
+                <th className="text-left p-3 text-sm font-medium text-muted-foreground">{t("backupSettings.name")}</th>
+                <th className="text-left p-3 text-sm font-medium text-muted-foreground">{t("backupSettings.size")}</th>
+                <th className="text-left p-3 text-sm font-medium text-muted-foreground">{t("backupSettings.modified")}</th>
               </tr>
             </thead>
             <tbody>
@@ -291,7 +290,7 @@ export default function BackupSettingsPage() {
               ) : (
                 <tr>
                   <td colSpan={3} className="p-8 text-center text-muted-foreground">
-                    No backup files yet
+                    {t("backupSettings.noBackupFiles")}
                   </td>
                 </tr>
               )}
@@ -308,10 +307,10 @@ export default function BackupSettingsPage() {
           </div>
           <div>
             <h2 className="text-lg font-semibold text-foreground">
-              Automatic Backups
+              {t("backupSettings.automaticBackups")}
             </h2>
             <p className="text-sm text-muted-foreground">
-              Schedule regular backups
+              {t("backupSettings.scheduleBackups")}
             </p>
           </div>
         </div>
@@ -320,7 +319,7 @@ export default function BackupSettingsPage() {
           {/* Enable toggle */}
           <div className="flex items-center justify-between">
             <label className="text-sm font-medium text-foreground">
-              Enable scheduled backups
+              {t("backupSettings.enableScheduled")}
             </label>
             <button
               onClick={() =>
@@ -341,7 +340,7 @@ export default function BackupSettingsPage() {
           {/* Schedule preset */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              Schedule
+              {t("backupSettings.schedule")}
             </label>
             <select
               value={schedule.cron_expression}
@@ -352,7 +351,7 @@ export default function BackupSettingsPage() {
             >
               {schedulePresets.map((preset) => (
                 <option key={preset.value} value={preset.value}>
-                  {preset.label}
+                  {t(preset.labelKey)}
                 </option>
               ))}
             </select>
@@ -361,7 +360,7 @@ export default function BackupSettingsPage() {
           {/* Target */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              Backup target
+              {t("backupSettings.backupTarget")}
             </label>
             <select
               value={schedule.target}
@@ -370,9 +369,9 @@ export default function BackupSettingsPage() {
               }
               className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground"
             >
-              <option value="local">Local Storage</option>
-              <option value="s3">Amazon S3</option>
-              <option value="smb">NAS / SMB</option>
+              <option value="local">{t("backupSettings.localStorageOption")}</option>
+              <option value="s3">{t("backupSettings.amazonS3")}</option>
+              <option value="smb">{t("backupSettings.nasSMB")}</option>
             </select>
           </div>
 
@@ -391,7 +390,7 @@ export default function BackupSettingsPage() {
                 className="w-4 h-4 rounded border-border"
               />
               <Database className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm text-foreground">Databases</span>
+              <span className="text-sm text-foreground">{t("backupSettings.databases")}</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input
@@ -406,7 +405,7 @@ export default function BackupSettingsPage() {
                 className="w-4 h-4 rounded border-border"
               />
               <FolderArchive className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm text-foreground">Docker Volumes</span>
+              <span className="text-sm text-foreground">{t("backupSettings.dockerVolumes")}</span>
             </label>
           </div>
 
@@ -414,7 +413,7 @@ export default function BackupSettingsPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                Keep backups for (days)
+                {t("backupSettings.keepBackupsDays")}
               </label>
               <input
                 type="number"
@@ -430,7 +429,7 @@ export default function BackupSettingsPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                Keep last N backups
+                {t("backupSettings.keepLastN")}
               </label>
               <input
                 type="number"
@@ -456,19 +455,19 @@ export default function BackupSettingsPage() {
           </div>
           <div className="flex-1">
             <h2 className="text-lg font-semibold text-foreground">
-              Amazon S3 / S3-Compatible
+              {t("backupSettings.s3Title")}
             </h2>
             <p className="text-sm text-muted-foreground">
-              Configure S3 bucket for cloud backups
+              {t("backupSettings.s3Subtitle")}
             </p>
           </div>
-          {targets?.targets?.find((t) => t.storage_type === "s3")?.configured ? (
+          {targets?.targets?.find((tgt) => tgt.storage_type === "s3")?.configured ? (
             <span className="flex items-center gap-1 text-sm text-green-500">
-              <Check className="w-4 h-4" /> Configured
+              <Check className="w-4 h-4" /> {t("backupSettings.configured")}
             </span>
           ) : (
             <span className="flex items-center gap-1 text-sm text-muted-foreground">
-              <X className="w-4 h-4" /> Not configured
+              <X className="w-4 h-4" /> {t("backupSettings.notConfigured")}
             </span>
           )}
         </div>
@@ -476,7 +475,7 @@ export default function BackupSettingsPage() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              Endpoint URL
+              {t("backupSettings.endpointURL")}
             </label>
             <input
               type="text"
@@ -490,7 +489,7 @@ export default function BackupSettingsPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              Bucket Name
+              {t("backupSettings.bucketName")}
             </label>
             <input
               type="text"
@@ -504,7 +503,7 @@ export default function BackupSettingsPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              Access Key ID
+              {t("backupSettings.accessKeyID")}
             </label>
             <input
               type="text"
@@ -518,7 +517,7 @@ export default function BackupSettingsPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              Secret Access Key
+              {t("backupSettings.secretAccessKey")}
             </label>
             <input
               type="password"
@@ -541,19 +540,19 @@ export default function BackupSettingsPage() {
           </div>
           <div className="flex-1">
             <h2 className="text-lg font-semibold text-foreground">
-              NAS / SMB Share
+              {t("backupSettings.smbTitle")}
             </h2>
             <p className="text-sm text-muted-foreground">
-              Configure network storage (Synology, QNAP, etc.)
+              {t("backupSettings.smbSubtitle")}
             </p>
           </div>
-          {targets?.targets?.find((t) => t.storage_type === "smb")?.configured ? (
+          {targets?.targets?.find((tgt) => tgt.storage_type === "smb")?.configured ? (
             <span className="flex items-center gap-1 text-sm text-green-500">
-              <Check className="w-4 h-4" /> Configured
+              <Check className="w-4 h-4" /> {t("backupSettings.configured")}
             </span>
           ) : (
             <span className="flex items-center gap-1 text-sm text-muted-foreground">
-              <X className="w-4 h-4" /> Not configured
+              <X className="w-4 h-4" /> {t("backupSettings.notConfigured")}
             </span>
           )}
         </div>
@@ -561,7 +560,7 @@ export default function BackupSettingsPage() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              Host / IP
+              {t("backupSettings.hostIP")}
             </label>
             <input
               type="text"
@@ -575,7 +574,7 @@ export default function BackupSettingsPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              Share Name
+              {t("backupSettings.shareName")}
             </label>
             <input
               type="text"
@@ -589,7 +588,7 @@ export default function BackupSettingsPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              Username
+              {t("backupSettings.username")}
             </label>
             <input
               type="text"
@@ -603,7 +602,7 @@ export default function BackupSettingsPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              Password
+              {t("backupSettings.password")}
             </label>
             <input
               type="password"
@@ -623,7 +622,7 @@ export default function BackupSettingsPage() {
         {saveSettings.isSuccess && (
           <span className="flex items-center gap-2 text-sm text-green-500">
             <Check className="w-4 h-4" />
-            Settings saved!
+            {t("backupSettings.settingsSaved")}
           </span>
         )}
         <button
@@ -636,7 +635,7 @@ export default function BackupSettingsPage() {
           ) : (
             <Save className="w-4 h-4" />
           )}
-          Save Settings
+          {t("backupSettings.saveSettings")}
         </button>
       </div>
     </div>

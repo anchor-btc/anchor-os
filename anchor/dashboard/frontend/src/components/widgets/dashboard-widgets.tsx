@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
 import { useWidgetConfig } from "@/hooks/use-widget-config";
 import { WidgetConfig } from "@/types/widgets";
 import { WidgetGrid } from "./widget-grid";
@@ -18,6 +19,7 @@ import { Pencil, Check, RotateCcw, Plus, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function DashboardWidgets() {
+  const { t } = useTranslation();
   const {
     widgets,
     isEditMode,
@@ -81,11 +83,11 @@ export function DashboardWidgets() {
       {/* Header with Edit Controls */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t("dashboard.title")}</h1>
           <p className="text-muted-foreground">
             {isEditMode
-              ? "Drag widgets to reorder, click × to remove"
-              : "Overview of your Anchor Bitcoin stack"}
+              ? t("app.tagline")
+              : t("app.tagline")}
           </p>
         </div>
 
@@ -97,7 +99,7 @@ export function DashboardWidgets() {
                 className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
               >
                 <RotateCcw className="w-4 h-4" />
-                Reset
+                {t("dashboard.resetWidgets")}
               </button>
               <WidgetPicker
                 availableWidgets={availableWidgets}
@@ -117,12 +119,12 @@ export function DashboardWidgets() {
             {isEditMode ? (
               <>
                 <Check className="w-4 h-4" />
-                Done
+                {t("dashboard.doneEditing")}
               </>
             ) : (
               <>
                 <Pencil className="w-4 h-4" />
-                Edit
+                {t("dashboard.editWidgets")}
               </>
             )}
           </button>
@@ -142,7 +144,7 @@ export function DashboardWidgets() {
       {/* Empty state */}
       {widgets.length === 0 && (
         <div className="flex flex-col items-center justify-center h-64 bg-card border-2 border-dashed border-border rounded-xl">
-          <p className="text-muted-foreground mb-4">No widgets added yet</p>
+          <p className="text-muted-foreground mb-4">{t("dashboard.noWidgets")}</p>
           <WidgetPicker
             availableWidgets={availableWidgets}
             onAddWidget={addWidget}

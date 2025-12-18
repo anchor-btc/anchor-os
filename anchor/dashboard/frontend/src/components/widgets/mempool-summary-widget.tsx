@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Layers, Loader2, AlertCircle } from "lucide-react";
 import Link from "next/link";
 
@@ -39,6 +40,7 @@ function formatVsize(vsize: number): string {
 }
 
 export function MempoolSummaryWidget() {
+  const { t } = useTranslation();
   const { data: mempool, isLoading: mempoolLoading } = useQuery({
     queryKey: ["mempool-info"],
     queryFn: fetchMempoolInfo,
@@ -72,8 +74,8 @@ export function MempoolSummaryWidget() {
               <AlertCircle className="w-4 h-4 text-destructive" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Mempool</p>
-              <p className="text-sm text-muted-foreground">Unavailable</p>
+              <p className="text-xs text-muted-foreground">{t("widgets.mempool")}</p>
+              <p className="text-sm text-muted-foreground">{t("widgets.unavailable")}</p>
             </div>
           </div>
         </div>
@@ -89,7 +91,7 @@ export function MempoolSummaryWidget() {
             <Layers className="w-4 h-4 text-orange-500" />
           </div>
           <div className="flex-1">
-            <p className="text-xs text-muted-foreground">Mempool</p>
+            <p className="text-xs text-muted-foreground">{t("widgets.mempool")}</p>
             <p className="text-sm font-medium text-foreground">
               {mempool.count.toLocaleString()} txs • {formatVsize(mempool.vsize)}
             </p>
@@ -99,7 +101,7 @@ export function MempoolSummaryWidget() {
         <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-border text-center">
           <div className="bg-success/10 rounded-lg py-1.5 px-2">
             <p className="text-sm font-bold text-success">{fees.fastestFee}</p>
-            <p className="text-[9px] text-muted-foreground">Fast</p>
+            <p className="text-[9px] text-muted-foreground">{t("widgets.fast")}</p>
           </div>
           <div className="bg-warning/10 rounded-lg py-1.5 px-2">
             <p className="text-sm font-bold text-warning">{fees.halfHourFee}</p>

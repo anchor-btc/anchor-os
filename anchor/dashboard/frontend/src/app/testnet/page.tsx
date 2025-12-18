@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Loader2,
@@ -27,6 +28,7 @@ import {
 } from "@/lib/api";
 
 export default function TestnetPage() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [localConfig, setLocalConfig] = useState<TestnetConfig | null>(null);
   const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle");
@@ -119,9 +121,9 @@ export default function TestnetPage() {
   if (configError) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <p className="text-error">Failed to connect to Testnet service</p>
+        <p className="text-error">{t("testnet.failedConnect")}</p>
         <p className="text-sm text-muted-foreground">
-          Make sure the testnet service is running on port 3014
+          {t("testnet.ensureRunning")}
         </p>
       </div>
     );
@@ -134,9 +136,9 @@ export default function TestnetPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Testnet Control</h1>
+          <h1 className="text-3xl font-bold text-foreground">{t("testnet.title")}</h1>
           <p className="text-muted-foreground mt-1">
-            Configure the ANCHOR testnet generator
+            {t("testnet.subtitle")}
           </p>
         </div>
         <div className="flex items-center gap-4">
@@ -154,7 +156,7 @@ export default function TestnetPage() {
                 isRunning ? "bg-success animate-pulse" : "bg-warning"
               )}
             />
-            {isRunning ? "Running" : "Paused"}
+            {isRunning ? t("testnet.running") : t("testnet.paused")}
           </div>
           <button
             onClick={handleTogglePause}
@@ -173,7 +175,7 @@ export default function TestnetPage() {
             ) : (
               <Play className="w-4 h-4" />
             )}
-            {isRunning ? "Pause" : "Resume"}
+            {isRunning ? t("testnet.pause") : t("testnet.resume")}
           </button>
         </div>
       </div>
@@ -181,29 +183,29 @@ export default function TestnetPage() {
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
         <StatCard
-          label="Total Messages"
+          label={t("testnet.totalMessages")}
           value={stats?.total_messages || 0}
           icon={Activity}
           color="primary"
         />
         <StatCard
-          label="Total Blocks"
+          label={t("testnet.totalBlocks")}
           value={stats?.total_blocks || 0}
           icon={Box}
           color="orange"
         />
-        <StatCard label="Text" value={stats?.text_count || 0} icon={Zap} color="blue" />
+        <StatCard label={t("testnet.textMessages")} value={stats?.text_count || 0} icon={Zap} color="blue" />
         <StatCard
-          label="Pixel"
+          label={t("testnet.pixel")}
           value={stats?.pixel_count || 0}
           icon={Zap}
           color="purple"
         />
-        <StatCard label="Image" value={stats?.image_count || 0} icon={Zap} color="pink" />
-        <StatCard label="Map" value={stats?.map_count || 0} icon={Zap} color="green" />
-        <StatCard label="DNS" value={stats?.dns_count || 0} icon={Zap} color="cyan" />
+        <StatCard label={t("testnet.images")} value={stats?.image_count || 0} icon={Zap} color="pink" />
+        <StatCard label={t("testnet.mapMarkers")} value={stats?.map_count || 0} icon={Zap} color="green" />
+        <StatCard label={t("testnet.dnsRecords")} value={stats?.dns_count || 0} icon={Zap} color="cyan" />
         <StatCard
-          label="Proof"
+          label={t("testnet.proofs")}
           value={stats?.proof_count || 0}
           icon={Zap}
           color="emerald"
@@ -215,13 +217,13 @@ export default function TestnetPage() {
         <div className="bg-card border border-border rounded-xl p-6">
           <div className="flex items-center gap-2 mb-6">
             <Clock className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-semibold text-foreground">Timing</h2>
+            <h2 className="text-lg font-semibold text-foreground">{t("testnet.timing")}</h2>
           </div>
 
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                Min Interval: {localConfig?.min_interval_secs || 0}s
+                {t("testnet.minInterval")}: {localConfig?.min_interval_secs || 0}s
               </label>
               <input
                 type="range"
@@ -241,7 +243,7 @@ export default function TestnetPage() {
 
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                Max Interval: {localConfig?.max_interval_secs || 0}s
+                {t("testnet.maxInterval")}: {localConfig?.max_interval_secs || 0}s
               </label>
               <input
                 type="range"
@@ -261,7 +263,7 @@ export default function TestnetPage() {
 
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                Blocks per Cycle: {localConfig?.blocks_per_cycle || 0}
+                {t("testnet.blocksPerCycle")}: {localConfig?.blocks_per_cycle || 0}
               </label>
               <input
                 type="range"
@@ -285,43 +287,43 @@ export default function TestnetPage() {
         <div className="bg-card border border-border rounded-xl p-6">
           <div className="flex items-center gap-2 mb-6">
             <Settings className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-semibold text-foreground">Message Types</h2>
+            <h2 className="text-lg font-semibold text-foreground">{t("testnet.messageTypes")}</h2>
           </div>
 
           <div className="space-y-4">
             <ToggleSwitch
-              label="Text Messages"
-              description="Basic text messages (Kind 1)"
+              label={t("testnet.textMessages")}
+              description={t("testnet.textMessagesDesc")}
               checked={localConfig?.enable_text || false}
               onChange={(v) => handleConfigChange("enable_text", v)}
             />
             <ToggleSwitch
-              label="Pixel"
-              description="Canvas pixels for Anchor Pixel (Kind 2)"
+              label={t("testnet.pixel")}
+              description={t("testnet.pixelDesc")}
               checked={localConfig?.enable_pixel || false}
               onChange={(v) => handleConfigChange("enable_pixel", v)}
             />
             <ToggleSwitch
-              label="Images"
-              description="PNG image messages (Kind 4)"
+              label={t("testnet.images")}
+              description={t("testnet.imagesDesc")}
               checked={localConfig?.enable_image || false}
               onChange={(v) => handleConfigChange("enable_image", v)}
             />
             <ToggleSwitch
-              label="Map Markers"
-              description="Geo markers for Anchor Map (Kind 5)"
+              label={t("testnet.mapMarkers")}
+              description={t("testnet.mapMarkersDesc")}
               checked={localConfig?.enable_map || false}
               onChange={(v) => handleConfigChange("enable_map", v)}
             />
             <ToggleSwitch
-              label="DNS Records"
-              description="Domain records for Anchor DNS (Kind 10)"
+              label={t("testnet.dnsRecords")}
+              description={t("testnet.dnsRecordsDesc")}
               checked={localConfig?.enable_dns || false}
               onChange={(v) => handleConfigChange("enable_dns", v)}
             />
             <ToggleSwitch
-              label="Proofs"
-              description="Proof of existence for Anchor Proof (Kind 11)"
+              label={t("testnet.proofs")}
+              description={t("testnet.proofsDesc")}
               checked={localConfig?.enable_proof || false}
               onChange={(v) => handleConfigChange("enable_proof", v)}
             />
@@ -333,9 +335,9 @@ export default function TestnetPage() {
       <div className="bg-card border border-border rounded-xl p-6">
         <div className="flex items-center gap-2 mb-6">
           <BarChart3 className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-semibold text-foreground">Carrier Distribution</h2>
+          <h2 className="text-lg font-semibold text-foreground">{t("testnet.carrierDistribution")}</h2>
           <span className="text-xs text-muted-foreground">
-            (weights are normalized automatically)
+            ({t("testnet.weightsNormalized")})
           </span>
         </div>
 
@@ -378,13 +380,13 @@ export default function TestnetPage() {
         {saveStatus === "success" && (
           <div className="flex items-center gap-2 text-success animate-in fade-in">
             <Check className="w-5 h-5" />
-            <span className="text-sm font-medium">Configuration saved!</span>
+            <span className="text-sm font-medium">{t("testnet.configSaved")}</span>
           </div>
         )}
         {saveStatus === "error" && (
           <div className="flex items-center gap-2 text-error animate-in fade-in">
             <X className="w-5 h-5" />
-            <span className="text-sm font-medium">Failed to save</span>
+            <span className="text-sm font-medium">{t("backup.failed")}</span>
           </div>
         )}
         <button
@@ -409,12 +411,12 @@ export default function TestnetPage() {
             <RefreshCw className="w-4 h-4" />
           )}
           {updateMutation.isPending
-            ? "Saving..."
+            ? t("testnet.saving")
             : saveStatus === "success"
-            ? "Saved!"
+            ? t("testnet.saved")
             : saveStatus === "error"
-            ? "Try Again"
-            : "Apply Configuration"}
+            ? t("testnet.tryAgain")
+            : t("testnet.applyConfig")}
         </button>
       </div>
     </div>
