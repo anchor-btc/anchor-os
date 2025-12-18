@@ -332,6 +332,19 @@ export const apps: App[] = [
     containers: ["anchor-core-postgres"],
     category: "core",
   },
+  {
+    id: "monitoring-netdata",
+    name: "Netdata",
+    description: "Real-time system and container monitoring dashboard",
+    icon: "Activity",
+    color: "green",
+    url: "http://localhost:19999",
+    internalUrl: "/monitoring",
+    port: 19999,
+    containers: ["anchor-monitoring-netdata"],
+    category: "core",
+    featured: true,
+  },
 ];
 
 export function getAppStatus(

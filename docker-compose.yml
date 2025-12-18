@@ -359,6 +359,38 @@ services:
       start_period: 120s
 
   # =============================================
+  # MONITORING (monitoring-)
+  # =============================================
+
+  # Netdata - Real-time system and container monitoring
+  monitoring-netdata:
+    image: netdata/netdata:latest
+    container_name: anchor-monitoring-netdata
+    hostname: anchor-netdata
+    ports:
+      - "19999:19999"
+    cap_add:
+      - SYS_PTRACE
+      - SYS_ADMIN
+    security_opt:
+      - apparmor:unconfined
+    volumes:
+      - netdata-config:/etc/netdata
+      - netdata-lib:/var/lib/netdata
+      - netdata-cache:/var/cache/netdata
+      - /etc/passwd:/host/etc/passwd:ro
+      - /etc/group:/host/etc/group:ro
+      - /etc/localtime:/etc/localtime:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    networks:
+      - anchor-network
+    restart: unless-stopped
+
+  # =============================================
   # ANCHOR DASHBOARD (anchor-)
   # =============================================
 
@@ -854,6 +886,9 @@ volumes:
   lottery-postgres-data:
   electrs-data:
   backup-data:
+  netdata-config:
+  netdata-lib:
+  netdata-cache:
 
 networks:
   anchor-network:

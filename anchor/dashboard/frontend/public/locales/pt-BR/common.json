@@ -744,5 +744,30 @@
     "openApp": "Abrir App",
     "startApp": "Iniciar App",
     "controlPanel": "Painel de Controle"
+  },
+  "monitoring": {
+    "title": "Netdata",
+    "subtitle": "Monitoramento em tempo real do sistema e containers",
+    "notRunning": "Netdata não está em execução",
+    "live": "Ao Vivo",
+    "openFullscreen": "Abrir em Tela Cheia",
+    "status": "Status",
+    "running": "Em Execução",
+    "metrics": "Métricas",
+    "cpu": "CPU e Memória",
+    "storage": "Armazenamento",
+    "disk": "I/O de Disco",
+    "network": "Rede",
+    "bandwidth": "Largura de Banda",
+    "features": "Recursos de Monitoramento",
+    "featuresDesc": "Capacidades fornecidas pelo Netdata",
+    "realtime": "Métricas em Tempo Real",
+    "realtimeDesc": "Monitore CPU, memória, disco e rede com granularidade por segundo",
+    "containers": "Monitoramento de Containers",
+    "containersDesc": "Descoberta automática e monitoramento de todos os containers Docker",
+    "history": "Dados Históricos",
+    "historyDesc": "Visualize gráficos históricos e analise tendências de desempenho",
+    "notRunningMsg": "Netdata Não Está em Execução",
+    "startWith": "Inicie o Netdata com"
   }
 }

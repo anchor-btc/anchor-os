@@ -744,5 +744,30 @@
     "openApp": "打开应用",
     "startApp": "启动应用",
     "controlPanel": "控制面板"
+  },
+  "monitoring": {
+    "title": "Netdata",
+    "subtitle": "系统和容器实时监控",
+    "notRunning": "Netdata 未运行",
+    "live": "实时",
+    "openFullscreen": "全屏打开",
+    "status": "状态",
+    "running": "运行中",
+    "metrics": "指标",
+    "cpu": "CPU 和内存",
+    "storage": "存储",
+    "disk": "磁盘 I/O",
+    "network": "网络",
+    "bandwidth": "带宽",
+    "features": "监控功能",
+    "featuresDesc": "Netdata 提供的功能",
+    "realtime": "实时指标",
+    "realtimeDesc": "以秒为单位监控 CPU、内存、磁盘和网络",
+    "containers": "容器监控",
+    "containersDesc": "自动发现和监控所有 Docker 容器",
+    "history": "历史数据",
+    "historyDesc": "查看历史图表并分析性能趋势",
+    "notRunningMsg": "Netdata 未运行",
+    "startWith": "启动 Netdata"
   }
 }

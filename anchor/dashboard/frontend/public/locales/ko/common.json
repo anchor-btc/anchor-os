@@ -744,5 +744,30 @@
     "openApp": "앱 열기",
     "startApp": "앱 시작",
     "controlPanel": "제어판"
+  },
+  "monitoring": {
+    "title": "Netdata",
+    "subtitle": "시스템 및 컨테이너 실시간 모니터링",
+    "notRunning": "Netdata가 실행되지 않습니다",
+    "live": "라이브",
+    "openFullscreen": "전체 화면으로 열기",
+    "status": "상태",
+    "running": "실행 중",
+    "metrics": "메트릭",
+    "cpu": "CPU 및 메모리",
+    "storage": "저장소",
+    "disk": "디스크 I/O",
+    "network": "네트워크",
+    "bandwidth": "대역폭",
+    "features": "모니터링 기능",
+    "featuresDesc": "Netdata가 제공하는 기능",
+    "realtime": "실시간 메트릭",
+    "realtimeDesc": "초 단위로 CPU, 메모리, 디스크, 네트워크 모니터링",
+    "containers": "컨테이너 모니터링",
+    "containersDesc": "모든 Docker 컨테이너 자동 검색 및 모니터링",
+    "history": "기록 데이터",
+    "historyDesc": "기록 차트를 보고 성능 추세 분석",
+    "notRunningMsg": "Netdata가 실행되지 않습니다",
+    "startWith": "Netdata 시작하기"
   }
 }

@@ -744,5 +744,30 @@
     "openApp": "アプリを開く",
     "startApp": "アプリを起動",
     "controlPanel": "コントロールパネル"
+  },
+  "monitoring": {
+    "title": "Netdata",
+    "subtitle": "システムとコンテナのリアルタイム監視",
+    "notRunning": "Netdataは実行されていません",
+    "live": "ライブ",
+    "openFullscreen": "フルスクリーンで開く",
+    "status": "ステータス",
+    "running": "実行中",
+    "metrics": "メトリクス",
+    "cpu": "CPU & メモリ",
+    "storage": "ストレージ",
+    "disk": "ディスクI/O",
+    "network": "ネットワーク",
+    "bandwidth": "帯域幅",
+    "features": "監視機能",
+    "featuresDesc": "Netdataが提供する機能",
+    "realtime": "リアルタイムメトリクス",
+    "realtimeDesc": "CPU、メモリ、ディスク、ネットワークを秒単位で監視",
+    "containers": "コンテナ監視",
+    "containersDesc": "すべてのDockerコンテナの自動検出と監視",
+    "history": "履歴データ",
+    "historyDesc": "履歴グラフを表示してパフォーマンストレンドを分析",
+    "notRunningMsg": "Netdataは実行されていません",
+    "startWith": "Netdataを起動するには"
   }
 }
