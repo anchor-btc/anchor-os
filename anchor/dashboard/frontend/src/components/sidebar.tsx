@@ -29,6 +29,7 @@ import {
   Play,
   Pause,
   Loader2,
+  HardDrive,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apps, getAppStatus } from "@/lib/apps";
@@ -42,6 +43,7 @@ const navigation = [
   { name: "Testnet Control", href: "/testnet", icon: Zap },
   { name: "Bitcoin Node", href: "/node", icon: Bitcoin },
   { name: "Wallet", href: "/wallet", icon: Wallet },
+  { name: "Backup", href: "/backup", icon: HardDrive },
 ];
 
 const iconMap: Record<string, React.ElementType> = {

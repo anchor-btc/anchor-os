@@ -244,6 +244,17 @@ export const apps: App[] = [
   // CORE (alphabetical)
   // =============================================
   {
+    id: "core-backup",
+    name: "Backup",
+    description: "Backup and restore Docker volumes, databases, and configs",
+    icon: "HardDrive",
+    color: "slate",
+    internalUrl: "/backup",
+    port: 8003,
+    containers: ["anchor-core-backup"],
+    category: "core",
+  },
+  {
     id: "core-electrs",
     name: "Electrs",
     description: "Electrum Server - efficient address and UTXO indexing",

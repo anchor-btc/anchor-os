@@ -123,6 +123,37 @@ services:
       retries: 5
     restart: unless-stopped
 
+  # Backup Service - Backup and restore Docker volumes, databases
+  core-backup:
+    build:
+      context: .
+      dockerfile: anchor/backup/backend/Dockerfile
+    container_name: anchor-core-backup
+    ports:
+      - "8003:8003"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./data/backups:/backups
+    environment:
+      HOST: 0.0.0.0
+      PORT: 8003
+      DATABASE_URL: postgres://anchor:anchor@core-postgres:5432/anchor
+      BACKUP_DIR: /backups
+      HOST_BACKUP_PATH: ${PWD}/data/backups
+      RESTIC_PASSWORD: anchor-backup-secret
+      RUST_LOG: anchor_backup=info
+    depends_on:
+      core-postgres:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
   # Electrs - Electrum Server for address indexing
   core-electrs:
     build:
@@ -347,6 +378,7 @@ services:
       args:
         NEXT_PUBLIC_API_URL: http://localhost:8010
         NEXT_PUBLIC_TESTNET_URL: http://localhost:8002
+        NEXT_PUBLIC_BACKUP_URL: http://localhost:8003
     container_name: anchor-dashboard-frontend
     ports:
       - "8000:8000"
@@ -795,6 +827,7 @@ volumes:
   oracles-postgres-data:
   lottery-postgres-data:
   electrs-data:
+  backup-data:
 
 networks:
   anchor-network:

@@ -26,11 +26,13 @@ RUN mkdir -p apps/anchor-proof/backend/src && echo "fn main() {}" > apps/anchor-
 RUN mkdir -p apps/anchor-tokens/backend/src && echo "fn main() {}" > apps/anchor-tokens/backend/src/main.rs
 RUN mkdir -p apps/anchor-oracles/backend/src && echo "fn main() {}" > apps/anchor-oracles/backend/src/main.rs
 RUN mkdir -p apps/anchor-lottery/backend/src && echo "fn main() {}" > apps/anchor-lottery/backend/src/main.rs
+RUN mkdir -p anchor/backup/backend/src && echo "fn main() {}" > anchor/backup/backend/src/main.rs
 COPY crates/anchor-indexer/Cargo.toml ./crates/anchor-indexer/
 COPY crates/anchor-wallet/Cargo.toml ./crates/anchor-wallet/
 COPY crates/anchor-wallet-lib/Cargo.toml ./crates/anchor-wallet-lib/
 COPY apps/anchor-threads/backend/Cargo.toml ./apps/anchor-threads/backend/
 COPY anchor/dashboard/backend/Cargo.toml ./anchor/dashboard/backend/
+COPY anchor/backup/backend/Cargo.toml ./anchor/backup/backend/
 COPY apps/anchor-pixel/backend/Cargo.toml ./apps/anchor-pixel/backend/
 COPY apps/anchor-map/backend/Cargo.toml ./apps/anchor-map/backend/
 COPY apps/anchor-dns/backend/Cargo.toml ./apps/anchor-dns/backend/

@@ -8,6 +8,7 @@ members = [
     "crates/anchor-wallet-lib",
     "apps/anchor-threads/backend",
     "anchor/dashboard/backend",
+    "anchor/backup/backend",
     "apps/anchor-pixel/backend",
     "apps/anchor-map/backend",
     "apps/anchor-dns/backend",
