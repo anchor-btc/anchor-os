@@ -37,18 +37,39 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apps, getAppStatus } from "@/lib/apps";
-import { fetchContainers, startContainer, stopContainer } from "@/lib/api";
+import { fetchContainers, startContainer, stopContainer, fetchUserProfile, fetchInstallationStatus } from "@/lib/api";
+import { getServiceIdFromAppId } from "@/lib/service-rules";
 import { LogsModal } from "./logs-modal";
 import { TerminalModal } from "./terminal-modal";
 
-const navigation = [
-  { nameKey: "nav.dashboard", href: "/", icon: LayoutDashboard },
-  { nameKey: "nav.services", href: "/apps", icon: AppWindow },
-  { nameKey: "nav.testnetControl", href: "/testnet", icon: Zap },
-  { nameKey: "nav.bitcoinNode", href: "/node", icon: Bitcoin },
-  { nameKey: "nav.wallet", href: "/wallet", icon: Wallet },
-  { nameKey: "nav.backup", href: "/backup", icon: HardDrive },
-  { nameKey: "nav.settings", href: "/settings", icon: Settings },
+const navigationSections = [
+  {
+    labelKey: "sidebar.menu",
+    items: [
+      { nameKey: "nav.dashboard", href: "/", icon: LayoutDashboard },
+      { nameKey: "nav.services", href: "/apps", icon: AppWindow },
+    ],
+  },
+  {
+    labelKey: "sidebar.bitcoin",
+    items: [
+      { nameKey: "nav.bitcoinNode", href: "/node", icon: Bitcoin },
+      { nameKey: "nav.wallet", href: "/wallet", icon: Wallet },
+    ],
+  },
+  {
+    labelKey: "sidebar.dev",
+    items: [
+      { nameKey: "nav.testnetControl", href: "/testnet", icon: Zap },
+    ],
+  },
+  {
+    labelKey: "sidebar.system",
+    items: [
+      { nameKey: "nav.backup", href: "/backup", icon: HardDrive },
+      { nameKey: "nav.settings", href: "/settings", icon: Settings },
+    ],
+  },
 ];
 
 const iconMap: Record<string, React.ElementType> = {
@@ -85,7 +106,28 @@ export function Sidebar() {
     refetchInterval: 5000,
   });
 
+  const { data: userProfile } = useQuery({
+    queryKey: ["userProfile"],
+    queryFn: fetchUserProfile,
+    staleTime: 60000, // Cache for 1 minute
+  });
+
+  const { data: installationStatus } = useQuery({
+    queryKey: ["installation-status"],
+    queryFn: fetchInstallationStatus,
+    refetchInterval: 5000, // Sync with apps page
+  });
+
   const containers = containersData?.containers || [];
+  const installedServices = installationStatus?.installed_services || [];
+
+  // Check if a service is installed
+  const isServiceInstalled = (appId: string): boolean => {
+    // If no installation data, show all (backwards compatibility)
+    if (!installationStatus || installedServices.length === 0) return true;
+    const serviceId = getServiceIdFromAppId(appId);
+    return installedServices.includes(serviceId);
+  };
 
   const startMutation = useMutation({
     mutationFn: startContainer,
@@ -141,10 +183,11 @@ export function Sidebar() {
     }
   };
 
-  const appsList = apps.filter((app) => app.category === "app");
-  const explorersList = apps.filter((app) => app.category === "explorer");
-  const networkingList = apps.filter((app) => app.category === "networking");
-  const coreList = apps.filter((app) => app.category === "core");
+  // Filter apps by category AND installation status
+  const appsList = apps.filter((app) => app.category === "app" && isServiceInstalled(app.id));
+  const explorersList = apps.filter((app) => app.category === "explorer" && isServiceInstalled(app.id));
+  const networkingList = apps.filter((app) => app.category === "networking" && isServiceInstalled(app.id));
+  const coreList = apps.filter((app) => app.category === "core" && isServiceInstalled(app.id));
 
   const getAppStatusInfo = (appContainers: string[]) => {
     const status = getAppStatus(
@@ -335,33 +378,52 @@ export function Sidebar() {
           </Link>
         </div>
 
+        {/* User Profile */}
+        {userProfile && userProfile.name && (
+          <div className="px-4 py-3 border-b border-border shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/20 to-orange-500/20 flex items-center justify-center text-lg border border-primary/10">
+                {userProfile.avatar_url || "🧑‍💻"}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-muted-foreground">{t("sidebar.welcome", "Welcome back")}</p>
+                <p className="text-sm font-medium text-foreground truncate">{userProfile.name}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto p-3 space-y-1">
-          {/* Menu */}
-          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-3 mb-2">
-            {t("sidebar.menu")}
-          </p>
-          {navigation.map((item) => {
-            // Dashboard is active when pathname is "/" AND no app is selected in iframe
-            const isActive = item.href === "/" 
-              ? pathname === "/" && !currentAppId
-              : pathname === item.href;
-            return (
-              <Link
-                key={item.nameKey}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                  isActive
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                )}
-              >
-                <item.icon className="w-4 h-4" />
-                {t(item.nameKey)}
-              </Link>
-            );
-          })}
+          {/* Navigation Sections */}
+          {navigationSections.map((section, sectionIndex) => (
+            <div key={section.labelKey} className={sectionIndex > 0 ? "pt-4" : ""}>
+              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-3 mb-2">
+                {t(section.labelKey)}
+              </p>
+              {section.items.map((item) => {
+                // Dashboard is active when pathname is "/" AND no app is selected in iframe
+                const isActive = item.href === "/" 
+                  ? pathname === "/" && !currentAppId
+                  : pathname === item.href;
+                return (
+                  <Link
+                    key={item.nameKey}
+                    href={item.href}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                      isActive
+                        ? "bg-primary/10 text-primary"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    )}
+                  >
+                    <item.icon className="w-4 h-4" />
+                    {t(item.nameKey)}
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
 
           {/* Apps */}
           <div className="pt-4">

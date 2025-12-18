@@ -15,6 +15,9 @@
   },
   "sidebar": {
     "menu": "Menu",
+    "bitcoin": "Bitcoin",
+    "dev": "Dev",
+    "system": "System",
     "apps": "Apps",
     "explorers": "Explorers",
     "networking": "Networking",
@@ -23,7 +26,8 @@
     "openTerminal": "Open Terminal",
     "openNewTab": "Open in new tab",
     "startService": "Start Service",
-    "stopService": "Stop Service"
+    "stopService": "Stop Service",
+    "welcome": "Welcome back"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -510,7 +514,26 @@
     "quickSettings": "Quick Settings",
     "overview": "Overview of all settings sections",
     "about": "About Anchor OS",
+    "profile": {
+      "title": "Profile",
+      "description": "Personalize how you appear in the dashboard",
+      "avatar": "Avatar",
+      "clickToChange": "Click to change your avatar",
+      "chooseAvatar": "Choose your avatar",
+      "name": "Display Name",
+      "namePlaceholder": "Enter your name or nickname",
+      "nameHint": "This name will be displayed in the sidebar",
+      "nameRequired": "Name is required",
+      "preview": "Preview",
+      "defaultName": "Bitcoiner",
+      "saved": "Profile saved successfully!",
+      "funFact": "Fun fact: Satoshi Nakamoto, Bitcoin's creator, remains anonymous to this day. Your node, your identity!"
+    },
     "sections": {
+      "profile": {
+        "title": "Profile",
+        "description": "Your name and avatar"
+      },
       "appearance": {
         "title": "Appearance",
         "description": "Customize themes and visual style"
@@ -667,7 +690,23 @@
       "notifications": "Notification preferences",
       "network": "Network settings"
     },
-    "passwordNote": "Passwords are never exported for security reasons."
+    "passwordNote": "Passwords are never exported for security reasons.",
+    "factoryReset": {
+      "title": "Factory Reset",
+      "devMode": "Dev Mode",
+      "description": "Reset everything and start the setup wizard from scratch",
+      "showOptions": "Show Factory Reset Options",
+      "warning": "Warning: This action cannot be undone!",
+      "warningDesc": "All settings and installation configuration will be reset. Non-essential containers will be stopped and removed. Backup data will be preserved.",
+      "resetAuth": "Reset password and authentication",
+      "resetServices": "Stop and remove non-essential containers",
+      "preserved": "✓ Backup data and Electrum settings will be preserved",
+      "confirmCheck": "I understand this will reset everything and start the setup wizard",
+      "confirmRequired": "Please check the confirmation box to proceed",
+      "button": "Factory Reset",
+      "resetting": "Resetting...",
+      "success": "Factory reset complete! Redirecting to setup..."
+    }
   },
   "lockScreen": {
     "title": "Anchor OS",
@@ -757,7 +796,128 @@
   "appCard": {
     "openApp": "Open App",
     "startApp": "Start App",
-    "controlPanel": "Control Panel"
+    "controlPanel": "Control Panel",
+    "notInstalled": "Not Installed",
+    "installing": "Installing...",
+    "install": "Install",
+    "uninstall": "Uninstall",
+    "uninstallConfirm": "Are you sure you want to uninstall {{name}}? This will remove it from your dashboard.",
+    "stopBeforeUninstall": "Stop the service before uninstalling",
+    "requiredService": "Required service"
+  },
+  "setup": {
+    "welcome": {
+      "title": "Welcome to Anchor OS",
+      "description": "Your personal Bitcoin operating system. Let's set up your node in just a few steps.",
+      "feature1Title": "Fast Setup",
+      "feature1Description": "Get your Bitcoin node running in minutes",
+      "feature2Title": "Secure",
+      "feature2Description": "Self-custody with optional Tor privacy",
+      "feature3Title": "Powerful",
+      "feature3Description": "Block explorers, apps, and more",
+      "getStarted": "Get Started"
+    },
+    "preset": {
+      "title": "Choose Your Setup",
+      "description": "Select a configuration that matches your needs",
+      "servicesCount": "{{count}} services",
+      "minimum": "Minimum",
+      "default": "Default",
+      "full": "Full",
+      "custom": "Custom"
+    },
+    "custom": {
+      "title": "Custom Installation",
+      "description": "Choose which services to install",
+      "required": "Required",
+      "incompatibleWith": "Incompatible with: {{services}}",
+      "selectedCount": "{{count}} services selected",
+      "incompatibleError": "Cannot select {{service}} - it is incompatible with {{incompatible}}",
+      "requiredError": "This service is required and cannot be removed",
+      "dependencyError": "Cannot remove {{service}} - {{dependent}} depends on it"
+    },
+    "review": {
+      "title": "Review Installation",
+      "description": "Review the services that will be installed",
+      "preset": "Preset",
+      "required": "Required",
+      "services": "Services",
+      "containers": "Containers",
+      "install": "Install"
+    },
+    "installing": {
+      "title": "Installing...",
+      "description": "Please wait while we set up your Anchor OS",
+      "complete": "complete",
+      "configuringService": "Configuring {{service}}...",
+      "preparingServices": "Preparing services...",
+      "andMore": "and {{count}} more...",
+      "info": "This process saves your configuration. You can start the services later using Docker Compose."
+    },
+    "complete": {
+      "title": "Setup Complete!",
+      "description": "Your Anchor OS configuration has been saved. You're ready to start your Bitcoin node.",
+      "servicesConfigured": "{{count}} services configured",
+      "nextSteps": "Next Steps",
+      "step1Title": "Start the services",
+      "step2Title": "Access the dashboard",
+      "step2Description": "Open http://localhost:8000 in your browser",
+      "step3Title": "Wait for sync",
+      "step3Description": "Your Bitcoin node will start syncing the blockchain",
+      "goToDashboard": "Go to Dashboard"
+    },
+    "language": {
+      "title": "Select Language",
+      "description": "Choose your preferred interface language"
+    },
+    "appearance": {
+      "title": "Choose Theme",
+      "description": "Select a visual theme for your dashboard"
+    },
+    "security": {
+      "title": "Secure Your Dashboard",
+      "description": "Set up a password to protect your Anchor OS dashboard",
+      "passwordPlaceholder": "Enter a secure password",
+      "confirmPlaceholder": "Confirm your password",
+      "info": "Password protection is optional but recommended to prevent unauthorized access to your Bitcoin node.",
+      "skip": "Skip for now",
+      "setPassword": "Set Password"
+    },
+    "profile": {
+      "title": "Let's get to know you",
+      "description": "Tell us a bit about yourself to personalize your experience",
+      "defaultName": "Bitcoiner",
+      "welcomePreview": "Welcome message preview",
+      "greeting": "Hello",
+      "chooseAvatar": "Choose your avatar",
+      "nameLabel": "What should we call you?",
+      "namePlaceholder": "Enter your name or nickname",
+      "nameHint": "This will be displayed in the dashboard sidebar",
+      "funFact": "Fun fact: Satoshi Nakamoto, Bitcoin's creator, remains anonymous to this day. Your node, your rules!",
+      "continue": "Continue as {{name}}"
+    },
+    "network": {
+      "title": "Select Network",
+      "description": "Choose which Bitcoin network to connect to",
+      "comingSoon": "Coming Soon",
+      "comingSoonHint": "This network will be available in a future update",
+      "regtest": {
+        "name": "Regtest",
+        "description": "Local development network. Perfect for testing and building applications without real Bitcoin."
+      },
+      "testnet": {
+        "name": "Testnet",
+        "description": "Bitcoin test network. Use test coins to experiment with real network conditions."
+      },
+      "mainnet": {
+        "name": "Mainnet",
+        "description": "Bitcoin main network. The real deal - use with actual Bitcoin."
+      },
+      "regtestInfo": {
+        "title": "Why Regtest?",
+        "description": "Regtest is a local blockchain that lets you generate blocks instantly. Perfect for development and testing Anchor apps without waiting for confirmations or spending real Bitcoin."
+      }
+    }
   },
   "monitoring": {
     "title": "Netdata",

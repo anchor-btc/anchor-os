@@ -544,6 +544,207 @@ export async function fetchElectrumInfo(): Promise<ElectrumStatus> {
   return res.json();
 }
 
+// Installation Types
+
+export type InstallationPreset = "minimum" | "default" | "full" | "custom";
+
+export type ServiceInstallStatus =
+  | "not_installed"
+  | "installed"
+  | "installing"
+  | "failed";
+
+export type ServiceCategory =
+  | "core"
+  | "explorer"
+  | "networking"
+  | "monitoring"
+  | "app"
+  | "dashboard";
+
+export interface ServiceDefinition {
+  id: string;
+  name: string;
+  description: string;
+  category: ServiceCategory;
+  docker_profiles: string[];
+  containers: string[];
+  install_status: ServiceInstallStatus;
+  enabled: boolean;
+  required: boolean;
+  incompatible_with: string[];
+  depends_on: string[];
+}
+
+export interface PresetInfo {
+  id: InstallationPreset;
+  name: string;
+  description: string;
+  services: string[];
+  warning: string | null;
+}
+
+export interface InstallationStatus {
+  setup_completed: boolean;
+  preset: InstallationPreset;
+  installed_services: string[];
+  active_profiles: string[];
+}
+
+export interface ServicesListResponse {
+  services: ServiceDefinition[];
+  presets: PresetInfo[];
+}
+
+export interface InstallationActionResponse {
+  success: boolean;
+  message: string;
+  installed_services: string[];
+}
+
+// Installation API Functions
+
+export async function fetchInstallationStatus(): Promise<InstallationStatus> {
+  const res = await fetch(`${API_URL}/installation/status`);
+  if (!res.ok) throw new Error("Failed to fetch installation status");
+  return res.json();
+}
+
+export async function fetchAvailableServices(): Promise<ServicesListResponse> {
+  const res = await fetch(`${API_URL}/installation/services`);
+  if (!res.ok) throw new Error("Failed to fetch available services");
+  return res.json();
+}
+
+export async function applyInstallationPreset(
+  preset: InstallationPreset
+): Promise<InstallationActionResponse> {
+  const res = await fetch(`${API_URL}/installation/preset`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ preset }),
+  });
+  if (!res.ok) throw new Error("Failed to apply installation preset");
+  return res.json();
+}
+
+export async function applyCustomInstallation(
+  services: string[]
+): Promise<InstallationActionResponse> {
+  const res = await fetch(`${API_URL}/installation/custom`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ services }),
+  });
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(error || "Failed to apply custom installation");
+  }
+  return res.json();
+}
+
+export async function completeSetup(): Promise<InstallationActionResponse> {
+  const res = await fetch(`${API_URL}/installation/complete`, {
+    method: "POST",
+  });
+  if (!res.ok) throw new Error("Failed to complete setup");
+  return res.json();
+}
+
+export async function installService(
+  serviceId: string
+): Promise<InstallationActionResponse> {
+  const res = await fetch(`${API_URL}/installation/service/install`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ service_id: serviceId }),
+  });
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(error || "Failed to install service");
+  }
+  return res.json();
+}
+
+export async function uninstallService(
+  serviceId: string,
+  removeContainers: boolean = false
+): Promise<InstallationActionResponse> {
+  const res = await fetch(`${API_URL}/installation/service/uninstall`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ service_id: serviceId, remove_containers: removeContainers }),
+  });
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(error || "Failed to uninstall service");
+  }
+  return res.json();
+}
+
+export async function fetchActiveProfiles(): Promise<string[]> {
+  const res = await fetch(`${API_URL}/installation/profiles`);
+  if (!res.ok) throw new Error("Failed to fetch active profiles");
+  return res.json();
+}
+
+// Reset installation (factory reset)
+export interface ResetInstallationRequest {
+  confirmation: string;
+  reset_auth?: boolean;
+  reset_services?: boolean;
+}
+
+export async function resetInstallation(
+  options: ResetInstallationRequest
+): Promise<InstallationActionResponse> {
+  const res = await fetch(`${API_URL}/installation/reset`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(options),
+  });
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(error || "Failed to reset installation");
+  }
+  return res.json();
+}
+
+// User Profile
+export interface UserProfile {
+  name: string;
+  avatar_url?: string;
+}
+
+export interface ProfileResponse {
+  success: boolean;
+  profile?: UserProfile;
+  message?: string;
+}
+
+export async function fetchUserProfile(): Promise<UserProfile> {
+  const res = await fetch(`${API_URL}/profile`);
+  if (!res.ok) throw new Error("Failed to fetch user profile");
+  const data: ProfileResponse = await res.json();
+  return data.profile || { name: "Bitcoiner" };
+}
+
+export async function updateUserProfile(
+  name: string,
+  avatar_url?: string
+): Promise<ProfileResponse> {
+  const res = await fetch(`${API_URL}/profile`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, avatar_url }),
+  });
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(error || "Failed to update profile");
+  }
+  return res.json();
+}
+
 // Utility functions
 export function formatSats(sats: number): string {
   return (sats / 100_000_000).toFixed(8);

@@ -15,6 +15,9 @@
   },
   "sidebar": {
     "menu": "メニュー",
+    "bitcoin": "Bitcoin",
+    "dev": "Dev",
+    "system": "システム",
     "apps": "アプリ",
     "explorers": "エクスプローラー",
     "networking": "ネットワーク",
@@ -23,7 +26,8 @@
     "openTerminal": "ターミナルを開く",
     "openNewTab": "新しいタブで開く",
     "startService": "サービスを開始",
-    "stopService": "サービスを停止"
+    "stopService": "サービスを停止",
+    "welcome": "おかえりなさい"
   },
   "dashboard": {
     "title": "ダッシュボード",
@@ -510,7 +514,26 @@
     "quickSettings": "クイック設定",
     "overview": "すべての設定セクションの概要",
     "about": "Anchor OSについて",
+    "profile": {
+      "title": "プロフィール",
+      "description": "ダッシュボードでの表示をカスタマイズ",
+      "avatar": "アバター",
+      "clickToChange": "クリックしてアバターを変更",
+      "chooseAvatar": "アバターを選択",
+      "name": "表示名",
+      "namePlaceholder": "名前またはニックネームを入力",
+      "nameHint": "この名前はサイドバーに表示されます",
+      "nameRequired": "名前は必須です",
+      "preview": "プレビュー",
+      "defaultName": "Bitcoiner",
+      "saved": "プロフィールを保存しました！",
+      "funFact": "豆知識：ビットコインの創設者サトシ・ナカモトは今日まで匿名のままです。あなたのノード、あなたのアイデンティティ！"
+    },
     "sections": {
+      "profile": {
+        "title": "プロフィール",
+        "description": "名前とアバター"
+      },
       "appearance": {
         "title": "外観",
         "description": "テーマとビジュアルスタイルをカスタマイズ"
@@ -667,7 +690,23 @@
       "notifications": "通知設定",
       "network": "ネットワーク設定"
     },
-    "passwordNote": "セキュリティ上の理由から、パスワードはエクスポートされません。"
+    "passwordNote": "セキュリティ上の理由から、パスワードはエクスポートされません。",
+    "factoryReset": {
+      "title": "工場出荷時リセット",
+      "devMode": "開発モード",
+      "description": "すべてをリセットしてセットアップウィザードを最初から開始",
+      "showOptions": "リセットオプションを表示",
+      "warning": "警告：この操作は取り消せません！",
+      "warningDesc": "すべての設定とインストール構成がリセットされます。必須でないコンテナは停止・削除されます。バックアップデータは保持されます。",
+      "resetAuth": "パスワードと認証をリセット",
+      "resetServices": "必須でないコンテナを停止・削除",
+      "preserved": "✓ バックアップデータとElectrum設定は保持されます",
+      "confirmCheck": "これによりすべてがリセットされ、セットアップウィザードが開始されることを理解しています",
+      "confirmRequired": "続行するには確認ボックスにチェックを入れてください",
+      "button": "工場出荷時リセット",
+      "resetting": "リセット中...",
+      "success": "リセット完了！セットアップにリダイレクトしています..."
+    }
   },
   "lockScreen": {
     "title": "Anchor OS",
@@ -757,7 +796,128 @@
   "appCard": {
     "openApp": "アプリを開く",
     "startApp": "アプリを起動",
-    "controlPanel": "コントロールパネル"
+    "controlPanel": "コントロールパネル",
+    "notInstalled": "未インストール",
+    "installing": "インストール中...",
+    "install": "インストール",
+    "uninstall": "アンインストール",
+    "uninstallConfirm": "{{name}}をアンインストールしてもよろしいですか？ダッシュボードから削除されます。",
+    "stopBeforeUninstall": "アンインストール前にサービスを停止してください",
+    "requiredService": "必須サービス"
+  },
+  "setup": {
+    "welcome": {
+      "title": "Anchor OSへようこそ",
+      "description": "あなた専用のビットコインオペレーティングシステム。数ステップでノードをセットアップしましょう。",
+      "feature1Title": "高速セットアップ",
+      "feature1Description": "数分でビットコインノードを起動",
+      "feature2Title": "安全",
+      "feature2Description": "オプションのTorプライバシーによるセルフカストディ",
+      "feature3Title": "パワフル",
+      "feature3Description": "ブロックエクスプローラー、アプリなど",
+      "getStarted": "始める"
+    },
+    "preset": {
+      "title": "セットアップを選択",
+      "description": "ニーズに合った構成を選択してください",
+      "servicesCount": "{{count}}サービス",
+      "minimum": "最小",
+      "default": "デフォルト",
+      "full": "フル",
+      "custom": "カスタム"
+    },
+    "custom": {
+      "title": "カスタムインストール",
+      "description": "インストールするサービスを選択",
+      "required": "必須",
+      "incompatibleWith": "非互換: {{services}}",
+      "selectedCount": "{{count}}サービス選択済み",
+      "incompatibleError": "{{service}}を選択できません - {{incompatible}}と非互換です",
+      "requiredError": "このサービスは必須で削除できません",
+      "dependencyError": "{{service}}を削除できません - {{dependent}}が依存しています"
+    },
+    "review": {
+      "title": "インストールの確認",
+      "description": "インストールされるサービスを確認",
+      "preset": "プリセット",
+      "required": "必須",
+      "services": "サービス",
+      "containers": "コンテナ",
+      "install": "インストール"
+    },
+    "installing": {
+      "title": "インストール中...",
+      "description": "Anchor OSをセットアップしています。お待ちください",
+      "complete": "完了",
+      "configuringService": "{{service}}を設定中...",
+      "preparingServices": "サービスを準備中...",
+      "andMore": "他{{count}}件...",
+      "info": "このプロセスで設定が保存されます。後でDocker Composeを使用してサービスを開始できます。"
+    },
+    "complete": {
+      "title": "セットアップ完了！",
+      "description": "Anchor OSの設定が保存されました。ビットコインノードを開始する準備ができました。",
+      "servicesConfigured": "{{count}}サービス設定済み",
+      "nextSteps": "次のステップ",
+      "step1Title": "サービスを開始",
+      "step2Title": "ダッシュボードにアクセス",
+      "step2Description": "ブラウザでhttp://localhost:8000を開く",
+      "step3Title": "同期を待つ",
+      "step3Description": "ビットコインノードがブロックチェーンの同期を開始します",
+      "goToDashboard": "ダッシュボードへ"
+    },
+    "language": {
+      "title": "言語を選択",
+      "description": "お好みのインターフェース言語を選択してください"
+    },
+    "appearance": {
+      "title": "テーマを選択",
+      "description": "ダッシュボードのビジュアルテーマを選択してください"
+    },
+    "security": {
+      "title": "ダッシュボードを保護",
+      "description": "Anchor OSダッシュボードを保護するパスワードを設定してください",
+      "passwordPlaceholder": "安全なパスワードを入力",
+      "confirmPlaceholder": "パスワードを確認",
+      "info": "パスワード保護はオプションですが、ビットコインノードへの不正アクセスを防ぐために推奨されます。",
+      "skip": "今はスキップ",
+      "setPassword": "パスワードを設定"
+    },
+    "profile": {
+      "title": "あなたについて教えてください",
+      "description": "体験をパーソナライズするために、少しだけ自己紹介をお願いします",
+      "defaultName": "Bitcoiner",
+      "welcomePreview": "ウェルカムメッセージのプレビュー",
+      "greeting": "こんにちは",
+      "chooseAvatar": "アバターを選択",
+      "nameLabel": "なんとお呼びしましょうか？",
+      "namePlaceholder": "名前またはニックネームを入力",
+      "nameHint": "これはダッシュボードのサイドバーに表示されます",
+      "funFact": "豆知識：ビットコインの創設者サトシ・ナカモトは今日まで匿名のままです。あなたのノード、あなたのルール！",
+      "continue": "{{name}}として続行"
+    },
+    "network": {
+      "title": "ネットワークを選択",
+      "description": "接続するビットコインネットワークを選択してください",
+      "comingSoon": "近日公開",
+      "comingSoonHint": "このネットワークは将来のアップデートで利用可能になります",
+      "regtest": {
+        "name": "Regtest",
+        "description": "ローカル開発ネットワーク。本物のビットコインを使わずにテストやアプリ開発に最適です。"
+      },
+      "testnet": {
+        "name": "Testnet",
+        "description": "ビットコインテストネットワーク。テストコインを使って実際のネットワーク条件で実験できます。"
+      },
+      "mainnet": {
+        "name": "Mainnet",
+        "description": "ビットコインメインネットワーク。本物のビットコインで使用する実際のネットワークです。"
+      },
+      "regtestInfo": {
+        "title": "なぜRegtest？",
+        "description": "Regtestは即座にブロックを生成できるローカルブロックチェーンです。確認を待ったり本物のビットコインを使わずにAnchorアプリの開発やテストに最適です。"
+      }
+    }
   },
   "monitoring": {
     "title": "Netdata",

@@ -2,18 +2,30 @@
 
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { fetchContainers, startContainer, stopContainer } from "@/lib/api";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { 
+  fetchContainers, 
+  startContainer, 
+  stopContainer,
+  fetchInstallationStatus,
+  fetchAvailableServices,
+  installService,
+  uninstallService,
+  ServiceInstallStatus,
+} from "@/lib/api";
 import { apps } from "@/lib/apps";
 import { AppCard } from "@/components/app-card";
 import { MultiLogsModal } from "@/components/multi-logs-modal";
 import { MultiTerminalModal } from "@/components/multi-terminal-modal";
+import { isRequiredService } from "@/lib/service-rules";
 import { Loader2, AppWindow, Search, Network, Server, Play, Square } from "lucide-react";
 
 export default function AppsPage() {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const [logsContainers, setLogsContainers] = useState<string[] | null>(null);
   const [terminalContainers, setTerminalContainers] = useState<string[] | null>(null);
+  const [installingService, setInstallingService] = useState<string | null>(null);
 
   const {
     data: containersData,
@@ -25,7 +37,70 @@ export default function AppsPage() {
     refetchInterval: 3000,
   });
 
+  // Fetch installation status to know which services are installed
+  const { data: installationStatus } = useQuery({
+    queryKey: ["installation-status"],
+    queryFn: fetchInstallationStatus,
+    refetchInterval: 5000,
+  });
+
+  // Fetch available services for more details
+  const { data: servicesData } = useQuery({
+    queryKey: ["available-services"],
+    queryFn: fetchAvailableServices,
+  });
+
   const containers = containersData?.containers || [];
+  const installedServices = installationStatus?.installed_services || [];
+  const services = servicesData?.services || [];
+
+  // Helper to get install status for an app
+  // App IDs in apps.ts are already the service IDs (e.g., "app-dns", "core-bitcoin")
+  const getInstallStatus = (appId: string): ServiceInstallStatus => {
+    if (installingService === appId) return "installing";
+    if (installedServices.includes(appId)) return "installed";
+    
+    // Check if service exists in available services (meaning it can be installed)
+    const serviceExists = services.find(s => s.id === appId);
+    if (serviceExists) return "not_installed";
+    
+    return "installed"; // Default for unknown services
+  };
+
+  // Install service mutation
+  const installMutation = useMutation({
+    mutationFn: async (appId: string) => {
+      setInstallingService(appId);
+      return installService(appId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["installation-status"] });
+      queryClient.invalidateQueries({ queryKey: ["containers"] });
+      setInstallingService(null);
+    },
+    onError: () => {
+      setInstallingService(null);
+    },
+  });
+
+  // Uninstall service mutation
+  const uninstallMutation = useMutation({
+    mutationFn: async ({ serviceId, removeContainers }: { serviceId: string; removeContainers: boolean }) => {
+      return uninstallService(serviceId, removeContainers);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["installation-status"] });
+      queryClient.invalidateQueries({ queryKey: ["containers"] });
+    },
+  });
+
+  const handleInstall = (appId: string) => {
+    installMutation.mutate(appId);
+  };
+
+  const handleUninstall = async (appId: string, removeContainers?: boolean) => {
+    await uninstallMutation.mutateAsync({ serviceId: appId, removeContainers: removeContainers ?? false });
+  };
 
   // Get all container names from all apps
   const allContainerNames = apps.flatMap((app) => app.containers);
@@ -138,6 +213,10 @@ export default function AppsPage() {
                 onToggle={() => refetch()}
                 onShowLogs={(names) => setLogsContainers(names)}
                 onShowTerminal={(names) => setTerminalContainers(names)}
+                installStatus={getInstallStatus(app.id)}
+                onInstall={() => handleInstall(app.id)}
+                onUninstall={(removeContainers) => handleUninstall(app.id, removeContainers)}
+                isRequired={isRequiredService(app.id, installedServices)}
               />
             ))}
           </div>
@@ -162,6 +241,10 @@ export default function AppsPage() {
                   onToggle={() => refetch()}
                   onShowLogs={(names) => setLogsContainers(names)}
                   onShowTerminal={(names) => setTerminalContainers(names)}
+                  installStatus={getInstallStatus(app.id)}
+                  onInstall={() => handleInstall(app.id)}
+                  onUninstall={() => handleUninstall(app.id)}
+                  isRequired={isRequiredService(app.id, installedServices)}
                 />
               ))}
             </div>
@@ -187,6 +270,10 @@ export default function AppsPage() {
                   onToggle={() => refetch()}
                   onShowLogs={(names) => setLogsContainers(names)}
                   onShowTerminal={(names) => setTerminalContainers(names)}
+                  installStatus={getInstallStatus(app.id)}
+                  onInstall={() => handleInstall(app.id)}
+                  onUninstall={() => handleUninstall(app.id)}
+                  isRequired={isRequiredService(app.id, installedServices)}
                 />
               ))}
             </div>
@@ -211,6 +298,10 @@ export default function AppsPage() {
                 onToggle={() => refetch()}
                 onShowLogs={(names) => setLogsContainers(names)}
                 onShowTerminal={(names) => setTerminalContainers(names)}
+                installStatus={getInstallStatus(app.id)}
+                onInstall={() => handleInstall(app.id)}
+                onUninstall={(removeContainers) => handleUninstall(app.id, removeContainers)}
+                isRequired={isRequiredService(app.id, installedServices)}
               />
             ))}
           </div>

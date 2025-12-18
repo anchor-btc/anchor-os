@@ -131,6 +131,7 @@ pub async fn start_container(
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     info!("Starting container: {}", id);
 
+    // First try to start the container directly
     match state
         .docker
         .start_container(&id, None::<StartContainerOptions<String>>)
@@ -142,10 +143,169 @@ pub async fn start_container(
             container_id: id,
         })),
         Err(e) => {
+            let error_str = e.to_string();
+            
+            // If container doesn't exist (404), try to create it via docker compose
+            if error_str.contains("404") || error_str.contains("No such container") {
+                info!("Container {} doesn't exist, trying to create via docker compose...", id);
+                
+                // Extract service name from container name (e.g., "anchor-app-threads-backend" -> "app-threads")
+                let service_name = extract_service_from_container(&id);
+                
+                if let Some(profile) = service_name {
+                    info!("Creating container with profile: {}", profile);
+                    
+                    // Get all required profiles (service + its dependencies)
+                    let profiles = get_required_profiles(&profile);
+                    info!("Using profiles: {:?}", profiles);
+                    
+                    let output = tokio::task::spawn_blocking(move || {
+                        let mut cmd = std::process::Command::new("docker");
+                        cmd.current_dir("/anchor-project");
+                        cmd.arg("compose");
+                        
+                        // Add all required profiles
+                        for p in &profiles {
+                            cmd.arg("--profile").arg(p);
+                        }
+                        
+                        cmd.args(["up", "-d"]);
+                        cmd.output()
+                    })
+                    .await
+                    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+                    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+                    
+                    if output.status.success() {
+                        return Ok(Json(ContainerActionResponse {
+                            success: true,
+                            message: format!("Container {} created and started via docker compose", id),
+                            container_id: id,
+                        }));
+                    } else {
+                        let stderr = String::from_utf8_lossy(&output.stderr);
+                        error!("Docker compose failed: {}", stderr);
+                        return Err((StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to create container: {}", stderr)));
+                    }
+                }
+            }
+            
             error!("Failed to start container {}: {}", id, e);
             Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
         }
     }
+}
+
+/// Get all required profiles for a service (including dependencies)
+fn get_required_profiles(service: &str) -> Vec<String> {
+    // Base profiles that are always needed for most services
+    let mut all_profiles = vec![
+        "core-bitcoin".to_string(),
+        "core-postgres".to_string(),
+    ];
+
+    // Service-specific dependencies (including ALL required deps)
+    let service_deps: Vec<String> = match service {
+        // Apps that need wallet
+        "app-threads" => vec!["core-wallet".to_string(), "app-threads".to_string()],
+        "app-pixel" | "app-map" | "app-dns" | "app-proof" | "app-tokens" => {
+            vec!["core-wallet".to_string(), service.to_string()]
+        },
+        // Oracles has its own postgres
+        "app-oracles" => vec!["core-wallet".to_string(), "app-oracles".to_string()],
+        // Lottery depends on oracles
+        "app-lottery" => vec![
+            "core-wallet".to_string(),
+            "app-oracles".to_string(),  // Lottery depends on oracles!
+            "app-lottery".to_string(),
+        ],
+        // Core services
+        "core-wallet" => vec!["core-wallet".to_string()],
+        "core-indexer" => vec!["core-indexer".to_string()],
+        "core-testnet" => vec!["core-wallet".to_string(), "core-indexer".to_string(), "core-testnet".to_string()],
+        "core-backup" => vec!["core-backup".to_string()],
+        "core-fulcrum" => vec!["core-fulcrum".to_string()],
+        "core-electrs" => vec!["core-electrs".to_string()],
+        // Explorers - mempool needs electrs!
+        "explorer-btc-rpc" => vec!["explorer-btc-rpc".to_string()],
+        "explorer-mempool" => vec![
+            "core-electrs".to_string(),  // Mempool depends on electrs!
+            "explorer-mempool".to_string(),
+        ],
+        "explorer-esplora" => vec!["explorer-esplora".to_string()],
+        "explorer-bitfeed" => vec!["explorer-bitfeed".to_string()],
+        // Networking
+        "networking-tor" => vec!["networking-tor".to_string()],
+        "networking-tailscale" => vec!["networking-tailscale".to_string()],
+        "networking-cloudflare" => vec!["networking-cloudflare".to_string()],
+        // Monitoring
+        "monitoring-netdata" => vec!["monitoring-netdata".to_string()],
+        // Default: just the service itself
+        _ => vec![service.to_string()],
+    };
+
+    // Add service deps, removing duplicates
+    for dep in service_deps {
+        if !all_profiles.contains(&dep) {
+            all_profiles.push(dep);
+        }
+    }
+
+    all_profiles
+}
+
+/// Extract service/profile name from container name
+fn extract_service_from_container(container_name: &str) -> Option<String> {
+    // Container names like "anchor-app-threads-backend" -> profile "app-threads"
+    // Container names like "anchor-core-fulcrum" -> profile "core-fulcrum"
+    let name = container_name.trim_start_matches("anchor-");
+    
+    // Known patterns
+    let patterns = [
+        ("app-threads-backend", "app-threads"),
+        ("app-threads-frontend", "app-threads"),
+        ("app-pixel-backend", "app-pixel"),
+        ("app-pixel-frontend", "app-pixel"),
+        ("app-map-backend", "app-map"),
+        ("app-map-frontend", "app-map"),
+        ("app-dns-backend", "app-dns"),
+        ("app-dns-frontend", "app-dns"),
+        ("app-proof-backend", "app-proof"),
+        ("app-proof-frontend", "app-proof"),
+        ("app-tokens-backend", "app-tokens"),
+        ("app-tokens-frontend", "app-tokens"),
+        ("app-oracles-backend", "app-oracles"),
+        ("app-oracles-frontend", "app-oracles"),
+        ("app-lottery-backend", "app-lottery"),
+        ("app-lottery-frontend", "app-lottery"),
+        ("core-fulcrum", "core-fulcrum"),
+        ("core-electrs", "core-electrs"),
+        ("core-indexer", "core-indexer"),
+        ("core-wallet", "core-wallet"),
+        ("core-testnet", "core-testnet"),
+        ("core-backup", "core-backup"),
+        ("core-bitcoin", "core-bitcoin"),
+        ("core-postgres", "core-postgres"),
+        ("explorer-btc-rpc", "explorer-btc-rpc"),
+        ("explorer-mempool-web", "explorer-mempool"),
+        ("explorer-mempool-api", "explorer-mempool"),
+        ("explorer-mempool-db", "explorer-mempool"),
+        ("explorer-esplora", "explorer-esplora"),
+        ("explorer-bitfeed", "explorer-bitfeed"),
+        ("networking-tor", "networking-tor"),
+        ("networking-tailscale", "networking-tailscale"),
+        ("networking-cloudflare", "networking-cloudflare"),
+        ("monitoring-netdata", "monitoring-netdata"),
+    ];
+    
+    for (pattern, profile) in patterns {
+        if name == pattern || name.starts_with(&format!("{}-", pattern)) {
+            return Some(profile.to_string());
+        }
+    }
+    
+    // Fallback: use the name as-is
+    Some(name.to_string())
 }
 
 /// Stop a container

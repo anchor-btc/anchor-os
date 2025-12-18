@@ -72,6 +72,17 @@ pub struct AppState {
         handlers::tor::new_tor_circuit,
         handlers::tor::enable_tor,
         handlers::tor::disable_tor,
+        handlers::installation::get_installation_status,
+        handlers::installation::get_services,
+        handlers::installation::apply_preset,
+        handlers::installation::apply_custom,
+        handlers::installation::complete_setup,
+        handlers::installation::install_service,
+        handlers::installation::uninstall_service,
+        handlers::installation::get_profiles,
+        handlers::installation::reset_installation,
+        handlers::profile::get_profile,
+        handlers::profile::update_profile,
     ),
     components(schemas(
         handlers::HealthResponse,
@@ -111,6 +122,21 @@ pub struct AppState {
         handlers::tor::TorStatus,
         handlers::tor::TorActionResponse,
         handlers::tor::OnionAddresses,
+        handlers::installation::InstallationPreset,
+        handlers::installation::ServiceInstallStatus,
+        handlers::installation::ServiceCategory,
+        handlers::installation::ServiceDefinition,
+        handlers::installation::InstallationStatus,
+        handlers::installation::ServicesListResponse,
+        handlers::installation::PresetInfo,
+        handlers::installation::ApplyPresetRequest,
+        handlers::installation::CustomInstallRequest,
+        handlers::installation::InstallationActionResponse,
+        handlers::installation::ServiceActionRequest,
+        handlers::installation::ResetInstallationRequest,
+        handlers::profile::UserProfile,
+        handlers::profile::UpdateProfileRequest,
+        handlers::profile::ProfileResponse,
     )),
     tags(
         (name = "System", description = "System health endpoints"),
@@ -122,6 +148,8 @@ pub struct AppState {
         (name = "Cloudflare", description = "Cloudflare Tunnel management"),
         (name = "Tor", description = "Tor network management"),
         (name = "Indexer", description = "Anchor indexer statistics"),
+        (name = "Installation", description = "Installation and setup wizard"),
+        (name = "Profile", description = "User profile management"),
     )
 )]
 struct ApiDoc;
@@ -173,6 +201,55 @@ async fn main() -> Result<()> {
                     Ok(_) => info!("Database migration 003 applied"),
                     Err(e) => info!("Migration 003 may already exist: {}", e),
                 }
+                // Migration 004 - installation_config (multi-statement, run each separately)
+                let migration_004_statements = [
+                    "CREATE TABLE IF NOT EXISTS installation_config (
+                        id SERIAL PRIMARY KEY,
+                        preset VARCHAR(20) NOT NULL DEFAULT 'default',
+                        services JSONB NOT NULL DEFAULT '{}',
+                        setup_completed BOOLEAN DEFAULT FALSE,
+                        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                    )",
+                    "INSERT INTO installation_config (preset, services, setup_completed)
+                     SELECT 'default', '{}', FALSE
+                     WHERE NOT EXISTS (SELECT 1 FROM installation_config WHERE id = 1)",
+                    "CREATE TABLE IF NOT EXISTS service_status (
+                        id SERIAL PRIMARY KEY,
+                        service_id VARCHAR(100) NOT NULL UNIQUE,
+                        install_status VARCHAR(20) NOT NULL DEFAULT 'not_installed',
+                        enabled BOOLEAN DEFAULT FALSE,
+                        last_health_check TIMESTAMP WITH TIME ZONE,
+                        error_message TEXT,
+                        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                        CONSTRAINT valid_install_status CHECK (install_status IN ('not_installed', 'installed', 'installing', 'failed'))
+                    )",
+                    "CREATE INDEX IF NOT EXISTS idx_service_status_service_id ON service_status(service_id)",
+                    "CREATE INDEX IF NOT EXISTS idx_service_status_install_status ON service_status(install_status)",
+                ];
+                for stmt in migration_004_statements {
+                    let _ = sqlx::query(stmt).execute(&pool).await;
+                }
+                info!("Database migration 004 applied");
+
+                // Migration 005 - user_profile (multi-statement, run each separately)
+                let migration_005_statements = [
+                    "CREATE TABLE IF NOT EXISTS user_profile (
+                        id SERIAL PRIMARY KEY,
+                        name VARCHAR(100) NOT NULL DEFAULT 'Bitcoiner',
+                        avatar_url TEXT,
+                        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                    )",
+                    "INSERT INTO user_profile (name)
+                     SELECT 'Bitcoiner'
+                     WHERE NOT EXISTS (SELECT 1 FROM user_profile WHERE id = 1)",
+                ];
+                for stmt in migration_005_statements {
+                    let _ = sqlx::query(stmt).execute(&pool).await;
+                }
+                info!("Database migration 005 applied");
                 Some(pool)
             }
             Err(e) => {
@@ -266,6 +343,20 @@ async fn main() -> Result<()> {
         .route("/electrum/info", get(handlers::electrum::get_electrum_info))
         // Indexer
         .route("/indexer/stats", get(handlers::indexer::get_indexer_stats))
+        // Installation
+        .route("/installation/status", get(handlers::installation::get_installation_status))
+        .route("/installation/services", get(handlers::installation::get_services))
+        .route("/installation/preset", post(handlers::installation::apply_preset))
+        .route("/installation/custom", post(handlers::installation::apply_custom))
+        .route("/installation/complete", post(handlers::installation::complete_setup))
+        .route("/installation/service/install", post(handlers::installation::install_service))
+        .route("/installation/service/uninstall", post(handlers::installation::uninstall_service))
+        .route("/installation/profiles", get(handlers::installation::get_profiles))
+        .route("/installation/reset", post(handlers::installation::reset_installation))
+        .route("/installation/stream", get(handlers::installation::stream_installation))
+        // Profile
+        .route("/profile", get(handlers::profile::get_profile))
+        .route("/profile", put(handlers::profile::update_profile))
         // Settings
         .route("/settings", get(handlers::settings::get_all_settings))
         .route("/settings/export", get(handlers::settings::export_settings))

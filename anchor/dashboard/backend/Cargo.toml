@@ -41,6 +41,10 @@ sqlx = { version = "0.8", features = ["runtime-tokio", "postgres", "json", "chro
 # Password hashing
 argon2 = "0.5"
 
+# For SSE streaming logs
+async-stream = "0.3"
+regex = "1"
+
 # JWT
 jsonwebtoken = "9"
 

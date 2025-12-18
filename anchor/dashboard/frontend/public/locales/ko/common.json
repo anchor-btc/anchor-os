@@ -15,6 +15,9 @@
   },
   "sidebar": {
     "menu": "메뉴",
+    "bitcoin": "Bitcoin",
+    "dev": "Dev",
+    "system": "시스템",
     "apps": "앱",
     "explorers": "익스플로러",
     "networking": "네트워킹",
@@ -23,7 +26,8 @@
     "openTerminal": "터미널 열기",
     "openNewTab": "새 탭에서 열기",
     "startService": "서비스 시작",
-    "stopService": "서비스 중지"
+    "stopService": "서비스 중지",
+    "welcome": "다시 오신 것을 환영합니다"
   },
   "dashboard": {
     "title": "대시보드",
@@ -510,7 +514,26 @@
     "quickSettings": "빠른 설정",
     "overview": "모든 설정 섹션 개요",
     "about": "Anchor OS 정보",
+    "profile": {
+      "title": "프로필",
+      "description": "대시보드에서 표시되는 방식을 개인화",
+      "avatar": "아바타",
+      "clickToChange": "클릭하여 아바타 변경",
+      "chooseAvatar": "아바타 선택",
+      "name": "표시 이름",
+      "namePlaceholder": "이름 또는 닉네임 입력",
+      "nameHint": "이 이름은 사이드바에 표시됩니다",
+      "nameRequired": "이름은 필수입니다",
+      "preview": "미리보기",
+      "defaultName": "Bitcoiner",
+      "saved": "프로필이 저장되었습니다!",
+      "funFact": "재미있는 사실: 비트코인의 창시자 사토시 나카모토는 오늘날까지 익명으로 남아있습니다. 당신의 노드, 당신의 정체성!"
+    },
     "sections": {
+      "profile": {
+        "title": "프로필",
+        "description": "이름과 아바타"
+      },
       "appearance": {
         "title": "외관",
         "description": "테마 및 비주얼 스타일 커스터마이징"
@@ -667,7 +690,23 @@
       "notifications": "알림 설정",
       "network": "네트워크 설정"
     },
-    "passwordNote": "보안상의 이유로 비밀번호는 내보내지지 않습니다."
+    "passwordNote": "보안상의 이유로 비밀번호는 내보내지지 않습니다.",
+    "factoryReset": {
+      "title": "공장 초기화",
+      "devMode": "개발 모드",
+      "description": "모든 것을 초기화하고 설정 마법사를 처음부터 시작",
+      "showOptions": "초기화 옵션 표시",
+      "warning": "경고: 이 작업은 취소할 수 없습니다!",
+      "warningDesc": "모든 설정과 설치 구성이 초기화됩니다. 필수가 아닌 컨테이너가 중지 및 제거됩니다. 백업 데이터는 보존됩니다.",
+      "resetAuth": "비밀번호 및 인증 초기화",
+      "resetServices": "필수가 아닌 컨테이너 중지 및 제거",
+      "preserved": "✓ 백업 데이터와 Electrum 설정은 보존됩니다",
+      "confirmCheck": "이것이 모든 것을 초기화하고 설정 마법사를 시작한다는 것을 이해합니다",
+      "confirmRequired": "계속하려면 확인란을 선택하세요",
+      "button": "공장 초기화",
+      "resetting": "초기화 중...",
+      "success": "초기화 완료! 설정으로 리디렉션 중..."
+    }
   },
   "lockScreen": {
     "title": "Anchor OS",
@@ -757,7 +796,128 @@
   "appCard": {
     "openApp": "앱 열기",
     "startApp": "앱 시작",
-    "controlPanel": "제어판"
+    "controlPanel": "제어판",
+    "notInstalled": "설치되지 않음",
+    "installing": "설치 중...",
+    "install": "설치",
+    "uninstall": "제거",
+    "uninstallConfirm": "{{name}}을(를) 제거하시겠습니까? 대시보드에서 삭제됩니다.",
+    "stopBeforeUninstall": "제거하기 전에 서비스를 중지하세요",
+    "requiredService": "필수 서비스"
+  },
+  "setup": {
+    "welcome": {
+      "title": "Anchor OS에 오신 것을 환영합니다",
+      "description": "개인용 비트코인 운영체제입니다. 몇 단계만 거치면 노드를 설정할 수 있습니다.",
+      "feature1Title": "빠른 설정",
+      "feature1Description": "몇 분 만에 비트코인 노드 실행",
+      "feature2Title": "안전",
+      "feature2Description": "선택적 Tor 프라이버시로 셀프 커스터디",
+      "feature3Title": "강력",
+      "feature3Description": "블록 탐색기, 앱 등",
+      "getStarted": "시작하기"
+    },
+    "preset": {
+      "title": "설정 선택",
+      "description": "필요에 맞는 구성을 선택하세요",
+      "servicesCount": "{{count}}개 서비스",
+      "minimum": "최소",
+      "default": "기본",
+      "full": "전체",
+      "custom": "사용자 정의"
+    },
+    "custom": {
+      "title": "사용자 정의 설치",
+      "description": "설치할 서비스 선택",
+      "required": "필수",
+      "incompatibleWith": "호환되지 않음: {{services}}",
+      "selectedCount": "{{count}}개 서비스 선택됨",
+      "incompatibleError": "{{service}}을(를) 선택할 수 없음 - {{incompatible}}과(와) 호환되지 않음",
+      "requiredError": "이 서비스는 필수이며 제거할 수 없습니다",
+      "dependencyError": "{{service}}을(를) 제거할 수 없음 - {{dependent}}이(가) 의존함"
+    },
+    "review": {
+      "title": "설치 검토",
+      "description": "설치될 서비스 검토",
+      "preset": "프리셋",
+      "required": "필수",
+      "services": "서비스",
+      "containers": "컨테이너",
+      "install": "설치"
+    },
+    "installing": {
+      "title": "설치 중...",
+      "description": "Anchor OS를 설정하는 동안 잠시 기다려 주세요",
+      "complete": "완료",
+      "configuringService": "{{service}} 구성 중...",
+      "preparingServices": "서비스 준비 중...",
+      "andMore": "외 {{count}}개...",
+      "info": "이 프로세스는 구성을 저장합니다. 나중에 Docker Compose를 사용하여 서비스를 시작할 수 있습니다."
+    },
+    "complete": {
+      "title": "설정 완료!",
+      "description": "Anchor OS 구성이 저장되었습니다. 비트코인 노드를 시작할 준비가 되었습니다.",
+      "servicesConfigured": "{{count}}개 서비스 구성됨",
+      "nextSteps": "다음 단계",
+      "step1Title": "서비스 시작",
+      "step2Title": "대시보드 접속",
+      "step2Description": "브라우저에서 http://localhost:8000 열기",
+      "step3Title": "동기화 대기",
+      "step3Description": "비트코인 노드가 블록체인 동기화를 시작합니다",
+      "goToDashboard": "대시보드로 이동"
+    },
+    "language": {
+      "title": "언어 선택",
+      "description": "원하는 인터페이스 언어를 선택하세요"
+    },
+    "appearance": {
+      "title": "테마 선택",
+      "description": "대시보드의 비주얼 테마를 선택하세요"
+    },
+    "security": {
+      "title": "대시보드 보호",
+      "description": "Anchor OS 대시보드를 보호할 비밀번호를 설정하세요",
+      "passwordPlaceholder": "안전한 비밀번호 입력",
+      "confirmPlaceholder": "비밀번호 확인",
+      "info": "비밀번호 보호는 선택 사항이지만 비트코인 노드에 대한 무단 접근을 방지하기 위해 권장됩니다.",
+      "skip": "지금 건너뛰기",
+      "setPassword": "비밀번호 설정"
+    },
+    "profile": {
+      "title": "당신에 대해 알려주세요",
+      "description": "경험을 개인화하기 위해 자신에 대해 조금 알려주세요",
+      "defaultName": "Bitcoiner",
+      "welcomePreview": "환영 메시지 미리보기",
+      "greeting": "안녕하세요",
+      "chooseAvatar": "아바타 선택",
+      "nameLabel": "어떻게 불러드릴까요?",
+      "namePlaceholder": "이름 또는 닉네임을 입력하세요",
+      "nameHint": "대시보드 사이드바에 표시됩니다",
+      "funFact": "재미있는 사실: 비트코인의 창시자 사토시 나카모토는 오늘날까지 익명으로 남아있습니다. 당신의 노드, 당신의 규칙!",
+      "continue": "{{name}}(으)로 계속"
+    },
+    "network": {
+      "title": "네트워크 선택",
+      "description": "연결할 비트코인 네트워크를 선택하세요",
+      "comingSoon": "출시 예정",
+      "comingSoonHint": "이 네트워크는 향후 업데이트에서 사용할 수 있습니다",
+      "regtest": {
+        "name": "Regtest",
+        "description": "로컬 개발 네트워크. 실제 비트코인 없이 테스트하고 애플리케이션을 구축하기에 완벽합니다."
+      },
+      "testnet": {
+        "name": "Testnet",
+        "description": "비트코인 테스트 네트워크. 테스트 코인을 사용하여 실제 네트워크 조건에서 실험해보세요."
+      },
+      "mainnet": {
+        "name": "Mainnet",
+        "description": "비트코인 메인 네트워크. 실제 비트코인을 사용하는 실제 네트워크입니다."
+      },
+      "regtestInfo": {
+        "title": "왜 Regtest인가요?",
+        "description": "Regtest는 즉시 블록을 생성할 수 있는 로컬 블록체인입니다. 확인을 기다리거나 실제 비트코인을 사용하지 않고 Anchor 앱을 개발하고 테스트하기에 완벽합니다."
+      }
+    }
   },
   "monitoring": {
     "title": "Netdata",

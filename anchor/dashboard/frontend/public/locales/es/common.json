@@ -15,6 +15,9 @@
   },
   "sidebar": {
     "menu": "Menú",
+    "bitcoin": "Bitcoin",
+    "dev": "Dev",
+    "system": "Sistema",
     "apps": "Apps",
     "explorers": "Exploradores",
     "networking": "Red",
@@ -23,7 +26,8 @@
     "openTerminal": "Abrir Terminal",
     "openNewTab": "Abrir en nueva pestaña",
     "startService": "Iniciar Servicio",
-    "stopService": "Detener Servicio"
+    "stopService": "Detener Servicio",
+    "welcome": "Bienvenido de nuevo"
   },
   "dashboard": {
     "title": "Panel",
@@ -510,7 +514,26 @@
     "quickSettings": "Configuración Rápida",
     "overview": "Vista general de todas las secciones",
     "about": "Acerca de Anchor OS",
+    "profile": {
+      "title": "Perfil",
+      "description": "Personaliza cómo apareces en el panel",
+      "avatar": "Avatar",
+      "clickToChange": "Haz clic para cambiar tu avatar",
+      "chooseAvatar": "Elige tu avatar",
+      "name": "Nombre a Mostrar",
+      "namePlaceholder": "Ingresa tu nombre o apodo",
+      "nameHint": "Este nombre se mostrará en la barra lateral",
+      "nameRequired": "El nombre es obligatorio",
+      "preview": "Vista previa",
+      "defaultName": "Bitcoiner",
+      "saved": "¡Perfil guardado con éxito!",
+      "funFact": "Dato curioso: Satoshi Nakamoto, el creador de Bitcoin, sigue siendo anónimo hasta hoy. ¡Tu nodo, tu identidad!"
+    },
     "sections": {
+      "profile": {
+        "title": "Perfil",
+        "description": "Tu nombre y avatar"
+      },
       "appearance": {
         "title": "Apariencia",
         "description": "Personaliza temas y estilo visual"
@@ -667,7 +690,23 @@
       "notifications": "Preferencias de notificaciones",
       "network": "Configuración de red"
     },
-    "passwordNote": "Las contraseñas nunca se exportan por razones de seguridad."
+    "passwordNote": "Las contraseñas nunca se exportan por razones de seguridad.",
+    "factoryReset": {
+      "title": "Restablecimiento de Fábrica",
+      "devMode": "Modo Dev",
+      "description": "Restablecer todo e iniciar el asistente de configuración desde cero",
+      "showOptions": "Mostrar Opciones de Restablecimiento",
+      "warning": "¡Advertencia: Esta acción no se puede deshacer!",
+      "warningDesc": "Todas las configuraciones e instalaciones serán restablecidas. Los contenedores no esenciales serán detenidos y eliminados. Los datos de respaldo se conservarán.",
+      "resetAuth": "Restablecer contraseña y autenticación",
+      "resetServices": "Detener y eliminar contenedores no esenciales",
+      "preserved": "✓ Los datos de respaldo y configuraciones de Electrum se conservarán",
+      "confirmCheck": "Entiendo que esto restablecerá todo e iniciará el asistente de configuración",
+      "confirmRequired": "Por favor, marca la casilla de confirmación para continuar",
+      "button": "Restablecimiento de Fábrica",
+      "resetting": "Restableciendo...",
+      "success": "¡Restablecimiento completado! Redirigiendo a configuración..."
+    }
   },
   "lockScreen": {
     "title": "Anchor OS",
@@ -757,7 +796,128 @@
   "appCard": {
     "openApp": "Abrir App",
     "startApp": "Iniciar App",
-    "controlPanel": "Panel de Control"
+    "controlPanel": "Panel de Control",
+    "notInstalled": "No Instalado",
+    "installing": "Instalando...",
+    "install": "Instalar",
+    "uninstall": "Desinstalar",
+    "uninstallConfirm": "¿Estás seguro de que deseas desinstalar {{name}}? Esto lo eliminará de tu panel.",
+    "stopBeforeUninstall": "Detén el servicio antes de desinstalar",
+    "requiredService": "Servicio requerido"
+  },
+  "setup": {
+    "welcome": {
+      "title": "Bienvenido a Anchor OS",
+      "description": "Tu sistema operativo Bitcoin personal. Configuremos tu nodo en pocos pasos.",
+      "feature1Title": "Configuración Rápida",
+      "feature1Description": "Ten tu nodo Bitcoin funcionando en minutos",
+      "feature2Title": "Seguro",
+      "feature2Description": "Auto-custodia con privacidad Tor opcional",
+      "feature3Title": "Potente",
+      "feature3Description": "Exploradores de bloques, apps y más",
+      "getStarted": "Comenzar"
+    },
+    "preset": {
+      "title": "Elige Tu Configuración",
+      "description": "Selecciona una configuración que se adapte a tus necesidades",
+      "servicesCount": "{{count}} servicios",
+      "minimum": "Mínimo",
+      "default": "Predeterminado",
+      "full": "Completo",
+      "custom": "Personalizado"
+    },
+    "custom": {
+      "title": "Instalación Personalizada",
+      "description": "Elige qué servicios instalar",
+      "required": "Requerido",
+      "incompatibleWith": "Incompatible con: {{services}}",
+      "selectedCount": "{{count}} servicios seleccionados",
+      "incompatibleError": "No se puede seleccionar {{service}} - es incompatible con {{incompatible}}",
+      "requiredError": "Este servicio es requerido y no puede ser eliminado",
+      "dependencyError": "No se puede eliminar {{service}} - {{dependent}} depende de él"
+    },
+    "review": {
+      "title": "Revisar Instalación",
+      "description": "Revisa los servicios que serán instalados",
+      "preset": "Preset",
+      "required": "Requerido",
+      "services": "Servicios",
+      "containers": "Contenedores",
+      "install": "Instalar"
+    },
+    "installing": {
+      "title": "Instalando...",
+      "description": "Por favor espera mientras configuramos tu Anchor OS",
+      "complete": "completo",
+      "configuringService": "Configurando {{service}}...",
+      "preparingServices": "Preparando servicios...",
+      "andMore": "y {{count}} más...",
+      "info": "Este proceso guarda tu configuración. Puedes iniciar los servicios después usando Docker Compose."
+    },
+    "complete": {
+      "title": "¡Configuración Completa!",
+      "description": "Tu configuración de Anchor OS ha sido guardada. Estás listo para iniciar tu nodo Bitcoin.",
+      "servicesConfigured": "{{count}} servicios configurados",
+      "nextSteps": "Próximos Pasos",
+      "step1Title": "Iniciar los servicios",
+      "step2Title": "Acceder al panel",
+      "step2Description": "Abre http://localhost:8000 en tu navegador",
+      "step3Title": "Esperar sincronización",
+      "step3Description": "Tu nodo Bitcoin comenzará a sincronizar la blockchain",
+      "goToDashboard": "Ir al Panel"
+    },
+    "language": {
+      "title": "Seleccionar Idioma",
+      "description": "Elige tu idioma de interfaz preferido"
+    },
+    "appearance": {
+      "title": "Elegir Tema",
+      "description": "Selecciona un tema visual para tu panel"
+    },
+    "security": {
+      "title": "Protege Tu Panel",
+      "description": "Configura una contraseña para proteger tu panel Anchor OS",
+      "passwordPlaceholder": "Ingresa una contraseña segura",
+      "confirmPlaceholder": "Confirma tu contraseña",
+      "info": "La protección con contraseña es opcional pero recomendada para prevenir acceso no autorizado a tu nodo Bitcoin.",
+      "skip": "Saltar por ahora",
+      "setPassword": "Establecer Contraseña"
+    },
+    "profile": {
+      "title": "Vamos a conocerte",
+      "description": "Cuéntanos un poco sobre ti para personalizar tu experiencia",
+      "defaultName": "Bitcoiner",
+      "welcomePreview": "Vista previa del mensaje de bienvenida",
+      "greeting": "Hola",
+      "chooseAvatar": "Elige tu avatar",
+      "nameLabel": "¿Cómo te llamamos?",
+      "namePlaceholder": "Ingresa tu nombre o apodo",
+      "nameHint": "Esto se mostrará en la barra lateral del panel",
+      "funFact": "Dato curioso: Satoshi Nakamoto, el creador de Bitcoin, sigue siendo anónimo hasta hoy. ¡Tu nodo, tus reglas!",
+      "continue": "Continuar como {{name}}"
+    },
+    "network": {
+      "title": "Seleccionar Red",
+      "description": "Elige a qué red Bitcoin conectarte",
+      "comingSoon": "Próximamente",
+      "comingSoonHint": "Esta red estará disponible en una actualización futura",
+      "regtest": {
+        "name": "Regtest",
+        "description": "Red de desarrollo local. Perfecta para probar y construir aplicaciones sin usar Bitcoin real."
+      },
+      "testnet": {
+        "name": "Testnet",
+        "description": "Red de prueba de Bitcoin. Usa monedas de prueba para experimentar con condiciones de red reales."
+      },
+      "mainnet": {
+        "name": "Mainnet",
+        "description": "Red principal de Bitcoin. La red real - usa con Bitcoin de verdad."
+      },
+      "regtestInfo": {
+        "title": "¿Por qué Regtest?",
+        "description": "Regtest es una blockchain local que permite generar bloques instantáneamente. Perfecto para desarrollo y pruebas de apps Anchor sin esperar confirmaciones o gastar Bitcoin real."
+      }
+    }
   },
   "monitoring": {
     "title": "Netdata",

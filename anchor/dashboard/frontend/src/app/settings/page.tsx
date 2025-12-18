@@ -12,9 +12,12 @@ import {
   LayoutGrid,
   Database,
   ChevronRight,
+  User,
 } from "lucide-react";
 import { useTheme } from "@/contexts/theme-context";
 import { useAuth } from "@/contexts/auth-context";
+import { useQuery } from "@tanstack/react-query";
+import { fetchUserProfile } from "@/lib/api";
 
 const DASHBOARD_BACKEND_URL =
   process.env.NEXT_PUBLIC_DASHBOARD_BACKEND_URL || "http://localhost:8010";
@@ -35,6 +38,11 @@ export default function SettingsPage() {
   const [networkChain, setNetworkChain] = useState<string>("...");
   const [notificationsEnabled, setNotificationsEnabled] = useState<boolean | null>(null);
   const [widgetCount, setWidgetCount] = useState<number>(0);
+
+  const { data: userProfile } = useQuery({
+    queryKey: ["userProfile"],
+    queryFn: fetchUserProfile,
+  });
 
   useEffect(() => {
     // Fetch network info
@@ -72,6 +80,20 @@ export default function SettingsPage() {
   const currentLanguage = LANGUAGE_NAMES[i18n.language] || i18n.language;
 
   const settingsCards = [
+    {
+      href: "/settings/profile",
+      labelKey: "settings.sections.profile.title",
+      icon: <User className="w-6 h-6" />,
+      descriptionKey: "settings.sections.profile.description",
+      preview: (
+        <div className="flex items-center gap-2">
+          <span className="text-lg">{userProfile?.avatar_url || "🧑‍💻"}</span>
+          <span className="text-sm text-muted-foreground">
+            {userProfile?.name || "Bitcoiner"}
+          </span>
+        </div>
+      ),
+    },
     {
       href: "/settings/appearance",
       labelKey: "settings.sections.appearance.title",

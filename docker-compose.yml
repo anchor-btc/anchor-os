@@ -3,7 +3,7 @@ services:
   # CORE (core-)
   # =============================================
 
-  # Bitcoin Core Node (default - always available)
+  # Bitcoin Core Node (always required - base for all profiles)
   core-bitcoin:
     build:
       context: ./docker/bitcoin-core
@@ -29,6 +29,11 @@ services:
       retries: 5
     networks:
       - anchor-network
+    profiles:
+      - minimum
+      - default
+      - full
+      - core-bitcoin
 
   core-postgres:
     image: postgres:16-alpine
@@ -50,6 +55,11 @@ services:
       retries: 5
     networks:
       - anchor-network
+    profiles:
+      - minimum
+      - default
+      - full
+      - core-postgres
 
   core-indexer:
     build:
@@ -69,6 +79,11 @@ services:
         condition: service_healthy
     networks:
       - anchor-network
+    profiles:
+      - minimum
+      - default
+      - full
+      - core-indexer
 
   core-wallet:
     build:
@@ -95,6 +110,11 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    profiles:
+      - minimum
+      - default
+      - full
+      - core-wallet
 
   core-testnet:
     build:
@@ -122,6 +142,11 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    profiles:
+      - minimum
+      - default
+      - full
+      - core-testnet
 
   # Backup Service - Backup and restore Docker volumes, databases
   core-backup:
@@ -153,8 +178,13 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    profiles:
+      - minimum
+      - default
+      - full
+      - core-backup
 
-  # Electrs - Electrum Server for address indexing (default)
+  # Electrs - Electrum Server for address indexing (default electrum server)
   core-electrs:
     build:
       context: ./docker/electrs
@@ -177,15 +207,20 @@ services:
     networks:
       - anchor-network
     restart: unless-stopped
+    profiles:
+      - default
+      - full
+      - core-electrs
 
-  # Fulcrum - High-performance Electrum Server (alternative)
+  # Fulcrum - High-performance Electrum Server (alternative to electrs)
   core-fulcrum:
-    image: cculianu/fulcrum:latest
+    build:
+      context: ./docker/fulcrum
+      dockerfile: Dockerfile
+    image: anchor-fulcrum:latest
     container_name: anchor-core-fulcrum
-    command: ["Fulcrum", "/data/fulcrum.conf"]
     volumes:
       - fulcrum-data:/data
-      - ./docker/fulcrum/fulcrum.conf:/data/fulcrum.conf:ro
     ports:
       - "50001:50001"
     depends_on:
@@ -195,7 +230,8 @@ services:
       - anchor-network
     restart: unless-stopped
     profiles:
-      - fulcrum
+      - minimum
+      - core-fulcrum
 
   # =============================================
   # EXPLORERS (explorer-)
@@ -214,6 +250,10 @@ services:
     networks:
       - anchor-network
     restart: unless-stopped
+    profiles:
+      - default
+      - full
+      - explorer-mempool
 
   explorer-mempool-api:
     image: mempool/backend:latest
@@ -241,6 +281,10 @@ services:
     networks:
       - anchor-network
     restart: unless-stopped
+    profiles:
+      - default
+      - full
+      - explorer-mempool
 
   explorer-mempool-web:
     image: mempool/frontend:latest
@@ -255,6 +299,10 @@ services:
     networks:
       - anchor-network
     restart: unless-stopped
+    profiles:
+      - default
+      - full
+      - explorer-mempool
 
   explorer-btc-rpc:
     image: getumbrel/btc-rpc-explorer:v3.3.0
@@ -280,11 +328,13 @@ services:
     depends_on:
       core-bitcoin:
         condition: service_healthy
-      core-electrs:
-        condition: service_started
     networks:
       - anchor-network
     restart: unless-stopped
+    profiles:
+      - minimum
+      - full
+      - explorer-btc-rpc
 
   # Esplora - Blockstream Block Explorer
   explorer-esplora:
@@ -303,6 +353,9 @@ services:
     networks:
       - anchor-network
     restart: unless-stopped
+    profiles:
+      - full
+      - explorer-esplora
 
   # Bitfeed - Real-time Bitcoin Transaction Visualizer
   explorer-bitfeed-api:
@@ -323,6 +376,9 @@ services:
     networks:
       - anchor-network
     restart: unless-stopped
+    profiles:
+      - full
+      - explorer-bitfeed
 
   explorer-bitfeed-web:
     image: ghcr.io/bitfeed-project/bitfeed-client:v2.1.2
@@ -338,6 +394,9 @@ services:
     networks:
       - anchor-network
     restart: unless-stopped
+    profiles:
+      - full
+      - explorer-bitfeed
 
   # =============================================
   # NETWORKING (networking-)
@@ -361,6 +420,9 @@ services:
     networks:
       - anchor-network
     restart: unless-stopped
+    profiles:
+      - full
+      - networking-tailscale
 
   # Cloudflare Tunnel
   networking-cloudflare:
@@ -372,6 +434,9 @@ services:
     networks:
       - anchor-network
     restart: unless-stopped
+    profiles:
+      - full
+      - networking-cloudflare
 
   # Tor Proxy - Privacy network for Bitcoin
   networking-tor:
@@ -394,6 +459,11 @@ services:
       timeout: 30s
       retries: 3
       start_period: 120s
+    profiles:
+      - minimum
+      - default
+      - full
+      - networking-tor
 
   # =============================================
   # MONITORING (monitoring-)
@@ -426,6 +496,9 @@ services:
     networks:
       - anchor-network
     restart: unless-stopped
+    profiles:
+      - full
+      - monitoring-netdata
 
   # =============================================
   # ANCHOR DASHBOARD (anchor-)
@@ -440,6 +513,8 @@ services:
       - "8010:8010"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - .:/anchor-project
+    working_dir: /anchor-project
     environment:
       HOST: 0.0.0.0
       PORT: 8010
@@ -449,12 +524,11 @@ services:
       BITCOIN_RPC_PASSWORD: anchor
       DATABASE_URL: postgres://anchor:anchor@core-postgres:5432/anchor
       RUST_LOG: dashboard_backend=info
+      COMPOSE_PROJECT_NAME: anchor
     depends_on:
       core-postgres:
         condition: service_healthy
       core-bitcoin:
-        condition: service_healthy
-      core-wallet:
         condition: service_healthy
     networks:
       - anchor-network
@@ -464,6 +538,11 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    profiles:
+      - minimum
+      - default
+      - full
+      - anchor-dashboard
 
   anchor-dashboard-frontend:
     build:
@@ -482,6 +561,11 @@ services:
     networks:
       - anchor-network
     restart: unless-stopped
+    profiles:
+      - minimum
+      - default
+      - full
+      - anchor-dashboard
 
   # =============================================
   # APPS (app-)
@@ -505,6 +589,11 @@ services:
         condition: service_healthy
     networks:
       - anchor-network
+    profiles:
+      - minimum
+      - default
+      - full
+      - app-threads
 
   app-threads-frontend:
     build:
@@ -522,6 +611,11 @@ services:
       - core-wallet
     networks:
       - anchor-network
+    profiles:
+      - minimum
+      - default
+      - full
+      - app-threads
 
   # Anchor Pixel - Collaborative Bitcoin Canvas
   app-pixel-backend:
@@ -556,6 +650,9 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    profiles:
+      - full
+      - app-pixel
 
   app-pixel-frontend:
     build:
@@ -573,6 +670,9 @@ services:
     networks:
       - anchor-network
     restart: unless-stopped
+    profiles:
+      - full
+      - app-pixel
 
   # Anchor Map - Bitcoin-Powered Map Markers
   app-map-backend:
@@ -607,6 +707,9 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    profiles:
+      - full
+      - app-map
 
   app-map-frontend:
     build:
@@ -624,6 +727,9 @@ services:
     networks:
       - anchor-network
     restart: unless-stopped
+    profiles:
+      - full
+      - app-map
 
   # Anchor DNS - Decentralized DNS on Bitcoin
   app-dns-backend:
@@ -658,6 +764,9 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    profiles:
+      - full
+      - app-dns
 
   app-dns-frontend:
     build:
@@ -675,6 +784,9 @@ services:
     networks:
       - anchor-network
     restart: unless-stopped
+    profiles:
+      - full
+      - app-dns
 
   # Anchor Proof - Proof of Existence
   app-proof-backend:
@@ -709,6 +821,9 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    profiles:
+      - full
+      - app-proof
 
   app-proof-frontend:
     build:
@@ -726,6 +841,9 @@ services:
     networks:
       - anchor-network
     restart: unless-stopped
+    profiles:
+      - full
+      - app-proof
 
   # Anchor Tokens - UTXO-based Token Protocol
   app-tokens-backend:
@@ -760,6 +878,9 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    profiles:
+      - full
+      - app-tokens
 
   app-tokens-frontend:
     build:
@@ -777,6 +898,9 @@ services:
     networks:
       - anchor-network
     restart: unless-stopped
+    profiles:
+      - full
+      - app-tokens
 
   # Anchor Oracles - Decentralized Oracle Network
   app-oracles-postgres:
@@ -797,6 +921,9 @@ services:
     networks:
       - anchor-network
     restart: unless-stopped
+    profiles:
+      - full
+      - app-oracles
 
   app-oracles-backend:
     build:
@@ -827,6 +954,9 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    profiles:
+      - full
+      - app-oracles
 
   app-oracles-frontend:
     build:
@@ -843,6 +973,9 @@ services:
     networks:
       - anchor-network
     restart: unless-stopped
+    profiles:
+      - full
+      - app-oracles
 
   # Anchor Lottery - Trustless Lottery with DLC Payouts
   app-lottery-postgres:
@@ -863,6 +996,9 @@ services:
     networks:
       - anchor-network
     restart: unless-stopped
+    profiles:
+      - full
+      - app-lottery
 
   app-lottery-backend:
     build:
@@ -896,6 +1032,9 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    profiles:
+      - full
+      - app-lottery
 
   app-lottery-frontend:
     build:
@@ -912,6 +1051,9 @@ services:
     networks:
       - anchor-network
     restart: unless-stopped
+    profiles:
+      - full
+      - app-lottery
 
 volumes:
   bitcoin-data:
