@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, memo } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
@@ -40,14 +40,60 @@ import {
   RotateCcw,
   Lock,
   MoreVertical,
+  ChevronDown,
+  ChevronRight,
+  Clock,
+  Blocks,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apps, getAppStatus } from "@/lib/apps";
-import { fetchContainers, startContainer, stopContainer, fetchUserProfile, fetchInstallationStatus, shutdownAll, restartAll } from "@/lib/api";
+import { fetchContainers, startContainer, stopContainer, fetchUserProfile, fetchInstallationStatus, shutdownAll, restartAll, fetchBlockchainInfo } from "@/lib/api";
 import { getServiceIdFromAppId } from "@/lib/service-rules";
 import { MultiLogsModal } from "./multi-logs-modal";
 import { MultiTerminalModal } from "./multi-terminal-modal";
 import { NotificationBell } from "./notification-bell";
+
+// Memoized Clock component - manages its own state to avoid sidebar re-renders
+const SidebarClock = memo(function SidebarClock() {
+  const [currentTime, setCurrentTime] = useState<Date>(new Date());
+  
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="flex items-center gap-2 text-muted-foreground">
+      <Clock className="w-3.5 h-3.5" />
+      <span className="font-mono tabular-nums">
+        {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+      </span>
+    </div>
+  );
+});
+
+// Memoized BlockHeight component - manages its own query to avoid sidebar re-renders
+const SidebarBlockHeight = memo(function SidebarBlockHeight() {
+  const { data: blockchainInfo } = useQuery({
+    queryKey: ["blockchain-info-sidebar"],
+    queryFn: fetchBlockchainInfo,
+    refetchInterval: 10000, // Refresh every 10 seconds
+  });
+
+  if (!blockchainInfo) return null;
+
+  return (
+    <div className="flex items-center gap-2 text-muted-foreground">
+      <Blocks className="w-3.5 h-3.5 text-primary" />
+      <span className="font-mono tabular-nums text-foreground font-medium">
+        {blockchainInfo.blocks.toLocaleString()}
+      </span>
+    </div>
+  );
+});
 
 // Dynamic greeting messages based on time of day
 function getGreeting(t: (key: string, fallback: string) => string): { greeting: string; emoji: string } {
@@ -160,6 +206,20 @@ const iconMap: Record<string, React.ElementType> = {
   Activity,
 };
 
+// Categories that can be collapsed
+type CategoryKey = "protocol" | "apps" | "explorers" | "networking" | "electrum" | "storage" | "monitoring";
+
+// Default expanded state - all expanded by default
+const DEFAULT_EXPANDED: Record<CategoryKey, boolean> = {
+  protocol: true,
+  apps: true,
+  explorers: true,
+  networking: true,
+  electrum: true,
+  storage: true,
+  monitoring: true,
+};
+
 export function Sidebar() {
   const { t } = useTranslation();
   const pathname = usePathname();
@@ -172,6 +232,31 @@ export function Sidebar() {
   const [isShuttingDown, setIsShuttingDown] = useState(false);
   const [isRestarting, setIsRestarting] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  
+  // Collapsed categories state with localStorage persistence
+  const [expandedCategories, setExpandedCategories] = useState<Record<CategoryKey, boolean>>(DEFAULT_EXPANDED);
+  
+  // Load collapsed state from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("anchor-sidebar-expanded");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setExpandedCategories({ ...DEFAULT_EXPANDED, ...parsed });
+      } catch {
+        // Invalid JSON, use defaults
+      }
+    }
+  }, []);
+  
+  // Toggle category expansion
+  const toggleCategory = (category: CategoryKey) => {
+    setExpandedCategories((prev) => {
+      const next = { ...prev, [category]: !prev[category] };
+      localStorage.setItem("anchor-sidebar-expanded", JSON.stringify(next));
+      return next;
+    });
+  };
   
   // Dynamic greeting - changes on mount and every 30 minutes
   const [greeting, setGreeting] = useState<{ greeting: string; emoji: string }>({ greeting: "", emoji: "" });
@@ -382,6 +467,41 @@ export function Sidebar() {
           )}
         </div>
       </div>
+    );
+  };
+
+  // Collapsible category header component
+  const CategoryHeader = ({
+    category,
+    icon: Icon,
+    label,
+    count,
+  }: {
+    category: CategoryKey;
+    icon: React.ElementType;
+    label: string;
+    count: number;
+  }) => {
+    const isExpanded = expandedCategories[category];
+    
+    return (
+      <button
+        onClick={() => toggleCategory(category)}
+        className="w-full flex items-center justify-between px-3 py-1.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors group"
+      >
+        <div className="flex items-center gap-2">
+          <Icon className="w-3 h-3" />
+          <span>{label}</span>
+          <span className="text-[9px] opacity-60 font-normal">({count})</span>
+        </div>
+        <div className="transition-transform duration-200">
+          {isExpanded ? (
+            <ChevronDown className="w-3 h-3 opacity-50 group-hover:opacity-100" />
+          ) : (
+            <ChevronRight className="w-3 h-3 opacity-50 group-hover:opacity-100" />
+          )}
+        </div>
+      </button>
     );
   };
 
@@ -648,74 +768,130 @@ export function Sidebar() {
           {/* Anchor Protocol */}
           {anchorList.length > 0 && (
             <div className="pt-4">
-              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-3 mb-2 flex items-center gap-2">
-                <Anchor className="w-3 h-3" />
-                {t("sidebar.protocol")}
-              </p>
-              {anchorList.map(renderServiceItem)}
+              <CategoryHeader
+                category="protocol"
+                icon={Anchor}
+                label={t("sidebar.protocol")}
+                count={anchorList.length}
+              />
+              {expandedCategories.protocol && (
+                <div className="mt-1 space-y-0.5">
+                  {anchorList.map(renderServiceItem)}
+                </div>
+              )}
             </div>
           )}
 
           {/* Apps */}
-          <div className="pt-4">
-            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-3 mb-2 flex items-center gap-2">
-              <AppWindow className="w-3 h-3" />
-              {t("sidebar.apps")}
-            </p>
-            {appsList.map(renderServiceItem)}
-          </div>
+          {appsList.length > 0 && (
+            <div className="pt-4">
+              <CategoryHeader
+                category="apps"
+                icon={AppWindow}
+                label={t("sidebar.apps")}
+                count={appsList.length}
+              />
+              {expandedCategories.apps && (
+                <div className="mt-1 space-y-0.5">
+                  {appsList.map(renderServiceItem)}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Explorers */}
-          <div className="pt-4">
-            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-3 mb-2 flex items-center gap-2">
-              <Search className="w-3 h-3" />
-              {t("sidebar.explorers")}
-            </p>
-            {explorersList.map(renderServiceItem)}
-          </div>
+          {explorersList.length > 0 && (
+            <div className="pt-4">
+              <CategoryHeader
+                category="explorers"
+                icon={Search}
+                label={t("sidebar.explorers")}
+                count={explorersList.length}
+              />
+              {expandedCategories.explorers && (
+                <div className="mt-1 space-y-0.5">
+                  {explorersList.map(renderServiceItem)}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Networking */}
-          <div className="pt-4">
-            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-3 mb-2 flex items-center gap-2">
-              <Network className="w-3 h-3" />
-              {t("sidebar.networking")}
-            </p>
-            {networkingList.map(renderServiceItem)}
-          </div>
+          {networkingList.length > 0 && (
+            <div className="pt-4">
+              <CategoryHeader
+                category="networking"
+                icon={Network}
+                label={t("sidebar.networking")}
+                count={networkingList.length}
+              />
+              {expandedCategories.networking && (
+                <div className="mt-1 space-y-0.5">
+                  {networkingList.map(renderServiceItem)}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Electrum Servers */}
           {electrumList.length > 0 && (
             <div className="pt-4">
-              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-3 mb-2 flex items-center gap-2">
-                <Zap className="w-3 h-3" />
-                {t("sidebar.electrum")}
-              </p>
-              {electrumList.map(renderServiceItem)}
+              <CategoryHeader
+                category="electrum"
+                icon={Zap}
+                label={t("sidebar.electrum")}
+                count={electrumList.length}
+              />
+              {expandedCategories.electrum && (
+                <div className="mt-1 space-y-0.5">
+                  {electrumList.map(renderServiceItem)}
+                </div>
+              )}
             </div>
           )}
 
           {/* Storage / Infrastructure */}
           {storageList.length > 0 && (
             <div className="pt-4">
-              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-3 mb-2 flex items-center gap-2">
-                <Database className="w-3 h-3" />
-                {t("sidebar.storage")}
-              </p>
-              {storageList.map(renderServiceItem)}
+              <CategoryHeader
+                category="storage"
+                icon={Database}
+                label={t("sidebar.storage")}
+                count={storageList.length}
+              />
+              {expandedCategories.storage && (
+                <div className="mt-1 space-y-0.5">
+                  {storageList.map(renderServiceItem)}
+                </div>
+              )}
             </div>
           )}
 
           {/* Monitoring */}
           {monitoringList.length > 0 && (
             <div className="pt-4">
-              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-3 mb-2 flex items-center gap-2">
-                <Activity className="w-3 h-3" />
-                {t("sidebar.monitoring")}
-              </p>
-              {monitoringList.map(renderServiceItem)}
+              <CategoryHeader
+                category="monitoring"
+                icon={Activity}
+                label={t("sidebar.monitoring")}
+                count={monitoringList.length}
+              />
+              {expandedCategories.monitoring && (
+                <div className="mt-1 space-y-0.5">
+                  {monitoringList.map(renderServiceItem)}
+                </div>
+              )}
             </div>
           )}
         </nav>
+
+        {/* Footer - Clock & Block Height */}
+        <div className="border-t border-border px-4 py-3 shrink-0 bg-muted/30">
+          <div className="flex items-center justify-between text-xs">
+            <SidebarClock />
+            <SidebarBlockHeight />
+          </div>
+        </div>
       </aside>
 
       {/* Logs Modal (with tabs for multiple containers) */}

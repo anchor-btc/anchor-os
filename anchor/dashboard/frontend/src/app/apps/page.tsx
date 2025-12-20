@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
@@ -15,10 +15,16 @@ import {
 } from "@/lib/api";
 import { apps } from "@/lib/apps";
 import { AppCard } from "@/components/app-card";
+import { AppListItem } from "@/components/app-list-item";
 import { MultiLogsModal } from "@/components/multi-logs-modal";
 import { MultiTerminalModal } from "@/components/multi-terminal-modal";
 import { isRequiredService } from "@/lib/service-rules";
-import { Loader2, AppWindow, Search, Network, Play, Square, Zap, Anchor, Database, Activity } from "lucide-react";
+import { Loader2, AppWindow, Search, Network, Play, Square, Zap, Anchor, Database, Activity, LayoutGrid, List } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+type ViewMode = "grid" | "list";
+
+const VIEW_MODE_STORAGE_KEY = "anchor-apps-view-mode";
 
 export default function AppsPage() {
   const { t } = useTranslation();
@@ -26,6 +32,21 @@ export default function AppsPage() {
   const [logsContainers, setLogsContainers] = useState<string[] | null>(null);
   const [terminalContainers, setTerminalContainers] = useState<string[] | null>(null);
   const [installingService, setInstallingService] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
+
+  // Load saved view mode from localStorage on mount
+  useEffect(() => {
+    const savedViewMode = localStorage.getItem(VIEW_MODE_STORAGE_KEY);
+    if (savedViewMode === "grid" || savedViewMode === "list") {
+      setViewMode(savedViewMode);
+    }
+  }, []);
+
+  // Save view mode to localStorage when it changes
+  const handleViewModeChange = (mode: ViewMode) => {
+    setViewMode(mode);
+    localStorage.setItem(VIEW_MODE_STORAGE_KEY, mode);
+  };
 
   const {
     data: containersData,
@@ -171,6 +192,36 @@ export default function AppsPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            {/* View Mode Toggle */}
+            <div className="flex items-center p-1 bg-muted rounded-lg">
+              <button
+                onClick={() => handleViewModeChange("grid")}
+                className={cn(
+                  "p-2 rounded-md transition-colors",
+                  viewMode === "grid"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                title={t("apps.gridView", "Grid View")}
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => handleViewModeChange("list")}
+                className={cn(
+                  "p-2 rounded-md transition-colors",
+                  viewMode === "list"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                title={t("apps.listView", "List View")}
+              >
+                <List className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="w-px h-6 bg-border" />
+
             <button
               onClick={() => startAllMutation.mutate()}
               disabled={startAllMutation.isPending || stoppedContainers.length === 0}
@@ -207,22 +258,41 @@ export default function AppsPage() {
               {t("apps.bitcoinApps")}
             </span>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {appsList.map((app) => (
-              <AppCard
-                key={app.id}
-                app={app}
-                containers={containers}
-                onToggle={() => refetch()}
-                onShowLogs={(names) => setLogsContainers(names)}
-                onShowTerminal={(names) => setTerminalContainers(names)}
-                installStatus={getInstallStatus(app.id)}
-                onInstall={() => handleInstall(app.id)}
-                onUninstall={(removeContainers) => handleUninstall(app.id, removeContainers)}
-                isRequired={isRequiredService(app.id, installedServices)}
-              />
-            ))}
-          </div>
+          {viewMode === "grid" ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {appsList.map((app) => (
+                <AppCard
+                  key={app.id}
+                  app={app}
+                  containers={containers}
+                  onToggle={() => refetch()}
+                  onShowLogs={(names) => setLogsContainers(names)}
+                  onShowTerminal={(names) => setTerminalContainers(names)}
+                  installStatus={getInstallStatus(app.id)}
+                  onInstall={() => handleInstall(app.id)}
+                  onUninstall={(removeContainers) => handleUninstall(app.id, removeContainers)}
+                  isRequired={isRequiredService(app.id, installedServices)}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+              {appsList.map((app) => (
+                <AppListItem
+                  key={app.id}
+                  app={app}
+                  containers={containers}
+                  onToggle={() => refetch()}
+                  onShowLogs={(names) => setLogsContainers(names)}
+                  onShowTerminal={(names) => setTerminalContainers(names)}
+                  installStatus={getInstallStatus(app.id)}
+                  onInstall={() => handleInstall(app.id)}
+                  onUninstall={(removeContainers) => handleUninstall(app.id, removeContainers)}
+                  isRequired={isRequiredService(app.id, installedServices)}
+                />
+              ))}
+            </div>
+          )}
         </section>
 
         {/* Explorers */}
@@ -235,22 +305,41 @@ export default function AppsPage() {
                 {t("apps.blockchainExplorers")}
               </span>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {explorerApps.map((app) => (
-                <AppCard
-                  key={app.id}
-                  app={app}
-                  containers={containers}
-                  onToggle={() => refetch()}
-                  onShowLogs={(names) => setLogsContainers(names)}
-                  onShowTerminal={(names) => setTerminalContainers(names)}
-                  installStatus={getInstallStatus(app.id)}
-                  onInstall={() => handleInstall(app.id)}
-                  onUninstall={() => handleUninstall(app.id)}
-                  isRequired={isRequiredService(app.id, installedServices)}
-                />
-              ))}
-            </div>
+            {viewMode === "grid" ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {explorerApps.map((app) => (
+                  <AppCard
+                    key={app.id}
+                    app={app}
+                    containers={containers}
+                    onToggle={() => refetch()}
+                    onShowLogs={(names) => setLogsContainers(names)}
+                    onShowTerminal={(names) => setTerminalContainers(names)}
+                    installStatus={getInstallStatus(app.id)}
+                    onInstall={() => handleInstall(app.id)}
+                    onUninstall={() => handleUninstall(app.id)}
+                    isRequired={isRequiredService(app.id, installedServices)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="bg-card border border-border rounded-xl overflow-hidden">
+                {explorerApps.map((app) => (
+                  <AppListItem
+                    key={app.id}
+                    app={app}
+                    containers={containers}
+                    onToggle={() => refetch()}
+                    onShowLogs={(names) => setLogsContainers(names)}
+                    onShowTerminal={(names) => setTerminalContainers(names)}
+                    installStatus={getInstallStatus(app.id)}
+                    onInstall={() => handleInstall(app.id)}
+                    onUninstall={() => handleUninstall(app.id)}
+                    isRequired={isRequiredService(app.id, installedServices)}
+                  />
+                ))}
+              </div>
+            )}
           </section>
         )}
 
@@ -264,22 +353,41 @@ export default function AppsPage() {
                 {t("apps.tunnelsVpn")}
               </span>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {networkingApps.map((app) => (
-                <AppCard
-                  key={app.id}
-                  app={app}
-                  containers={containers}
-                  onToggle={() => refetch()}
-                  onShowLogs={(names) => setLogsContainers(names)}
-                  onShowTerminal={(names) => setTerminalContainers(names)}
-                  installStatus={getInstallStatus(app.id)}
-                  onInstall={() => handleInstall(app.id)}
-                  onUninstall={() => handleUninstall(app.id)}
-                  isRequired={isRequiredService(app.id, installedServices)}
-                />
-              ))}
-            </div>
+            {viewMode === "grid" ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {networkingApps.map((app) => (
+                  <AppCard
+                    key={app.id}
+                    app={app}
+                    containers={containers}
+                    onToggle={() => refetch()}
+                    onShowLogs={(names) => setLogsContainers(names)}
+                    onShowTerminal={(names) => setTerminalContainers(names)}
+                    installStatus={getInstallStatus(app.id)}
+                    onInstall={() => handleInstall(app.id)}
+                    onUninstall={() => handleUninstall(app.id)}
+                    isRequired={isRequiredService(app.id, installedServices)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="bg-card border border-border rounded-xl overflow-hidden">
+                {networkingApps.map((app) => (
+                  <AppListItem
+                    key={app.id}
+                    app={app}
+                    containers={containers}
+                    onToggle={() => refetch()}
+                    onShowLogs={(names) => setLogsContainers(names)}
+                    onShowTerminal={(names) => setTerminalContainers(names)}
+                    installStatus={getInstallStatus(app.id)}
+                    onInstall={() => handleInstall(app.id)}
+                    onUninstall={() => handleUninstall(app.id)}
+                    isRequired={isRequiredService(app.id, installedServices)}
+                  />
+                ))}
+              </div>
+            )}
           </section>
         )}
 
@@ -293,22 +401,41 @@ export default function AppsPage() {
                 {t("apps.electrumServers")}
               </span>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {electrumApps.map((app) => (
-                <AppCard
-                  key={app.id}
-                  app={app}
-                  containers={containers}
-                  onToggle={() => refetch()}
-                  onShowLogs={(names) => setLogsContainers(names)}
-                  onShowTerminal={(names) => setTerminalContainers(names)}
-                  installStatus={getInstallStatus(app.id)}
-                  onInstall={() => handleInstall(app.id)}
-                  onUninstall={(removeContainers) => handleUninstall(app.id, removeContainers)}
-                  isRequired={isRequiredService(app.id, installedServices)}
-                />
-              ))}
-            </div>
+            {viewMode === "grid" ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {electrumApps.map((app) => (
+                  <AppCard
+                    key={app.id}
+                    app={app}
+                    containers={containers}
+                    onToggle={() => refetch()}
+                    onShowLogs={(names) => setLogsContainers(names)}
+                    onShowTerminal={(names) => setTerminalContainers(names)}
+                    installStatus={getInstallStatus(app.id)}
+                    onInstall={() => handleInstall(app.id)}
+                    onUninstall={(removeContainers) => handleUninstall(app.id, removeContainers)}
+                    isRequired={isRequiredService(app.id, installedServices)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="bg-card border border-border rounded-xl overflow-hidden">
+                {electrumApps.map((app) => (
+                  <AppListItem
+                    key={app.id}
+                    app={app}
+                    containers={containers}
+                    onToggle={() => refetch()}
+                    onShowLogs={(names) => setLogsContainers(names)}
+                    onShowTerminal={(names) => setTerminalContainers(names)}
+                    installStatus={getInstallStatus(app.id)}
+                    onInstall={() => handleInstall(app.id)}
+                    onUninstall={(removeContainers) => handleUninstall(app.id, removeContainers)}
+                    isRequired={isRequiredService(app.id, installedServices)}
+                  />
+                ))}
+              </div>
+            )}
           </section>
         )}
 
@@ -322,22 +449,41 @@ export default function AppsPage() {
                 {t("apps.anchorProtocol")}
               </span>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {anchorApps.map((app) => (
-                <AppCard
-                  key={app.id}
-                  app={app}
-                  containers={containers}
-                  onToggle={() => refetch()}
-                  onShowLogs={(names) => setLogsContainers(names)}
-                  onShowTerminal={(names) => setTerminalContainers(names)}
-                  installStatus={getInstallStatus(app.id)}
-                  onInstall={() => handleInstall(app.id)}
-                  onUninstall={(removeContainers) => handleUninstall(app.id, removeContainers)}
-                  isRequired={isRequiredService(app.id, installedServices)}
-                />
-              ))}
-            </div>
+            {viewMode === "grid" ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {anchorApps.map((app) => (
+                  <AppCard
+                    key={app.id}
+                    app={app}
+                    containers={containers}
+                    onToggle={() => refetch()}
+                    onShowLogs={(names) => setLogsContainers(names)}
+                    onShowTerminal={(names) => setTerminalContainers(names)}
+                    installStatus={getInstallStatus(app.id)}
+                    onInstall={() => handleInstall(app.id)}
+                    onUninstall={(removeContainers) => handleUninstall(app.id, removeContainers)}
+                    isRequired={isRequiredService(app.id, installedServices)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="bg-card border border-border rounded-xl overflow-hidden">
+                {anchorApps.map((app) => (
+                  <AppListItem
+                    key={app.id}
+                    app={app}
+                    containers={containers}
+                    onToggle={() => refetch()}
+                    onShowLogs={(names) => setLogsContainers(names)}
+                    onShowTerminal={(names) => setTerminalContainers(names)}
+                    installStatus={getInstallStatus(app.id)}
+                    onInstall={() => handleInstall(app.id)}
+                    onUninstall={(removeContainers) => handleUninstall(app.id, removeContainers)}
+                    isRequired={isRequiredService(app.id, installedServices)}
+                  />
+                ))}
+              </div>
+            )}
           </section>
         )}
 
@@ -351,22 +497,41 @@ export default function AppsPage() {
                 {t("apps.storageServices")}
               </span>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {storageApps.map((app) => (
-                <AppCard
-                  key={app.id}
-                  app={app}
-                  containers={containers}
-                  onToggle={() => refetch()}
-                  onShowLogs={(names) => setLogsContainers(names)}
-                  onShowTerminal={(names) => setTerminalContainers(names)}
-                  installStatus={getInstallStatus(app.id)}
-                  onInstall={() => handleInstall(app.id)}
-                  onUninstall={(removeContainers) => handleUninstall(app.id, removeContainers)}
-                  isRequired={isRequiredService(app.id, installedServices)}
-                />
-              ))}
-            </div>
+            {viewMode === "grid" ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {storageApps.map((app) => (
+                  <AppCard
+                    key={app.id}
+                    app={app}
+                    containers={containers}
+                    onToggle={() => refetch()}
+                    onShowLogs={(names) => setLogsContainers(names)}
+                    onShowTerminal={(names) => setTerminalContainers(names)}
+                    installStatus={getInstallStatus(app.id)}
+                    onInstall={() => handleInstall(app.id)}
+                    onUninstall={(removeContainers) => handleUninstall(app.id, removeContainers)}
+                    isRequired={isRequiredService(app.id, installedServices)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="bg-card border border-border rounded-xl overflow-hidden">
+                {storageApps.map((app) => (
+                  <AppListItem
+                    key={app.id}
+                    app={app}
+                    containers={containers}
+                    onToggle={() => refetch()}
+                    onShowLogs={(names) => setLogsContainers(names)}
+                    onShowTerminal={(names) => setTerminalContainers(names)}
+                    installStatus={getInstallStatus(app.id)}
+                    onInstall={() => handleInstall(app.id)}
+                    onUninstall={(removeContainers) => handleUninstall(app.id, removeContainers)}
+                    isRequired={isRequiredService(app.id, installedServices)}
+                  />
+                ))}
+              </div>
+            )}
           </section>
         )}
 
@@ -380,22 +545,41 @@ export default function AppsPage() {
                 {t("apps.monitoringServices")}
               </span>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {monitoringApps.map((app) => (
-                <AppCard
-                  key={app.id}
-                  app={app}
-                  containers={containers}
-                  onToggle={() => refetch()}
-                  onShowLogs={(names) => setLogsContainers(names)}
-                  onShowTerminal={(names) => setTerminalContainers(names)}
-                  installStatus={getInstallStatus(app.id)}
-                  onInstall={() => handleInstall(app.id)}
-                  onUninstall={(removeContainers) => handleUninstall(app.id, removeContainers)}
-                  isRequired={isRequiredService(app.id, installedServices)}
-                />
-              ))}
-            </div>
+            {viewMode === "grid" ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {monitoringApps.map((app) => (
+                  <AppCard
+                    key={app.id}
+                    app={app}
+                    containers={containers}
+                    onToggle={() => refetch()}
+                    onShowLogs={(names) => setLogsContainers(names)}
+                    onShowTerminal={(names) => setTerminalContainers(names)}
+                    installStatus={getInstallStatus(app.id)}
+                    onInstall={() => handleInstall(app.id)}
+                    onUninstall={(removeContainers) => handleUninstall(app.id, removeContainers)}
+                    isRequired={isRequiredService(app.id, installedServices)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="bg-card border border-border rounded-xl overflow-hidden">
+                {monitoringApps.map((app) => (
+                  <AppListItem
+                    key={app.id}
+                    app={app}
+                    containers={containers}
+                    onToggle={() => refetch()}
+                    onShowLogs={(names) => setLogsContainers(names)}
+                    onShowTerminal={(names) => setTerminalContainers(names)}
+                    installStatus={getInstallStatus(app.id)}
+                    onInstall={() => handleInstall(app.id)}
+                    onUninstall={(removeContainers) => handleUninstall(app.id, removeContainers)}
+                    isRequired={isRequiredService(app.id, installedServices)}
+                  />
+                ))}
+              </div>
+            )}
           </section>
         )}
 
