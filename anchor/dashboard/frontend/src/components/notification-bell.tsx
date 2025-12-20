@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -114,7 +115,14 @@ export function NotificationBell() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  // Ensure we're on the client for portal
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Fetch unread count
   const { data: unreadData } = useQuery({
@@ -170,6 +178,7 @@ export function NotificationBell() {
     <div className="relative" ref={dropdownRef}>
       {/* Bell Button */}
       <button
+        ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
           "relative p-2 rounded-lg transition-colors",
@@ -187,9 +196,13 @@ export function NotificationBell() {
         )}
       </button>
 
-      {/* Dropdown - opens to the right to avoid sidebar overflow */}
-      {isOpen && (
-        <div className="fixed left-64 top-14 w-80 bg-card border border-border rounded-xl shadow-xl overflow-hidden z-[9999]">
+      {/* Dropdown - rendered via portal to ensure it's above everything */}
+      {mounted && isOpen && createPortal(
+        <div 
+          ref={dropdownRef}
+          className="fixed left-64 top-14 w-80 bg-card border border-border rounded-xl shadow-2xl overflow-hidden"
+          style={{ zIndex: 99999 }}
+        >
           {/* Header */}
           <div className="flex items-center justify-between p-3 border-b border-border bg-secondary">
             <h3 className="text-sm font-semibold text-foreground">
@@ -254,7 +267,8 @@ export function NotificationBell() {
               <ExternalLink className="w-3.5 h-3.5" />
             </Link>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
@@ -42,6 +42,86 @@ import { getServiceIdFromAppId } from "@/lib/service-rules";
 import { MultiLogsModal } from "./multi-logs-modal";
 import { MultiTerminalModal } from "./multi-terminal-modal";
 import { NotificationBell } from "./notification-bell";
+
+// Dynamic greeting messages based on time of day
+function getGreeting(t: (key: string, fallback: string) => string): { greeting: string; emoji: string } {
+  const hour = new Date().getHours();
+  
+  // Time-based greetings
+  const morningGreetings = [
+    { greeting: t("greetings.goodMorning", "Good morning"), emoji: "☀️" },
+    { greeting: t("greetings.riseAndShine", "Rise and shine"), emoji: "🌅" },
+    { greeting: t("greetings.topOfTheMorning", "Top of the morning"), emoji: "🌤️" },
+    { greeting: t("greetings.freshStart", "Fresh start today"), emoji: "🌱" },
+    { greeting: t("greetings.coffeeTime", "Coffee time"), emoji: "☕" },
+    { greeting: t("greetings.letsGo", "Let's go"), emoji: "🚀" },
+  ];
+  
+  const afternoonGreetings = [
+    { greeting: t("greetings.goodAfternoon", "Good afternoon"), emoji: "🌞" },
+    { greeting: t("greetings.hopefullyProductive", "Hope you're productive"), emoji: "💪" },
+    { greeting: t("greetings.keepStacking", "Keep stacking"), emoji: "⚡" },
+    { greeting: t("greetings.halfwayThere", "Halfway there"), emoji: "🎯" },
+    { greeting: t("greetings.keepGoing", "Keep going"), emoji: "💫" },
+    { greeting: t("greetings.almostEvening", "Almost evening"), emoji: "🌆" },
+  ];
+  
+  const eveningGreetings = [
+    { greeting: t("greetings.goodEvening", "Good evening"), emoji: "🌙" },
+    { greeting: t("greetings.eveningVibes", "Evening vibes"), emoji: "✨" },
+    { greeting: t("greetings.nightOwl", "Night owl mode"), emoji: "🦉" },
+    { greeting: t("greetings.windingDown", "Winding down"), emoji: "🌅" },
+    { greeting: t("greetings.relaxMode", "Relax mode"), emoji: "😌" },
+    { greeting: t("greetings.eveningShift", "Evening shift"), emoji: "🌃" },
+  ];
+  
+  const lateNightGreetings = [
+    { greeting: t("greetings.stillAwake", "Still awake?"), emoji: "🌃" },
+    { greeting: t("greetings.burningMidnightOil", "Burning midnight oil"), emoji: "🔥" },
+    { greeting: t("greetings.nocturnalCoder", "Nocturnal builder"), emoji: "🛠️" },
+    { greeting: t("greetings.lateNightHacking", "Late night hacking"), emoji: "💻" },
+    { greeting: t("greetings.sleepIsOverrated", "Sleep is overrated"), emoji: "😴" },
+    { greeting: t("greetings.midnightMagic", "Midnight magic"), emoji: "🪄" },
+  ];
+  
+  // Fun Bitcoin-themed greetings (random chance)
+  const bitcoinGreetings = [
+    { greeting: t("greetings.hodlOn", "HODL on"), emoji: "₿" },
+    { greeting: t("greetings.stayHumble", "Stay humble"), emoji: "🙏" },
+    { greeting: t("greetings.stackSats", "Stack sats"), emoji: "⚡" },
+    { greeting: t("greetings.notYourKeys", "Your keys, your coins"), emoji: "🔐" },
+    { greeting: t("greetings.tickTock", "Tick tock"), emoji: "⏰" },
+    { greeting: t("greetings.nextBlock", "Next block"), emoji: "🧱" },
+    { greeting: t("greetings.verifyDontTrust", "Verify, don't trust"), emoji: "🔍" },
+    { greeting: t("greetings.runYourNode", "Run your node"), emoji: "🖥️" },
+    { greeting: t("greetings.beYourOwnBank", "Be your own bank"), emoji: "🏦" },
+    { greeting: t("greetings.fixTheMoney", "Fix the money"), emoji: "🔧" },
+    { greeting: t("greetings.orangePilled", "Orange pilled"), emoji: "🍊" },
+    { greeting: t("greetings.toTheMoon", "To the moon"), emoji: "🌕" },
+    { greeting: t("greetings.diamondHands", "Diamond hands"), emoji: "💎" },
+    { greeting: t("greetings.wagmi", "WAGMI"), emoji: "🤝" },
+    { greeting: t("greetings.lfg", "LFG"), emoji: "🔥" },
+  ];
+  
+  // 25% chance of a Bitcoin greeting
+  if (Math.random() < 0.25) {
+    return bitcoinGreetings[Math.floor(Math.random() * bitcoinGreetings.length)];
+  }
+  
+  let greetings: { greeting: string; emoji: string }[];
+  
+  if (hour >= 5 && hour < 12) {
+    greetings = morningGreetings;
+  } else if (hour >= 12 && hour < 18) {
+    greetings = afternoonGreetings;
+  } else if (hour >= 18 && hour < 23) {
+    greetings = eveningGreetings;
+  } else {
+    greetings = lateNightGreetings;
+  }
+  
+  return greetings[Math.floor(Math.random() * greetings.length)];
+}
 
 const navigationSections = [
   {
@@ -100,6 +180,21 @@ export function Sidebar() {
   const [logsContainers, setLogsContainers] = useState<string[] | null>(null);
   const [terminalContainers, setTerminalContainers] = useState<string[] | null>(null);
   const [pendingContainers, setPendingContainers] = useState<Set<string>>(new Set());
+  
+  // Dynamic greeting - changes on mount and every 30 minutes
+  const [greeting, setGreeting] = useState<{ greeting: string; emoji: string }>({ greeting: "", emoji: "" });
+  
+  useEffect(() => {
+    // Set initial greeting
+    setGreeting(getGreeting(t));
+    
+    // Update greeting every 30 minutes
+    const interval = setInterval(() => {
+      setGreeting(getGreeting(t));
+    }, 30 * 60 * 1000);
+    
+    return () => clearInterval(interval);
+  }, [t]);
 
   const { data: containersData } = useQuery({
     queryKey: ["containers"],
@@ -397,7 +492,10 @@ export function Sidebar() {
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs text-muted-foreground">{t("sidebar.welcome", "Welcome back")}</p>
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <span>{greeting.emoji}</span>
+                  <span>{greeting.greeting}</span>
+                </p>
                 <p className="text-sm font-medium text-foreground truncate">{userProfile.name}</p>
               </div>
             </div>
