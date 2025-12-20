@@ -18,7 +18,7 @@ import { AppCard } from "@/components/app-card";
 import { MultiLogsModal } from "@/components/multi-logs-modal";
 import { MultiTerminalModal } from "@/components/multi-terminal-modal";
 import { isRequiredService } from "@/lib/service-rules";
-import { Loader2, AppWindow, Search, Network, Server, Play, Square } from "lucide-react";
+import { Loader2, AppWindow, Search, Network, Play, Square, Zap, Anchor, Database, Activity } from "lucide-react";
 
 export default function AppsPage() {
   const { t } = useTranslation();
@@ -146,7 +146,10 @@ export default function AppsPage() {
   const appsList = apps.filter((app) => app.category === "app");
   const explorerApps = apps.filter((app) => app.category === "explorer");
   const networkingApps = apps.filter((app) => app.category === "networking");
-  const coreApps = apps.filter((app) => app.category === "core");
+  const electrumApps = apps.filter((app) => app.category === "electrum");
+  const anchorApps = apps.filter((app) => app.category === "anchor");
+  const storageApps = apps.filter((app) => app.category === "storage");
+  const monitoringApps = apps.filter((app) => app.category === "monitoring");
 
   if (isLoading) {
     return (
@@ -280,32 +283,122 @@ export default function AppsPage() {
           </section>
         )}
 
-        {/* Kernel */}
-        <section>
-          <div className="flex items-center gap-2 mb-4">
-            <Server className="w-5 h-5 text-muted-foreground" />
-            <h2 className="text-xl font-semibold text-foreground">{t("sidebar.kernel")}</h2>
-            <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
-              {t("apps.essentialServices")}
-            </span>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {coreApps.map((app) => (
-              <AppCard
-                key={app.id}
-                app={app}
-                containers={containers}
-                onToggle={() => refetch()}
-                onShowLogs={(names) => setLogsContainers(names)}
-                onShowTerminal={(names) => setTerminalContainers(names)}
-                installStatus={getInstallStatus(app.id)}
-                onInstall={() => handleInstall(app.id)}
-                onUninstall={(removeContainers) => handleUninstall(app.id, removeContainers)}
-                isRequired={isRequiredService(app.id, installedServices)}
-              />
-            ))}
-          </div>
-        </section>
+        {/* Electrum Servers */}
+        {electrumApps.length > 0 && (
+          <section>
+            <div className="flex items-center gap-2 mb-4">
+              <Zap className="w-5 h-5 text-muted-foreground" />
+              <h2 className="text-xl font-semibold text-foreground">{t("sidebar.electrum")}</h2>
+              <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                {t("apps.electrumServers")}
+              </span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {electrumApps.map((app) => (
+                <AppCard
+                  key={app.id}
+                  app={app}
+                  containers={containers}
+                  onToggle={() => refetch()}
+                  onShowLogs={(names) => setLogsContainers(names)}
+                  onShowTerminal={(names) => setTerminalContainers(names)}
+                  installStatus={getInstallStatus(app.id)}
+                  onInstall={() => handleInstall(app.id)}
+                  onUninstall={(removeContainers) => handleUninstall(app.id, removeContainers)}
+                  isRequired={isRequiredService(app.id, installedServices)}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Anchor Protocol */}
+        {anchorApps.length > 0 && (
+          <section>
+            <div className="flex items-center gap-2 mb-4">
+              <Anchor className="w-5 h-5 text-muted-foreground" />
+              <h2 className="text-xl font-semibold text-foreground">{t("sidebar.protocol")}</h2>
+              <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                {t("apps.anchorProtocol")}
+              </span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {anchorApps.map((app) => (
+                <AppCard
+                  key={app.id}
+                  app={app}
+                  containers={containers}
+                  onToggle={() => refetch()}
+                  onShowLogs={(names) => setLogsContainers(names)}
+                  onShowTerminal={(names) => setTerminalContainers(names)}
+                  installStatus={getInstallStatus(app.id)}
+                  onInstall={() => handleInstall(app.id)}
+                  onUninstall={(removeContainers) => handleUninstall(app.id, removeContainers)}
+                  isRequired={isRequiredService(app.id, installedServices)}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Storage */}
+        {storageApps.length > 0 && (
+          <section>
+            <div className="flex items-center gap-2 mb-4">
+              <Database className="w-5 h-5 text-muted-foreground" />
+              <h2 className="text-xl font-semibold text-foreground">{t("sidebar.storage")}</h2>
+              <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                {t("apps.storageServices")}
+              </span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {storageApps.map((app) => (
+                <AppCard
+                  key={app.id}
+                  app={app}
+                  containers={containers}
+                  onToggle={() => refetch()}
+                  onShowLogs={(names) => setLogsContainers(names)}
+                  onShowTerminal={(names) => setTerminalContainers(names)}
+                  installStatus={getInstallStatus(app.id)}
+                  onInstall={() => handleInstall(app.id)}
+                  onUninstall={(removeContainers) => handleUninstall(app.id, removeContainers)}
+                  isRequired={isRequiredService(app.id, installedServices)}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Monitoring */}
+        {monitoringApps.length > 0 && (
+          <section>
+            <div className="flex items-center gap-2 mb-4">
+              <Activity className="w-5 h-5 text-muted-foreground" />
+              <h2 className="text-xl font-semibold text-foreground">{t("sidebar.monitoring")}</h2>
+              <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                {t("apps.monitoringServices")}
+              </span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {monitoringApps.map((app) => (
+                <AppCard
+                  key={app.id}
+                  app={app}
+                  containers={containers}
+                  onToggle={() => refetch()}
+                  onShowLogs={(names) => setLogsContainers(names)}
+                  onShowTerminal={(names) => setTerminalContainers(names)}
+                  installStatus={getInstallStatus(app.id)}
+                  onInstall={() => handleInstall(app.id)}
+                  onUninstall={(removeContainers) => handleUninstall(app.id, removeContainers)}
+                  isRequired={isRequiredService(app.id, installedServices)}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
       </div>
 
       {/* Logs Modal (with tabs for multiple containers) */}

@@ -375,6 +375,171 @@ pub async fn restart_container(
     }
 }
 
+/// Bulk action response
+#[derive(Debug, Serialize, ToSchema)]
+pub struct BulkActionResponse {
+    pub success: bool,
+    pub message: String,
+    pub affected_containers: Vec<String>,
+    pub failed_containers: Vec<String>,
+}
+
+/// Stop all anchor-* containers (except dashboard)
+#[utoipa::path(
+    post,
+    path = "/docker/shutdown",
+    tag = "Docker",
+    responses(
+        (status = 200, description = "All containers stopped", body = BulkActionResponse),
+        (status = 500, description = "Internal server error")
+    )
+)]
+pub async fn shutdown_all(
+    State(state): State<Arc<AppState>>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    info!("Shutting down all Anchor OS containers...");
+
+    // Containers that must stay running for the dashboard to work
+    let essential_containers = [
+        "anchor-dashboard-backend",
+        "anchor-dashboard-frontend",
+    ];
+
+    // List all anchor-* containers
+    let mut filters = HashMap::new();
+    filters.insert("name", vec!["anchor-"]);
+
+    let options = Some(ListContainersOptions {
+        all: false, // Only running containers
+        filters,
+        ..Default::default()
+    });
+
+    let containers = state
+        .docker
+        .list_containers(options)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let mut affected = Vec::new();
+    let mut failed = Vec::new();
+
+    for container in containers {
+        let name = container
+            .names
+            .as_ref()
+            .and_then(|n| n.first())
+            .map(|n| n.trim_start_matches('/').to_string())
+            .unwrap_or_default();
+
+        // Skip essential containers
+        if essential_containers.iter().any(|e| name.contains(e)) {
+            continue;
+        }
+
+        let stop_options = Some(StopContainerOptions { t: 10 });
+        match state.docker.stop_container(&name, stop_options).await {
+            Ok(_) => {
+                info!("Stopped container: {}", name);
+                affected.push(name);
+            }
+            Err(e) => {
+                error!("Failed to stop container {}: {}", name, e);
+                failed.push(name);
+            }
+        }
+    }
+
+    Ok(Json(BulkActionResponse {
+        success: failed.is_empty(),
+        message: format!(
+            "Stopped {} containers, {} failed",
+            affected.len(),
+            failed.len()
+        ),
+        affected_containers: affected,
+        failed_containers: failed,
+    }))
+}
+
+/// Restart all anchor-* containers (except dashboard)
+#[utoipa::path(
+    post,
+    path = "/docker/restart-all",
+    tag = "Docker",
+    responses(
+        (status = 200, description = "All containers restarted", body = BulkActionResponse),
+        (status = 500, description = "Internal server error")
+    )
+)]
+pub async fn restart_all(
+    State(state): State<Arc<AppState>>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    info!("Restarting all Anchor OS containers...");
+
+    // Containers that should not be restarted
+    let skip_containers = [
+        "anchor-dashboard-backend",
+        "anchor-dashboard-frontend",
+    ];
+
+    // List all anchor-* containers
+    let mut filters = HashMap::new();
+    filters.insert("name", vec!["anchor-"]);
+
+    let options = Some(ListContainersOptions {
+        all: false, // Only running containers
+        filters,
+        ..Default::default()
+    });
+
+    let containers = state
+        .docker
+        .list_containers(options)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let mut affected = Vec::new();
+    let mut failed = Vec::new();
+
+    for container in containers {
+        let name = container
+            .names
+            .as_ref()
+            .and_then(|n| n.first())
+            .map(|n| n.trim_start_matches('/').to_string())
+            .unwrap_or_default();
+
+        // Skip dashboard containers
+        if skip_containers.iter().any(|e| name.contains(e)) {
+            continue;
+        }
+
+        let restart_options = Some(RestartContainerOptions { t: 10 });
+        match state.docker.restart_container(&name, restart_options).await {
+            Ok(_) => {
+                info!("Restarted container: {}", name);
+                affected.push(name);
+            }
+            Err(e) => {
+                error!("Failed to restart container {}: {}", name, e);
+                failed.push(name);
+            }
+        }
+    }
+
+    Ok(Json(BulkActionResponse {
+        success: failed.is_empty(),
+        message: format!(
+            "Restarted {} containers, {} failed",
+            affected.len(),
+            failed.len()
+        ),
+        affected_containers: affected,
+        failed_containers: failed,
+    }))
+}
+
 /// Get container logs
 #[derive(Debug, Deserialize)]
 pub struct LogsQuery {

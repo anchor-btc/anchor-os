@@ -11,7 +11,8 @@
     "bitcoinNode": "Bitcoin Node",
     "wallet": "Wallet",
     "backup": "Backup",
-    "settings": "Settings"
+    "settings": "Settings",
+    "docs": "Documentation"
   },
   "sidebar": {
     "menu": "Menu",
@@ -22,12 +23,24 @@
     "explorers": "Explorers",
     "networking": "Networking",
     "kernel": "Kernel",
+    "electrum": "Electrum",
+    "protocol": "Protocol",
+    "storage": "Storage",
+    "monitoring": "Monitoring",
     "viewLogs": "View Logs",
     "openTerminal": "Open Terminal",
     "openNewTab": "Open in new tab",
     "startService": "Start Service",
     "stopService": "Stop Service",
-    "welcome": "Welcome back"
+    "welcome": "Welcome back",
+    "power": "Power",
+    "lock": "Lock",
+    "restart": "Restart",
+    "stop": "Stop",
+    "shutdown": "Shutdown Services",
+    "restartAll": "Restart All Services",
+    "confirmShutdown": "Are you sure you want to shutdown all services? The dashboard will remain available.",
+    "confirmRestart": "Are you sure you want to restart all services? This may take a few minutes."
   },
   "greetings": {
     "goodMorning": "Good morning",
@@ -87,6 +100,10 @@
     "bitcoinApps": "Bitcoin applications",
     "blockchainExplorers": "Blockchain explorers",
     "tunnelsVpn": "Tunnels & VPN",
+    "electrumServers": "Electrum servers",
+    "anchorProtocol": "Anchor protocol services",
+    "storageServices": "Data & storage",
+    "monitoringServices": "System monitoring",
     "essentialServices": "Essential services"
   },
   "wallet": {

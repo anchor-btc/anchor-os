@@ -114,6 +114,29 @@ export async function restartContainer(id: string): Promise<void> {
   if (!res.ok) throw new Error("Failed to restart container");
 }
 
+export interface BulkActionResponse {
+  success: boolean;
+  message: string;
+  affected_containers: string[];
+  failed_containers: string[];
+}
+
+export async function shutdownAll(): Promise<BulkActionResponse> {
+  const res = await fetch(`${API_URL}/docker/shutdown`, {
+    method: "POST",
+  });
+  if (!res.ok) throw new Error("Failed to shutdown");
+  return res.json();
+}
+
+export async function restartAll(): Promise<BulkActionResponse> {
+  const res = await fetch(`${API_URL}/docker/restart-all`, {
+    method: "POST",
+  });
+  if (!res.ok) throw new Error("Failed to restart all");
+  return res.json();
+}
+
 export async function fetchContainerLogs(
   id: string,
   tail: number = 100

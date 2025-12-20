@@ -18,7 +18,7 @@ export interface App {
   backendPort?: number; // Backend API port (if separate)
   containers: string[]; // container names that make up this app
   containerConfigs?: ContainerConfig[]; // Detailed container configuration with labels
-  category: "app" | "explorer" | "networking" | "core";
+  category: "app" | "explorer" | "networking" | "core" | "electrum" | "anchor" | "storage" | "monitoring";
   featured?: boolean;
   supportsIframe?: boolean; // Whether the app can be loaded in an iframe (default: true)
 }
@@ -266,19 +266,8 @@ export const apps: App[] = [
   },
 
   // =============================================
-  // CORE (alphabetical)
+  // ELECTRUM SERVERS (alphabetical)
   // =============================================
-  {
-    id: "core-backup",
-    name: "Backup",
-    description: "Backup and restore Docker volumes, databases, and configs",
-    icon: "HardDrive",
-    color: "slate",
-    internalUrl: "/backup",
-    port: 8003,
-    containers: ["anchor-core-backup"],
-    category: "core",
-  },
   {
     id: "core-electrs",
     name: "Electrs",
@@ -288,7 +277,7 @@ export const apps: App[] = [
     internalUrl: "/electrum",
     port: 50001,
     containers: ["anchor-core-electrs"],
-    category: "core",
+    category: "electrum",
   },
   {
     id: "core-fulcrum",
@@ -299,77 +288,12 @@ export const apps: App[] = [
     internalUrl: "/electrum",
     port: 50001,
     containers: ["anchor-core-fulcrum"],
-    category: "core",
+    category: "electrum",
   },
-  {
-    id: "core-indexer",
-    name: "Anchor Indexer",
-    description: "Indexes ANCHOR messages from the blockchain",
-    icon: "Search",
-    color: "cyan",
-    internalUrl: "/indexer",
-    containers: ["anchor-core-indexer"],
-    category: "core",
-  },
-  {
-    id: "core-testnet",
-    name: "Anchor Testnet",
-    description: "Automatically generates test transactions and mines blocks",
-    icon: "Pickaxe",
-    color: "amber",
-    internalUrl: "/testnet",
-    port: 8002,
-    containers: ["anchor-core-testnet"],
-    category: "core",
-    featured: true,
-  },
-  {
-    id: "core-wallet",
-    name: "Anchor Wallet",
-    description: "REST API for creating and broadcasting transactions",
-    icon: "Wallet",
-    color: "green",
-    url: "http://localhost:8001/swagger-ui",
-    internalUrl: "/wallet",
-    port: 8001,
-    containers: ["anchor-core-wallet"],
-    category: "core",
-  },
-  {
-    id: "core-bitcoin",
-    name: "Bitcoin Node",
-    description: "Bitcoin Core - full-featured node with mining support",
-    icon: "Bitcoin",
-    color: "orange",
-    internalUrl: "/node",
-    port: 18443,
-    containers: ["anchor-core-bitcoin"],
-    category: "core",
-  },
-  {
-    id: "core-postgres",
-    name: "Database",
-    description: "PostgreSQL database for storing indexed data",
-    icon: "Database",
-    color: "blue",
-    internalUrl: "/database",
-    port: 5432,
-    containers: ["anchor-core-postgres"],
-    category: "core",
-  },
-  {
-    id: "monitoring-netdata",
-    name: "Netdata",
-    description: "Real-time system and container monitoring dashboard",
-    icon: "Activity",
-    color: "green",
-    url: "http://localhost:19999",
-    internalUrl: "/monitoring",
-    port: 19999,
-    containers: ["anchor-monitoring-netdata"],
-    category: "core",
-    featured: true,
-  },
+
+  // =============================================
+  // ANCHOR PROTOCOL (alphabetical)
+  // =============================================
   {
     id: "anchor-docs",
     name: "Anchor Docs",
@@ -382,9 +306,96 @@ export const apps: App[] = [
     containerConfigs: [
       { name: "anchor-docs", label: "Docs", port: 3900 },
     ],
-    category: "core",
+    category: "anchor",
     featured: true,
-    supportsIframe: false, // Open in new tab - docs need proper URL navigation
+  },
+  {
+    id: "core-indexer",
+    name: "Anchor Indexer",
+    description: "Indexes ANCHOR messages from the blockchain",
+    icon: "Search",
+    color: "cyan",
+    internalUrl: "/indexer",
+    containers: ["anchor-core-indexer"],
+    category: "anchor",
+  },
+  {
+    id: "core-testnet",
+    name: "Anchor Testnet",
+    description: "Automatically generates test transactions and mines blocks",
+    icon: "Pickaxe",
+    color: "amber",
+    internalUrl: "/testnet",
+    port: 8002,
+    containers: ["anchor-core-testnet"],
+    category: "anchor",
+    featured: true,
+  },
+  {
+    id: "core-wallet",
+    name: "Anchor Wallet",
+    description: "REST API for creating and broadcasting transactions",
+    icon: "Wallet",
+    color: "green",
+    url: "http://localhost:8001/swagger-ui",
+    internalUrl: "/wallet",
+    port: 8001,
+    containers: ["anchor-core-wallet"],
+    category: "anchor",
+  },
+
+  // =============================================
+  // STORAGE / INFRASTRUCTURE (alphabetical)
+  // =============================================
+  {
+    id: "core-backup",
+    name: "Backup",
+    description: "Backup and restore Docker volumes, databases, and configs",
+    icon: "HardDrive",
+    color: "slate",
+    internalUrl: "/backup",
+    port: 8003,
+    containers: ["anchor-core-backup"],
+    category: "storage",
+  },
+  {
+    id: "core-bitcoin",
+    name: "Bitcoin Node",
+    description: "Bitcoin Core - full-featured node with mining support",
+    icon: "Bitcoin",
+    color: "orange",
+    internalUrl: "/node",
+    port: 18443,
+    containers: ["anchor-core-bitcoin"],
+    category: "storage",
+  },
+  {
+    id: "core-postgres",
+    name: "Database",
+    description: "PostgreSQL database for storing indexed data",
+    icon: "Database",
+    color: "blue",
+    internalUrl: "/database",
+    port: 5432,
+    containers: ["anchor-core-postgres"],
+    category: "storage",
+  },
+
+  // =============================================
+  // MONITORING
+  // =============================================
+  {
+    id: "monitoring-netdata",
+    name: "Netdata",
+    description: "Real-time system and container monitoring dashboard",
+    icon: "Activity",
+    color: "green",
+    url: "http://localhost:19999",
+    internalUrl: "/monitoring",
+    port: 19999,
+    containers: ["anchor-monitoring-netdata"],
+    category: "monitoring",
+    featured: true,
   },
 ];
 

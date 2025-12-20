@@ -48,6 +48,8 @@ pub struct AppState {
         handlers::docker::get_container_logs,
         handlers::docker::exec_container,
         handlers::docker::get_docker_stats,
+        handlers::docker::shutdown_all,
+        handlers::docker::restart_all,
         handlers::bitcoin::get_blockchain_info,
         handlers::bitcoin::get_mempool_info,
         handlers::bitcoin::get_network_info,
@@ -97,6 +99,7 @@ pub struct AppState {
         handlers::docker::ContainerInfo,
         handlers::docker::ContainersResponse,
         handlers::docker::ContainerActionResponse,
+        handlers::docker::BulkActionResponse,
         handlers::docker::ContainerLogsResponse,
         handlers::docker::ExecRequest,
         handlers::docker::ExecResponse,
@@ -345,6 +348,8 @@ async fn main() -> Result<()> {
             post(handlers::docker::exec_container),
         )
         .route("/docker/stats", get(handlers::docker::get_docker_stats))
+        .route("/docker/shutdown", post(handlers::docker::shutdown_all))
+        .route("/docker/restart-all", post(handlers::docker::restart_all))
         // Bitcoin
         .route("/bitcoin/info", get(handlers::bitcoin::get_blockchain_info))
         .route(

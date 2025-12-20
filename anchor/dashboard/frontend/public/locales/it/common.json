@@ -11,7 +11,8 @@
     "bitcoinNode": "Nodo Bitcoin",
     "wallet": "Portafoglio",
     "backup": "Backup",
-    "settings": "Impostazioni"
+    "settings": "Impostazioni",
+    "docs": "Documentazione"
   },
   "sidebar": {
     "menu": "Menu",
@@ -22,6 +23,10 @@
     "explorers": "Esploratori",
     "networking": "Rete",
     "kernel": "Kernel",
+    "electrum": "Electrum",
+    "protocol": "Protocollo",
+    "storage": "Archiviazione",
+    "monitoring": "Monitoraggio",
     "viewLogs": "Visualizza log",
     "openTerminal": "Apri terminale",
     "openNewTab": "Apri in nuova scheda",

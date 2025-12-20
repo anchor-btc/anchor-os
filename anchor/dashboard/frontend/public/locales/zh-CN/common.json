@@ -11,7 +11,8 @@
     "bitcoinNode": "比特币节点",
     "wallet": "钱包",
     "backup": "备份",
-    "settings": "设置"
+    "settings": "设置",
+    "docs": "文档"
   },
   "sidebar": {
     "menu": "菜单",
@@ -22,6 +23,10 @@
     "explorers": "浏览器",
     "networking": "网络",
     "kernel": "内核",
+    "electrum": "Electrum",
+    "protocol": "协议",
+    "storage": "存储",
+    "monitoring": "监控",
     "viewLogs": "查看日志",
     "openTerminal": "打开终端",
     "openNewTab": "在新标签页中打开",

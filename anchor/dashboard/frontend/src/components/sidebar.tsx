@@ -34,10 +34,16 @@ import {
   Settings,
   Shield,
   Layers,
+  BookOpen,
+  Activity,
+  Power,
+  RotateCcw,
+  Lock,
+  MoreVertical,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apps, getAppStatus } from "@/lib/apps";
-import { fetchContainers, startContainer, stopContainer, fetchUserProfile, fetchInstallationStatus } from "@/lib/api";
+import { fetchContainers, startContainer, stopContainer, fetchUserProfile, fetchInstallationStatus, shutdownAll, restartAll } from "@/lib/api";
 import { getServiceIdFromAppId } from "@/lib/service-rules";
 import { MultiLogsModal } from "./multi-logs-modal";
 import { MultiTerminalModal } from "./multi-terminal-modal";
@@ -129,25 +135,6 @@ const navigationSections = [
     items: [
       { nameKey: "nav.dashboard", href: "/", icon: LayoutDashboard },
       { nameKey: "nav.services", href: "/apps", icon: AppWindow },
-    ],
-  },
-  {
-    labelKey: "sidebar.bitcoin",
-    items: [
-      { nameKey: "nav.bitcoinNode", href: "/node", icon: Bitcoin },
-      { nameKey: "nav.wallet", href: "/wallet", icon: Wallet },
-    ],
-  },
-  {
-    labelKey: "sidebar.dev",
-    items: [
-      { nameKey: "nav.testnetControl", href: "/testnet", icon: Zap },
-    ],
-  },
-  {
-    labelKey: "sidebar.system",
-    items: [
-      { nameKey: "nav.backup", href: "/backup", icon: HardDrive },
       { nameKey: "nav.settings", href: "/settings", icon: Settings },
     ],
   },
@@ -169,6 +156,8 @@ const iconMap: Record<string, React.ElementType> = {
   Cloud,
   Shield,
   Layers,
+  BookOpen,
+  Activity,
 };
 
 export function Sidebar() {
@@ -180,6 +169,9 @@ export function Sidebar() {
   const [logsContainers, setLogsContainers] = useState<string[] | null>(null);
   const [terminalContainers, setTerminalContainers] = useState<string[] | null>(null);
   const [pendingContainers, setPendingContainers] = useState<Set<string>>(new Set());
+  const [isShuttingDown, setIsShuttingDown] = useState(false);
+  const [isRestarting, setIsRestarting] = useState(false);
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   
   // Dynamic greeting - changes on mount and every 30 minutes
   const [greeting, setGreeting] = useState<{ greeting: string; emoji: string }>({ greeting: "", emoji: "" });
@@ -239,6 +231,42 @@ export function Sidebar() {
     },
   });
 
+  const shutdownMutation = useMutation({
+    mutationFn: shutdownAll,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["containers"] });
+      setIsShuttingDown(false);
+    },
+    onError: () => {
+      setIsShuttingDown(false);
+    },
+  });
+
+  const restartAllMutation = useMutation({
+    mutationFn: restartAll,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["containers"] });
+      setIsRestarting(false);
+    },
+    onError: () => {
+      setIsRestarting(false);
+    },
+  });
+
+  const handleShutdown = () => {
+    if (confirm(t("sidebar.confirmShutdown", "Are you sure you want to shutdown all services?"))) {
+      setIsShuttingDown(true);
+      shutdownMutation.mutate();
+    }
+  };
+
+  const handleRestartAll = () => {
+    if (confirm(t("sidebar.confirmRestart", "Are you sure you want to restart all services?"))) {
+      setIsRestarting(true);
+      restartAllMutation.mutate();
+    }
+  };
+
   const handleToggleService = async (
     e: React.MouseEvent,
     containerNames: string[],
@@ -283,7 +311,11 @@ export function Sidebar() {
   const appsList = apps.filter((app) => app.category === "app" && isServiceInstalled(app.id));
   const explorersList = apps.filter((app) => app.category === "explorer" && isServiceInstalled(app.id));
   const networkingList = apps.filter((app) => app.category === "networking" && isServiceInstalled(app.id));
-  const coreList = apps.filter((app) => app.category === "core" && isServiceInstalled(app.id));
+  // New kernel subcategories
+  const electrumList = apps.filter((app) => app.category === "electrum" && isServiceInstalled(app.id));
+  const anchorList = apps.filter((app) => app.category === "anchor" && isServiceInstalled(app.id));
+  const storageList = apps.filter((app) => app.category === "storage" && isServiceInstalled(app.id));
+  const monitoringList = apps.filter((app) => app.category === "monitoring" && isServiceInstalled(app.id));
 
   const getAppStatusInfo = (appContainers: string[]) => {
     const status = getAppStatus(
@@ -478,28 +510,90 @@ export function Sidebar() {
 
         {/* User Profile */}
         {userProfile && userProfile.name && (
-          <Link href="/settings/profile" className="block px-4 py-3 border-b border-border shrink-0 hover:bg-muted/50 transition-colors">
+          <div className="px-4 py-3 border-b border-border shrink-0">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-orange-500/20 flex items-center justify-center text-xl overflow-hidden border-2 border-primary/20 ring-2 ring-primary/10">
-                {userProfile.avatar_url?.startsWith("data:") || userProfile.avatar_url?.startsWith("http") ? (
-                  <img
-                    src={userProfile.avatar_url}
-                    alt={userProfile.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <span>{userProfile.avatar_url || "🧑‍💻"}</span>
+              <Link href="/settings/profile" className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-orange-500/20 flex items-center justify-center text-xl overflow-hidden border-2 border-primary/20 ring-2 ring-primary/10 shrink-0">
+                  {userProfile.avatar_url?.startsWith("data:") || userProfile.avatar_url?.startsWith("http") ? (
+                    <img
+                      src={userProfile.avatar_url}
+                      alt={userProfile.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span>{userProfile.avatar_url || "🧑‍💻"}</span>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <span>{greeting.emoji}</span>
+                    <span>{greeting.greeting}</span>
+                  </p>
+                  <p className="text-sm font-medium text-foreground truncate">{userProfile.name}</p>
+                </div>
+              </Link>
+              {/* More Menu */}
+              <div className="relative shrink-0">
+                <button
+                  onClick={() => setMoreMenuOpen(!moreMenuOpen)}
+                  className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                >
+                  <MoreVertical className="w-4 h-4" />
+                </button>
+                {moreMenuOpen && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-40" 
+                      onClick={() => setMoreMenuOpen(false)}
+                    />
+                    <div className="absolute right-0 top-full mt-1 w-44 bg-card border border-border rounded-lg shadow-xl z-50 py-1">
+                      <button
+                        onClick={() => {
+                          localStorage.removeItem("anchor-os-token");
+                          window.location.reload();
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      >
+                        <Lock className="w-4 h-4" />
+                        {t("sidebar.lock", "Lock")}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setMoreMenuOpen(false);
+                          handleRestartAll();
+                        }}
+                        disabled={isRestarting || isShuttingDown}
+                        className="w-full flex items-center gap-3 px-3 py-2 text-sm text-muted-foreground hover:text-warning hover:bg-muted transition-colors disabled:opacity-50"
+                      >
+                        {isRestarting ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <RotateCcw className="w-4 h-4" />
+                        )}
+                        {t("sidebar.restartAll", "Restart All")}
+                      </button>
+                      <div className="h-px bg-border my-1" />
+                      <button
+                        onClick={() => {
+                          setMoreMenuOpen(false);
+                          handleShutdown();
+                        }}
+                        disabled={isShuttingDown || isRestarting}
+                        className="w-full flex items-center gap-3 px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
+                      >
+                        {isShuttingDown ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Power className="w-4 h-4" />
+                        )}
+                        {t("sidebar.shutdown", "Shutdown")}
+                      </button>
+                    </div>
+                  </>
                 )}
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                  <span>{greeting.emoji}</span>
-                  <span>{greeting.greeting}</span>
-                </p>
-                <p className="text-sm font-medium text-foreground truncate">{userProfile.name}</p>
-              </div>
             </div>
-          </Link>
+          </div>
         )}
 
         {/* Navigation */}
@@ -515,6 +609,23 @@ export function Sidebar() {
                 const isActive = item.href === "/" 
                   ? pathname === "/" && !currentAppId
                   : pathname === item.href;
+                
+                // Handle external links (like Docs)
+                if ('external' in item && item.external && 'externalUrl' in item) {
+                  return (
+                    <a
+                      key={item.nameKey}
+                      href={item.externalUrl as string}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-muted-foreground hover:text-foreground hover:bg-muted"
+                    >
+                      <item.icon className="w-4 h-4" />
+                      {t(item.nameKey)}
+                    </a>
+                  );
+                }
+                
                 return (
                   <Link
                     key={item.nameKey}
@@ -533,6 +644,17 @@ export function Sidebar() {
               })}
             </div>
           ))}
+
+          {/* Anchor Protocol */}
+          {anchorList.length > 0 && (
+            <div className="pt-4">
+              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-3 mb-2 flex items-center gap-2">
+                <Anchor className="w-3 h-3" />
+                {t("sidebar.protocol")}
+              </p>
+              {anchorList.map(renderServiceItem)}
+            </div>
+          )}
 
           {/* Apps */}
           <div className="pt-4">
@@ -561,14 +683,38 @@ export function Sidebar() {
             {networkingList.map(renderServiceItem)}
           </div>
 
-          {/* Kernel */}
-          <div className="pt-4">
-            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-3 mb-2 flex items-center gap-2">
-              <Server className="w-3 h-3" />
-              {t("sidebar.kernel")}
-            </p>
-            {coreList.map(renderServiceItem)}
-          </div>
+          {/* Electrum Servers */}
+          {electrumList.length > 0 && (
+            <div className="pt-4">
+              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-3 mb-2 flex items-center gap-2">
+                <Zap className="w-3 h-3" />
+                {t("sidebar.electrum")}
+              </p>
+              {electrumList.map(renderServiceItem)}
+            </div>
+          )}
+
+          {/* Storage / Infrastructure */}
+          {storageList.length > 0 && (
+            <div className="pt-4">
+              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-3 mb-2 flex items-center gap-2">
+                <Database className="w-3 h-3" />
+                {t("sidebar.storage")}
+              </p>
+              {storageList.map(renderServiceItem)}
+            </div>
+          )}
+
+          {/* Monitoring */}
+          {monitoringList.length > 0 && (
+            <div className="pt-4">
+              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-3 mb-2 flex items-center gap-2">
+                <Activity className="w-3 h-3" />
+                {t("sidebar.monitoring")}
+              </p>
+              {monitoringList.map(renderServiceItem)}
+            </div>
+          )}
         </nav>
       </aside>
 

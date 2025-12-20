@@ -11,7 +11,8 @@
     "bitcoinNode": "ビットコインノード",
     "wallet": "ウォレット",
     "backup": "バックアップ",
-    "settings": "設定"
+    "settings": "設定",
+    "docs": "ドキュメント"
   },
   "sidebar": {
     "menu": "メニュー",
@@ -22,6 +23,10 @@
     "explorers": "エクスプローラー",
     "networking": "ネットワーク",
     "kernel": "カーネル",
+    "electrum": "Electrum",
+    "protocol": "プロトコル",
+    "storage": "ストレージ",
+    "monitoring": "モニタリング",
     "viewLogs": "ログを表示",
     "openTerminal": "ターミナルを開く",
     "openNewTab": "新しいタブで開く",

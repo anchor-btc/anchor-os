@@ -11,7 +11,8 @@
     "bitcoinNode": "비트코인 노드",
     "wallet": "지갑",
     "backup": "백업",
-    "settings": "설정"
+    "settings": "설정",
+    "docs": "문서"
   },
   "sidebar": {
     "menu": "메뉴",
@@ -22,6 +23,10 @@
     "explorers": "익스플로러",
     "networking": "네트워킹",
     "kernel": "커널",
+    "electrum": "Electrum",
+    "protocol": "프로토콜",
+    "storage": "저장소",
+    "monitoring": "모니터링",
     "viewLogs": "로그 보기",
     "openTerminal": "터미널 열기",
     "openNewTab": "새 탭에서 열기",
