@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <defs>
+    <linearGradient id="anchorGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f7931a"/>
+      <stop offset="100%" stop-color="#ffc107"/>
+    </linearGradient>
+  </defs>
+  <!-- Anchor shape -->
+  <g transform="translate(100, 100)">
+    <!-- Ring at top -->
+    <circle cx="0" cy="-55" r="18" stroke="url(#anchorGradient)" stroke-width="8" fill="none"/>
+    <!-- Vertical shaft -->
+    <rect x="-6" y="-40" width="12" height="90" rx="4" fill="url(#anchorGradient)"/>
+    <!-- Horizontal bar -->
+    <rect x="-35" y="-10" width="70" height="12" rx="4" fill="url(#anchorGradient)"/>
+    <!-- Left hook -->
+    <path d="M-30 50 Q-50 50 -50 30 Q-50 10 -35 5" stroke="url(#anchorGradient)" stroke-width="10" stroke-linecap="round" fill="none"/>
+    <!-- Right hook -->
+    <path d="M30 50 Q50 50 50 30 Q50 10 35 5" stroke="url(#anchorGradient)" stroke-width="10" stroke-linecap="round" fill="none"/>
+    <!-- Base -->
+    <circle cx="0" cy="55" r="8" fill="url(#anchorGradient)"/>
+  </g>
+</svg>
+

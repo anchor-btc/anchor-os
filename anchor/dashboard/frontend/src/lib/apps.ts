@@ -370,6 +370,22 @@ export const apps: App[] = [
     category: "core",
     featured: true,
   },
+  {
+    id: "anchor-docs",
+    name: "Anchor Docs",
+    description: "Protocol documentation - kinds, SDK, examples, and API reference",
+    icon: "BookOpen",
+    color: "amber",
+    url: "http://localhost:3900",
+    port: 3900,
+    containers: ["anchor-docs"],
+    containerConfigs: [
+      { name: "anchor-docs", label: "Docs", port: 3900 },
+    ],
+    category: "core",
+    featured: true,
+    supportsIframe: false, // Open in new tab - docs need proper URL navigation
+  },
 ];
 
 export function getAppStatus(

@@ -1,0 +1,16 @@
+{
+  "name": "anchor-docs",
+  "version": "1.0.0",
+  "description": "Anchor Protocol Documentation",
+  "type": "module",
+  "scripts": {
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview"
+  },
+  "devDependencies": {
+    "vitepress": "^1.5.0",
+    "vue": "^3.5.13"
+  }
+}
+

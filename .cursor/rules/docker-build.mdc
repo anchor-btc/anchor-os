@@ -29,6 +29,12 @@ Use this reference to know which service to rebuild based on which files you cha
 |------|---------|---------------|
 | `anchor/backup/backend/**` | core-backup | `docker compose build core-backup && docker compose up -d core-backup` |
 
+### Docs (`anchor/docs/`)
+
+| Path | Service | Build Command |
+|------|---------|---------------|
+| `anchor/docs/**` | anchor-docs | `docker compose build anchor-docs && docker compose up -d anchor-docs` |
+
 ### Core Services (`crates/`)
 
 | Path | Service | Build Command |

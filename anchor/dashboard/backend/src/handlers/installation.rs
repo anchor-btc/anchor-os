@@ -248,6 +248,19 @@ fn get_all_services() -> Vec<ServiceDefinition> {
             incompatible_with: vec![],
             depends_on: vec!["core-postgres".to_string()],
         },
+        ServiceDefinition {
+            id: "anchor-docs".to_string(),
+            name: "Anchor Docs".to_string(),
+            description: "Protocol documentation - kinds, SDK, examples, and API reference".to_string(),
+            category: ServiceCategory::Core,
+            docker_profiles: vec!["minimum".to_string(), "default".to_string(), "full".to_string(), "anchor-docs".to_string()],
+            containers: vec!["anchor-docs".to_string()],
+            install_status: ServiceInstallStatus::NotInstalled,
+            enabled: false,
+            required: false,
+            incompatible_with: vec![],
+            depends_on: vec![],
+        },
         // Explorers
         ServiceDefinition {
             id: "explorer-mempool".to_string(),

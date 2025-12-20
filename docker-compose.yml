@@ -977,6 +977,23 @@ services:
       - full
       - app-oracles
 
+  # Anchor Docs - Protocol Documentation
+  anchor-docs:
+    build:
+      context: ./anchor/docs
+      dockerfile: Dockerfile
+    container_name: anchor-docs
+    ports:
+      - "3900:3900"
+    networks:
+      - anchor-network
+    restart: unless-stopped
+    profiles:
+      - minimum
+      - default
+      - full
+      - anchor-docs
+
   # Anchor Lottery - Trustless Lottery with DLC Payouts
   app-lottery-postgres:
     image: postgres:16-alpine
