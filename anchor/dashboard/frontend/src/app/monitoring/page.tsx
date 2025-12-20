@@ -61,3 +61,6 @@ export default function MonitoringPage() {
   // Use the IframeView component with browser-like layout
   return <IframeView appId="monitoring-netdata" />;
 }
+
+
+

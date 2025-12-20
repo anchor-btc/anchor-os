@@ -39,8 +39,8 @@ import { cn } from "@/lib/utils";
 import { apps, getAppStatus } from "@/lib/apps";
 import { fetchContainers, startContainer, stopContainer, fetchUserProfile, fetchInstallationStatus } from "@/lib/api";
 import { getServiceIdFromAppId } from "@/lib/service-rules";
-import { LogsModal } from "./logs-modal";
-import { TerminalModal } from "./terminal-modal";
+import { MultiLogsModal } from "./multi-logs-modal";
+import { MultiTerminalModal } from "./multi-terminal-modal";
 
 const navigationSections = [
   {
@@ -96,8 +96,8 @@ export function Sidebar() {
   const searchParams = useSearchParams();
   const currentAppId = searchParams.get("app");
   const queryClient = useQueryClient();
-  const [logsContainer, setLogsContainer] = useState<string | null>(null);
-  const [terminalContainer, setTerminalContainer] = useState<string | null>(null);
+  const [logsContainers, setLogsContainers] = useState<string[] | null>(null);
+  const [terminalContainers, setTerminalContainers] = useState<string[] | null>(null);
   const [pendingContainers, setPendingContainers] = useState<Set<string>>(new Set());
 
   const { data: containersData } = useQuery({
@@ -261,7 +261,6 @@ export function Sidebar() {
     const Icon = iconMap[app.icon] || Server;
     const hasExternalUrl = !!app.url;
     const hasInternalUrl = !!app.internalUrl;
-    const mainContainer = app.containers[0];
     const { isRunning, color } = getAppStatusInfo(app.containers);
     // Check if any container of this app is pending
     const isPending = app.containers.some((c) => pendingContainers.has(c));
@@ -284,7 +283,7 @@ export function Sidebar() {
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              setLogsContainer(mainContainer);
+              setLogsContainers(app.containers);
             }}
             className="p-1 hover:bg-muted rounded transition-colors"
             title="View Logs"
@@ -295,7 +294,7 @@ export function Sidebar() {
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              setTerminalContainer(mainContainer);
+              setTerminalContainers(app.containers);
             }}
             className="p-1 hover:bg-muted rounded transition-colors"
             title="Open Terminal"
@@ -463,16 +462,16 @@ export function Sidebar() {
         </nav>
       </aside>
 
-      {/* Logs Modal */}
-      <LogsModal
-        containerName={logsContainer}
-        onClose={() => setLogsContainer(null)}
+      {/* Logs Modal (with tabs for multiple containers) */}
+      <MultiLogsModal
+        containerNames={logsContainers}
+        onClose={() => setLogsContainers(null)}
       />
 
-      {/* Terminal Modal */}
-      <TerminalModal
-        containerName={terminalContainer}
-        onClose={() => setTerminalContainer(null)}
+      {/* Terminal Modal (with tabs for multiple containers) */}
+      <MultiTerminalModal
+        containerNames={terminalContainers}
+        onClose={() => setTerminalContainers(null)}
       />
     </>
   );

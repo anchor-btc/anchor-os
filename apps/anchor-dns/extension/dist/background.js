@@ -1,24 +1,33 @@
 /**
  * BitDNS Chrome Extension - Background Service Worker
- * Intercepts DNS errors for .bit domains and redirects to resolved addresses.
+ *
+ * Intercepts requests to .bit domains and resolves them using the BitDNS API.
  */
 
-const DEFAULT_API_URL = "http://localhost:3008";
-const dnsCache = new Map();
-const CACHE_TTL = 300000;
+// Default API URL (can be configured in popup)
+const DEFAULT_API_URL = "http://localhost:3006";
 
+// Cache for DNS lookups
+const dnsCache = new Map();
+const CACHE_TTL = 300000; // 5 minutes
+
+/**
+ * Get the API URL from storage
+ */
 async function getApiUrl() {
   const result = await chrome.storage.local.get(["apiUrl"]);
   return result.apiUrl || DEFAULT_API_URL;
 }
 
+/**
+ * Resolve a .bit domain to an IP address
+ */
 async function resolveDomain(domain) {
-  if (!domain.endsWith('.bit')) domain += '.bit';
-  
+  // Check cache first
   const cached = dnsCache.get(domain);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    console.log(`[BitDNS] Cache: ${domain} -> ${cached.value}`);
-    return cached;
+    console.log(`[BitDNS] Cache hit for ${domain}`);
+    return cached.ip;
   }
 
   const apiUrl = await getApiUrl();
@@ -26,86 +35,157 @@ async function resolveDomain(domain) {
 
   try {
     const response = await fetch(`${apiUrl}/resolve/${encodeURIComponent(domain)}`);
-    if (!response.ok) return null;
+    
+    if (!response.ok) {
+      console.log(`[BitDNS] Domain not found: ${domain}`);
+      return null;
+    }
 
     const data = await response.json();
     
-    const aRecord = data.records?.find(r => r.record_type === "A");
+    // Find A record (IPv4)
+    const aRecord = data.records?.find((r) => r.record_type === "A");
     if (aRecord) {
-      const result = { value: aRecord.value, type: 'A', timestamp: Date.now() };
-      dnsCache.set(domain, result);
-      updateStats(domain, aRecord.value);
-      return result;
+      console.log(`[BitDNS] Resolved ${domain} to ${aRecord.value}`);
+      
+      // Cache the result
+      dnsCache.set(domain, {
+        ip: aRecord.value,
+        timestamp: Date.now(),
+        ttl: aRecord.ttl,
+      });
+      
+      // Update stats
+      await updateStats(domain, aRecord.value);
+      
+      return aRecord.value;
     }
 
-    const cnameRecord = data.records?.find(r => r.record_type === "CNAME");
+    // Try AAAA record (IPv6)
+    const aaaaRecord = data.records?.find((r) => r.record_type === "AAAA");
+    if (aaaaRecord) {
+      console.log(`[BitDNS] Resolved ${domain} to ${aaaaRecord.value} (IPv6)`);
+      
+      dnsCache.set(domain, {
+        ip: aaaaRecord.value,
+        timestamp: Date.now(),
+        ttl: aaaaRecord.ttl,
+      });
+      
+      await updateStats(domain, aaaaRecord.value);
+      
+      return aaaaRecord.value;
+    }
+
+    // Try CNAME record
+    const cnameRecord = data.records?.find((r) => r.record_type === "CNAME");
     if (cnameRecord) {
-      const result = { value: cnameRecord.value, type: 'CNAME', timestamp: Date.now() };
-      dnsCache.set(domain, result);
-      updateStats(domain, cnameRecord.value);
-      return result;
+      console.log(`[BitDNS] CNAME ${domain} -> ${cnameRecord.value}`);
+      return cnameRecord.value;
     }
 
+    console.log(`[BitDNS] No A/AAAA/CNAME record found for ${domain}`);
     return null;
   } catch (error) {
-    console.error(`[BitDNS] Error:`, error);
+    console.error(`[BitDNS] Error resolving ${domain}:`, error);
     return null;
   }
 }
 
-async function updateStats(domain, target) {
+/**
+ * Update resolution statistics
+ */
+async function updateStats(domain, ip) {
   const result = await chrome.storage.local.get(["stats"]);
   const stats = result.stats || { resolved: 0, domains: {} };
+  
   stats.resolved++;
-  stats.domains[domain] = { ip: target, lastResolved: Date.now(), count: (stats.domains[domain]?.count || 0) + 1 };
+  stats.domains[domain] = {
+    ip,
+    lastResolved: Date.now(),
+    count: (stats.domains[domain]?.count || 0) + 1,
+  };
+  
   await chrome.storage.local.set({ stats });
 }
 
-// IMPORTANT: Use onErrorOccurred to catch DNS failures
-chrome.webNavigation.onErrorOccurred.addListener(async (details) => {
-  if (details.frameId !== 0) return;
-  if (details.error !== "net::ERR_NAME_NOT_RESOLVED") return;
-  
-  let url;
+/**
+ * Check if a URL is a .bit domain
+ */
+function isBitDomain(url) {
   try {
-    url = new URL(details.url);
+    const parsed = new URL(url);
+    return parsed.hostname.endsWith(".bit");
   } catch {
-    return;
+    return false;
   }
+}
+
+/**
+ * Handle navigation to .bit domains
+ */
+chrome.webNavigation?.onBeforeNavigate?.addListener(async (details) => {
+  if (details.frameId !== 0) return; // Only handle main frame
   
-  if (!url.hostname.endsWith(".bit")) return;
-  
-  console.log(`[BitDNS] DNS failed for ${url.hostname}, resolving...`);
-  
-  const resolved = await resolveDomain(url.hostname);
-  
-  if (resolved) {
-    let newUrl;
-    if (resolved.type === 'CNAME') {
-      newUrl = `https://${resolved.value}${url.pathname}${url.search}`;
-    } else {
-      newUrl = `http://${resolved.value}${url.pathname}${url.search}`;
-    }
+  if (!isBitDomain(details.url)) return;
+
+  try {
+    const url = new URL(details.url);
+    const domain = url.hostname;
     
-    console.log(`[BitDNS] Redirecting to ${newUrl}`);
-    chrome.tabs.update(details.tabId, { url: newUrl });
+    console.log(`[BitDNS] Intercepting navigation to ${domain}`);
+    
+    const ip = await resolveDomain(domain);
+    
+    if (ip) {
+      // Check if it's another domain (CNAME) or IP
+      const isIp = /^[\d.:]+$/.test(ip);
+      
+      if (isIp) {
+        // Replace hostname with IP
+        url.hostname = ip;
+        console.log(`[BitDNS] Redirecting to ${url.href}`);
+        
+        chrome.tabs.update(details.tabId, { url: url.href });
+      } else {
+        // It's a CNAME, redirect to the target domain
+        url.hostname = ip;
+        console.log(`[BitDNS] Redirecting via CNAME to ${url.href}`);
+        
+        chrome.tabs.update(details.tabId, { url: url.href });
+      }
+    } else {
+      // Show error page
+      console.log(`[BitDNS] Domain not found: ${domain}`);
+    }
+  } catch (error) {
+    console.error("[BitDNS] Navigation error:", error);
   }
 });
 
+/**
+ * Listen for messages from popup
+ */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "resolve") {
-    resolveDomain(message.domain).then(r => sendResponse({ ip: r?.value }));
-    return true;
+    resolveDomain(message.domain).then((ip) => {
+      sendResponse({ ip });
+    });
+    return true; // Keep channel open for async response
   }
+  
   if (message.type === "clearCache") {
     dnsCache.clear();
     sendResponse({ success: true });
     return true;
   }
+  
   if (message.type === "getStats") {
-    chrome.storage.local.get(["stats"]).then(r => sendResponse(r.stats || { resolved: 0, domains: {} }));
+    chrome.storage.local.get(["stats"]).then((result) => {
+      sendResponse(result.stats || { resolved: 0, domains: {} });
+    });
     return true;
   }
 });
 
-console.log("[BitDNS] Extension loaded - using onErrorOccurred!");
+console.log("[BitDNS] Extension loaded");

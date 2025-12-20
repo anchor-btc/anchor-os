@@ -178,3 +178,6 @@ export default function AppearancePage() {
     </div>
   );
 }
+
+
+

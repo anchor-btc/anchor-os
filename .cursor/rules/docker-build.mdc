@@ -1,0 +1,122 @@
+---
+description: Auto build and restart Docker containers after code changes
+globs:
+  - anchor/**/*
+  - apps/**/*
+  - crates/**/*
+  - docker/**/*
+alwaysApply: true
+---
+
+# Docker Build & Restart Rules
+
+**IMPORTANT**: After making ANY code changes, you MUST rebuild and restart the affected Docker container(s) for changes to take effect.
+
+## Service Mapping
+
+Use this reference to know which service to rebuild based on which files you changed:
+
+### Dashboard (`anchor/dashboard/`)
+
+| Path | Service | Build Command |
+|------|---------|---------------|
+| `anchor/dashboard/frontend/**` | anchor-dashboard-frontend | `docker compose build anchor-dashboard-frontend && docker compose up -d anchor-dashboard-frontend` |
+| `anchor/dashboard/backend/**` | anchor-dashboard-backend | `docker compose build anchor-dashboard-backend && docker compose up -d anchor-dashboard-backend` |
+
+### Backup (`anchor/backup/`)
+
+| Path | Service | Build Command |
+|------|---------|---------------|
+| `anchor/backup/backend/**` | core-backup | `docker compose build core-backup && docker compose up -d core-backup` |
+
+### Core Services (`crates/`)
+
+| Path | Service | Build Command |
+|------|---------|---------------|
+| `crates/anchor-indexer/**` | core-indexer | `docker compose build core-indexer && docker compose up -d core-indexer` |
+| `crates/anchor-wallet/**` | core-wallet | `docker compose build core-wallet && docker compose up -d core-wallet` |
+| `crates/anchor-testnet/**` | core-testnet | `docker compose build core-testnet && docker compose up -d core-testnet` |
+
+### Docker Configs (`docker/`)
+
+| Path | Service | Build Command |
+|------|---------|---------------|
+| `docker/bitcoin-core/**` | core-bitcoin | `docker compose build core-bitcoin && docker compose up -d core-bitcoin` |
+| `docker/electrs/**` | core-electrs | `docker compose build core-electrs && docker compose up -d core-electrs` |
+| `docker/fulcrum/**` | core-fulcrum | `docker compose build core-fulcrum && docker compose up -d core-fulcrum` |
+| `docker/postgres/**` | core-postgres | `docker compose up -d core-postgres` (no build needed, uses image) |
+| `docker/tor/**` | networking-tor | `docker compose up -d networking-tor` (no build needed, uses image) |
+
+### Apps (`apps/`)
+
+#### Anchor Threads
+| Path | Service | Build Command |
+|------|---------|---------------|
+| `apps/anchor-threads/frontend/**` | app-threads-frontend | `docker compose build app-threads-frontend && docker compose up -d app-threads-frontend` |
+| `apps/anchor-threads/backend/**` | app-threads-backend | `docker compose build app-threads-backend && docker compose up -d app-threads-backend` |
+
+#### Anchor Pixel
+| Path | Service | Build Command |
+|------|---------|---------------|
+| `apps/anchor-pixel/frontend/**` | app-pixel-frontend | `docker compose build app-pixel-frontend && docker compose up -d app-pixel-frontend` |
+| `apps/anchor-pixel/backend/**` | app-pixel-backend | `docker compose build app-pixel-backend && docker compose up -d app-pixel-backend` |
+
+#### Anchor Map
+| Path | Service | Build Command |
+|------|---------|---------------|
+| `apps/anchor-map/frontend/**` | app-map-frontend | `docker compose build app-map-frontend && docker compose up -d app-map-frontend` |
+| `apps/anchor-map/backend/**` | app-map-backend | `docker compose build app-map-backend && docker compose up -d app-map-backend` |
+
+#### Anchor DNS
+| Path | Service | Build Command |
+|------|---------|---------------|
+| `apps/anchor-dns/frontend/**` | app-dns-frontend | `docker compose build app-dns-frontend && docker compose up -d app-dns-frontend` |
+| `apps/anchor-dns/backend/**` | app-dns-backend | `docker compose build app-dns-backend && docker compose up -d app-dns-backend` |
+
+#### Anchor Proof
+| Path | Service | Build Command |
+|------|---------|---------------|
+| `apps/anchor-proof/frontend/**` | app-proof-frontend | `docker compose build app-proof-frontend && docker compose up -d app-proof-frontend` |
+| `apps/anchor-proof/backend/**` | app-proof-backend | `docker compose build app-proof-backend && docker compose up -d app-proof-backend` |
+
+#### Anchor Tokens
+| Path | Service | Build Command |
+|------|---------|---------------|
+| `apps/anchor-tokens/frontend/**` | app-tokens-frontend | `docker compose build app-tokens-frontend && docker compose up -d app-tokens-frontend` |
+| `apps/anchor-tokens/backend/**` | app-tokens-backend | `docker compose build app-tokens-backend && docker compose up -d app-tokens-backend` |
+
+#### Anchor Oracles
+| Path | Service | Build Command |
+|------|---------|---------------|
+| `apps/anchor-oracles/frontend/**` | app-oracles-frontend | `docker compose build app-oracles-frontend && docker compose up -d app-oracles-frontend` |
+| `apps/anchor-oracles/backend/**` | app-oracles-backend | `docker compose build app-oracles-backend && docker compose up -d app-oracles-backend` |
+
+#### Anchor Lottery
+| Path | Service | Build Command |
+|------|---------|---------------|
+| `apps/anchor-lottery/frontend/**` | app-lottery-frontend | `docker compose build app-lottery-frontend && docker compose up -d app-lottery-frontend` |
+| `apps/anchor-lottery/backend/**` | app-lottery-backend | `docker compose build app-lottery-backend && docker compose up -d app-lottery-backend` |
+
+## Quick Commands
+
+### Build and restart a single service:
+```bash
+docker compose build <service-name> && docker compose up -d <service-name>
+```
+
+### Build and restart multiple services:
+```bash
+docker compose build <service1> <service2> && docker compose up -d <service1> <service2>
+```
+
+### Rebuild all services (slow, avoid if possible):
+```bash
+docker compose build && docker compose up -d
+```
+
+## Important Notes
+
+1. **Always run from project root**: `/Users/miguelmedeiros/code/anchor`
+2. **Wait for build to complete** before proceeding
+3. **Check logs if issues**: `docker compose logs -f <service-name>`
+4. **Only rebuild affected services** - don't rebuild everything unnecessarily

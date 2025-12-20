@@ -5,14 +5,16 @@
   "description": "Resolve .bit domains from the Bitcoin blockchain using the Anchor protocol",
   "permissions": [
     "storage",
-    "webNavigation",
-    "tabs"
+    "declarativeNetRequest",
+    "declarativeNetRequestWithHostAccess"
   ],
   "host_permissions": [
+    "*://*.bit/*",
     "<all_urls>"
   ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
   "action": {
     "default_popup": "popup.html",

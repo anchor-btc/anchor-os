@@ -18,3 +18,6 @@ INSERT INTO system_settings (key, value) VALUES
     ('notifications', '{"enabled": true, "backup_alerts": true, "service_alerts": true, "transaction_alerts": false}'),
     ('dashboard', '{"default_widgets": ["quick-launch", "resource-charts", "wallet", "node-stats", "recent-transactions", "indexer-stats"]}')
 ON CONFLICT (key) DO NOTHING;
+
+
+

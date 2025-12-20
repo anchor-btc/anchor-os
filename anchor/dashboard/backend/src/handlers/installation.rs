@@ -872,52 +872,13 @@ pub async fn complete_setup(
         profiles.push(preset.clone());
     }
 
-    info!("Starting containers with profiles: {:?}", profiles);
+    info!("Preparing installation with profiles: {:?}", profiles);
 
-    // Build the docker compose command
-    // We'll run this in background since it can take a while
-    if !profiles.is_empty() {
-        let profiles_clone = profiles.clone();
-        
-        // Spawn docker compose in background
-        tokio::spawn(async move {
-            // Build the command with all profile flags
-            let mut cmd = tokio::process::Command::new("docker");
-            cmd.current_dir("/anchor-project");
-            cmd.arg("compose");
-            
-            // Add each profile
-            for profile in &profiles_clone {
-                cmd.arg("--profile");
-                cmd.arg(profile);
-            }
-            
-            cmd.args(["up", "-d", "--no-recreate"]);
+    // NOTE: We do NOT run docker compose here!
+    // The SSE stream at /installation/stream will handle the actual docker compose execution.
+    // This endpoint only prepares the configuration.
 
-            info!("Running: docker compose with profiles {:?} up -d --no-recreate", profiles_clone);
-            
-            match cmd.output().await {
-                Ok(output) => {
-                    if output.status.success() {
-                        info!("Docker compose completed successfully");
-                        let stdout = String::from_utf8_lossy(&output.stdout);
-                        if !stdout.is_empty() {
-                            info!("Output: {}", stdout);
-                        }
-                    } else {
-                        let stderr = String::from_utf8_lossy(&output.stderr);
-                        let stdout = String::from_utf8_lossy(&output.stdout);
-                        info!("Docker compose failed. stderr: {}, stdout: {}", stderr, stdout);
-                    }
-                }
-                Err(e) => {
-                    info!("Failed to run docker compose: {}", e);
-                }
-            }
-        });
-    }
-
-    // Mark setup as completed
+    // Mark setup as starting (the SSE stream will complete the installation)
     sqlx::query("UPDATE installation_config SET setup_completed = TRUE, updated_at = NOW() WHERE id = 1")
         .execute(pool)
         .await
@@ -1020,7 +981,7 @@ pub async fn install_service(
             cmd.arg(profile);
         }
         
-        cmd.args(["up", "-d", "--no-recreate"]);
+        cmd.args(["up", "-d", "--remove-orphans"]);
 
         match cmd.output() {
             Ok(output) => {
@@ -1450,6 +1411,23 @@ pub async fn stream_installation(
             }
         }
         
+        // First, remove any containers stuck in "Created" state (but not running ones)
+        // This prevents conflicts while preserving the running dashboard-backend
+        yield Ok(Event::default().data("[INFO] Cleaning up stuck containers..."));
+        
+        let cleanup_created = Command::new("sh")
+            .arg("-c")
+            .arg("docker rm -f $(docker ps -aq --filter 'status=created' --filter 'name=anchor-') 2>/dev/null || true")
+            .output()
+            .await;
+        
+        if let Ok(output) = cleanup_created {
+            let removed = String::from_utf8_lossy(&output.stdout);
+            if !removed.trim().is_empty() {
+                yield Ok(Event::default().data(format!("[CLEANUP] Removed stuck containers")));
+            }
+        }
+        
         yield Ok(Event::default().data("[INFO] Building and starting containers...")); 
 
         // Build the docker compose up command
@@ -1462,7 +1440,8 @@ pub async fn stream_installation(
             cmd.arg(profile);
         }
         
-        // Use --no-recreate to not recreate essential containers that are already running
+        // Use --no-recreate to avoid recreating the dashboard-backend which is running this code!
+        // Also use --remove-orphans to clean up old containers
         cmd.args(["up", "-d", "--no-recreate", "--remove-orphans"]);
         cmd.stdout(std::process::Stdio::piped());
         cmd.stderr(std::process::Stdio::piped());
