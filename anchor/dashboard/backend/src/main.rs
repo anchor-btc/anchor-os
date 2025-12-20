@@ -408,8 +408,8 @@ async fn main() -> Result<()> {
         .route("/settings", get(handlers::settings::get_all_settings))
         .route("/settings/export", get(handlers::settings::export_settings))
         .route("/settings/import", post(handlers::settings::import_settings))
-        .route("/settings/{key}", get(handlers::settings::get_setting))
-        .route("/settings/{key}", put(handlers::settings::update_setting))
+        .route("/settings/:key", get(handlers::settings::get_setting))
+        .route("/settings/:key", put(handlers::settings::update_setting))
         // Auth
         .route("/auth/status", get(handlers::auth::get_auth_status))
         .route("/auth/setup", post(handlers::auth::setup_password))
@@ -423,8 +423,8 @@ async fn main() -> Result<()> {
         .route("/notifications/unread-count", get(handlers::notifications::get_unread_count))
         .route("/notifications/read-all", put(handlers::notifications::mark_all_as_read))
         .route("/notifications/clear-read", delete(handlers::notifications::clear_read_notifications))
-        .route("/notifications/{id}/read", put(handlers::notifications::mark_as_read))
-        .route("/notifications/{id}", delete(handlers::notifications::delete_notification))
+        .route("/notifications/:id/read", put(handlers::notifications::mark_as_read))
+        .route("/notifications/:id", delete(handlers::notifications::delete_notification))
         .with_state(state)
         .layer(TraceLayer::new_for_http())
         .layer(
