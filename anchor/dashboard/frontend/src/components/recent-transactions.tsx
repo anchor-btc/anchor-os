@@ -31,7 +31,7 @@ export function RecentTransactions() {
     );
   }
 
-  const recentTxs = (transactions || []).slice(0, 5);
+  const recentTxs = (transactions || []).slice(0, 10);
 
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden">
@@ -47,7 +47,7 @@ export function RecentTransactions() {
           <p className="text-xs">No transactions yet</p>
         </div>
       ) : (
-        <div className="divide-y divide-border">
+        <div className="divide-y divide-border max-h-[320px] overflow-y-auto">
           {recentTxs.map((tx) => (
             <TransactionRow key={tx.txid} transaction={tx} />
           ))}

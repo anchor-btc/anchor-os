@@ -1010,6 +1010,22 @@ services:
       - full
       - anchor-landing-protocol
 
+  # Anchor OS Landing Page
+  anchor-landing-os:
+    build:
+      context: ./anchor/landing-os
+      dockerfile: Dockerfile
+    container_name: anchor-landing-os
+    ports:
+      - "3951:3000"
+    networks:
+      - anchor-network
+    restart: unless-stopped
+    profiles:
+      - default
+      - full
+      - anchor-landing-os
+
   # Anchor Lottery - Trustless Lottery with DLC Payouts
   app-lottery-postgres:
     image: postgres:16-alpine
