@@ -79,6 +79,9 @@ export default function SettingsPage() {
 
   const currentLanguage = LANGUAGE_NAMES[i18n.language] || i18n.language;
 
+  // Check if avatar is an image (base64 or URL)
+  const isImageAvatar = userProfile?.avatar_url?.startsWith("data:") || userProfile?.avatar_url?.startsWith("http");
+
   const settingsCards = [
     {
       href: "/settings/profile",
@@ -87,7 +90,15 @@ export default function SettingsPage() {
       descriptionKey: "settings.sections.profile.description",
       preview: (
         <div className="flex items-center gap-2">
-          <span className="text-lg">{userProfile?.avatar_url || "🧑‍💻"}</span>
+          {isImageAvatar ? (
+            <img
+              src={userProfile?.avatar_url}
+              alt="Avatar"
+              className="w-6 h-6 rounded-full object-cover"
+            />
+          ) : (
+            <span className="text-lg">{userProfile?.avatar_url || "🧑‍💻"}</span>
+          )}
           <span className="text-sm text-muted-foreground">
             {userProfile?.name || "Bitcoiner"}
           </span>

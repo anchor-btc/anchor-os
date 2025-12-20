@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Bell, Save, Loader2 } from "lucide-react";
+import { Bell, Save, Loader2, CheckCircle, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const DASHBOARD_BACKEND_URL =
   process.env.NEXT_PUBLIC_DASHBOARD_BACKEND_URL || "http://localhost:8010";
@@ -26,7 +27,15 @@ export default function NotificationsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+  // Auto-dismiss toast after 3 seconds
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   useEffect(() => {
     fetchSettings();
@@ -51,7 +60,7 @@ export default function NotificationsPage() {
   const handleToggle = (key: keyof NotificationSettings) => {
     setSettings((prev) => ({ ...prev, [key]: !prev[key] }));
     setHasChanges(true);
-    setSuccess(null);
+    setToast(null);
   };
 
   const handleSave = async () => {
@@ -67,11 +76,13 @@ export default function NotificationsPage() {
       );
 
       if (res.ok) {
-        setSuccess(t("notifications.saved"));
+        setToast({ type: "success", message: t("notifications.saved") });
         setHasChanges(false);
+      } else {
+        setToast({ type: "error", message: t("common.error") });
       }
     } catch {
-      // Ignore
+      setToast({ type: "error", message: t("common.error") });
     } finally {
       setSaving(false);
     }
@@ -128,9 +139,24 @@ export default function NotificationsPage() {
           </div>
         </div>
 
-        {success && (
-          <div className="mb-6 p-4 rounded-lg bg-success/10 border border-success/20 text-success text-sm">
-            {success}
+        {/* Toast Notification */}
+        {toast && (
+          <div
+            className={cn(
+              "fixed bottom-6 right-6 z-[9999] flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl border animate-in slide-in-from-bottom-5 fade-in duration-300",
+              toast.type === "success"
+                ? "bg-success/10 border-success/30 text-success"
+                : "bg-destructive/10 border-destructive/30 text-destructive"
+            )}
+          >
+            <CheckCircle className="w-5 h-5 shrink-0" />
+            <span className="font-medium">{toast.message}</span>
+            <button
+              onClick={() => setToast(null)}
+              className="p-1 hover:bg-white/10 rounded-lg transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
         )}
 
@@ -170,22 +196,20 @@ export default function NotificationsPage() {
           ))}
         </div>
 
-        {hasChanges && (
-          <div className="mt-6 flex justify-end">
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
-            >
-              {saving ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Save className="w-4 h-4" />
-              )}
-              {t("notifications.saveChanges")}
-            </button>
-          </div>
-        )}
+        <div className="mt-6 flex justify-end">
+          <button
+            onClick={handleSave}
+            disabled={saving || !hasChanges}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            {saving ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Save className="w-4 h-4" />
+            )}
+            {t("notifications.saveChanges")}
+          </button>
+        </div>
       </div>
 
       <div className="bg-card border border-border rounded-xl p-6">

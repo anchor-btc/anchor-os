@@ -8,6 +8,7 @@ pub mod electrum;
 pub mod indexer;
 pub mod installation;
 pub mod node;
+pub mod notifications;
 pub mod profile;
 pub mod settings;
 pub mod tailscale;

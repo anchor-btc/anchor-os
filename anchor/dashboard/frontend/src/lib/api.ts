@@ -759,3 +759,72 @@ export function shortenHash(hash: string, chars: number = 8): string {
   return `${hash.slice(0, chars)}...${hash.slice(-chars)}`;
 }
 
+// Notifications
+export interface Notification {
+  id: number;
+  notification_type: string;
+  title: string;
+  message?: string;
+  severity: "info" | "success" | "warning" | "error";
+  read: boolean;
+  created_at: string;
+}
+
+export interface NotificationsListResponse {
+  notifications: Notification[];
+  total: number;
+}
+
+export interface UnreadCountResponse {
+  count: number;
+}
+
+export interface NotificationActionResponse {
+  success: boolean;
+  message: string;
+}
+
+export async function fetchNotifications(): Promise<NotificationsListResponse> {
+  const res = await fetch(`${API_URL}/notifications`);
+  if (!res.ok) throw new Error("Failed to fetch notifications");
+  return res.json();
+}
+
+export async function fetchUnreadCount(): Promise<UnreadCountResponse> {
+  const res = await fetch(`${API_URL}/notifications/unread-count`);
+  if (!res.ok) throw new Error("Failed to fetch unread count");
+  return res.json();
+}
+
+export async function markNotificationAsRead(id: number): Promise<NotificationActionResponse> {
+  const res = await fetch(`${API_URL}/notifications/${id}/read`, {
+    method: "PUT",
+  });
+  if (!res.ok) throw new Error("Failed to mark notification as read");
+  return res.json();
+}
+
+export async function markAllNotificationsAsRead(): Promise<NotificationActionResponse> {
+  const res = await fetch(`${API_URL}/notifications/read-all`, {
+    method: "PUT",
+  });
+  if (!res.ok) throw new Error("Failed to mark all notifications as read");
+  return res.json();
+}
+
+export async function deleteNotification(id: number): Promise<NotificationActionResponse> {
+  const res = await fetch(`${API_URL}/notifications/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error("Failed to delete notification");
+  return res.json();
+}
+
+export async function clearReadNotifications(): Promise<NotificationActionResponse> {
+  const res = await fetch(`${API_URL}/notifications/clear-read`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error("Failed to clear read notifications");
+  return res.json();
+}
+

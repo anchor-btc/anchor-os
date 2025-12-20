@@ -4,6 +4,7 @@
 
 mod config;
 mod handlers;
+mod monitors;
 
 use anyhow::Result;
 use axum::{
@@ -83,6 +84,13 @@ pub struct AppState {
         handlers::installation::reset_installation,
         handlers::profile::get_profile,
         handlers::profile::update_profile,
+        handlers::notifications::list_notifications,
+        handlers::notifications::get_unread_count,
+        handlers::notifications::create_notification,
+        handlers::notifications::mark_as_read,
+        handlers::notifications::mark_all_as_read,
+        handlers::notifications::delete_notification,
+        handlers::notifications::clear_read_notifications,
     ),
     components(schemas(
         handlers::HealthResponse,
@@ -137,6 +145,11 @@ pub struct AppState {
         handlers::profile::UserProfile,
         handlers::profile::UpdateProfileRequest,
         handlers::profile::ProfileResponse,
+        handlers::notifications::Notification,
+        handlers::notifications::NotificationsListResponse,
+        handlers::notifications::UnreadCountResponse,
+        handlers::notifications::CreateNotificationRequest,
+        handlers::notifications::NotificationActionResponse,
     )),
     tags(
         (name = "System", description = "System health endpoints"),
@@ -150,6 +163,7 @@ pub struct AppState {
         (name = "Indexer", description = "Anchor indexer statistics"),
         (name = "Installation", description = "Installation and setup wizard"),
         (name = "Profile", description = "User profile management"),
+        (name = "Notifications", description = "System notifications management"),
     )
 )]
 struct ApiDoc;
@@ -250,6 +264,26 @@ async fn main() -> Result<()> {
                     let _ = sqlx::query(stmt).execute(&pool).await;
                 }
                 info!("Database migration 005 applied");
+
+                // Migration 006 - notifications (multi-statement, run each separately)
+                let migration_006_statements = [
+                    "CREATE TABLE IF NOT EXISTS notifications (
+                        id SERIAL PRIMARY KEY,
+                        notification_type VARCHAR(50) NOT NULL,
+                        title VARCHAR(255) NOT NULL,
+                        message TEXT,
+                        severity VARCHAR(20) DEFAULT 'info',
+                        read BOOLEAN DEFAULT FALSE,
+                        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+                    )",
+                    "CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(read)",
+                    "CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created_at DESC)",
+                    "CREATE INDEX IF NOT EXISTS idx_notifications_type ON notifications(notification_type)",
+                ];
+                for stmt in migration_006_statements {
+                    let _ = sqlx::query(stmt).execute(&pool).await;
+                }
+                info!("Database migration 006 applied");
                 Some(pool)
             }
             Err(e) => {
@@ -261,6 +295,19 @@ async fn main() -> Result<()> {
         info!("DATABASE_URL not set, settings features disabled");
         None
     };
+
+    // Start background monitors if database is available
+    if let Some(ref pool) = db_pool {
+        monitors::start_monitors(
+            Docker::connect_with_socket_defaults().unwrap(),
+            reqwest::Client::new(),
+            pool.clone(),
+            config.bitcoin_rpc_url.clone(),
+            config.bitcoin_rpc_user.clone(),
+            config.bitcoin_rpc_password.clone(),
+            config.wallet_url.clone(),
+        );
+    }
 
     // Create application state
     let state = Arc::new(AppState {
@@ -370,6 +417,14 @@ async fn main() -> Result<()> {
         .route("/auth/verify", post(handlers::auth::verify_token))
         .route("/auth/change-password", post(handlers::auth::change_password))
         .route("/auth/disable", delete(handlers::auth::disable_auth))
+        // Notifications
+        .route("/notifications", get(handlers::notifications::list_notifications))
+        .route("/notifications", post(handlers::notifications::create_notification))
+        .route("/notifications/unread-count", get(handlers::notifications::get_unread_count))
+        .route("/notifications/read-all", put(handlers::notifications::mark_all_as_read))
+        .route("/notifications/clear-read", delete(handlers::notifications::clear_read_notifications))
+        .route("/notifications/{id}/read", put(handlers::notifications::mark_as_read))
+        .route("/notifications/{id}", delete(handlers::notifications::delete_notification))
         .with_state(state)
         .layer(TraceLayer::new_for_http())
         .layer(

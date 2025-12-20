@@ -41,6 +41,7 @@ import { fetchContainers, startContainer, stopContainer, fetchUserProfile, fetch
 import { getServiceIdFromAppId } from "@/lib/service-rules";
 import { MultiLogsModal } from "./multi-logs-modal";
 import { MultiTerminalModal } from "./multi-terminal-modal";
+import { NotificationBell } from "./notification-bell";
 
 const navigationSections = [
   {
@@ -366,30 +367,41 @@ export function Sidebar() {
       <aside className="fixed left-0 top-0 bottom-0 w-64 bg-card border-r border-border flex flex-col overflow-hidden">
         {/* Logo */}
         <div className="p-4 border-b border-border shrink-0">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Anchor className="w-6 h-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="font-bold text-lg text-foreground">ANCHOR OS</h1>
-              <span className="text-[10px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded">beta</span>
-            </div>
-          </Link>
+          <div className="flex items-center justify-between">
+            <Link href="/" className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Anchor className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h1 className="font-bold text-lg text-foreground">ANCHOR OS</h1>
+                <span className="text-[10px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded">beta</span>
+              </div>
+            </Link>
+            <NotificationBell />
+          </div>
         </div>
 
         {/* User Profile */}
         {userProfile && userProfile.name && (
-          <div className="px-4 py-3 border-b border-border shrink-0">
+          <Link href="/settings/profile" className="block px-4 py-3 border-b border-border shrink-0 hover:bg-muted/50 transition-colors">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/20 to-orange-500/20 flex items-center justify-center text-lg border border-primary/10">
-                {userProfile.avatar_url || "🧑‍💻"}
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-orange-500/20 flex items-center justify-center text-xl overflow-hidden border-2 border-primary/20 ring-2 ring-primary/10">
+                {userProfile.avatar_url?.startsWith("data:") || userProfile.avatar_url?.startsWith("http") ? (
+                  <img
+                    src={userProfile.avatar_url}
+                    alt={userProfile.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span>{userProfile.avatar_url || "🧑‍💻"}</span>
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-muted-foreground">{t("sidebar.welcome", "Welcome back")}</p>
                 <p className="text-sm font-medium text-foreground truncate">{userProfile.name}</p>
               </div>
             </div>
-          </div>
+          </Link>
         )}
 
         {/* Navigation */}

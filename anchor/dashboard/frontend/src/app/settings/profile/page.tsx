@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -10,9 +10,12 @@ import {
   Check,
   Loader2,
   AlertTriangle,
+  Upload,
+  Trash2,
 } from "lucide-react";
 import { fetchUserProfile, updateUserProfile } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { ImageCropper } from "@/components/image-cropper";
 
 // Predefined avatar options (emoji-based)
 const AVATAR_OPTIONS = [
@@ -25,12 +28,16 @@ const AVATAR_OPTIONS = [
 export default function ProfilePage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [name, setName] = useState("");
   const [avatar, setAvatar] = useState("");
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  
+  // Image cropper state
+  const [imageToCrop, setImageToCrop] = useState<string | null>(null);
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ["userProfile"],
@@ -73,6 +80,48 @@ export default function ProfilePage() {
     setShowAvatarPicker(false);
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      setError(t("settings.profile.invalidImage", "Please select a valid image file"));
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError(t("settings.profile.imageTooLarge", "Image must be less than 5MB"));
+      return;
+    }
+
+    // Read file and open cropper
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImageToCrop(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleCropComplete = (croppedImage: string) => {
+    setAvatar(croppedImage);
+    setImageToCrop(null);
+    setShowAvatarPicker(false);
+  };
+
+  const handleRemoveAvatar = () => {
+    setAvatar("");
+  };
+
+  // Check if avatar is an image (base64 or URL) vs emoji
+  const isImageAvatar = avatar.startsWith("data:") || avatar.startsWith("http");
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[300px]">
@@ -83,6 +132,15 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-6 max-w-2xl">
+      {/* Image Cropper Modal */}
+      {imageToCrop && (
+        <ImageCropper
+          imageSrc={imageToCrop}
+          onCropComplete={handleCropComplete}
+          onCancel={() => setImageToCrop(null)}
+        />
+      )}
+
       {/* Status Messages */}
       {error && (
         <div className="p-4 rounded-lg bg-error/10 border border-error/20 text-error text-sm flex items-center gap-2">
@@ -120,28 +178,77 @@ export default function ProfilePage() {
               {t("settings.profile.avatar", "Avatar")}
             </label>
             <div className="flex items-center gap-4">
-              <button
-                onClick={() => setShowAvatarPicker(!showAvatarPicker)}
-                className="relative group"
-              >
+              {/* Avatar Preview */}
+              <div className="relative group">
                 <div className={cn(
-                  "w-20 h-20 rounded-2xl flex items-center justify-center text-4xl",
+                  "w-24 h-24 rounded-full flex items-center justify-center overflow-hidden",
                   "bg-gradient-to-br from-primary/20 to-orange-500/20",
-                  "border-2 border-border transition-all",
-                  "group-hover:border-primary group-hover:scale-105"
+                  "border-3 border-border transition-all",
+                  "ring-4 ring-primary/10"
                 )}>
-                  {avatar || "🧑‍💻"}
+                  {isImageAvatar ? (
+                    <img
+                      src={avatar}
+                      alt="Avatar"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-5xl">{avatar || "🧑‍💻"}</span>
+                  )}
                 </div>
-                <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-primary flex items-center justify-center shadow-lg">
-                  <Camera className="w-3.5 h-3.5 text-primary-foreground" />
+                
+                {/* Upload Button Overlay */}
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                >
+                  <Camera className="w-6 h-6 text-white" />
+                </button>
+                
+                {/* Camera Badge */}
+                <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-lg cursor-pointer hover:scale-110 transition-transform"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Camera className="w-4 h-4 text-primary-foreground" />
                 </div>
-              </button>
-              <div className="text-sm text-muted-foreground">
-                {t("settings.profile.clickToChange", "Click to change your avatar")}
+              </div>
+
+              {/* Actions */}
+              <div className="flex flex-col gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="px-4 py-2 text-sm font-medium bg-muted hover:bg-muted/80 rounded-lg transition-colors flex items-center gap-2"
+                >
+                  <Upload className="w-4 h-4" />
+                  {t("settings.profile.uploadPhoto", "Upload photo")}
+                </button>
+                <button
+                  onClick={() => setShowAvatarPicker(!showAvatarPicker)}
+                  className="px-4 py-2 text-sm font-medium bg-muted hover:bg-muted/80 rounded-lg transition-colors flex items-center gap-2"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  {t("settings.profile.chooseEmoji", "Choose emoji")}
+                </button>
+                {isImageAvatar && (
+                  <button
+                    onClick={handleRemoveAvatar}
+                    className="px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 rounded-lg transition-colors flex items-center gap-2"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    {t("settings.profile.removePhoto", "Remove")}
+                  </button>
+                )}
               </div>
             </div>
 
-            {/* Avatar Picker */}
+            {/* Emoji Picker */}
             {showAvatarPicker && (
               <div className="mt-4 p-4 rounded-xl bg-muted/50 border border-border">
                 <p className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
@@ -192,8 +299,20 @@ export default function ProfilePage() {
             </label>
             <div className="p-4 rounded-xl bg-muted/50 border border-border">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-orange-500/20 flex items-center justify-center text-xl border border-primary/10">
-                  {avatar || "🧑‍💻"}
+                <div className={cn(
+                  "w-12 h-12 rounded-full flex items-center justify-center overflow-hidden",
+                  "bg-gradient-to-br from-primary/20 to-orange-500/20",
+                  "border-2 border-primary/20"
+                )}>
+                  {isImageAvatar ? (
+                    <img
+                      src={avatar}
+                      alt="Avatar preview"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-2xl">{avatar || "🧑‍💻"}</span>
+                  )}
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">
