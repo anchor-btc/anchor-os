@@ -1,6 +1,7 @@
 "use client";
 
 import { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { X, GripVertical, Maximize2, Minimize2 } from "lucide-react";
@@ -22,6 +23,7 @@ export function WidgetWrapper({
   onChangeSize,
   children,
 }: WidgetWrapperProps) {
+  const { t } = useTranslation();
   const {
     attributes,
     listeners,
@@ -53,6 +55,8 @@ export function WidgetWrapper({
     if (widget.size === "large") onChangeSize("medium");
     else if (widget.size === "medium") onChangeSize("small");
   };
+
+  const widgetName = definition ? t(definition.nameKey, definition.name) : widget.type;
 
   return (
     <div
@@ -86,7 +90,7 @@ export function WidgetWrapper({
           >
             <GripVertical className="w-3.5 h-3.5 text-muted-foreground" />
             <span className="text-[10px] font-medium text-muted-foreground">
-              {definition?.name || widget.type}
+              {widgetName}
             </span>
           </div>
 
@@ -96,7 +100,7 @@ export function WidgetWrapper({
               <button
                 onClick={handleShrink}
                 className="w-6 h-6 bg-card border border-border rounded-full flex items-center justify-center shadow-lg hover:bg-muted transition-colors"
-                title="Shrink"
+                title={t("widgetWrapper.shrink")}
               >
                 <Minimize2 className="w-3 h-3 text-muted-foreground" />
               </button>
@@ -105,7 +109,7 @@ export function WidgetWrapper({
               <button
                 onClick={handleGrow}
                 className="w-6 h-6 bg-card border border-border rounded-full flex items-center justify-center shadow-lg hover:bg-muted transition-colors"
-                title="Expand"
+                title={t("widgetWrapper.expand")}
               >
                 <Maximize2 className="w-3 h-3 text-muted-foreground" />
               </button>

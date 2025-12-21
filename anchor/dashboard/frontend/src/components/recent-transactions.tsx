@@ -1,12 +1,14 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { fetchTransactions, shortenHash, type Transaction } from "@/lib/api";
 import { ArrowDownLeft, ArrowUpRight, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
 export function RecentTransactions() {
+  const { t } = useTranslation();
   const { data: transactions, isLoading, error } = useQuery({
     queryKey: ["transactions"],
     queryFn: fetchTransactions,
@@ -26,7 +28,7 @@ export function RecentTransactions() {
   if (error) {
     return (
       <div className="bg-card border border-border rounded-xl p-4">
-        <p className="text-sm text-error">Failed to load transactions</p>
+        <p className="text-sm text-error">{t("transactions.loadError")}</p>
       </div>
     );
   }
@@ -36,20 +38,20 @@ export function RecentTransactions() {
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden">
       <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-        <h3 className="text-sm font-semibold text-foreground">Recent Transactions</h3>
+        <h3 className="text-sm font-semibold text-foreground">{t("transactions.recentTransactions")}</h3>
         <Link href="/wallet" className="text-xs text-primary hover:underline">
-          View all
+          {t("transactions.viewAll")}
         </Link>
       </div>
 
       {recentTxs.length === 0 ? (
         <div className="p-4 text-center text-muted-foreground">
-          <p className="text-xs">No transactions yet</p>
+          <p className="text-xs">{t("transactions.noTransactions")}</p>
         </div>
       ) : (
         <div className="divide-y divide-border max-h-[320px] overflow-y-auto">
           {recentTxs.map((tx) => (
-            <TransactionRow key={tx.txid} transaction={tx} />
+            <TransactionRow key={tx.txid} transaction={tx} t={t} />
           ))}
         </div>
       )}
@@ -57,7 +59,7 @@ export function RecentTransactions() {
   );
 }
 
-function TransactionRow({ transaction }: { transaction: Transaction }) {
+function TransactionRow({ transaction, t }: { transaction: Transaction; t: (key: string) => string }) {
   const isReceive = transaction.category === "receive" || transaction.category === "generate" || transaction.category === "immature";
 
   return (
@@ -77,7 +79,7 @@ function TransactionRow({ transaction }: { transaction: Transaction }) {
         </div>
         <div>
           <p className="text-xs font-medium text-foreground">
-            {isReceive ? "Received" : "Sent"}
+            {isReceive ? t("transactions.received") : t("transactions.sent")}
           </p>
           <p className="text-[10px] text-muted-foreground font-mono">
             {shortenHash(transaction.txid, 6)}
@@ -95,7 +97,7 @@ function TransactionRow({ transaction }: { transaction: Transaction }) {
           {isReceive ? "+" : "-"}{Math.abs(transaction.amount).toFixed(8)} BTC
         </p>
         <p className="text-[10px] text-muted-foreground">
-          {transaction.confirmations > 0 ? `${transaction.confirmations} confs` : "Pending"}
+          {transaction.confirmations > 0 ? `${transaction.confirmations} ${t("transactions.confs")}` : t("transactions.pending")}
         </p>
       </div>
     </div>

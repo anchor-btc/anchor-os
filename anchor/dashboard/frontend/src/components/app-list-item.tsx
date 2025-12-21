@@ -217,7 +217,7 @@ export function AppListItem({
               </span>
             )}
           </div>
-          <p className="text-xs text-muted-foreground truncate">{app.description}</p>
+          <p className="text-xs text-muted-foreground truncate">{t(app.descriptionKey, app.description)}</p>
         </div>
 
         {/* Ports */}

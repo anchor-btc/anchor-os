@@ -554,6 +554,64 @@
     "noBackups": "バックアップなし",
     "fast": "高速"
   },
+  "widgetNames": {
+    "quickLaunch": "クイックランチ",
+    "resourceCharts": "リソースモニター",
+    "wallet": "ウォレット",
+    "recentTransactions": "最近の取引",
+    "nodeStats": "ノード統計",
+    "indexerStats": "インデクサー統計",
+    "backupStatus": "バックアップ状態",
+    "mempoolSummary": "Mempool概要",
+    "bitcoinPrice": "ビットコイン価格",
+    "apps": "アプリ",
+    "explorers": "エクスプローラー",
+    "networking": "ネットワーク",
+    "kernel": "カーネル"
+  },
+  "widgetDescriptions": {
+    "quickLaunch": "お気に入りアプリへのクイックアクセス",
+    "resourceCharts": "CPU、メモリ、Docker統計",
+    "wallet": "ビットコインウォレットの残高とアドレス",
+    "recentTransactions": "最新のブロックチェーン取引",
+    "nodeStats": "ビットコインノードの統計",
+    "indexerStats": "ANCHORインデクサーの統計",
+    "backupStatus": "最終バックアップとストレージ情報",
+    "mempoolSummary": "Mempoolサイズと手数料見積もり",
+    "bitcoinPrice": "現在のBTC価格（USD）",
+    "apps": "すべてのAnchorアプリとステータス",
+    "explorers": "ブロックエクスプローラーとビジュアライザー",
+    "networking": "VPNとトンネルサービス",
+    "kernel": "コアインフラサービス"
+  },
+  "walletWidget": {
+    "balance": "ウォレット残高",
+    "confirmed": "確認済み",
+    "unconfirmed": "未確認",
+    "immature": "未成熟",
+    "unavailable": "ウォレット利用不可"
+  },
+  "transactions": {
+    "recentTransactions": "最近の取引",
+    "viewAll": "すべて表示",
+    "received": "受信",
+    "sent": "送信",
+    "noTransactions": "取引なし",
+    "loadError": "取引の読み込みに失敗しました",
+    "pending": "保留中",
+    "confs": "確認"
+  },
+  "indexer": {
+    "title": "Anchor Indexer",
+    "protocolMessages": "プロトコルメッセージ",
+    "unavailable": "利用不可",
+    "live": "ライブ",
+    "messages": "メッセージ",
+    "blocks": "ブロック",
+    "lastBlock": "最終ブロック",
+    "messageTypes": "メッセージタイプ",
+    "carrierTypes": "キャリアタイプ"
+  },
   "settings": {
     "title": "設定",
     "subtitle": "Anchor OSの設定を管理",
@@ -711,6 +769,23 @@
     "noConfig": "ウィジェット設定が見つかりません。",
     "visitDashboard": "ダッシュボードにアクセスしてウィジェットを設定してください。",
     "availableWidgets": "利用可能なウィジェット"
+  },
+  "widgetPicker": {
+    "allAdded": "すべてのウィジェットが追加済みです"
+  },
+  "widgetWrapper": {
+    "shrink": "縮小",
+    "expand": "拡大"
+  },
+  "resourceMonitor": {
+    "title": "リソースモニター",
+    "loading": "統計を読み込み中...",
+    "containers": "コンテナ",
+    "cpu": "CPU",
+    "memory": "メモリ",
+    "network": "ネットワーク",
+    "diskIO": "ディスクI/O",
+    "topCpu": "Top CPU"
   },
   "data": {
     "title": "データ管理",
@@ -989,5 +1064,48 @@
     "historyDesc": "履歴グラフを表示してパフォーマンストレンドを分析",
     "notRunningMsg": "Netdataは実行されていません",
     "startWith": "Netdataを起動するには"
+  },
+  "tor": {
+    "title": "Torネットワーク",
+    "subtitle": "匿名Bitcoin接続のためのプライバシーネットワーク",
+    "connectionStatus": "接続状態",
+    "connectedToTor": "Torに接続済み",
+    "establishingCircuit": "回路を確立中...",
+    "containerStopped": "コンテナ停止",
+    "container": "コンテナ",
+    "circuit": "回路",
+    "exitIP": "出口IP",
+    "version": "バージョン",
+    "running": "実行中",
+    "stopped": "停止",
+    "established": "確立済み",
+    "notReady": "準備中",
+    "connectedInfo": "Torネットワークに接続済み",
+    "trafficRouted": "あなたのトラフィックはTorネットワーク経由でルーティングされています。出口IPは",
+    "stopContainer": "コンテナを停止",
+    "startContainer": "コンテナを開始",
+    "newCircuit": "新しい回路",
+    "hiddenServices": "隠しサービス (.onion)",
+    "hide": "非表示",
+    "show": "表示",
+    "hiddenServicesDesc": "これらの.onionアドレスにより、他のユーザーがTorネットワーク経由であなたのサービスにプライベートに接続できます。",
+    "bitcoinNode": "Bitcoinノード",
+    "p2pConnections": "P2P接続（ポート8333/18444）",
+    "electrumServer": "Electrumサーバー",
+    "walletConnections": "ウォレット接続（ポート50001）",
+    "dashboard": "ダッシュボード",
+    "webInterface": "Webインターフェース（ポート80）",
+    "copyAddress": "アドレスをコピー",
+    "notAvailableYet": "まだ利用できません",
+    "addressesPersist": "隠しサービスアドレスは自動的に生成され、再起動後も保持されます。",
+    "aboutTor": "Torについて",
+    "torDescription": "は複数の暗号化されたリレーを経由してトラフィックをルーティングするプライバシーネットワークで、接続の追跡を困難にします。",
+    "whenEnabled": "有効にすると、Bitcoinノードは以下が可能になります：",
+    "connectAnonymously": "SOCKS5プロキシ経由で他のノードに匿名で接続",
+    "acceptConnections": "隠しサービス経由で他のTorユーザーからの受信接続を受け入れ",
+    "hideRealIP": "Bitcoinネットワークから実際のIPアドレスを隠す",
+    "hiddenServicesLabel": "隠しサービス",
+    "hiddenServicesInfo": "（.onionアドレス）により、他のユーザーがあなたの実際のIPアドレスを知らずにノードに接続できます。",
+    "learnMore": "Torについて詳しく"
   }
 }

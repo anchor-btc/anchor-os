@@ -152,3 +152,4 @@ function handleMessage(bytes: Uint8Array) {
 - [Custom Kinds](/kinds/#custom-kinds) - Define your own kind
 - [Message Format](/protocol/message-format) - Protocol structure
 
+

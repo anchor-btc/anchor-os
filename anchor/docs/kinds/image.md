@@ -288,3 +288,4 @@ const post = createMessage({
 - [Proof (Kind 11)](/kinds/proof) - Hash images instead of embedding
 - [Ordinals Compatibility](/sdk/encoding#ordinals) - Cross-protocol support
 
+

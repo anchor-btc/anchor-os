@@ -29,8 +29,10 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export default function TorPage() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
   const [showAddresses, setShowAddresses] = useState(true);
@@ -116,10 +118,10 @@ export default function TorPage() {
         <div>
           <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
             <Shield className="w-8 h-8 text-purple-500" />
-            Tor Network
+            {t("tor.title")}
           </h1>
           <p className="text-muted-foreground mt-1">
-            Privacy network for anonymous Bitcoin connections
+            {t("tor.subtitle")}
           </p>
         </div>
         <button
@@ -134,24 +136,24 @@ export default function TorPage() {
       {/* Status Card */}
       <div className="bg-card border border-border rounded-2xl p-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-foreground">Connection Status</h2>
+          <h2 className="text-lg font-semibold text-foreground">{t("tor.connectionStatus")}</h2>
           <div className="flex items-center gap-2">
             {isContainerRunning ? (
               isConnected ? (
                 <span className="flex items-center gap-2 text-sm text-success">
                   <CheckCircle2 className="w-4 h-4" />
-                  Connected to Tor
+                  {t("tor.connectedToTor")}
                 </span>
               ) : (
                 <span className="flex items-center gap-2 text-sm text-warning">
                   <AlertCircle className="w-4 h-4" />
-                  Establishing circuit...
+                  {t("tor.establishingCircuit")}
                 </span>
               )
             ) : (
               <span className="flex items-center gap-2 text-sm text-muted-foreground">
                 <XCircle className="w-4 h-4" />
-                Container stopped
+                {t("tor.containerStopped")}
               </span>
             )}
           </div>
@@ -162,33 +164,33 @@ export default function TorPage() {
           <div className="bg-muted/50 rounded-xl p-4">
             <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
               <Server className="w-4 h-4" />
-              Container
+              {t("tor.container")}
             </div>
             <div className={cn(
               "font-medium",
               isContainerRunning ? "text-success" : "text-muted-foreground"
             )}>
-              {isContainerRunning ? "Running" : "Stopped"}
+              {isContainerRunning ? t("tor.running") : t("tor.stopped")}
             </div>
           </div>
 
           <div className="bg-muted/50 rounded-xl p-4">
             <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
               <Shield className="w-4 h-4" />
-              Circuit
+              {t("tor.circuit")}
             </div>
             <div className={cn(
               "font-medium",
               isConnected ? "text-success" : "text-muted-foreground"
             )}>
-              {isConnected ? "Established" : "Not ready"}
+              {isConnected ? t("tor.established") : t("tor.notReady")}
             </div>
           </div>
 
           <div className="bg-muted/50 rounded-xl p-4">
             <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
               <Globe className="w-4 h-4" />
-              Exit IP
+              {t("tor.exitIP")}
             </div>
             <div className="font-medium font-mono text-foreground text-sm truncate">
               {status?.external_ip || "-"}
@@ -198,7 +200,7 @@ export default function TorPage() {
           <div className="bg-muted/50 rounded-xl p-4">
             <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
               <Zap className="w-4 h-4" />
-              Version
+              {t("tor.version")}
             </div>
             <div className="font-medium text-foreground truncate">
               {status?.tor_version || "-"}
@@ -212,9 +214,9 @@ export default function TorPage() {
             <div className="flex items-start gap-3">
               <CheckCircle2 className="w-5 h-5 text-purple-500 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-purple-400">Connected to Tor Network</p>
+                <p className="text-sm font-medium text-purple-400">{t("tor.connectedInfo")}</p>
                 <p className="text-sm text-purple-400/80 mt-1">
-                  Your traffic is being routed through the Tor network. Your exit IP is{" "}
+                  {t("tor.trafficRouted")}{" "}
                   <code className="bg-purple-500/20 px-1.5 py-0.5 rounded font-mono">
                     {status?.external_ip}
                   </code>
@@ -237,7 +239,7 @@ export default function TorPage() {
               ) : (
                 <Square className="w-4 h-4" />
               )}
-              Stop Container
+              {t("tor.stopContainer")}
             </button>
           ) : (
             <button
@@ -250,7 +252,7 @@ export default function TorPage() {
               ) : (
                 <Play className="w-4 h-4" />
               )}
-              Start Container
+              {t("tor.startContainer")}
             </button>
           )}
 
@@ -265,7 +267,7 @@ export default function TorPage() {
               ) : (
                 <RefreshCw className="w-4 h-4" />
               )}
-              New Circuit
+              {t("tor.newCircuit")}
             </button>
           )}
         </div>
@@ -283,7 +285,7 @@ export default function TorPage() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
               <Globe className="w-5 h-5 text-purple-500" />
-              Hidden Services (.onion)
+              {t("tor.hiddenServices")}
             </h2>
             <button
               onClick={() => setShowAddresses(!showAddresses)}
@@ -292,19 +294,19 @@ export default function TorPage() {
               {showAddresses ? (
                 <>
                   <EyeOff className="w-4 h-4" />
-                  Hide
+                  {t("tor.hide")}
                 </>
               ) : (
                 <>
                   <Eye className="w-4 h-4" />
-                  Show
+                  {t("tor.show")}
                 </>
               )}
             </button>
           </div>
 
           <p className="text-sm text-muted-foreground mb-6">
-            These .onion addresses allow others to connect to your services privately through the Tor network.
+            {t("tor.hiddenServicesDesc")}
           </p>
 
           <div className="space-y-4">
@@ -312,8 +314,8 @@ export default function TorPage() {
             <div className="bg-muted/50 rounded-xl p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="font-medium text-foreground">Bitcoin Node</div>
-                  <div className="text-sm text-muted-foreground">P2P connections (port 8333/18444)</div>
+                  <div className="font-medium text-foreground">{t("tor.bitcoinNode")}</div>
+                  <div className="text-sm text-muted-foreground">{t("tor.p2pConnections")}</div>
                 </div>
                 {status?.onion_addresses?.bitcoin ? (
                   <div className="flex items-center gap-2">
@@ -323,7 +325,7 @@ export default function TorPage() {
                     <button
                       onClick={() => copyToClipboard(status.onion_addresses.bitcoin!, "bitcoin")}
                       className="p-2 hover:bg-muted rounded-lg transition-colors"
-                      title="Copy address"
+                      title={t("tor.copyAddress")}
                     >
                       {copiedAddress === "bitcoin" ? (
                         <CheckCircle2 className="w-4 h-4 text-success" />
@@ -333,7 +335,7 @@ export default function TorPage() {
                     </button>
                   </div>
                 ) : (
-                  <span className="text-sm text-muted-foreground">Not available yet</span>
+                  <span className="text-sm text-muted-foreground">{t("tor.notAvailableYet")}</span>
                 )}
               </div>
             </div>
@@ -342,8 +344,8 @@ export default function TorPage() {
             <div className="bg-muted/50 rounded-xl p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="font-medium text-foreground">Electrum Server</div>
-                  <div className="text-sm text-muted-foreground">Wallet connections (port 50001)</div>
+                  <div className="font-medium text-foreground">{t("tor.electrumServer")}</div>
+                  <div className="text-sm text-muted-foreground">{t("tor.walletConnections")}</div>
                 </div>
                 {status?.onion_addresses?.electrs ? (
                   <div className="flex items-center gap-2">
@@ -353,7 +355,7 @@ export default function TorPage() {
                     <button
                       onClick={() => copyToClipboard(status.onion_addresses.electrs!, "electrs")}
                       className="p-2 hover:bg-muted rounded-lg transition-colors"
-                      title="Copy address"
+                      title={t("tor.copyAddress")}
                     >
                       {copiedAddress === "electrs" ? (
                         <CheckCircle2 className="w-4 h-4 text-success" />
@@ -363,7 +365,7 @@ export default function TorPage() {
                     </button>
                   </div>
                 ) : (
-                  <span className="text-sm text-muted-foreground">Not available yet</span>
+                  <span className="text-sm text-muted-foreground">{t("tor.notAvailableYet")}</span>
                 )}
               </div>
             </div>
@@ -372,8 +374,8 @@ export default function TorPage() {
             <div className="bg-muted/50 rounded-xl p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="font-medium text-foreground">Dashboard</div>
-                  <div className="text-sm text-muted-foreground">Web interface (port 80)</div>
+                  <div className="font-medium text-foreground">{t("tor.dashboard")}</div>
+                  <div className="text-sm text-muted-foreground">{t("tor.webInterface")}</div>
                 </div>
                 {status?.onion_addresses?.dashboard ? (
                   <div className="flex items-center gap-2">
@@ -383,7 +385,7 @@ export default function TorPage() {
                     <button
                       onClick={() => copyToClipboard(status.onion_addresses.dashboard!, "dashboard")}
                       className="p-2 hover:bg-muted rounded-lg transition-colors"
-                      title="Copy address"
+                      title={t("tor.copyAddress")}
                     >
                       {copiedAddress === "dashboard" ? (
                         <CheckCircle2 className="w-4 h-4 text-success" />
@@ -393,37 +395,35 @@ export default function TorPage() {
                     </button>
                   </div>
                 ) : (
-                  <span className="text-sm text-muted-foreground">Not available yet</span>
+                  <span className="text-sm text-muted-foreground">{t("tor.notAvailableYet")}</span>
                 )}
               </div>
             </div>
           </div>
 
           <p className="text-xs text-muted-foreground mt-4">
-            Hidden service addresses are generated automatically and persist across restarts.
+            {t("tor.addressesPersist")}
           </p>
         </div>
       )}
 
       {/* Help Section */}
       <div className="bg-muted/30 border border-border rounded-2xl p-6">
-        <h3 className="font-semibold text-foreground mb-3">About Tor</h3>
+        <h3 className="font-semibold text-foreground mb-3">{t("tor.aboutTor")}</h3>
         <div className="text-sm text-muted-foreground space-y-3">
           <p>
-            <strong>Tor (The Onion Router)</strong> is a privacy network that routes your traffic through 
-            multiple encrypted relays, making it difficult to trace your connections.
+            <strong>Tor (The Onion Router)</strong> {t("tor.torDescription")}
           </p>
           <p>
-            When enabled, your Bitcoin node can:
+            {t("tor.whenEnabled")}
           </p>
           <ul className="list-disc list-inside space-y-1 ml-2">
-            <li>Connect to other nodes anonymously via the SOCKS5 proxy</li>
-            <li>Accept incoming connections from other Tor users via hidden services</li>
-            <li>Hide your real IP address from the Bitcoin network</li>
+            <li>{t("tor.connectAnonymously")}</li>
+            <li>{t("tor.acceptConnections")}</li>
+            <li>{t("tor.hideRealIP")}</li>
           </ul>
           <p className="mt-4">
-            <strong>Hidden Services</strong> (.onion addresses) allow others to connect to your node 
-            without knowing your real IP address.
+            <strong>{t("tor.hiddenServicesLabel")}</strong> {t("tor.hiddenServicesInfo")}
           </p>
         </div>
         <div className="mt-4 pt-4 border-t border-border">
@@ -433,7 +433,7 @@ export default function TorPage() {
             rel="noopener noreferrer"
             className="text-sm text-purple-400 hover:text-purple-300 inline-flex items-center gap-1"
           >
-            Learn more about Tor
+            {t("tor.learnMore")}
             <ExternalLink className="w-3 h-3" />
           </a>
         </div>

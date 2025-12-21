@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Cpu, HardDrive, Wifi, Database, Activity, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -86,6 +87,7 @@ function Sparkline({
 }
 
 export function ResourceCharts() {
+  const { t } = useTranslation();
   const [history, setHistory] = useState<HistoryPoint[]>([]);
 
   const { data: stats } = useQuery({
@@ -122,8 +124,8 @@ export function ResourceCharts() {
             <Activity className="w-5 h-5 text-primary animate-pulse" />
           </div>
           <div>
-            <h2 className="font-semibold text-foreground">Resource Monitor</h2>
-            <p className="text-sm text-muted-foreground">Loading stats...</p>
+            <h2 className="font-semibold text-foreground">{t("resourceMonitor.title")}</h2>
+            <p className="text-sm text-muted-foreground">{t("resourceMonitor.loading")}</p>
           </div>
         </div>
       </div>
@@ -144,11 +146,11 @@ export function ResourceCharts() {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Activity className="w-5 h-5 text-primary" />
-          <h2 className="font-semibold text-foreground">Resource Monitor</h2>
+          <h2 className="font-semibold text-foreground">{t("resourceMonitor.title")}</h2>
         </div>
         <span className="text-xs text-muted-foreground flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-          {stats.container_count} containers
+          {stats.container_count} {t("resourceMonitor.containers")}
         </span>
       </div>
 
@@ -160,7 +162,7 @@ export function ResourceCharts() {
             <div className="w-6 h-6 rounded-md bg-orange-500/10 flex items-center justify-center">
               <Cpu className="w-3.5 h-3.5 text-orange-500" />
             </div>
-            <span className="text-xs text-muted-foreground">CPU</span>
+            <span className="text-xs text-muted-foreground">{t("resourceMonitor.cpu")}</span>
           </div>
           <p className="text-xl font-bold font-tabular text-foreground">
             {stats.total_cpu_percent.toFixed(1)}%
@@ -174,7 +176,7 @@ export function ResourceCharts() {
             <div className="w-6 h-6 rounded-md bg-blue-500/10 flex items-center justify-center">
               <Database className="w-3.5 h-3.5 text-blue-500" />
             </div>
-            <span className="text-xs text-muted-foreground">Memory</span>
+            <span className="text-xs text-muted-foreground">{t("resourceMonitor.memory")}</span>
           </div>
           <p className="text-xl font-bold font-tabular text-foreground">
             {formatBytes(stats.total_memory_usage)}
@@ -188,7 +190,7 @@ export function ResourceCharts() {
             <div className="w-6 h-6 rounded-md bg-green-500/10 flex items-center justify-center">
               <Wifi className="w-3.5 h-3.5 text-green-500" />
             </div>
-            <span className="text-xs text-muted-foreground">Network</span>
+            <span className="text-xs text-muted-foreground">{t("resourceMonitor.network")}</span>
           </div>
           <div>
             <p className="text-sm font-semibold font-tabular text-foreground">
@@ -206,7 +208,7 @@ export function ResourceCharts() {
             <div className="w-6 h-6 rounded-md bg-purple-500/10 flex items-center justify-center">
               <HardDrive className="w-3.5 h-3.5 text-purple-500" />
             </div>
-            <span className="text-xs text-muted-foreground">Disk I/O</span>
+            <span className="text-xs text-muted-foreground">{t("resourceMonitor.diskIO")}</span>
           </div>
           <div>
             <p className="text-sm font-semibold font-tabular text-foreground">
@@ -224,7 +226,7 @@ export function ResourceCharts() {
             <div className="w-6 h-6 rounded-md bg-amber-500/10 flex items-center justify-center">
               <TrendingUp className="w-3.5 h-3.5 text-amber-500" />
             </div>
-            <span className="text-xs text-muted-foreground">Top CPU</span>
+            <span className="text-xs text-muted-foreground">{t("resourceMonitor.topCpu")}</span>
           </div>
           <div className="space-y-1">
             {topContainers.slice(0, 3).map((container) => (

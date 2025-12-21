@@ -1,0 +1,6 @@
+# Build output (if created in the future)
+dist/
+
+# Dependencies
+node_modules/
+

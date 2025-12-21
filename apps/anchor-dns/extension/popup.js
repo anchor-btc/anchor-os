@@ -2,7 +2,7 @@
  * BitDNS Chrome Extension - Popup Script
  */
 
-const DEFAULT_API_URL = "http://localhost:3006";
+const DEFAULT_API_URL = "http://localhost:3401";
 
 // DOM Elements
 const domainInput = document.getElementById("domainInput");

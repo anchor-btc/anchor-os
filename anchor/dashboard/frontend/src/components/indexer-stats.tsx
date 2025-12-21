@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import {
   Search,
   Loader2,
@@ -92,6 +93,7 @@ const carrierColors: Record<string, string> = {
 };
 
 export function IndexerStatsWidget() {
+  const { t } = useTranslation();
   const { data: stats, isLoading, error } = useQuery({
     queryKey: ["indexer-stats"],
     queryFn: fetchIndexerStats,
@@ -117,8 +119,8 @@ export function IndexerStatsWidget() {
               <Search className="w-4 h-4 text-cyan-500" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Anchor Indexer</p>
-              <p className="text-sm text-muted-foreground">Unavailable</p>
+              <p className="text-xs text-muted-foreground">{t("indexer.title")}</p>
+              <p className="text-sm text-muted-foreground">{t("indexer.unavailable")}</p>
             </div>
           </div>
         </div>
@@ -141,13 +143,13 @@ export function IndexerStatsWidget() {
                 <Search className="w-4 h-4 text-cyan-500" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Anchor Indexer</p>
-                <p className="text-sm font-medium text-foreground">Protocol Messages</p>
+                <p className="text-xs text-muted-foreground">{t("indexer.title")}</p>
+                <p className="text-sm font-medium text-foreground">{t("indexer.protocolMessages")}</p>
               </div>
             </div>
             <div className="flex items-center gap-1 text-[10px] text-success">
               <Activity className="w-2.5 h-2.5 animate-pulse" />
-              Live
+              {t("indexer.live")}
             </div>
           </div>
         </div>
@@ -158,19 +160,19 @@ export function IndexerStatsWidget() {
             <p className="text-sm font-bold font-tabular text-foreground">
               {totalMessages.toLocaleString()}
             </p>
-            <p className="text-[10px] text-muted-foreground">Messages</p>
+            <p className="text-[10px] text-muted-foreground">{t("indexer.messages")}</p>
           </div>
           <div className="py-2 px-3 text-center">
             <p className="text-sm font-bold font-tabular text-foreground">
               {stats.total_blocks_with_messages.toLocaleString()}
             </p>
-            <p className="text-[10px] text-muted-foreground">Blocks</p>
+            <p className="text-[10px] text-muted-foreground">{t("indexer.blocks")}</p>
           </div>
           <div className="py-2 px-3 text-center">
             <p className="text-sm font-bold font-tabular text-foreground">
               {stats.last_indexed_block?.toLocaleString() || "-"}
             </p>
-            <p className="text-[10px] text-muted-foreground">Last Block</p>
+            <p className="text-[10px] text-muted-foreground">{t("indexer.lastBlock")}</p>
           </div>
         </div>
 
@@ -180,7 +182,7 @@ export function IndexerStatsWidget() {
           <div className="p-3">
             <div className="flex items-center gap-1 mb-2 text-[10px] text-muted-foreground">
               <TrendingUp className="w-2.5 h-2.5" />
-              Message Types
+              {t("indexer.messageTypes")}
             </div>
             <div className="space-y-1">
               {topKinds.map((kind) => {
@@ -208,7 +210,7 @@ export function IndexerStatsWidget() {
           <div className="p-3">
             <div className="flex items-center gap-1 mb-2 text-[10px] text-muted-foreground">
               <Box className="w-2.5 h-2.5" />
-              Carrier Types
+              {t("indexer.carrierTypes")}
             </div>
             <div className="space-y-1">
               {topCarriers.map((carrier) => {

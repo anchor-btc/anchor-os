@@ -408,3 +408,4 @@ interface TokenMessage extends AnchorMessage {
 - [Wallet Integration](/sdk/wallet) - Transaction handling
 - [Kinds Reference](/kinds/) - Payload formats
 
+

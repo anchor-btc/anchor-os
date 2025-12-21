@@ -28,7 +28,9 @@ export interface WidgetConfig {
 export interface WidgetDefinition {
   type: WidgetType;
   name: string;
+  nameKey: string;
   description: string;
+  descriptionKey: string;
   defaultSize: WidgetSize;
   allowedSizes: WidgetSize[];
   icon: string;
@@ -39,7 +41,9 @@ export const WIDGET_DEFINITIONS: WidgetDefinition[] = [
   {
     type: 'quick-launch',
     name: 'Quick Launch',
+    nameKey: 'widgetNames.quickLaunch',
     description: 'Quick access to your favorite apps',
+    descriptionKey: 'widgetDescriptions.quickLaunch',
     defaultSize: 'large',
     allowedSizes: ['medium', 'large'],
     icon: 'Rocket',
@@ -47,7 +51,9 @@ export const WIDGET_DEFINITIONS: WidgetDefinition[] = [
   {
     type: 'resource-charts',
     name: 'Resource Monitor',
+    nameKey: 'widgetNames.resourceCharts',
     description: 'CPU, Memory, and Docker stats',
+    descriptionKey: 'widgetDescriptions.resourceCharts',
     defaultSize: 'large',
     allowedSizes: ['medium', 'large'],
     icon: 'Activity',
@@ -55,7 +61,9 @@ export const WIDGET_DEFINITIONS: WidgetDefinition[] = [
   {
     type: 'wallet',
     name: 'Wallet',
+    nameKey: 'widgetNames.wallet',
     description: 'Bitcoin wallet balance and addresses',
+    descriptionKey: 'widgetDescriptions.wallet',
     defaultSize: 'medium',
     allowedSizes: ['small', 'medium', 'large'],
     icon: 'Wallet',
@@ -63,7 +71,9 @@ export const WIDGET_DEFINITIONS: WidgetDefinition[] = [
   {
     type: 'recent-transactions',
     name: 'Recent Transactions',
+    nameKey: 'widgetNames.recentTransactions',
     description: 'Latest blockchain transactions',
+    descriptionKey: 'widgetDescriptions.recentTransactions',
     defaultSize: 'medium',
     allowedSizes: ['small', 'medium', 'large'],
     icon: 'ArrowLeftRight',
@@ -71,7 +81,9 @@ export const WIDGET_DEFINITIONS: WidgetDefinition[] = [
   {
     type: 'node-stats',
     name: 'Node Stats',
+    nameKey: 'widgetNames.nodeStats',
     description: 'Bitcoin node statistics',
+    descriptionKey: 'widgetDescriptions.nodeStats',
     defaultSize: 'medium',
     allowedSizes: ['small', 'medium', 'large'],
     icon: 'Bitcoin',
@@ -79,7 +91,9 @@ export const WIDGET_DEFINITIONS: WidgetDefinition[] = [
   {
     type: 'indexer-stats',
     name: 'Indexer Stats',
+    nameKey: 'widgetNames.indexerStats',
     description: 'ANCHOR indexer statistics',
+    descriptionKey: 'widgetDescriptions.indexerStats',
     defaultSize: 'medium',
     allowedSizes: ['small', 'medium', 'large'],
     icon: 'Database',
@@ -87,7 +101,9 @@ export const WIDGET_DEFINITIONS: WidgetDefinition[] = [
   {
     type: 'backup-status',
     name: 'Backup Status',
+    nameKey: 'widgetNames.backupStatus',
     description: 'Last backup and storage info',
+    descriptionKey: 'widgetDescriptions.backupStatus',
     defaultSize: 'small',
     allowedSizes: ['small', 'medium'],
     icon: 'HardDrive',
@@ -95,7 +111,9 @@ export const WIDGET_DEFINITIONS: WidgetDefinition[] = [
   {
     type: 'mempool-summary',
     name: 'Mempool Summary',
+    nameKey: 'widgetNames.mempoolSummary',
     description: 'Mempool size and fee estimates',
+    descriptionKey: 'widgetDescriptions.mempoolSummary',
     defaultSize: 'small',
     allowedSizes: ['small', 'medium'],
     icon: 'Layers',
@@ -103,7 +121,9 @@ export const WIDGET_DEFINITIONS: WidgetDefinition[] = [
   {
     type: 'bitcoin-price',
     name: 'Bitcoin Price',
+    nameKey: 'widgetNames.bitcoinPrice',
     description: 'Current BTC price in USD',
+    descriptionKey: 'widgetDescriptions.bitcoinPrice',
     defaultSize: 'small',
     allowedSizes: ['small', 'medium'],
     icon: 'TrendingUp',
@@ -111,7 +131,9 @@ export const WIDGET_DEFINITIONS: WidgetDefinition[] = [
   {
     type: 'apps',
     name: 'Apps',
+    nameKey: 'widgetNames.apps',
     description: 'All Anchor apps with status',
+    descriptionKey: 'widgetDescriptions.apps',
     defaultSize: 'medium',
     allowedSizes: ['medium', 'large'],
     icon: 'AppWindow',
@@ -119,7 +141,9 @@ export const WIDGET_DEFINITIONS: WidgetDefinition[] = [
   {
     type: 'explorers',
     name: 'Explorers',
+    nameKey: 'widgetNames.explorers',
     description: 'Block explorers and visualizers',
+    descriptionKey: 'widgetDescriptions.explorers',
     defaultSize: 'small',
     allowedSizes: ['small', 'medium'],
     icon: 'Search',
@@ -127,7 +151,9 @@ export const WIDGET_DEFINITIONS: WidgetDefinition[] = [
   {
     type: 'networking',
     name: 'Networking',
+    nameKey: 'widgetNames.networking',
     description: 'VPN and tunnel services',
+    descriptionKey: 'widgetDescriptions.networking',
     defaultSize: 'small',
     allowedSizes: ['small', 'medium'],
     icon: 'Network',
@@ -135,7 +161,9 @@ export const WIDGET_DEFINITIONS: WidgetDefinition[] = [
   {
     type: 'kernel',
     name: 'Kernel',
+    nameKey: 'widgetNames.kernel',
     description: 'Core infrastructure services',
+    descriptionKey: 'widgetDescriptions.kernel',
     defaultSize: 'medium',
     allowedSizes: ['medium', 'large'],
     icon: 'Server',

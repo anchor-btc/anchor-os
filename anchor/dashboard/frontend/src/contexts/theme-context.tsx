@@ -20,6 +20,7 @@ export interface ThemeInfo {
   id: ThemeName;
   name: string;
   description: string;
+  descriptionKey: string;
   isDark: boolean;
   preview: {
     background: string;
@@ -33,6 +34,7 @@ export const THEMES: ThemeInfo[] = [
     id: "bitcoin-orange",
     name: "Bitcoin Orange",
     description: "Light theme with Bitcoin orange accent",
+    descriptionKey: "themeDescriptions.bitcoin-orange",
     isDark: false,
     preview: {
       background: "#fafafa",
@@ -44,6 +46,7 @@ export const THEMES: ThemeInfo[] = [
     id: "dark",
     name: "Dark Mode",
     description: "Dark theme with Bitcoin orange accent",
+    descriptionKey: "themeDescriptions.dark",
     isDark: true,
     preview: {
       background: "#0a0a0a",
@@ -55,6 +58,7 @@ export const THEMES: ThemeInfo[] = [
     id: "midnight-blue",
     name: "Midnight Blue",
     description: "Dark blue theme for night owls",
+    descriptionKey: "themeDescriptions.midnight-blue",
     isDark: true,
     preview: {
       background: "#0f172a",
@@ -66,6 +70,7 @@ export const THEMES: ThemeInfo[] = [
     id: "light-clean",
     name: "Light Clean",
     description: "Minimalist light theme",
+    descriptionKey: "themeDescriptions.light-clean",
     isDark: false,
     preview: {
       background: "#ffffff",
@@ -77,6 +82,7 @@ export const THEMES: ThemeInfo[] = [
     id: "hacker-green",
     name: "Hacker Green",
     description: "Matrix-inspired terminal theme",
+    descriptionKey: "themeDescriptions.hacker-green",
     isDark: true,
     preview: {
       background: "#0d1117",
@@ -88,6 +94,7 @@ export const THEMES: ThemeInfo[] = [
     id: "dracula",
     name: "Dracula",
     description: "Popular dark theme with purple accents",
+    descriptionKey: "themeDescriptions.dracula",
     isDark: true,
     preview: {
       background: "#282a36",
@@ -200,6 +207,8 @@ export function useTheme() {
   }
   return context;
 }
+
+
 
 
 

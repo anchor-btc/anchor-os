@@ -437,3 +437,4 @@ const verified = await verifier.verify(claimedPhoto, photoProof)
 - [Generic (Kind 0)](/kinds/generic) - Store raw hashes
 - [Anchoring System](/protocol/anchoring) - Revocation chains
 
+

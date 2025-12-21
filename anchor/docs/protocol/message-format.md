@@ -211,3 +211,4 @@ function isValidAnchorMessage(bytes: Uint8Array): boolean {
 - [Anchoring System](/protocol/anchoring) - Create message threads
 - [SDK Encoding](/sdk/encoding) - Use the TypeScript SDK
 
+

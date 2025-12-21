@@ -1,10 +1,9 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchTorStatus,
-  enableTor,
-  disableTor,
   fetchContainers,
   startContainer,
   stopContainer,
@@ -26,6 +25,7 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 
 export default function NetworkSettingsPage() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const { data: torStatus, isLoading: torLoading } = useQuery({
@@ -83,9 +83,9 @@ export default function NetworkSettingsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="bg-card border border-border rounded-xl p-6">
-        <h2 className="text-lg font-semibold text-foreground mb-1">Network Settings</h2>
+        <h2 className="text-lg font-semibold text-foreground mb-1">{t("networkPage.title", "Network Settings")}</h2>
         <p className="text-sm text-muted-foreground">
-          Configure network privacy and connectivity options for your Anchor stack.
+          {t("networkPage.description", "Configure network privacy and connectivity options for your Anchor stack.")}
         </p>
       </div>
 
@@ -97,9 +97,9 @@ export default function NetworkSettingsPage() {
               <Shield className="w-6 h-6 text-purple-500" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-foreground">Tor Network</h3>
+              <h3 className="text-lg font-semibold text-foreground">{t("networkPage.tor.title", "Tor Network")}</h3>
               <p className="text-sm text-muted-foreground mt-1">
-                Route Bitcoin traffic through the Tor network for enhanced privacy.
+                {t("networkPage.tor.description", "Route Bitcoin traffic through the Tor network for enhanced privacy.")}
               </p>
             </div>
           </div>
@@ -126,7 +126,7 @@ export default function NetworkSettingsPage() {
           <div className="bg-muted/50 rounded-lg p-4">
             <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
               <Server className="w-4 h-4" />
-              Container Status
+              {t("networkPage.tor.containerStatus", "Container Status")}
             </div>
             <div className={cn(
               "font-medium flex items-center gap-2",
@@ -135,10 +135,10 @@ export default function NetworkSettingsPage() {
               {isTorRunning ? (
                 <>
                   <CheckCircle2 className="w-4 h-4" />
-                  Running
+                  {t("networkPage.tor.running", "Running")}
                 </>
               ) : (
-                "Stopped"
+                t("networkPage.tor.stopped", "Stopped")
               )}
             </div>
           </div>
@@ -146,7 +146,7 @@ export default function NetworkSettingsPage() {
           <div className="bg-muted/50 rounded-lg p-4">
             <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
               <Wifi className="w-4 h-4" />
-              Circuit Status
+              {t("networkPage.tor.circuitStatus", "Circuit Status")}
             </div>
             <div className={cn(
               "font-medium flex items-center gap-2",
@@ -155,12 +155,12 @@ export default function NetworkSettingsPage() {
               {isTorConnected ? (
                 <>
                   <CheckCircle2 className="w-4 h-4" />
-                  Connected
+                  {t("networkPage.tor.connected", "Connected")}
                 </>
               ) : isTorRunning ? (
-                "Establishing..."
+                t("networkPage.tor.establishing", "Establishing...")
               ) : (
-                "Disabled"
+                t("networkPage.tor.disabled", "Disabled")
               )}
             </div>
           </div>
@@ -168,7 +168,7 @@ export default function NetworkSettingsPage() {
           <div className="bg-muted/50 rounded-lg p-4">
             <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
               <Globe className="w-4 h-4" />
-              Exit IP
+              {t("networkPage.tor.exitIp", "Exit IP")}
             </div>
             <div className="font-medium font-mono text-foreground">
               {torStatus?.external_ip || "-"}
@@ -179,7 +179,7 @@ export default function NetworkSettingsPage() {
         {/* Tor Features */}
         {isTorRunning && (
           <div className="space-y-4">
-            <h4 className="text-sm font-medium text-foreground">Enabled Features</h4>
+            <h4 className="text-sm font-medium text-foreground">{t("networkPage.tor.enabledFeatures", "Enabled Features")}</h4>
             
             <div className="space-y-3">
               {/* Bitcoin Proxy */}
@@ -187,12 +187,12 @@ export default function NetworkSettingsPage() {
                 <div className="flex items-center gap-3">
                   <Bitcoin className="w-5 h-5 text-primary" />
                   <div>
-                    <div className="text-sm font-medium text-foreground">Bitcoin Core Proxy</div>
-                    <div className="text-xs text-muted-foreground">Route outgoing connections through Tor</div>
+                    <div className="text-sm font-medium text-foreground">{t("networkPage.tor.bitcoinProxy", "Bitcoin Core Proxy")}</div>
+                    <div className="text-xs text-muted-foreground">{t("networkPage.tor.bitcoinProxyDesc", "Route outgoing connections through Tor")}</div>
                   </div>
                 </div>
                 <span className="text-xs px-2 py-1 bg-success/10 text-success rounded-full">
-                  Available
+                  {t("networkPage.tor.available", "Available")}
                 </span>
               </div>
 
@@ -201,12 +201,12 @@ export default function NetworkSettingsPage() {
                 <div className="flex items-center gap-3">
                   <Eye className="w-5 h-5 text-purple-500" />
                   <div>
-                    <div className="text-sm font-medium text-foreground">Hidden Services</div>
-                    <div className="text-xs text-muted-foreground">Accept connections via .onion addresses</div>
+                    <div className="text-sm font-medium text-foreground">{t("networkPage.tor.hiddenServices", "Hidden Services")}</div>
+                    <div className="text-xs text-muted-foreground">{t("networkPage.tor.hiddenServicesDesc", "Accept connections via .onion addresses")}</div>
                   </div>
                 </div>
                 <span className="text-xs px-2 py-1 bg-success/10 text-success rounded-full">
-                  {torStatus?.onion_addresses?.bitcoin ? "Active" : "Initializing"}
+                  {torStatus?.onion_addresses?.bitcoin ? t("networkPage.tor.active", "Active") : t("networkPage.tor.initializing", "Initializing")}
                 </span>
               </div>
 
@@ -215,12 +215,12 @@ export default function NetworkSettingsPage() {
                 <div className="flex items-center gap-3">
                   <Database className="w-5 h-5 text-blue-500" />
                   <div>
-                    <div className="text-sm font-medium text-foreground">Electrs Hidden Service</div>
-                    <div className="text-xs text-muted-foreground">Allow wallet connections via Tor</div>
+                    <div className="text-sm font-medium text-foreground">{t("networkPage.tor.electrsHidden", "Electrs Hidden Service")}</div>
+                    <div className="text-xs text-muted-foreground">{t("networkPage.tor.electrsHiddenDesc", "Allow wallet connections via Tor")}</div>
                   </div>
                 </div>
                 <span className="text-xs px-2 py-1 bg-success/10 text-success rounded-full">
-                  {torStatus?.onion_addresses?.electrs ? "Active" : "Initializing"}
+                  {torStatus?.onion_addresses?.electrs ? t("networkPage.tor.active", "Active") : t("networkPage.tor.initializing", "Initializing")}
                 </span>
               </div>
             </div>
@@ -233,10 +233,9 @@ export default function NetworkSettingsPage() {
             <div className="flex items-start gap-3">
               <AlertTriangle className="w-5 h-5 text-warning mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-warning">Privacy Notice</p>
+                <p className="text-sm font-medium text-warning">{t("networkPage.tor.privacyNotice", "Privacy Notice")}</p>
                 <p className="text-sm text-warning/80 mt-1">
-                  Using Tor provides enhanced privacy but may slow down initial blockchain sync. 
-                  For fastest sync, disable Tor temporarily during initial setup.
+                  {t("networkPage.tor.privacyNoticeDesc", "Using Tor provides enhanced privacy but may slow down initial blockchain sync. For fastest sync, disable Tor temporarily during initial setup.")}
                 </p>
               </div>
             </div>
@@ -250,7 +249,7 @@ export default function NetworkSettingsPage() {
             className="flex items-center gap-2 text-sm text-purple-400 hover:text-purple-300 transition-colors"
           >
             <Link2 className="w-4 h-4" />
-            View full Tor configuration and hidden services
+            {t("networkPage.tor.viewFullConfig", "View full Tor configuration and hidden services")}
           </Link>
         </div>
       </div>
@@ -262,45 +261,45 @@ export default function NetworkSettingsPage() {
             <Bitcoin className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-foreground">Bitcoin Network</h3>
+            <h3 className="text-lg font-semibold text-foreground">{t("networkPage.bitcoin.title", "Bitcoin Network")}</h3>
             <p className="text-sm text-muted-foreground mt-1">
-              Current network configuration for Bitcoin Core.
+              {t("networkPage.bitcoin.description", "Current network configuration for Bitcoin Core.")}
             </p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-muted/50 rounded-lg p-4">
-            <div className="text-sm text-muted-foreground mb-1">Network Mode</div>
+            <div className="text-sm text-muted-foreground mb-1">{t("networkPage.bitcoin.networkMode", "Network Mode")}</div>
             <div className="font-medium text-foreground">Regtest</div>
           </div>
 
           <div className="bg-muted/50 rounded-lg p-4">
-            <div className="text-sm text-muted-foreground mb-1">RPC Port</div>
+            <div className="text-sm text-muted-foreground mb-1">{t("networkPage.bitcoin.rpcPort", "RPC Port")}</div>
             <div className="font-medium font-mono text-foreground">18443</div>
           </div>
 
           <div className="bg-muted/50 rounded-lg p-4">
-            <div className="text-sm text-muted-foreground mb-1">P2P Port</div>
+            <div className="text-sm text-muted-foreground mb-1">{t("networkPage.bitcoin.p2pPort", "P2P Port")}</div>
             <div className="font-medium font-mono text-foreground">18444</div>
           </div>
 
           <div className="bg-muted/50 rounded-lg p-4">
-            <div className="text-sm text-muted-foreground mb-1">Tor Proxy</div>
+            <div className="text-sm text-muted-foreground mb-1">{t("networkPage.bitcoin.torProxy", "Tor Proxy")}</div>
             <div className="font-medium text-foreground">
-              {isTorRunning ? "networking-tor:9050" : "Disabled"}
+              {isTorRunning ? "networking-tor:9050" : t("networkPage.tor.disabled", "Disabled")}
             </div>
           </div>
         </div>
 
         <p className="text-xs text-muted-foreground mt-4">
-          Network configuration is set in docker-compose.yml. Changing networks requires rebuilding containers.
+          {t("networkPage.bitcoin.configNote", "Network configuration is set in docker-compose.yml. Changing networks requires rebuilding containers.")}
         </p>
       </div>
 
       {/* Other Networking Options */}
       <div className="bg-card border border-border rounded-xl p-6">
-        <h3 className="text-lg font-semibold text-foreground mb-4">Other Networking Options</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-4">{t("networkPage.other.title", "Other Networking Options")}</h3>
         
         <div className="space-y-3">
           <Link
@@ -312,8 +311,8 @@ export default function NetworkSettingsPage() {
                 <Wifi className="w-5 h-5 text-blue-500" />
               </div>
               <div>
-                <div className="font-medium text-foreground">Tailscale VPN</div>
-                <div className="text-sm text-muted-foreground">Private network access via Tailscale</div>
+                <div className="font-medium text-foreground">{t("networkPage.other.tailscale", "Tailscale VPN")}</div>
+                <div className="text-sm text-muted-foreground">{t("networkPage.other.tailscaleDesc", "Private network access via Tailscale")}</div>
               </div>
             </div>
             <Link2 className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
@@ -328,8 +327,8 @@ export default function NetworkSettingsPage() {
                 <Globe className="w-5 h-5 text-orange-500" />
               </div>
               <div>
-                <div className="font-medium text-foreground">Cloudflare Tunnel</div>
-                <div className="text-sm text-muted-foreground">Expose services via Cloudflare</div>
+                <div className="font-medium text-foreground">{t("networkPage.other.cloudflare", "Cloudflare Tunnel")}</div>
+                <div className="text-sm text-muted-foreground">{t("networkPage.other.cloudflareDesc", "Expose services via Cloudflare")}</div>
               </div>
             </div>
             <Link2 className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />

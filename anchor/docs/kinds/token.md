@@ -512,3 +512,4 @@ function calculateFeeSavings(
 - [Vote (Kind 3)](/kinds/vote) - Token-weighted voting
 - [Carrier Types](/protocol/carriers) - Witness discount
 
+

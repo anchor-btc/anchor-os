@@ -15,10 +15,12 @@ function ThemeCard({
   theme,
   isSelected,
   onSelect,
+  t,
 }: {
   theme: ThemeInfo;
   isSelected: boolean;
   onSelect: () => void;
+  t: (key: string, fallback: string) => string;
 }) {
   return (
     <button
@@ -73,7 +75,7 @@ function ThemeCard({
         <div className="min-w-0">
           <div className="font-medium text-foreground truncate">{theme.name}</div>
           <div className="text-xs text-muted-foreground truncate">
-            {theme.description}
+            {t(theme.descriptionKey, theme.description)}
           </div>
         </div>
         {isSelected && (
@@ -105,12 +107,13 @@ export function AppearanceStep({ onNext, onBack }: AppearanceStepProps) {
 
       {/* Theme Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-h-[350px] overflow-y-auto pr-2">
-        {themes.map((t) => (
+        {themes.map((themeItem) => (
           <ThemeCard
-            key={t.id}
-            theme={t}
-            isSelected={theme === t.id}
-            onSelect={() => setTheme(t.id)}
+            key={themeItem.id}
+            theme={themeItem}
+            isSelected={theme === themeItem.id}
+            onSelect={() => setTheme(themeItem.id)}
+            t={t}
           />
         ))}
       </div>

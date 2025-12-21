@@ -554,6 +554,64 @@
     "noBackups": "暂无备份",
     "fast": "快速"
   },
+  "widgetNames": {
+    "quickLaunch": "快速启动",
+    "resourceCharts": "资源监控",
+    "wallet": "钱包",
+    "recentTransactions": "最近交易",
+    "nodeStats": "节点统计",
+    "indexerStats": "索引器统计",
+    "backupStatus": "备份状态",
+    "mempoolSummary": "内存池摘要",
+    "bitcoinPrice": "比特币价格",
+    "apps": "应用",
+    "explorers": "浏览器",
+    "networking": "网络",
+    "kernel": "内核"
+  },
+  "widgetDescriptions": {
+    "quickLaunch": "快速访问您喜爱的应用",
+    "resourceCharts": "CPU、内存和 Docker 统计",
+    "wallet": "比特币钱包余额和地址",
+    "recentTransactions": "最新区块链交易",
+    "nodeStats": "比特币节点统计",
+    "indexerStats": "ANCHOR 索引器统计",
+    "backupStatus": "最近备份和存储信息",
+    "mempoolSummary": "内存池大小和费用估算",
+    "bitcoinPrice": "当前 BTC 价格（美元）",
+    "apps": "所有 Anchor 应用及状态",
+    "explorers": "区块浏览器和可视化工具",
+    "networking": "VPN 和隧道服务",
+    "kernel": "核心基础设施服务"
+  },
+  "walletWidget": {
+    "balance": "钱包余额",
+    "confirmed": "已确认",
+    "unconfirmed": "未确认",
+    "immature": "未成熟",
+    "unavailable": "钱包不可用"
+  },
+  "transactions": {
+    "recentTransactions": "最近交易",
+    "viewAll": "查看全部",
+    "received": "已接收",
+    "sent": "已发送",
+    "noTransactions": "暂无交易",
+    "loadError": "加载交易失败",
+    "pending": "待确认",
+    "confs": "确认"
+  },
+  "indexer": {
+    "title": "Anchor Indexer",
+    "protocolMessages": "协议消息",
+    "unavailable": "不可用",
+    "live": "实时",
+    "messages": "消息",
+    "blocks": "区块",
+    "lastBlock": "最新区块",
+    "messageTypes": "消息类型",
+    "carrierTypes": "载体类型"
+  },
   "settings": {
     "title": "设置",
     "subtitle": "管理您的 Anchor OS 偏好设置",
@@ -711,6 +769,23 @@
     "noConfig": "未找到组件配置。",
     "visitDashboard": "访问控制面板设置您的组件。",
     "availableWidgets": "可用组件"
+  },
+  "widgetPicker": {
+    "allAdded": "所有组件已添加"
+  },
+  "widgetWrapper": {
+    "shrink": "缩小",
+    "expand": "展开"
+  },
+  "resourceMonitor": {
+    "title": "资源监控",
+    "loading": "加载统计数据...",
+    "containers": "容器",
+    "cpu": "CPU",
+    "memory": "内存",
+    "network": "网络",
+    "diskIO": "磁盘I/O",
+    "topCpu": "Top CPU"
   },
   "data": {
     "title": "数据管理",
@@ -989,5 +1064,48 @@
     "historyDesc": "查看历史图表并分析性能趋势",
     "notRunningMsg": "Netdata 未运行",
     "startWith": "启动 Netdata"
+  },
+  "tor": {
+    "title": "Tor 网络",
+    "subtitle": "用于匿名比特币连接的隐私网络",
+    "connectionStatus": "连接状态",
+    "connectedToTor": "已连接到 Tor",
+    "establishingCircuit": "正在建立线路...",
+    "containerStopped": "容器已停止",
+    "container": "容器",
+    "circuit": "线路",
+    "exitIP": "出口 IP",
+    "version": "版本",
+    "running": "运行中",
+    "stopped": "已停止",
+    "established": "已建立",
+    "notReady": "未就绪",
+    "connectedInfo": "已连接到 Tor 网络",
+    "trafficRouted": "您的流量正在通过 Tor 网络路由。您的出口 IP 是",
+    "stopContainer": "停止容器",
+    "startContainer": "启动容器",
+    "newCircuit": "新建线路",
+    "hiddenServices": "隐藏服务 (.onion)",
+    "hide": "隐藏",
+    "show": "显示",
+    "hiddenServicesDesc": "这些 .onion 地址允许其他人通过 Tor 网络私密地连接到您的服务。",
+    "bitcoinNode": "比特币节点",
+    "p2pConnections": "P2P 连接（端口 8333/18444）",
+    "electrumServer": "Electrum 服务器",
+    "walletConnections": "钱包连接（端口 50001）",
+    "dashboard": "仪表板",
+    "webInterface": "Web 界面（端口 80）",
+    "copyAddress": "复制地址",
+    "notAvailableYet": "尚不可用",
+    "addressesPersist": "隐藏服务地址自动生成，并在重启后保持不变。",
+    "aboutTor": "关于 Tor",
+    "torDescription": "是一个隐私网络，通过多个加密中继路由您的流量，使追踪您的连接变得困难。",
+    "whenEnabled": "启用后，您的比特币节点可以：",
+    "connectAnonymously": "通过 SOCKS5 代理匿名连接到其他节点",
+    "acceptConnections": "通过隐藏服务接受来自其他 Tor 用户的传入连接",
+    "hideRealIP": "对比特币网络隐藏您的真实 IP 地址",
+    "hiddenServicesLabel": "隐藏服务",
+    "hiddenServicesInfo": "（.onion 地址）允许其他人在不知道您真实 IP 地址的情况下连接到您的节点。",
+    "learnMore": "了解更多关于 Tor"
   }
 }

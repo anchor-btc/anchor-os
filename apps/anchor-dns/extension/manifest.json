@@ -1,13 +1,18 @@
 {
   "manifest_version": 3,
   "name": "BitDNS Resolver",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Resolve .bit domains from the Bitcoin blockchain using the Anchor protocol",
   "permissions": [
     "storage",
+    "webNavigation",
+    "tabs",
     "declarativeNetRequest",
     "declarativeNetRequestWithHostAccess"
   ],
+  "omnibox": {
+    "keyword": "bit"
+  },
   "host_permissions": [
     "*://*.bit/*",
     "<all_urls>"

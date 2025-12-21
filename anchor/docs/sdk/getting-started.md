@@ -199,3 +199,4 @@ const message = createMessage({
 - [Kinds Reference](/kinds/) - Message type specifications
 - [Examples](/examples/create-message) - More code samples
 
+

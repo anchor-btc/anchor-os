@@ -554,6 +554,64 @@
     "noBackups": "백업 없음",
     "fast": "빠름"
   },
+  "widgetNames": {
+    "quickLaunch": "빠른 실행",
+    "resourceCharts": "리소스 모니터",
+    "wallet": "지갑",
+    "recentTransactions": "최근 거래",
+    "nodeStats": "노드 통계",
+    "indexerStats": "인덱서 통계",
+    "backupStatus": "백업 상태",
+    "mempoolSummary": "Mempool 요약",
+    "bitcoinPrice": "비트코인 가격",
+    "apps": "앱",
+    "explorers": "탐색기",
+    "networking": "네트워크",
+    "kernel": "커널"
+  },
+  "widgetDescriptions": {
+    "quickLaunch": "즐겨찾기 앱 빠른 접근",
+    "resourceCharts": "CPU, 메모리 및 Docker 통계",
+    "wallet": "비트코인 지갑 잔액 및 주소",
+    "recentTransactions": "최신 블록체인 거래",
+    "nodeStats": "비트코인 노드 통계",
+    "indexerStats": "ANCHOR 인덱서 통계",
+    "backupStatus": "마지막 백업 및 저장소 정보",
+    "mempoolSummary": "Mempool 크기 및 수수료 추정",
+    "bitcoinPrice": "현재 BTC 가격 (USD)",
+    "apps": "모든 Anchor 앱 상태",
+    "explorers": "블록 탐색기 및 시각화 도구",
+    "networking": "VPN 및 터널 서비스",
+    "kernel": "코어 인프라 서비스"
+  },
+  "walletWidget": {
+    "balance": "지갑 잔액",
+    "confirmed": "확인됨",
+    "unconfirmed": "미확인",
+    "immature": "미성숙",
+    "unavailable": "지갑 사용 불가"
+  },
+  "transactions": {
+    "recentTransactions": "최근 거래",
+    "viewAll": "모두 보기",
+    "received": "수신",
+    "sent": "송신",
+    "noTransactions": "거래 없음",
+    "loadError": "거래 로드 실패",
+    "pending": "대기 중",
+    "confs": "확인"
+  },
+  "indexer": {
+    "title": "Anchor Indexer",
+    "protocolMessages": "프로토콜 메시지",
+    "unavailable": "사용 불가",
+    "live": "실시간",
+    "messages": "메시지",
+    "blocks": "블록",
+    "lastBlock": "마지막 블록",
+    "messageTypes": "메시지 유형",
+    "carrierTypes": "캐리어 유형"
+  },
   "settings": {
     "title": "설정",
     "subtitle": "Anchor OS 환경설정 관리",
@@ -711,6 +769,23 @@
     "noConfig": "위젯 설정을 찾을 수 없습니다.",
     "visitDashboard": "대시보드를 방문하여 위젯을 설정하세요.",
     "availableWidgets": "사용 가능한 위젯"
+  },
+  "widgetPicker": {
+    "allAdded": "모든 위젯이 이미 추가되었습니다"
+  },
+  "widgetWrapper": {
+    "shrink": "축소",
+    "expand": "확대"
+  },
+  "resourceMonitor": {
+    "title": "리소스 모니터",
+    "loading": "통계 로딩 중...",
+    "containers": "컨테이너",
+    "cpu": "CPU",
+    "memory": "메모리",
+    "network": "네트워크",
+    "diskIO": "디스크 I/O",
+    "topCpu": "Top CPU"
   },
   "data": {
     "title": "데이터 관리",
@@ -989,5 +1064,48 @@
     "historyDesc": "기록 차트를 보고 성능 추세 분석",
     "notRunningMsg": "Netdata가 실행되지 않습니다",
     "startWith": "Netdata 시작하기"
+  },
+  "tor": {
+    "title": "Tor 네트워크",
+    "subtitle": "익명 비트코인 연결을 위한 프라이버시 네트워크",
+    "connectionStatus": "연결 상태",
+    "connectedToTor": "Tor에 연결됨",
+    "establishingCircuit": "회로 설정 중...",
+    "containerStopped": "컨테이너 중지됨",
+    "container": "컨테이너",
+    "circuit": "회로",
+    "exitIP": "출구 IP",
+    "version": "버전",
+    "running": "실행 중",
+    "stopped": "중지됨",
+    "established": "설정됨",
+    "notReady": "준비 안됨",
+    "connectedInfo": "Tor 네트워크에 연결됨",
+    "trafficRouted": "트래픽이 Tor 네트워크를 통해 라우팅됩니다. 출구 IP는",
+    "stopContainer": "컨테이너 중지",
+    "startContainer": "컨테이너 시작",
+    "newCircuit": "새 회로",
+    "hiddenServices": "숨겨진 서비스 (.onion)",
+    "hide": "숨기기",
+    "show": "표시",
+    "hiddenServicesDesc": "이 .onion 주소를 통해 다른 사람들이 Tor 네트워크를 통해 비공개로 서비스에 연결할 수 있습니다.",
+    "bitcoinNode": "비트코인 노드",
+    "p2pConnections": "P2P 연결 (포트 8333/18444)",
+    "electrumServer": "Electrum 서버",
+    "walletConnections": "지갑 연결 (포트 50001)",
+    "dashboard": "대시보드",
+    "webInterface": "웹 인터페이스 (포트 80)",
+    "copyAddress": "주소 복사",
+    "notAvailableYet": "아직 사용 불가",
+    "addressesPersist": "숨겨진 서비스 주소는 자동으로 생성되며 재시작 후에도 유지됩니다.",
+    "aboutTor": "Tor 정보",
+    "torDescription": "는 여러 암호화된 릴레이를 통해 트래픽을 라우팅하여 연결 추적을 어렵게 만드는 프라이버시 네트워크입니다.",
+    "whenEnabled": "활성화되면 비트코인 노드는 다음을 수행할 수 있습니다:",
+    "connectAnonymously": "SOCKS5 프록시를 통해 다른 노드에 익명으로 연결",
+    "acceptConnections": "숨겨진 서비스를 통해 다른 Tor 사용자의 수신 연결 수락",
+    "hideRealIP": "비트코인 네트워크에서 실제 IP 주소 숨기기",
+    "hiddenServicesLabel": "숨겨진 서비스",
+    "hiddenServicesInfo": "(.onion 주소)를 통해 다른 사람들이 실제 IP 주소를 모르고 노드에 연결할 수 있습니다.",
+    "learnMore": "Tor에 대해 자세히 알아보기"
   }
 }

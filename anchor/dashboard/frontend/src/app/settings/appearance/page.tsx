@@ -8,10 +8,12 @@ function ThemeCard({
   theme,
   isSelected,
   onSelect,
+  t,
 }: {
   theme: ThemeInfo;
   isSelected: boolean;
   onSelect: () => void;
+  t: (key: string, fallback: string) => string;
 }) {
   return (
     <button
@@ -68,7 +70,7 @@ function ThemeCard({
         <div>
           <div className="font-medium text-foreground">{theme.name}</div>
           <div className="text-xs text-muted-foreground">
-            {theme.description}
+            {t(theme.descriptionKey, theme.description)}
           </div>
         </div>
         {isSelected && (
@@ -128,12 +130,13 @@ export default function AppearancePage() {
 
         {/* Theme Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {themes.map((t) => (
+          {themes.map((themeItem) => (
             <ThemeCard
-              key={t.id}
-              theme={t}
-              isSelected={theme === t.id && !autoMode}
-              onSelect={() => setTheme(t.id)}
+              key={themeItem.id}
+              theme={themeItem}
+              isSelected={theme === themeItem.id && !autoMode}
+              onSelect={() => setTheme(themeItem.id)}
+              t={t}
             />
           ))}
         </div>
@@ -178,6 +181,8 @@ export default function AppearancePage() {
     </div>
   );
 }
+
+
 
 
 

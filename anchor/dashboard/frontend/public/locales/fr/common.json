@@ -554,6 +554,64 @@
     "noBackups": "Pas encore de sauvegardes",
     "fast": "Rapide"
   },
+  "widgetNames": {
+    "quickLaunch": "Lancement Rapide",
+    "resourceCharts": "Moniteur de Ressources",
+    "wallet": "Portefeuille",
+    "recentTransactions": "Transactions Récentes",
+    "nodeStats": "Statistiques du Nœud",
+    "indexerStats": "Statistiques de l'Indexeur",
+    "backupStatus": "État de la Sauvegarde",
+    "mempoolSummary": "Résumé du Mempool",
+    "bitcoinPrice": "Prix du Bitcoin",
+    "apps": "Applications",
+    "explorers": "Explorateurs",
+    "networking": "Réseau",
+    "kernel": "Noyau"
+  },
+  "widgetDescriptions": {
+    "quickLaunch": "Accès rapide à vos applications favorites",
+    "resourceCharts": "CPU, mémoire et statistiques Docker",
+    "wallet": "Solde et adresses du portefeuille Bitcoin",
+    "recentTransactions": "Dernières transactions blockchain",
+    "nodeStats": "Statistiques du nœud Bitcoin",
+    "indexerStats": "Statistiques de l'indexeur ANCHOR",
+    "backupStatus": "Dernière sauvegarde et info stockage",
+    "mempoolSummary": "Taille du mempool et estimations de frais",
+    "bitcoinPrice": "Prix actuel du BTC en USD",
+    "apps": "Toutes les apps Anchor avec statut",
+    "explorers": "Explorateurs de blocs et visualiseurs",
+    "networking": "Services VPN et tunnel",
+    "kernel": "Services d'infrastructure core"
+  },
+  "walletWidget": {
+    "balance": "Solde du Portefeuille",
+    "confirmed": "Confirmé",
+    "unconfirmed": "Non confirmé",
+    "immature": "Immature",
+    "unavailable": "Portefeuille indisponible"
+  },
+  "transactions": {
+    "recentTransactions": "Transactions Récentes",
+    "viewAll": "Voir tout",
+    "received": "Reçu",
+    "sent": "Envoyé",
+    "noTransactions": "Pas encore de transactions",
+    "loadError": "Échec du chargement des transactions",
+    "pending": "En attente",
+    "confs": "confs"
+  },
+  "indexer": {
+    "title": "Anchor Indexer",
+    "protocolMessages": "Messages du Protocole",
+    "unavailable": "Indisponible",
+    "live": "En direct",
+    "messages": "Messages",
+    "blocks": "Blocs",
+    "lastBlock": "Dernier Bloc",
+    "messageTypes": "Types de Message",
+    "carrierTypes": "Types de Porteur"
+  },
   "settings": {
     "title": "Paramètres",
     "subtitle": "Gérer vos préférences Anchor OS",
@@ -711,6 +769,23 @@
     "noConfig": "Aucune configuration de widget trouvée.",
     "visitDashboard": "Visitez le tableau de bord pour configurer vos widgets.",
     "availableWidgets": "Widgets disponibles"
+  },
+  "widgetPicker": {
+    "allAdded": "Tous les widgets sont déjà ajoutés"
+  },
+  "widgetWrapper": {
+    "shrink": "Réduire",
+    "expand": "Agrandir"
+  },
+  "resourceMonitor": {
+    "title": "Moniteur de Ressources",
+    "loading": "Chargement des statistiques...",
+    "containers": "conteneurs",
+    "cpu": "CPU",
+    "memory": "Mémoire",
+    "network": "Réseau",
+    "diskIO": "E/S Disque",
+    "topCpu": "Top CPU"
   },
   "data": {
     "title": "Gestion des données",
@@ -989,5 +1064,48 @@
     "historyDesc": "Visualisez les graphiques historiques et analysez les tendances de performance",
     "notRunningMsg": "Netdata N'est Pas en Cours d'Exécution",
     "startWith": "Démarrer Netdata avec"
+  },
+  "tor": {
+    "title": "Réseau Tor",
+    "subtitle": "Réseau de confidentialité pour des connexions Bitcoin anonymes",
+    "connectionStatus": "État de la Connexion",
+    "connectedToTor": "Connecté à Tor",
+    "establishingCircuit": "Établissement du circuit...",
+    "containerStopped": "Conteneur arrêté",
+    "container": "Conteneur",
+    "circuit": "Circuit",
+    "exitIP": "IP de Sortie",
+    "version": "Version",
+    "running": "En cours",
+    "stopped": "Arrêté",
+    "established": "Établi",
+    "notReady": "Pas prêt",
+    "connectedInfo": "Connecté au Réseau Tor",
+    "trafficRouted": "Votre trafic est acheminé via le réseau Tor. Votre IP de sortie est",
+    "stopContainer": "Arrêter le Conteneur",
+    "startContainer": "Démarrer le Conteneur",
+    "newCircuit": "Nouveau Circuit",
+    "hiddenServices": "Services Cachés (.onion)",
+    "hide": "Masquer",
+    "show": "Afficher",
+    "hiddenServicesDesc": "Ces adresses .onion permettent à d'autres de se connecter à vos services de manière privée via le réseau Tor.",
+    "bitcoinNode": "Nœud Bitcoin",
+    "p2pConnections": "Connexions P2P (port 8333/18444)",
+    "electrumServer": "Serveur Electrum",
+    "walletConnections": "Connexions portefeuille (port 50001)",
+    "dashboard": "Tableau de bord",
+    "webInterface": "Interface web (port 80)",
+    "copyAddress": "Copier l'adresse",
+    "notAvailableYet": "Pas encore disponible",
+    "addressesPersist": "Les adresses des services cachés sont générées automatiquement et persistent après les redémarrages.",
+    "aboutTor": "À propos de Tor",
+    "torDescription": "est un réseau de confidentialité qui achemine votre trafic à travers plusieurs relais chiffrés, rendant difficile le traçage de vos connexions.",
+    "whenEnabled": "Lorsqu'il est activé, votre nœud Bitcoin peut :",
+    "connectAnonymously": "Se connecter à d'autres nœuds de manière anonyme via le proxy SOCKS5",
+    "acceptConnections": "Accepter les connexions entrantes d'autres utilisateurs Tor via les services cachés",
+    "hideRealIP": "Masquer votre véritable adresse IP du réseau Bitcoin",
+    "hiddenServicesLabel": "Services Cachés",
+    "hiddenServicesInfo": "(adresses .onion) permettent à d'autres de se connecter à votre nœud sans connaître votre véritable adresse IP.",
+    "learnMore": "En savoir plus sur Tor"
   }
 }

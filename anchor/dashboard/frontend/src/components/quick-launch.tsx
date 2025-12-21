@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { fetchContainers } from "@/lib/api";
 import { apps, getAppStatus } from "@/lib/apps";
 import {
@@ -16,7 +17,6 @@ import {
   Network,
   Loader2,
   ArrowRight,
-  ExternalLink,
   Layers,
 } from "lucide-react";
 import Link from "next/link";
@@ -48,6 +48,7 @@ const bgColorMap: Record<string, string> = {
 };
 
 export function QuickLaunch() {
+  const { t } = useTranslation();
   const { data: containersData, isLoading } = useQuery({
     queryKey: ["containers"],
     queryFn: fetchContainers,
@@ -81,7 +82,7 @@ export function QuickLaunch() {
     );
   }
 
-  const renderAppItem = (app: (typeof apps)[0], showCategory = false) => {
+  const renderAppItem = (app: (typeof apps)[0]) => {
     const status = getAppStatus(
       app.containers,
       containers.map((c) => ({ name: c.name, state: c.state }))
@@ -93,14 +94,6 @@ export function QuickLaunch() {
     const isExternal = !!app.url;
     const displayName = app.name.replace("Anchor ", "");
 
-    const categoryLabels: Record<string, string> = {
-      app: "App",
-      explorer: "Explorer",
-      networking: "Tool",
-      core: "Core",
-    };
-    const categoryLabel = categoryLabels[app.category] || "";
-
     return (
       <a
         key={app.id}
@@ -108,45 +101,34 @@ export function QuickLaunch() {
         target={isExternal ? "_blank" : undefined}
         rel={isExternal ? "noopener noreferrer" : undefined}
         className={cn(
-          "flex items-center gap-3 p-2 rounded-lg transition-all",
+          "flex items-center gap-3 p-2.5 rounded-lg transition-all",
           "hover:bg-muted group",
           !isRunning && "opacity-50"
         )}
       >
-        {/* Icon */}
+        {/* Icon with status indicator */}
+        <div className="relative shrink-0">
         <div
           className={cn(
-            "w-8 h-8 rounded-lg flex items-center justify-center shrink-0",
+              "w-10 h-10 rounded-lg flex items-center justify-center",
             colorClass
           )}
         >
-          <IconComponent className="w-4 h-4" />
-        </div>
-
-        {/* Info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-foreground">
-              {displayName}
-            </span>
-            {isExternal && (
-              <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-            )}
+            <IconComponent className="w-5 h-5" />
           </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            {showCategory && <span className="text-[10px]">{categoryLabel}</span>}
-            {app.port && <span>:{app.port}</span>}
-            {app.backendPort && <span>API :{app.backendPort}</span>}
-          </div>
-        </div>
-
-        {/* Status */}
+          {/* Status dot */}
         <div
           className={cn(
-            "w-2 h-2 rounded-full shrink-0",
+              "absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-card",
             isRunning ? "bg-success" : "bg-slate-400"
           )}
         />
+        </div>
+
+        {/* Name only - clean and simple */}
+        <span className="text-sm font-medium text-foreground truncate flex-1 min-w-0">
+          {displayName}
+        </span>
       </a>
     );
   };
@@ -155,21 +137,21 @@ export function QuickLaunch() {
   const allApps = [...appsByCategory.app, ...appsByCategory.explorer, ...appsByCategory.networking];
 
   return (
-    <div className="bg-card border border-border rounded-xl p-5">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-foreground">Quick Launch</h2>
+    <div className="bg-card border border-border rounded-xl p-4 sm:p-5">
+      <div className="flex items-center justify-between mb-3 sm:mb-4">
+        <h2 className="text-base sm:text-lg font-semibold text-foreground">{t("widgets.quickLaunch")}</h2>
         <Link
           href="/apps"
-          className="flex items-center gap-1 text-sm text-primary hover:underline"
+          className="flex items-center gap-1 text-xs sm:text-sm text-primary hover:underline"
         >
-          View all
-          <ArrowRight className="w-4 h-4" />
+          {t("common.seeAll")}
+          <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </Link>
       </div>
 
-      {/* Fluid grid layout */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-1">
-        {allApps.map((app) => renderAppItem(app, true))}
+      {/* Responsive grid layout with fixed minimum width per item */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+        {allApps.map((app) => renderAppItem(app))}
       </div>
     </div>
   );

@@ -260,3 +260,4 @@ async function countVotes(
 - [Token (Kind 20)](/kinds/token) - For token-weighted voting
 - [Anchoring System](/protocol/anchoring) - Reference proposals
 
+

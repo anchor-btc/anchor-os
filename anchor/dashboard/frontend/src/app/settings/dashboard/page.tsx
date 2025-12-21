@@ -104,10 +104,10 @@ export default function DashboardSettingsPage() {
                     <GripVertical className="w-4 h-4 text-muted-foreground" />
                     <div>
                       <div className="font-medium text-foreground">
-                        {definition?.name || widget.type}
+                        {definition ? t(definition.nameKey, definition.name) : widget.type}
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        {definition?.description || "Widget"}
+                        {definition ? t(definition.descriptionKey, definition.description) : "Widget"}
                       </div>
                     </div>
                   </div>
@@ -161,10 +161,10 @@ export default function DashboardSettingsPage() {
               className="p-3 rounded-lg border border-border bg-secondary/30"
             >
               <div className="text-sm font-medium text-foreground">
-                {widget.name}
+                {t(widget.nameKey, widget.name)}
               </div>
               <div className="text-xs text-muted-foreground mt-1">
-                {widget.description}
+                {t(widget.descriptionKey, widget.description)}
               </div>
             </div>
           ))}
@@ -173,6 +173,8 @@ export default function DashboardSettingsPage() {
     </div>
   );
 }
+
+
 
 
 

@@ -5,7 +5,7 @@
  */
 
 // Default API URL (can be configured in popup)
-const DEFAULT_API_URL = "http://localhost:3006";
+const DEFAULT_API_URL = "http://localhost:3401";
 
 // Cache for DNS lookups
 const dnsCache = new Map();
@@ -186,6 +186,76 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     });
     return true;
   }
+});
+
+/**
+ * Omnibox - Handle "bit" keyword in address bar
+ * User types: "bit miguel" -> resolves miguel.bit
+ */
+chrome.omnibox.onInputEntered.addListener(async (text, disposition) => {
+  let domain = text.trim();
+  
+  // Add .bit if not present
+  if (!domain.endsWith(".bit")) {
+    domain += ".bit";
+  }
+  
+  console.log(`[BitDNS] Omnibox: resolving ${domain}`);
+  
+  const resolved = await resolveDomain(domain);
+  
+  let targetUrl;
+  if (resolved) {
+    // Check if it's an IP or domain (CNAME)
+    const isIp = /^[\d.:]+$/.test(resolved);
+    if (isIp) {
+      targetUrl = `http://${resolved}`;
+    } else {
+      // CNAME - redirect to the target domain
+      targetUrl = resolved.startsWith("http") ? resolved : `https://${resolved}`;
+    }
+  } else {
+    // Domain not found - show error or go to registration page
+    const apiUrl = await getApiUrl();
+    const baseUrl = apiUrl.replace(/:\d+$/, ":3400"); // Frontend port
+    targetUrl = `${baseUrl}/register?domain=${encodeURIComponent(domain.replace(".bit", ""))}`;
+  }
+  
+  console.log(`[BitDNS] Omnibox: navigating to ${targetUrl}`);
+  
+  // Handle disposition (how the URL should be opened)
+  switch (disposition) {
+    case "currentTab":
+      chrome.tabs.update({ url: targetUrl });
+      break;
+    case "newForegroundTab":
+      chrome.tabs.create({ url: targetUrl });
+      break;
+    case "newBackgroundTab":
+      chrome.tabs.create({ url: targetUrl, active: false });
+      break;
+  }
+});
+
+// Provide suggestions as user types
+chrome.omnibox.onInputChanged.addListener(async (text, suggest) => {
+  const domain = text.trim();
+  if (!domain) return;
+  
+  const fullDomain = domain.endsWith(".bit") ? domain : `${domain}.bit`;
+  
+  // Provide a suggestion
+  suggest([
+    {
+      content: fullDomain,
+      description: `Go to <match>${fullDomain}</match> (BitDNS)`,
+    },
+  ]);
+});
+
+// Set default suggestion
+chrome.omnibox.setDefaultSuggestion({
+  description: "Type a .bit domain to resolve (e.g., miguel)",
 });
 
 console.log("[BitDNS] Extension loaded");

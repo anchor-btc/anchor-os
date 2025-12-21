@@ -294,7 +294,7 @@ export function AppCard({
 
       {/* Description */}
       <p className="text-sm text-muted-foreground mb-5 line-clamp-2 flex-1">
-        {app.description}
+        {t(app.descriptionKey, app.description)}
       </p>
 
       {/* Action Buttons */}

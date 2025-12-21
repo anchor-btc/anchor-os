@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Plus,
   X,
@@ -19,7 +20,6 @@ import {
   Server,
 } from "lucide-react";
 import { WidgetType, WidgetDefinition } from "@/types/widgets";
-import { cn } from "@/lib/utils";
 
 const iconMap: Record<string, React.ElementType> = {
   Rocket,
@@ -43,6 +43,7 @@ interface WidgetPickerProps {
 }
 
 export function WidgetPicker({ availableWidgets, onAddWidget }: WidgetPickerProps) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
 
   const handleAdd = (type: WidgetType) => {
@@ -57,7 +58,7 @@ export function WidgetPicker({ availableWidgets, onAddWidget }: WidgetPickerProp
         className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary hover:bg-primary/20 rounded-lg transition-colors text-sm font-medium"
       >
         <Plus className="w-4 h-4" />
-        Add Widget
+        {t("dashboard.addWidget")}
       </button>
 
       {isOpen && (
@@ -71,7 +72,7 @@ export function WidgetPicker({ availableWidgets, onAddWidget }: WidgetPickerProp
           {/* Dropdown */}
           <div className="absolute right-0 top-full mt-2 w-80 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden">
             <div className="flex items-center justify-between p-4 border-b border-border">
-              <h3 className="font-semibold text-foreground">Add Widget</h3>
+              <h3 className="font-semibold text-foreground">{t("dashboard.addWidget")}</h3>
               <button
                 onClick={() => setIsOpen(false)}
                 className="p-1 hover:bg-muted rounded-lg transition-colors"
@@ -83,7 +84,7 @@ export function WidgetPicker({ availableWidgets, onAddWidget }: WidgetPickerProp
             <div className="max-h-80 overflow-y-auto p-2">
               {availableWidgets.length === 0 ? (
                 <p className="text-center text-muted-foreground py-8 text-sm">
-                  All widgets are already added
+                  {t("widgetPicker.allAdded")}
                 </p>
               ) : (
                 <div className="space-y-1">
@@ -100,10 +101,10 @@ export function WidgetPicker({ availableWidgets, onAddWidget }: WidgetPickerProp
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-foreground text-sm">
-                            {widget.name}
+                            {t(widget.nameKey, widget.name)}
                           </p>
                           <p className="text-xs text-muted-foreground truncate">
-                            {widget.description}
+                            {t(widget.descriptionKey, widget.description)}
                           </p>
                         </div>
                         <Plus className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />

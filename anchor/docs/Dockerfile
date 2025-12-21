@@ -42,3 +42,4 @@ EXPOSE 3900
 
 CMD ["nginx", "-g", "daemon off;"]
 
+
