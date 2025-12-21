@@ -20,10 +20,10 @@ RUN mkdir -p crates/anchor-indexer/src && echo "fn main() {}" > crates/anchor-in
 RUN mkdir -p crates/anchor-testnet/src && echo "fn main() {}" > crates/anchor-testnet/src/main.rs
 RUN mkdir -p apps/anchor-threads/backend/src && echo "fn main() {}" > apps/anchor-threads/backend/src/main.rs
 RUN mkdir -p anchor/dashboard/backend/src && echo "fn main() {}" > anchor/dashboard/backend/src/main.rs
-RUN mkdir -p apps/anchor-pixel/backend/src && echo "fn main() {}" > apps/anchor-pixel/backend/src/main.rs
+RUN mkdir -p apps/anchor-canvas/backend/src && echo "fn main() {}" > apps/anchor-canvas/backend/src/main.rs
 RUN mkdir -p apps/anchor-map/backend/src && echo "fn main() {}" > apps/anchor-map/backend/src/main.rs
 RUN mkdir -p apps/anchor-dns/backend/src && echo "fn main() {}" > apps/anchor-dns/backend/src/main.rs
-RUN mkdir -p apps/anchor-proof/backend/src && echo "fn main() {}" > apps/anchor-proof/backend/src/main.rs
+RUN mkdir -p apps/anchor-proofs/backend/src && echo "fn main() {}" > apps/anchor-proofs/backend/src/main.rs
 RUN mkdir -p apps/anchor-tokens/backend/src && echo "fn main() {}" > apps/anchor-tokens/backend/src/main.rs
 RUN mkdir -p apps/anchor-oracles/backend/src && echo "fn main() {}" > apps/anchor-oracles/backend/src/main.rs
 RUN mkdir -p apps/anchor-lottery/backend/src && echo "fn main() {}" > apps/anchor-lottery/backend/src/main.rs
@@ -33,10 +33,10 @@ COPY crates/anchor-testnet/Cargo.toml ./crates/anchor-testnet/
 COPY apps/anchor-threads/backend/Cargo.toml ./apps/anchor-threads/backend/
 COPY anchor/dashboard/backend/Cargo.toml ./anchor/dashboard/backend/
 COPY anchor/backup/backend/Cargo.toml ./anchor/backup/backend/
-COPY apps/anchor-pixel/backend/Cargo.toml ./apps/anchor-pixel/backend/
+COPY apps/anchor-canvas/backend/Cargo.toml ./apps/anchor-canvas/backend/
 COPY apps/anchor-map/backend/Cargo.toml ./apps/anchor-map/backend/
 COPY apps/anchor-dns/backend/Cargo.toml ./apps/anchor-dns/backend/
-COPY apps/anchor-proof/backend/Cargo.toml ./apps/anchor-proof/backend/
+COPY apps/anchor-proofs/backend/Cargo.toml ./apps/anchor-proofs/backend/
 COPY apps/anchor-tokens/backend/Cargo.toml ./apps/anchor-tokens/backend/
 COPY apps/anchor-oracles/backend/Cargo.toml ./apps/anchor-oracles/backend/
 COPY apps/anchor-lottery/backend/Cargo.toml ./apps/anchor-lottery/backend/

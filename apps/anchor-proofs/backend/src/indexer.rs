@@ -1,4 +1,4 @@
-//! AnchorProof Indexer
+//! AnchorProofs Indexer
 //! Scans the blockchain for Proof of Existence transactions
 
 use anyhow::{Context, Result};
@@ -58,7 +58,7 @@ impl Indexer {
 
     /// Run the indexer loop
     pub async fn run(&self) -> Result<()> {
-        info!("Starting AnchorProof indexer loop");
+        info!("Starting AnchorProofs indexer loop");
 
         loop {
             match self.index_new_blocks().await {

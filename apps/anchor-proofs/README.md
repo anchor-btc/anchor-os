@@ -1,6 +1,6 @@
-# AnchorProof - Proof of Existence on Bitcoin
+# AnchorProofs - Proof of Existence on Bitcoin
 
-AnchorProof is a proof of existence application built on the Anchor Protocol. It allows users to timestamp any file on the Bitcoin blockchain, creating an immutable record that the file existed at a specific point in time.
+AnchorProofs is a proof of existence application built on the Anchor Protocol. It allows users to timestamp any file on the Bitcoin blockchain, creating an immutable record that the file existed at a specific point in time.
 
 ## Features
 
@@ -37,7 +37,7 @@ apps/anchorproof/
 
 ## Protocol Specification
 
-AnchorProof uses **Kind 11** (Custom) in the Anchor Protocol.
+AnchorProofs uses **Kind 11** (Custom) in the Anchor Protocol.
 
 ### Payload Format
 

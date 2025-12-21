@@ -433,7 +433,7 @@ const verified = await verifier.verify(claimedPhoto, photoProof)
 
 ## See Also
 
-- [Anchor Proof](https://proof.anchor.dev) - Live application
+- [Anchor Proofs](https://proofs.anchor.dev) - Live application
 - [Generic (Kind 0)](/kinds/generic) - Store raw hashes
 - [Anchoring System](/protocol/anchoring) - Revocation chains
 

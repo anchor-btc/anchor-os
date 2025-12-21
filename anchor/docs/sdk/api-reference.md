@@ -429,7 +429,7 @@ enum HashAlgorithm { SHA256, SHA512 }
 // Functions
 function encodeProofPayload(payload: ProofPayload): Uint8Array
 function decodeProofPayload(bytes: Uint8Array): ProofPayload | null
-function createAnchorProofMessage(payload: ProofPayload, anchors?: Anchor[]): Uint8Array
+function createAnchorProofsMessage(payload: ProofPayload, anchors?: Anchor[]): Uint8Array
 
 // Utilities
 function getHashSize(algo: HashAlgorithm): number

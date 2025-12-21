@@ -1,4 +1,4 @@
-//! Configuration for the AnchorProof backend
+//! Configuration for the AnchorProofs backend
 
 use serde::Deserialize;
 

@@ -1,13 +1,13 @@
 [package]
-name = "anchorproof-backend"
+name = "anchorproofs-backend"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 authors.workspace = true
-description = "Backend API and indexer for AnchorProof - Proof of Existence on Bitcoin"
+description = "Backend API and indexer for AnchorProofs - Proof of Existence on Bitcoin"
 
 [[bin]]
-name = "anchorproof-backend"
+name = "anchorproofs-backend"
 path = "src/main.rs"
 
 [dependencies]

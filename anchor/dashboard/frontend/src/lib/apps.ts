@@ -122,7 +122,7 @@ export const apps: App[] = [
   },
   {
     id: "app-proof",
-    name: "Anchor Proof",
+    name: "Anchor Proofs",
     description: "Proof of Existence - timestamp files on Bitcoin",
     descriptionKey: "appDescriptions.app-proof",
     icon: "FileCheck",

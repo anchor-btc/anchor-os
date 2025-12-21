@@ -621,7 +621,7 @@ services:
   app-pixel-backend:
     build:
       context: .
-      dockerfile: apps/anchor-pixel/backend/Dockerfile
+      dockerfile: apps/anchor-canvas/backend/Dockerfile
     container_name: anchor-app-pixel-backend
     ports:
       - "3201:3201"
@@ -656,7 +656,7 @@ services:
 
   app-pixel-frontend:
     build:
-      context: ./apps/anchor-pixel/frontend
+      context: ./apps/anchor-canvas/frontend
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_URL: http://localhost:3201
@@ -792,7 +792,7 @@ services:
   app-proof-backend:
     build:
       context: .
-      dockerfile: apps/anchor-proof/backend/Dockerfile
+      dockerfile: apps/anchor-proofs/backend/Dockerfile
     container_name: anchor-app-proof-backend
     ports:
       - "3501:3501"
@@ -805,7 +805,7 @@ services:
       BITCOIN_RPC_PASSWORD: anchor
       WALLET_URL: http://core-wallet:8001
       POLL_INTERVAL_SECS: 5
-      RUST_LOG: anchorproof_backend=info
+      RUST_LOG: anchorproofs_backend=info
     depends_on:
       core-postgres:
         condition: service_healthy
@@ -827,7 +827,7 @@ services:
 
   app-proof-frontend:
     build:
-      context: ./apps/anchor-proof/frontend
+      context: ./apps/anchor-proofs/frontend
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_URL: http://localhost:3501

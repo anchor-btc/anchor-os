@@ -1,4 +1,4 @@
-//! AnchorProof Backend
+//! AnchorProofs Backend
 //! Proof of Existence service using the Anchor Protocol
 
 mod config;
@@ -72,7 +72,7 @@ async fn main() -> Result<()> {
         .finish();
     tracing::subscriber::set_global_default(subscriber)?;
 
-    info!("Starting AnchorProof backend");
+    info!("Starting AnchorProofs backend");
 
     // Load configuration
     let config = Config::from_env();

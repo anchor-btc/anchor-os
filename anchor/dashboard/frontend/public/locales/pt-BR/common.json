@@ -219,7 +219,7 @@
     "dnsRecords": "Registros DNS",
     "dnsRecordsDesc": "Registros de domínio para Anchor DNS (Kind 10)",
     "proofs": "Provas",
-    "proofsDesc": "Prova de existência para Anchor Proof (Kind 11)",
+    "proofsDesc": "Prova de existência para Anchor Proofs (Kind 11)",
     "carrierDistribution": "Distribuição de Carriers",
     "weightsNormalized": "pesos são normalizados automaticamente",
     "saving": "Salvando...",

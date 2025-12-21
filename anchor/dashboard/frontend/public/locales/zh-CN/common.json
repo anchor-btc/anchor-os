@@ -207,7 +207,7 @@
     "dnsRecords": "DNS 记录",
     "dnsRecordsDesc": "Anchor DNS 的域名记录 (Kind 10)",
     "proofs": "证明",
-    "proofsDesc": "Anchor Proof 的存在证明 (Kind 11)",
+    "proofsDesc": "Anchor Proofs 的存在证明 (Kind 11)",
     "carrierDistribution": "载体分布",
     "weightsNormalized": "权重自动归一化",
     "saving": "保存中...",

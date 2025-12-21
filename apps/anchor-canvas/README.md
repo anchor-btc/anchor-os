@@ -337,7 +337,7 @@ print(payload.hex())  # 00000001006400c8ff0000
 ### Backend (Rust)
 
 ```bash
-cd apps/anchor-pixel/backend
+cd apps/anchor-canvas/backend
 cargo build
 cargo run
 ```
@@ -350,7 +350,7 @@ Environment variables:
 ### Frontend (Next.js)
 
 ```bash
-cd apps/anchor-pixel/frontend
+cd apps/anchor-canvas/frontend
 npm install
 npm run dev
 ```

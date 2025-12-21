@@ -1,4 +1,4 @@
-//! Data models for the AnchorProof API
+//! Data models for the AnchorProofs API
 
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;

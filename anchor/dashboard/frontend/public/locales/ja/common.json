@@ -207,7 +207,7 @@
     "dnsRecords": "DNSレコード",
     "dnsRecordsDesc": "Anchor DNS用ドメインレコード (Kind 10)",
     "proofs": "証明",
-    "proofsDesc": "Anchor Proof用存在証明 (Kind 11)",
+    "proofsDesc": "Anchor Proofs用存在証明 (Kind 11)",
     "carrierDistribution": "キャリア分布",
     "weightsNormalized": "重みは自動的に正規化されます",
     "saving": "保存中...",

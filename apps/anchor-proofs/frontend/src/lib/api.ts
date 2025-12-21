@@ -1,5 +1,5 @@
 /**
- * AnchorProof API client
+ * AnchorProofs API client
  */
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3012";

@@ -4,7 +4,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "AnchorProof - Proof of Existence on Bitcoin",
+  title: "AnchorProofs - Proof of Existence on Bitcoin",
   description:
     "Timestamp any file on the Bitcoin blockchain. Create immutable proof that your document existed at a specific point in time.",
 };

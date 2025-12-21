@@ -333,7 +333,7 @@ pub async fn get_exposable_services(
             port: 3200,
         },
         ExposableService {
-            name: "Anchor Proof".to_string(),
+            name: "Anchor Proofs".to_string(),
             description: "Proof of existence on Bitcoin".to_string(),
             local_url: "http://app-proof-frontend:3500".to_string(),
             port: 3500,

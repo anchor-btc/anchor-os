@@ -1,4 +1,4 @@
-//! HTTP handlers for the AnchorProof API
+//! HTTP handlers for the AnchorProofs API
 
 use axum::{
     extract::{Path, Query, State},

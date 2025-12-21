@@ -207,7 +207,7 @@
     "dnsRecords": "DNS 레코드",
     "dnsRecordsDesc": "Anchor DNS용 도메인 레코드 (Kind 10)",
     "proofs": "증명",
-    "proofsDesc": "Anchor Proof용 존재 증명 (Kind 11)",
+    "proofsDesc": "Anchor Proofs용 존재 증명 (Kind 11)",
     "carrierDistribution": "캐리어 분포",
     "weightsNormalized": "가중치는 자동으로 정규화됩니다",
     "saving": "저장 중...",

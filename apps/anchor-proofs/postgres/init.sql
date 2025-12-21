@@ -1,8 +1,8 @@
--- AnchorProof Schema
+-- AnchorProofs Schema
 -- Proof of Existence system on Bitcoin using the Anchor protocol
 -- Files are hashed client-side and only the hash is stored on-chain
 
--- AnchorProof indexer state (separate from main anchor indexer)
+-- AnchorProofs indexer state (separate from main anchor indexer)
 CREATE TABLE IF NOT EXISTS anchorproof_indexer_state (
     id INTEGER PRIMARY KEY DEFAULT 1,
     last_block_hash BYTEA,

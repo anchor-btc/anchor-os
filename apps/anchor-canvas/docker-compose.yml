@@ -84,7 +84,7 @@ services:
   backend:
     build:
       context: ../../
-      dockerfile: apps/anchor-pixel/backend/Dockerfile
+      dockerfile: apps/anchor-canvas/backend/Dockerfile
     container_name: anchorcanvas-backend
     environment:
       HOST: 0.0.0.0

@@ -1,5 +1,5 @@
 /**
- * AnchorProof Encoder/Decoder
+ * AnchorProofs Encoder/Decoder
  *
  * Encodes/decodes Proof of Existence records for the Anchor Protocol.
  * Uses AnchorKind::Custom(11) for proof operations.
@@ -118,7 +118,7 @@ export interface BatchProofPayload {
 /**
  * Combined payload type
  */
-export type AnchorProofPayload = ProofPayload | BatchProofPayload;
+export type AnchorProofsPayload = ProofPayload | BatchProofPayload;
 
 /**
  * Encode metadata to bytes
@@ -260,7 +260,7 @@ function encodeProofEntry(
 /**
  * Encode a proof payload to bytes
  */
-export function encodeProofPayload(payload: AnchorProofPayload): Uint8Array {
+export function encodeProofPayload(payload: AnchorProofsPayload): Uint8Array {
   if (payload.operation === ProofOperation.BATCH) {
     const batchPayload = payload as BatchProofPayload;
     const entries = batchPayload.entries.map((e) =>
@@ -298,7 +298,7 @@ export function encodeProofPayload(payload: AnchorProofPayload): Uint8Array {
 /**
  * Decode a proof payload from bytes
  */
-export function decodeProofPayload(bytes: Uint8Array): AnchorProofPayload | null {
+export function decodeProofPayload(bytes: Uint8Array): AnchorProofsPayload | null {
   if (bytes.length < 2) {
     return null;
   }
@@ -359,8 +359,8 @@ export function decodeProofPayload(bytes: Uint8Array): AnchorProofPayload | null
 /**
  * Create a full Anchor protocol message for Proof of Existence
  */
-export function createAnchorProofMessage(
-  payload: AnchorProofPayload,
+export function createAnchorProofsMessage(
+  payload: AnchorProofsPayload,
   anchors: Array<{ txidPrefix: Uint8Array; vout: number }> = []
 ): Uint8Array {
   const body = encodeProofPayload(payload);
@@ -437,14 +437,14 @@ export function isTxidPrefix(value: string): boolean {
 /**
  * Calculate payload size for a proof
  */
-export function calculatePayloadSize(payload: AnchorProofPayload): number {
+export function calculatePayloadSize(payload: AnchorProofsPayload): number {
   return encodeProofPayload(payload).length;
 }
 
 /**
  * Check if payload fits in OP_RETURN (80 bytes max)
  */
-export function fitsInOpReturn(payload: AnchorProofPayload): boolean {
+export function fitsInOpReturn(payload: AnchorProofsPayload): boolean {
   // Protocol overhead: 4 (magic) + 1 (kind) + 1 (anchor_count) = 6 bytes
   const payloadSize = calculatePayloadSize(payload);
   return payloadSize + 6 <= 80;
@@ -453,7 +453,7 @@ export function fitsInOpReturn(payload: AnchorProofPayload): boolean {
 /**
  * Estimate fee for proof transaction
  */
-export function estimateFee(payload: AnchorProofPayload, feeRate = 1): number {
+export function estimateFee(payload: AnchorProofsPayload, feeRate = 1): number {
   const baseTxSize = 150; // vbytes
   const payloadSize = calculatePayloadSize(payload);
   const opReturnOverhead = 10;

@@ -167,7 +167,7 @@ export function Certificate({ proof }: CertificateProps) {
         <div className="mt-8 pt-6 border-t-2 border-slate-200 text-center text-sm text-slate-500">
           <p>
             Certified by{" "}
-            <span className="font-medium text-emerald-600">AnchorProof</span>
+            <span className="font-medium text-emerald-600">AnchorProofs</span>
           </p>
           <p className="mt-1">
             Using the Anchor Protocol on Bitcoin

@@ -1,4 +1,4 @@
-//! Database operations for AnchorProof
+//! Database operations for AnchorProofs
 
 use anyhow::{Context, Result};
 use sqlx::postgres::PgPoolOptions;

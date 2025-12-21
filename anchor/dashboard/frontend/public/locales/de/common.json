@@ -207,7 +207,7 @@
     "dnsRecords": "DNS-Einträge",
     "dnsRecordsDesc": "Domain-Einträge für Anchor DNS (Kind 10)",
     "proofs": "Nachweise",
-    "proofsDesc": "Existenznachweise für Anchor Proof (Kind 11)",
+    "proofsDesc": "Existenznachweise für Anchor Proofs (Kind 11)",
     "carrierDistribution": "Trägerverteilung",
     "weightsNormalized": "Gewichtungen werden automatisch normalisiert",
     "saving": "Speichern...",

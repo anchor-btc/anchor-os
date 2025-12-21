@@ -100,7 +100,7 @@ The Anchor Protocol powers several applications:
 - **[Anchor Threads](https://threads.anchor.dev)** - Decentralized forum with Bitcoin-backed posts
 - **[Anchor Tokens](https://tokens.anchor.dev)** - Fungible tokens on Bitcoin
 - **[Anchor DNS](https://dns.anchor.dev)** - .bit domain registration
-- **[Anchor Proof](https://proof.anchor.dev)** - Document timestamping
+- **[Anchor Proofs](https://proofs.anchor.dev)** - Document timestamping
 - **[Anchor Map](https://map.anchor.dev)** - Geographic markers
 - **[Anchor Canvas](https://canvas.anchor.dev)** - Collaborative canvas
 

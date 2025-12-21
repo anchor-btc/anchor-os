@@ -437,7 +437,7 @@ fn get_all_services() -> Vec<ServiceDefinition> {
         },
         ServiceDefinition {
             id: "app-proof".to_string(),
-            name: "Anchor Proof".to_string(),
+            name: "Anchor Proofs".to_string(),
             description: "Proof of Existence - timestamp files on Bitcoin".to_string(),
             category: ServiceCategory::App,
             docker_profiles: vec!["full".to_string(), "app-proof".to_string()],
