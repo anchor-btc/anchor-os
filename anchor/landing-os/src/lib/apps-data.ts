@@ -25,8 +25,8 @@ export const apps: AppData[] = [
     category: "app",
   },
   {
-    id: "anchor-pixel",
-    name: "Anchor Pixel",
+    id: "anchor-canvas",
+    name: "Anchor Canvas",
     description: "Collaborative pixel canvas. Create art on Bitcoin, one pixel at a time.",
     icon: "🎨",
     color: "from-purple-500 to-pink-400",

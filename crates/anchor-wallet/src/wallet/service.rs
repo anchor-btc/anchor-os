@@ -4,6 +4,7 @@ use anyhow::{Context, Result};
 use bitcoincore_rpc::{Auth, Client, RpcApi};
 use std::collections::HashSet;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Mutex;
 use tracing::{info, warn};
 
 use crate::config::Config;
@@ -15,6 +16,9 @@ pub struct WalletService {
     pub(crate) base_rpc: Client,
     pub(crate) wallet_name: String,
     pub(crate) wallet_loaded: AtomicBool,
+    /// Mutex to serialize two-stage transaction creation (commit/reveal)
+    /// This prevents race conditions where multiple transactions try to use the same UTXOs
+    pub(crate) tx_creation_mutex: Mutex<()>,
 }
 
 impl WalletService {
@@ -88,6 +92,7 @@ impl WalletService {
             base_rpc,
             wallet_name,
             wallet_loaded: AtomicBool::new(true),
+            tx_creation_mutex: Mutex::new(()),
         })
     }
 
@@ -215,6 +220,21 @@ impl WalletService {
         })
     }
 
+    /// List all addresses that have ever received funds (including those with 0 balance)
+    pub fn list_received_addresses(&self) -> Result<Vec<String>> {
+        self.with_wallet_check(|| {
+            // address_filter: None (all addresses)
+            // minconf: Some(0) (include unconfirmed)
+            // include_empty: Some(true) (include addresses with 0 balance)
+            // include_watchonly: None
+            let received = self.rpc.list_received_by_address(None, Some(0), Some(true), None)?;
+            Ok(received
+                .into_iter()
+                .map(|r| r.address.assume_checked().to_string())
+                .collect())
+        })
+    }
+
     /// List unspent outputs
     pub fn list_utxos(&self) -> Result<Vec<Utxo>> {
         self.with_wallet_check(|| {
@@ -227,6 +247,7 @@ impl WalletService {
                     vout: u.vout,
                     amount: u.amount.to_btc(),
                     confirmations: u.confirmations,
+                    address: u.address.map(|a| a.assume_checked().to_string()),
                 })
                 .collect())
         })

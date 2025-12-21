@@ -21,9 +21,18 @@ import {
   AlertCircle,
   CheckCircle,
   X,
+  Info,
 } from "lucide-react";
 
 const RECORD_TYPES = ["A", "AAAA", "CNAME", "TXT", "MX", "NS", "SRV"];
+
+// DNS carriers that create spendable UTXOs for ownership tracking
+// OP_RETURN (0) is NOT allowed as it doesn't create spendable outputs
+const DNS_CARRIERS = [
+  { value: 1, name: "Inscription", description: "Commit/reveal with taproot (recommended)" },
+  { value: 2, name: "Witness Data", description: "Data stored in witness" },
+  { value: 3, name: "Annex", description: "Data stored in transaction annex" },
+];
 
 interface RecordForm {
   id: string;
@@ -48,6 +57,7 @@ export default function ManageDomainPage({
   const [records, setRecords] = useState<RecordForm[]>([]);
   const [initialized, setInitialized] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [selectedCarrier, setSelectedCarrier] = useState(1); // Default to Inscription
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -79,8 +89,7 @@ export default function ManageDomainPage({
   // Update mutation
   const updateMutation = useMutation({
     mutationFn: async (newRecords: DnsRecordInput[]) => {
-      // Use carrier=1 (inscription) for domain ownership UTXO
-      const result = await updateDomain(decodedName, newRecords, 1);
+      const result = await updateDomain(decodedName, newRecords, selectedCarrier);
       // Mine a block to confirm the transaction
       await mineBlocks(1);
       return result;
@@ -367,6 +376,58 @@ export default function ManageDomainPage({
               ))}
             </div>
           )}
+        </div>
+
+        {/* Carrier Selection */}
+        <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <label className="block text-sm font-medium text-slate-300">
+              Data Carrier
+            </label>
+            <div className="group relative">
+              <Info className="h-4 w-4 text-slate-400 cursor-help" />
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-slate-700 text-xs text-slate-300 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                Choose how your domain data is stored on Bitcoin
+              </div>
+            </div>
+          </div>
+          <div className="grid sm:grid-cols-3 gap-3">
+            {DNS_CARRIERS.map((carrier) => (
+              <label
+                key={carrier.value}
+                className={`flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all ${
+                  selectedCarrier === carrier.value
+                    ? "bg-bitcoin-orange/10 border-bitcoin-orange"
+                    : "bg-slate-700/30 border-slate-600 hover:border-slate-500"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="carrier"
+                  value={carrier.value}
+                  checked={selectedCarrier === carrier.value}
+                  onChange={() => {
+                    setSelectedCarrier(carrier.value);
+                    setHasChanges(true);
+                  }}
+                  className="sr-only"
+                />
+                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                  selectedCarrier === carrier.value
+                    ? "border-bitcoin-orange"
+                    : "border-slate-500"
+                }`}>
+                  {selectedCarrier === carrier.value && (
+                    <div className="w-2 h-2 rounded-full bg-bitcoin-orange" />
+                  )}
+                </div>
+                <div>
+                  <div className="font-medium text-white text-sm">{carrier.name}</div>
+                  <div className="text-xs text-slate-400 hidden sm:block">{carrier.description}</div>
+                </div>
+              </label>
+            ))}
+          </div>
         </div>
 
         {/* Save Button */}

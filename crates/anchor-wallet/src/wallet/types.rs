@@ -9,6 +9,9 @@ pub struct Utxo {
     pub vout: u32,
     pub amount: f64,
     pub confirmations: u32,
+    /// Bitcoin address that holds this UTXO
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub address: Option<String>,
 }
 
 /// Wallet balance information

@@ -17,9 +17,18 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
+  Info,
 } from "lucide-react";
 
 const RECORD_TYPES = ["A", "AAAA", "CNAME", "TXT", "MX", "NS", "SRV"];
+
+// DNS carriers that create spendable UTXOs for ownership tracking
+// OP_RETURN (0) is NOT allowed as it doesn't create spendable outputs
+const DNS_CARRIERS = [
+  { value: 1, name: "Inscription", description: "Commit/reveal with taproot (recommended)" },
+  { value: 2, name: "Witness Data", description: "Data stored in witness" },
+  { value: 3, name: "Annex", description: "Data stored in transaction annex" },
+];
 
 interface RecordFormData {
   id: number;
@@ -35,6 +44,7 @@ export default function RegisterPage() {
   const queryClient = useQueryClient();
   const [domainName, setDomainName] = useState("");
   const [selectedTld, setSelectedTld] = useState<SupportedTLD>(".btc");
+  const [selectedCarrier, setSelectedCarrier] = useState(1); // Default to Inscription
   const [availability, setAvailability] = useState<boolean | null>(null);
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
   const [records, setRecords] = useState<RecordFormData[]>([
@@ -59,8 +69,7 @@ export default function RegisterPage() {
           port: r.port,
         }));
 
-      // Use carrier=1 (inscription) to create a spendable UTXO for domain ownership
-      return registerDomain(getFullDomainName(), dnsRecords, 1);
+      return registerDomain(getFullDomainName(), dnsRecords, selectedCarrier);
     },
     onSuccess: async (data) => {
       setSuccess({ txid: data.txid });
@@ -325,6 +334,55 @@ export default function RegisterPage() {
                       <Trash2 className="h-5 w-5" />
                     </button>
                   </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Carrier Selection */}
+            <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <label className="block text-sm font-medium text-slate-300">
+                  Data Carrier
+                </label>
+                <div className="group relative">
+                  <Info className="h-4 w-4 text-slate-400 cursor-help" />
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-slate-700 text-xs text-slate-300 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                    Choose how your domain data is stored on Bitcoin
+                  </div>
+                </div>
+              </div>
+              <div className="grid gap-3">
+                {DNS_CARRIERS.map((carrier) => (
+                  <label
+                    key={carrier.value}
+                    className={`flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all ${
+                      selectedCarrier === carrier.value
+                        ? "bg-bitcoin-orange/10 border-bitcoin-orange"
+                        : "bg-slate-700/30 border-slate-600 hover:border-slate-500"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="carrier"
+                      value={carrier.value}
+                      checked={selectedCarrier === carrier.value}
+                      onChange={() => setSelectedCarrier(carrier.value)}
+                      className="sr-only"
+                    />
+                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                      selectedCarrier === carrier.value
+                        ? "border-bitcoin-orange"
+                        : "border-slate-500"
+                    }`}>
+                      {selectedCarrier === carrier.value && (
+                        <div className="w-2 h-2 rounded-full bg-bitcoin-orange" />
+                      )}
+                    </div>
+                    <div>
+                      <div className="font-medium text-white">{carrier.name}</div>
+                      <div className="text-sm text-slate-400">{carrier.description}</div>
+                    </div>
+                  </label>
                 ))}
               </div>
             </div>

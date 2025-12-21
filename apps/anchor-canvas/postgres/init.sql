@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS pixel_state (
     last_txid BYTEA NOT NULL,
     last_vout INTEGER NOT NULL DEFAULT 0,
     last_block_height INTEGER,
+    creator_address VARCHAR(100),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE(x, y)
 );
@@ -31,6 +32,7 @@ CREATE TABLE IF NOT EXISTS pixel_history (
     txid BYTEA NOT NULL,
     vout INTEGER NOT NULL,
     block_height INTEGER,
+    creator_address VARCHAR(100),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -58,6 +60,8 @@ CREATE INDEX IF NOT EXISTS idx_pixel_history_coords ON pixel_history(x, y);
 CREATE INDEX IF NOT EXISTS idx_pixel_history_created ON pixel_history(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_pixel_history_block ON pixel_history(block_height DESC);
 CREATE INDEX IF NOT EXISTS idx_pixel_history_txid ON pixel_history(txid);
+CREATE INDEX IF NOT EXISTS idx_pixel_history_creator ON pixel_history(creator_address);
+CREATE INDEX IF NOT EXISTS idx_pixel_state_creator ON pixel_state(creator_address);
 
 -- Spatial index for region queries (using btree on x,y is sufficient for our use case)
 CREATE INDEX IF NOT EXISTS idx_pixel_state_region ON pixel_state(x, y) INCLUDE (r, g, b);

@@ -28,6 +28,10 @@ pub fn create_and_broadcast_annex_tx(
     fee_rate: u64,
     locked_set: Option<&HashSet<(String, u32)>>,
 ) -> Result<CreatedTransaction> {
+    // Acquire the transaction creation mutex to prevent race conditions
+    let _tx_guard = wallet.tx_creation_mutex.lock()
+        .map_err(|e| anyhow::anyhow!("Transaction mutex poisoned: {}", e))?;
+    
     let secp = Secp256k1::new();
 
     // Generate a keypair for the Taproot key-path spend

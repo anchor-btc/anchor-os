@@ -68,6 +68,48 @@ export interface RecentPixel {
   updated_at: string;
 }
 
+export interface UserPixel {
+  x: number;
+  y: number;
+  r: number;
+  g: number;
+  b: number;
+  txid: string;
+  vout: number;
+  block_height: number | null;
+  created_at: string;
+}
+
+export interface MyPixelsResponse {
+  pixels: UserPixel[];
+  total_pixels: number;
+  unique_transactions: number;
+}
+
+export interface MyPixelsByAddressResponse {
+  pixels: UserPixel[];
+  total_pixels: number;
+  unique_transactions: number;
+  unique_positions: number;
+  page: number;
+  per_page: number;
+}
+
+export interface WalletAddressResponse {
+  address: string;
+}
+
+export interface WalletAddressesResponse {
+  addresses: string[];
+}
+
+export interface WalletUtxo {
+  txid: string;
+  vout: number;
+  amount: number;
+  confirmations: number;
+}
+
 export interface WalletBalance {
   confirmed: number;
   unconfirmed: number;
@@ -99,8 +141,8 @@ export const CARRIER_INFO: Record<CarrierType, {
   op_return: {
     id: 0,
     name: "OP_RETURN",
-    maxBytes: 80,
-    description: "Standard, ~10 pixels max",
+    maxBytes: 100000, // Bitcoin Core v30+ supports 100KB
+    description: "Standard, ~14K pixels max",
     feeMultiplier: 1,
   },
   witness_data: {
@@ -200,10 +242,12 @@ export function calculatePayloadSize(pixelCount: number): number {
 
 /**
  * Get recommended carrier based on payload size
+ * Bitcoin Core v30+ supports 100KB OP_RETURN
  */
 export function getRecommendedCarrier(pixelCount: number): CarrierType {
   const payloadSize = calculatePayloadSize(pixelCount);
-  if (payloadSize <= 60) return "op_return";
+  // With 100KB OP_RETURN limit, can fit ~14K pixels
+  if (payloadSize <= 99000) return "op_return";
   return "inscription"; // Default to inscription for larger payloads
 }
 
@@ -246,8 +290,8 @@ export async function createPixelTransaction(
   const selectedCarrier = carrierType || getRecommendedCarrier(pixels.length);
   const carrierId = CARRIER_INFO[selectedCarrier].id;
   
-  // Validate payload size for OP_RETURN
-  if (selectedCarrier === "op_return" && payloadSize > 70) {
+  // Validate payload size for OP_RETURN (Bitcoin Core v30+ supports 100KB)
+  if (selectedCarrier === "op_return" && payloadSize > 99900) {
     throw new Error(`Payload too large for OP_RETURN (${payloadSize} bytes). Use Witness Data or Inscription.`);
   }
   
@@ -340,5 +384,83 @@ export function formatNumber(n: number): string {
     return `${(n / 1_000).toFixed(1)}K`;
   }
   return n.toString();
+}
+
+// My Pixels API
+
+/**
+ * Fetch a new wallet address (generates a new one)
+ */
+export async function fetchWalletAddress(): Promise<string> {
+  const res = await fetch(`${WALLET_URL}/wallet/address`);
+  if (!res.ok) throw new Error("Failed to fetch wallet address");
+  const data: WalletAddressResponse = await res.json();
+  return data.address;
+}
+
+/**
+ * Fetch all wallet addresses (from UTXOs)
+ */
+export async function fetchWalletAddresses(): Promise<string[]> {
+  const res = await fetch(`${WALLET_URL}/wallet/addresses`);
+  if (!res.ok) throw new Error("Failed to fetch wallet addresses");
+  const data: WalletAddressesResponse = await res.json();
+  return data.addresses;
+}
+
+/**
+ * Fetch pixels painted by the connected wallet (server-side address lookup)
+ * Note: Returns most recent pixels first, limited to per_page
+ */
+export async function fetchMyPixels(perPage: number = 1000): Promise<MyPixelsByAddressResponse> {
+  const res = await fetch(`${API_URL}/pixels/my?per_page=${perPage}`);
+  if (!res.ok) throw new Error("Failed to fetch my pixels");
+  return res.json();
+}
+
+/**
+ * Fetch wallet UTXOs (to get txids for my pixels)
+ */
+export async function fetchWalletUtxos(): Promise<WalletUtxo[]> {
+  const res = await fetch(`${WALLET_URL}/wallet/utxos`);
+  if (!res.ok) throw new Error("Failed to fetch wallet UTXOs");
+  return res.json();
+}
+
+/**
+ * Fetch pixels painted by a specific address
+ */
+export async function fetchPixelsByAddress(
+  address: string, 
+  page = 0, 
+  perPage = 100
+): Promise<MyPixelsByAddressResponse> {
+  const params = new URLSearchParams({
+    address,
+    page: page.toString(),
+    per_page: perPage.toString(),
+  });
+  
+  const res = await fetch(`${API_URL}/pixels/by-address?${params}`);
+  if (!res.ok) throw new Error("Failed to fetch pixels by address");
+  return res.json();
+}
+
+/**
+ * Fetch pixels painted by specific transaction IDs
+ */
+export async function fetchPixelsByTxids(txids: string[]): Promise<MyPixelsResponse> {
+  if (txids.length === 0) {
+    return { pixels: [], total_pixels: 0, unique_transactions: 0 };
+  }
+  
+  const res = await fetch(`${API_URL}/pixels/by-txids`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ txids }),
+  });
+  
+  if (!res.ok) throw new Error("Failed to fetch pixels by txids");
+  return res.json();
 }
 

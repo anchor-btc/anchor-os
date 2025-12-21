@@ -14,44 +14,34 @@ use tracing::{debug, error, info, warn};
 
 use anchor_core::carrier::CarrierSelector;
 use anchor_core::AnchorKind;
+use anchor_specs::state::StateSpec;
+use anchor_specs::KindSpec;
 
 use crate::config::{Config, CANVAS_HEIGHT, CANVAS_WIDTH};
 use crate::db::Database;
 use crate::models::Pixel;
 
-/// Parse pixel data from Anchor message body
-/// Format: [num_pixels: u32][pixels...]
-/// Each pixel: [x: u16][y: u16][r: u8][g: u8][b: u8] = 7 bytes
+/// Parse pixel data from Anchor message body using StateSpec
 pub fn parse_pixel_payload(body: &[u8]) -> Result<Vec<Pixel>> {
-    if body.len() < 4 {
-        return Err(anyhow!("Body too short for pixel count"));
-    }
+    let spec = StateSpec::from_bytes(body)
+        .map_err(|e| anyhow!("Failed to parse StateSpec: {}", e))?;
 
-    let num_pixels = u32::from_be_bytes([body[0], body[1], body[2], body[3]]) as usize;
-    let expected_len = 4 + num_pixels * 7;
-
-    if body.len() < expected_len {
-        return Err(anyhow!(
-            "Body too short: expected {} bytes for {} pixels, got {}",
-            expected_len,
-            num_pixels,
-            body.len()
-        ));
-    }
-
-    let mut pixels = Vec::with_capacity(num_pixels);
-    for i in 0..num_pixels {
-        let offset = 4 + i * 7;
-        if let Some(pixel) = Pixel::from_bytes(&body[offset..offset + 7]) {
-            // Validate coordinates
-            if pixel.x < CANVAS_WIDTH && pixel.y < CANVAS_HEIGHT {
-                pixels.push(pixel);
-            } else {
-                warn!(
-                    "Pixel ({}, {}) out of bounds, skipping",
-                    pixel.x, pixel.y
-                );
-            }
+    let mut pixels = Vec::with_capacity(spec.pixels.len());
+    for pixel_data in spec.pixels {
+        // Validate coordinates
+        if (pixel_data.x as u32) < CANVAS_WIDTH && (pixel_data.y as u32) < CANVAS_HEIGHT {
+            pixels.push(Pixel {
+                x: pixel_data.x as u32,
+                y: pixel_data.y as u32,
+                r: pixel_data.r,
+                g: pixel_data.g,
+                b: pixel_data.b,
+            });
+        } else {
+            warn!(
+                "Pixel ({}, {}) out of bounds, skipping",
+                pixel_data.x, pixel_data.y
+            );
         }
     }
 
@@ -149,6 +139,10 @@ impl CanvasIndexer {
         for tx in &block.txdata {
             if let Some(pixels) = self.extract_pixels_from_tx(tx)? {
                 let txid = tx.compute_txid();
+                
+                // Extract creator address from the first input
+                let creator_address = self.get_creator_address(tx);
+                
                 for (vout, pixel) in pixels.iter().enumerate() {
                     self.db
                         .upsert_pixel(
@@ -160,6 +154,7 @@ impl CanvasIndexer {
                             &txid.to_byte_array(),
                             vout as i32,
                             Some(height),
+                            creator_address.as_deref(),
                         )
                         .await?;
                     pixel_count += 1;
@@ -177,6 +172,55 @@ impl CanvasIndexer {
         }
 
         Ok(())
+    }
+    
+    /// Get the creator address from the transaction
+    /// For Anchor transactions, we look at the change output (non-OP_RETURN outputs)
+    /// This works for both regular transactions and inscriptions
+    fn get_creator_address(&self, tx: &bitcoin::Transaction) -> Option<String> {
+        // Skip coinbase transactions
+        if tx.is_coinbase() {
+            return None;
+        }
+        
+        // First try: Look for a change output in the transaction itself
+        // Skip outputs that are OP_RETURN (nulldata) or zero value
+        for output in &tx.output {
+            // Skip OP_RETURN outputs (they start with 0x6a)
+            if output.script_pubkey.is_op_return() {
+                continue;
+            }
+            // Skip zero-value outputs
+            if output.value.to_sat() == 0 {
+                continue;
+            }
+            // Try to extract address from the script pubkey
+            if let Ok(addr) = bitcoin::Address::from_script(&output.script_pubkey, bitcoin::Network::Regtest) {
+                return Some(addr.to_string());
+            }
+        }
+        
+        // Fallback: Get the address from the first input's previous output
+        if let Some(first_input) = tx.input.first() {
+            let prev_txid = first_input.previous_output.txid;
+            let prev_vout = first_input.previous_output.vout;
+            
+            // Fetch the previous transaction to get the address
+            match self.rpc.get_raw_transaction_info(&prev_txid, None) {
+                Ok(prev_tx_info) => {
+                    if let Some(vout) = prev_tx_info.vout.get(prev_vout as usize) {
+                        if let Some(ref addr) = vout.script_pub_key.address {
+                            return Some(addr.clone().assume_checked().to_string());
+                        }
+                    }
+                }
+                Err(e) => {
+                    debug!("Failed to get previous tx {}: {}", prev_txid, e);
+                }
+            }
+        }
+        
+        None
     }
 
     /// Extract pixel data from a transaction if it contains valid Anchor pixel messages

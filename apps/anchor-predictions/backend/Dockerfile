@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y \
 # Copy workspace files
 COPY Cargo.toml Cargo.lock ./
 COPY crates/anchor-core ./crates/anchor-core
+COPY crates/anchor-specs ./crates/anchor-specs
 COPY apps/anchor-predictions/backend ./apps/anchor-predictions/backend
 
 # Create dummy files for other workspace members

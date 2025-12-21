@@ -271,6 +271,10 @@ impl WalletService {
         custom_outputs: Vec<(String, u64)>,
         locked_set: Option<&HashSet<(String, u32)>>,
     ) -> Result<CreatedTransaction> {
+        // Acquire the transaction creation mutex to prevent race conditions
+        let _tx_guard = self.tx_creation_mutex.lock()
+            .map_err(|e| anyhow::anyhow!("Transaction mutex poisoned: {}", e))?;
+        
         use bitcoin::secp256k1::Secp256k1;
         use bitcoin::XOnlyPublicKey;
 

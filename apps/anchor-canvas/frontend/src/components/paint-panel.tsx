@@ -4,7 +4,6 @@ import { useState, useMemo } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   createPixelTransaction, 
-  mineBlocks, 
   type Pixel, 
   type CarrierType,
   CARRIER_INFO,
@@ -14,7 +13,7 @@ import {
   estimateTxSize,
 } from "@/lib/api";
 import { ColorPicker } from "./color-picker";
-import { AlertCircle, Bitcoin, CheckCircle, Loader2, Paintbrush, Pickaxe, ChevronDown, ChevronUp, Zap, Settings } from "lucide-react";
+import { AlertCircle, Bitcoin, CheckCircle, Loader2, Paintbrush, ChevronDown, ChevronUp, Zap, Settings } from "lucide-react";
 
 interface PaintPanelProps {
   selectedPixels: Map<string, Pixel>;
@@ -87,17 +86,6 @@ export function PaintPanel({
         queryClient.invalidateQueries({ queryKey: ["balance"] });
         onTransactionSuccess?.();
       }, 2000);
-    },
-  });
-
-  const mineMutation = useMutation({
-    mutationFn: () => mineBlocks(1),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["stats"] });
-      queryClient.invalidateQueries({ queryKey: ["recent-pixels"] });
-      queryClient.invalidateQueries({ queryKey: ["balance"] });
-      // Trigger canvas refresh
-      onTransactionSuccess?.();
     },
   });
 
@@ -360,23 +348,6 @@ export function PaintPanel({
           </p>
         </div>
       )}
-
-      {/* Mine Block (regtest only) */}
-      <div className="stats-card">
-        <h3 className="font-medium mb-3 text-sm text-gray-400">Development</h3>
-        <button
-          onClick={() => mineMutation.mutate()}
-          disabled={mineMutation.isPending}
-          className="btn-secondary w-full flex items-center justify-center gap-2"
-        >
-          {mineMutation.isPending ? (
-            <Loader2 size={16} className="animate-spin" />
-          ) : (
-            <Pickaxe size={16} />
-          )}
-          Mine Block
-        </button>
-      </div>
     </div>
   );
 }

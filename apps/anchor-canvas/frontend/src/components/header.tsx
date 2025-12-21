@@ -2,10 +2,13 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { fetchStats, fetchWalletBalance, formatNumber } from "@/lib/api";
-import { Bitcoin, Blocks, BookOpen, Palette, Wallet, Zap } from "lucide-react";
+import { BookOpen, Palette, Wallet, Grid3X3, Zap, Box } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export function Header() {
+  const pathname = usePathname();
+  
   const { data: stats } = useQuery({
     queryKey: ["stats"],
     queryFn: fetchStats,
@@ -19,78 +22,80 @@ export function Header() {
   });
 
   return (
-    <header className="bg-secondary/80 backdrop-blur-md border-b border-gray-800 sticky top-0 z-50">
-      <div className="container mx-auto px-4 py-3">
-        <div className="flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="relative">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary to-bitcoin rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-primary/50 transition-shadow">
-                <Palette size={24} className="text-white" />
-              </div>
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-accent rounded-full flex items-center justify-center">
-                <Bitcoin size={10} className="text-black" />
-              </div>
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-white tracking-tight">
-                Anchor<span className="text-primary">Canvas</span>
-              </h1>
-              <p className="text-xs text-gray-500">Bitcoin Canvas</p>
-            </div>
-          </Link>
-
-          {/* Stats */}
-          <div className="hidden md:flex items-center gap-6">
-            <div className="flex items-center gap-2 text-sm">
-              <Palette size={16} className="text-primary" />
-              <span className="text-gray-400">Painted:</span>
-              <span className="font-mono text-white">
-                {formatNumber(stats?.total_pixels_painted || 0)}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 text-sm">
-              <Zap size={16} className="text-accent" />
-              <span className="text-gray-400">Transactions:</span>
-              <span className="font-mono text-white">
-                {formatNumber(stats?.total_transactions || 0)}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 text-sm">
-              <Blocks size={16} className="text-bitcoin" />
-              <span className="text-gray-400">Block:</span>
-              <span className="font-mono text-white">
-                #{stats?.last_block_height?.toLocaleString() || "—"}
-              </span>
-            </div>
-          </div>
-
-          {/* Right side */}
-          <div className="flex items-center gap-3">
-            {/* Docs Link */}
-            <Link
-              href="/docs"
-              className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 rounded-lg px-3 py-2 transition-colors"
-              title="Protocol Documentation"
-            >
-              <BookOpen size={18} className="text-primary" />
-              <span className="text-sm text-gray-300 hidden sm:inline">Docs</span>
-            </Link>
-            
-            {/* Wallet */}
-            <div className="flex items-center gap-2 bg-gray-900 rounded-lg px-4 py-2">
-              <Wallet size={18} className="text-bitcoin" />
-              <div className="text-sm">
-                <span className="text-gray-400">Balance:</span>{" "}
-                <span className="font-mono text-white">
-                  {balance ? balance.total.toFixed(4) : "—"} BTC
-                </span>
-              </div>
-            </div>
-          </div>
+    <header className="h-14 bg-[#0a0a0a] border-b border-white/[0.08] flex items-center px-4 gap-6">
+      {/* Logo */}
+      <Link href="/" className="flex items-center gap-2.5 shrink-0">
+        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/20">
+          <Palette size={18} className="text-white" />
         </div>
+        <span className="text-[15px] font-semibold text-white tracking-tight">
+          Anchor <span className="text-orange-500">Canvas</span>
+        </span>
+      </Link>
+
+      {/* Divider */}
+      <div className="w-px h-6 bg-white/10" />
+
+      {/* Stats - Compact pills */}
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/[0.06]">
+          <Grid3X3 size={13} className="text-orange-500" />
+          <span className="text-xs font-medium text-white/80 font-mono">
+            {formatNumber(stats?.total_pixels_painted || 0)}
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/[0.06]">
+          <Zap size={13} className="text-cyan-400" />
+          <span className="text-xs font-medium text-white/80 font-mono">
+            {formatNumber(stats?.total_transactions || 0)}
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/[0.06]">
+          <Box size={13} className="text-amber-500" />
+          <span className="text-xs font-medium text-white/80 font-mono">
+            #{stats?.last_block_height?.toLocaleString() || "—"}
+          </span>
+        </div>
+      </div>
+
+      {/* Spacer */}
+      <div className="flex-1" />
+
+      {/* Navigation */}
+      <nav className="flex items-center gap-1">
+        <Link
+          href="/my-pixels"
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+            pathname === "/my-pixels"
+              ? "bg-orange-500/15 text-orange-500"
+              : "text-white/60 hover:text-white hover:bg-white/[0.06]"
+          }`}
+        >
+          <Palette size={16} />
+          <span>My Pixels</span>
+        </Link>
+        <a
+          href={process.env.NEXT_PUBLIC_DOCS_URL ? `${process.env.NEXT_PUBLIC_DOCS_URL}/kinds/state.html` : "http://localhost:3900/kinds/state.html"}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-white/60 hover:text-white hover:bg-white/[0.06] transition-all"
+        >
+          <BookOpen size={16} />
+          <span>Docs</span>
+        </a>
+      </nav>
+
+      {/* Divider */}
+      <div className="w-px h-6 bg-white/10" />
+
+      {/* Wallet */}
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.06]">
+        <Wallet size={16} className="text-amber-500" />
+        <span className="text-sm font-mono text-white/90">
+          {balance ? balance.total.toFixed(4) : "—"}
+        </span>
+        <span className="text-xs text-white/40">BTC</span>
       </div>
     </header>
   );
 }
-

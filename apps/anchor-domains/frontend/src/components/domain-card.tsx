@@ -1,27 +1,42 @@
 "use client";
 
 import Link from "next/link";
-import { Globe, Clock, Database, ExternalLink } from "lucide-react";
+import { Globe, Clock, Database, ExternalLink, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import type { DomainListItem, ResolveResponse } from "@/lib/api";
+import type { DomainListItem, ResolveResponse, PendingTransaction } from "@/lib/api";
 import { getRecordTypeColor, truncateTxid } from "@/lib/api";
 
 interface DomainCardProps {
   domain: DomainListItem | ResolveResponse;
   showRecords?: boolean;
+  pending?: PendingTransaction;
 }
 
-export function DomainCard({ domain, showRecords = false }: DomainCardProps) {
+export function DomainCard({ domain, showRecords = false, pending }: DomainCardProps) {
   const isResolveResponse = "records" in domain;
   const records = isResolveResponse ? (domain as ResolveResponse).records : null;
 
   return (
-    <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-6 hover:border-bitcoin-orange/50 transition-all">
+    <div className={`bg-slate-800/50 rounded-xl border p-6 transition-all ${
+      pending 
+        ? "border-yellow-500/50 animate-pulse" 
+        : "border-slate-700 hover:border-bitcoin-orange/50"
+    }`}>
+      {/* Pending Badge */}
+      {pending && (
+        <div className="mb-3 flex items-center gap-2 px-3 py-1.5 bg-yellow-500/20 rounded-lg w-fit">
+          <Loader2 className="h-4 w-4 text-yellow-400 animate-spin" />
+          <span className="text-sm font-medium text-yellow-400">
+            {pending.operation === "register" ? "Registering" : "Updating"} - Awaiting confirmation
+          </span>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-bitcoin-orange/20 rounded-lg">
-            <Globe className="h-6 w-6 text-bitcoin-orange" />
+          <div className={`p-2 rounded-lg ${pending ? "bg-yellow-500/20" : "bg-bitcoin-orange/20"}`}>
+            <Globe className={`h-6 w-6 ${pending ? "text-yellow-400" : "text-bitcoin-orange"}`} />
           </div>
           <div>
             <Link

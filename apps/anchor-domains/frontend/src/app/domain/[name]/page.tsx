@@ -4,7 +4,7 @@ import { use } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { Header } from "@/components";
-import { getDomain, getDomainHistory, getRecordTypeColor, truncateTxid } from "@/lib/api";
+import { getDomain, getDomainHistory, getPendingStatus, getRecordTypeColor, truncateTxid } from "@/lib/api";
 import {
   Globe,
   Clock,
@@ -35,6 +35,7 @@ export default function DomainDetailPage({
   const { data: domain, isLoading, error } = useQuery({
     queryKey: ["domain", decodedName],
     queryFn: () => getDomain(decodedName),
+    refetchInterval: 5000, // Refetch to catch updates after confirmation
   });
 
   const { data: history } = useQuery({
@@ -42,6 +43,15 @@ export default function DomainDetailPage({
     queryFn: () => getDomainHistory(decodedName),
     enabled: !!domain,
   });
+
+  // Fetch pending status for this domain
+  const { data: pendingStatus } = useQuery({
+    queryKey: ["pending-status", decodedName],
+    queryFn: () => getPendingStatus(decodedName),
+    refetchInterval: 3000, // Check frequently for confirmation
+  });
+
+  const hasPending = pendingStatus?.has_pending;
 
   const copyToClipboard = async (text: string, field: string) => {
     try {
@@ -123,6 +133,24 @@ export default function DomainDetailPage({
           <ArrowLeft className="h-4 w-4" />
           Back to domains
         </Link>
+
+        {/* Pending Transaction Banner */}
+        {hasPending && pendingStatus?.pending && (
+          <div className="mb-6 p-4 bg-yellow-500/20 border border-yellow-500/50 rounded-xl animate-pulse">
+            <div className="flex items-center gap-3">
+              <Loader2 className="h-5 w-5 text-yellow-400 animate-spin" />
+              <div>
+                <h3 className="font-semibold text-yellow-400">
+                  {pendingStatus.pending.operation === "register" ? "Registration" : "Update"} Pending
+                </h3>
+                <p className="text-sm text-yellow-300/80">
+                  Transaction {truncateTxid(pendingStatus.pending.txid, 8)} is awaiting confirmation.
+                  The page will update automatically when confirmed.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Domain Header */}
         <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-6 mb-6">

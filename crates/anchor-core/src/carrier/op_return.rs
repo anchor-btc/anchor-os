@@ -41,8 +41,15 @@ impl OpReturnCarrier {
     /// Extended limit for Bitcoin Core v30+ (100 KB)
     pub const EXTENDED_LIMIT: usize = 100_000;
 
-    /// Create a new OP_RETURN carrier with legacy limit
+    /// Create a new OP_RETURN carrier with extended limit (v30+)
     pub fn new() -> Self {
+        Self {
+            max_size: Self::EXTENDED_LIMIT,
+        }
+    }
+
+    /// Create a new OP_RETURN carrier with legacy limit (80 bytes)
+    pub fn legacy() -> Self {
         Self {
             max_size: Self::LEGACY_LIMIT,
         }

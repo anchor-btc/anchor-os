@@ -9,11 +9,12 @@ use axum::{
 use serde_json::json;
 use tracing::error;
 
+use anchor_specs::KindSpec;
 use crate::db::Database;
 use crate::models::{
     BurnTokenRequest, CreateTxResponse, DeployTokenRequest, HealthResponse, ListParams,
-    MintTokenRequest, Token, TokenBalance, TokenHolder, TokenOperationResponse, TokenStats,
-    TokenUtxo, TransferTokenRequest, PaginatedResponse,
+    MintTokenRequest, Token, TokenAllocation, TokenBalance, TokenHolder, TokenOperation, 
+    TokenOperationResponse, TokenSpec, TokenStats, TokenUtxo, TransferTokenRequest, PaginatedResponse,
 };
 
 /// Application state
@@ -306,7 +307,7 @@ pub async fn create_deploy_tx(
     }
 
     // Create the token operation
-    let operation = crate::models::TokenOperation::Deploy {
+    let operation = TokenOperation::Deploy {
         ticker: request.ticker.to_uppercase(),
         decimals: request.decimals,
         max_supply: request.max_supply.parse().map_err(|_| {
@@ -318,8 +319,9 @@ pub async fn create_deploy_tx(
         flags,
     };
 
-    // Encode the payload
-    let payload = operation.to_bytes();
+    // Encode the payload using anchor-specs
+    let spec = TokenSpec::new(operation);
+    let payload = spec.to_bytes();
 
     // Call wallet service to create transaction
     let carrier = request.carrier.unwrap_or(4); // Default to WitnessData
@@ -348,7 +350,7 @@ pub async fn create_mint_tx(
     }
 
     // Create the token operation
-    let operation = crate::models::TokenOperation::Mint {
+    let operation = TokenOperation::Mint {
         token_id: token.id as u64,
         amount: request.amount.parse().map_err(|_| {
             AppError::BadRequest("Invalid amount".to_string())
@@ -356,7 +358,9 @@ pub async fn create_mint_tx(
         output_index: 0, // Mint to first output
     };
 
-    let payload = operation.to_bytes();
+    // Encode the payload using anchor-specs
+    let spec = TokenSpec::new(operation);
+    let payload = spec.to_bytes();
 
     let carrier = request.carrier.unwrap_or(4);
     let fee_rate = request.fee_rate.unwrap_or(1.0);
@@ -579,11 +583,11 @@ pub async fn create_transfer_tx(
     // Build allocations for the transfer
     // Output 0 = change (if any), subsequent outputs = recipients
     let change_amount = selected_amount - total_amount;
-    let mut allocations: Vec<crate::models::TokenAllocation> = Vec::new();
+    let mut allocations: Vec<TokenAllocation> = Vec::new();
     
     // Add change allocation if there's any (goes to output 0)
     if change_amount > 0 {
-        allocations.push(crate::models::TokenAllocation {
+        allocations.push(TokenAllocation {
             output_index: 0,
             amount: change_amount,
         });
@@ -592,19 +596,21 @@ pub async fn create_transfer_tx(
     // Add recipient allocations (outputs 1, 2, 3, etc. if there's change, otherwise 0, 1, 2...)
     let output_offset = if change_amount > 0 { 1 } else { 0 };
     for (i, alloc) in request.allocations.iter().enumerate() {
-        allocations.push(crate::models::TokenAllocation {
+        allocations.push(TokenAllocation {
             output_index: (i + output_offset) as u8,
             amount: alloc.amount.parse().unwrap_or(0),
         });
     }
 
     // Create the token operation
-    let operation = crate::models::TokenOperation::Transfer {
+    let operation = TokenOperation::Transfer {
         token_id: token.id as u64,
         allocations,
     };
 
-    let payload = operation.to_bytes();
+    // Encode the payload using anchor-specs
+    let spec = TokenSpec::new(operation);
+    let payload = spec.to_bytes();
 
     let carrier = request.carrier.unwrap_or(4);
     let fee_rate = request.fee_rate.unwrap_or(1.0);
@@ -683,14 +689,16 @@ pub async fn create_burn_tx(
     }
 
     // Create the token operation
-    let operation = crate::models::TokenOperation::Burn {
+    let operation = TokenOperation::Burn {
         token_id: token.id as u64,
         amount: request.amount.parse().map_err(|_| {
             AppError::BadRequest("Invalid amount".to_string())
         })?,
     };
 
-    let payload = operation.to_bytes();
+    // Encode the payload using anchor-specs
+    let spec = TokenSpec::new(operation);
+    let payload = spec.to_bytes();
 
     let carrier = request.carrier.unwrap_or(4);
     let fee_rate = request.fee_rate.unwrap_or(1.0);

@@ -5,11 +5,13 @@
 //! - `service` - WalletService core implementation
 //! - `anchor` - ANCHOR transaction creation
 //! - `advanced` - Advanced transaction with required inputs/outputs
+//! - `specs` - Type-safe spec-based transaction creation
 //! - `carriers/` - Carrier-specific transaction builders
 
 mod advanced;
 mod anchor;
 mod service;
+mod specs;
 mod types;
 mod utils;
 
@@ -20,4 +22,6 @@ pub use service::WalletService;
 // Types are re-exported for external use
 #[allow(unused_imports)]
 pub use types::{Balance, CreatedTransaction, Utxo};
+#[allow(unused_imports)]
+pub use specs::AnchorRef;
 

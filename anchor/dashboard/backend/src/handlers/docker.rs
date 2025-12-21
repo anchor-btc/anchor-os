@@ -208,7 +208,7 @@ fn get_required_profiles(service: &str) -> Vec<String> {
     let service_deps: Vec<String> = match service {
         // Apps that need wallet
         "app-threads" => vec!["core-wallet".to_string(), "app-threads".to_string()],
-        "app-pixel" | "app-places" | "app-domains" | "app-proof" | "app-tokens" => {
+        "app-canvas" | "app-places" | "app-domains" | "app-proof" | "app-tokens" => {
             vec!["core-wallet".to_string(), service.to_string()]
         },
         // Oracles has its own postgres
@@ -264,8 +264,8 @@ fn extract_service_from_container(container_name: &str) -> Option<String> {
     let patterns = [
         ("app-threads-backend", "app-threads"),
         ("app-threads-frontend", "app-threads"),
-        ("app-pixel-backend", "app-pixel"),
-        ("app-pixel-frontend", "app-pixel"),
+        ("app-canvas-backend", "app-canvas"),
+        ("app-canvas-frontend", "app-canvas"),
         ("app-places-backend", "app-places"),
         ("app-places-frontend", "app-places"),
         ("app-domains-backend", "app-domains"),

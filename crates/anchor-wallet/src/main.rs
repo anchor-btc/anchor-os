@@ -126,6 +126,7 @@ async fn main() -> Result<()> {
         .route("/health", get(handlers::health))
         .route("/wallet/balance", get(handlers::get_balance))
         .route("/wallet/address", get(handlers::get_new_address))
+        .route("/wallet/addresses", get(handlers::list_addresses))
         .route("/wallet/utxos", get(handlers::list_utxos))
         .route("/wallet/utxos/unlocked", get(handlers::list_utxos_unlocked))
         .route("/wallet/utxos/locked", get(handlers::list_locked_utxos))

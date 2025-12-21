@@ -10,7 +10,9 @@ import type { Pixel } from "./api";
 // Anchor protocol constants
 const ANCHOR_MAGIC = new Uint8Array([0xa1, 0x1c, 0x00, 0x01]);
 const ANCHOR_KIND_STATE = 2;
-const MAX_PIXELS_PER_TX = 10; // Based on OP_RETURN size limit
+// Bitcoin Core v30+ supports up to 100KB OP_RETURN
+// (100000 - 14 header) / 7 bytes per pixel ≈ 14,283 pixels max
+const MAX_PIXELS_PER_TX = 14000;
 
 /**
  * Encode a single pixel to bytes

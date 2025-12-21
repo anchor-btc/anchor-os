@@ -397,12 +397,12 @@ fn get_all_services() -> Vec<ServiceDefinition> {
             depends_on: vec!["core-postgres".to_string(), "core-wallet".to_string()],
         },
         ServiceDefinition {
-            id: "app-pixel".to_string(),
+            id: "app-canvas".to_string(),
             name: "Anchor Canvas".to_string(),
             description: "Collaborative pixel canvas powered by Bitcoin".to_string(),
             category: ServiceCategory::App,
-            docker_profiles: vec!["full".to_string(), "app-pixel".to_string()],
-            containers: vec!["anchor-app-pixel-frontend".to_string(), "anchor-app-pixel-backend".to_string()],
+            docker_profiles: vec!["full".to_string(), "app-canvas".to_string()],
+            containers: vec!["anchor-app-canvas-frontend".to_string(), "anchor-app-canvas-backend".to_string()],
             install_status: ServiceInstallStatus::NotInstalled,
             enabled: false,
             required: false,
@@ -1562,7 +1562,7 @@ fn get_service_profiles(service: &str) -> Vec<String> {
     let service_deps: Vec<String> = match service {
         // Apps that need wallet
         "app-threads" => vec!["core-wallet".to_string(), "app-threads".to_string()],
-        "app-pixel" | "app-places" | "app-domains" | "app-proof" | "app-tokens" => {
+        "app-canvas" | "app-places" | "app-domains" | "app-proof" | "app-tokens" => {
             vec!["core-wallet".to_string(), service.to_string()]
         },
         // Oracles has its own postgres

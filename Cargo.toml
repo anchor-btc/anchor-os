@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
     "crates/anchor-core",
+    "crates/anchor-specs",
     "crates/anchor-indexer",
     "crates/anchor-wallet",
     "crates/anchor-testnet",
@@ -87,6 +88,7 @@ utoipa-swagger-ui = { version = "8", features = ["axum"] }
 
 # Internal crates
 anchor-core = { path = "crates/anchor-core" }
+anchor-specs = { path = "crates/anchor-specs" }
 
 
 

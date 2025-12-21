@@ -26,6 +26,11 @@ pub fn create_and_broadcast_inscription_tx(
     fee_rate: u64,
     locked_set: Option<&HashSet<(String, u32)>>,
 ) -> Result<CreatedTransaction> {
+    // Acquire the transaction creation mutex to prevent race conditions
+    // This serializes all two-stage transactions to avoid UTXO conflicts
+    let _tx_guard = wallet.tx_creation_mutex.lock()
+        .map_err(|e| anyhow::anyhow!("Transaction mutex poisoned: {}", e))?;
+    
     let secp = Secp256k1::new();
 
     // Generate an internal key (could be from wallet, using random for simplicity)

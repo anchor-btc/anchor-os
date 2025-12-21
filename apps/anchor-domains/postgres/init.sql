@@ -74,6 +74,19 @@ CREATE TABLE IF NOT EXISTS domain_history (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Pending transactions (local state before confirmation)
+-- Tracks domains that have been submitted but not yet confirmed on-chain
+CREATE TABLE IF NOT EXISTS pending_transactions (
+    id SERIAL PRIMARY KEY,
+    txid BYTEA NOT NULL UNIQUE,
+    domain_name VARCHAR(255) NOT NULL,
+    operation SMALLINT NOT NULL, -- 1=register, 2=update, 3=transfer
+    records_json JSONB, -- Stores the records for display while pending
+    carrier SMALLINT, -- Carrier type used
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    expires_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() + INTERVAL '24 hours'
+);
+
 -- ============================================================================
 -- Indexes
 -- ============================================================================
@@ -98,6 +111,11 @@ CREATE INDEX IF NOT EXISTS idx_records_txid ON dns_records(txid);
 -- History indexes
 CREATE INDEX IF NOT EXISTS idx_history_domain ON domain_history(domain_id);
 CREATE INDEX IF NOT EXISTS idx_history_created ON domain_history(created_at DESC);
+
+-- Pending transaction indexes
+CREATE INDEX IF NOT EXISTS idx_pending_domain_name ON pending_transactions(domain_name);
+CREATE INDEX IF NOT EXISTS idx_pending_txid ON pending_transactions(txid);
+CREATE INDEX IF NOT EXISTS idx_pending_expires ON pending_transactions(expires_at);
 
 -- Full-text search on domain names
 CREATE INDEX IF NOT EXISTS idx_domains_name_search ON domains 
@@ -309,6 +327,59 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Function to check if domain has a pending transaction
+CREATE OR REPLACE FUNCTION has_pending_transaction(domain_name_param VARCHAR(255))
+RETURNS BOOLEAN AS $$
+BEGIN
+    RETURN EXISTS (
+        SELECT 1 FROM pending_transactions 
+        WHERE LOWER(domain_name) = LOWER(domain_name_param)
+        AND expires_at > NOW()
+    );
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to get pending transaction for a domain
+CREATE OR REPLACE FUNCTION get_pending_transaction(domain_name_param VARCHAR(255))
+RETURNS TABLE (
+    id INTEGER,
+    txid BYTEA,
+    domain_name VARCHAR(255),
+    operation SMALLINT,
+    records_json JSONB,
+    carrier SMALLINT,
+    created_at TIMESTAMP WITH TIME ZONE
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        p.id,
+        p.txid,
+        p.domain_name,
+        p.operation,
+        p.records_json,
+        p.carrier,
+        p.created_at
+    FROM pending_transactions p
+    WHERE LOWER(p.domain_name) = LOWER(domain_name_param)
+    AND p.expires_at > NOW()
+    ORDER BY p.created_at DESC
+    LIMIT 1;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to cleanup expired pending transactions
+CREATE OR REPLACE FUNCTION cleanup_expired_pending()
+RETURNS INTEGER AS $$
+DECLARE
+    deleted_count INTEGER;
+BEGIN
+    DELETE FROM pending_transactions WHERE expires_at < NOW();
+    GET DIAGNOSTICS deleted_count = ROW_COUNT;
+    RETURN deleted_count;
+END;
+$$ LANGUAGE plpgsql;
+
 -- ============================================================================
 -- Triggers
 -- ============================================================================
@@ -346,3 +417,19 @@ CREATE TRIGGER tr_domains_history
     AFTER INSERT OR UPDATE ON domains
     FOR EACH ROW
     EXECUTE FUNCTION log_domain_history();
+
+-- Remove pending transaction when domain is confirmed
+CREATE OR REPLACE FUNCTION remove_pending_on_confirm()
+RETURNS TRIGGER AS $$
+BEGIN
+    DELETE FROM pending_transactions 
+    WHERE LOWER(domain_name) = LOWER(NEW.name);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS tr_remove_pending ON domains;
+CREATE TRIGGER tr_remove_pending
+    AFTER INSERT OR UPDATE ON domains
+    FOR EACH ROW
+    EXECUTE FUNCTION remove_pending_on_confirm();

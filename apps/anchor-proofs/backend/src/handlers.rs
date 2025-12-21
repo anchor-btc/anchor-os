@@ -9,6 +9,7 @@ use axum::{
 use serde_json::json;
 use tracing::{error, info};
 
+use anchor_specs::KindSpec;
 use crate::db::Database;
 use crate::models::{
     BatchStampRequest, CreateTxResponse, HashAlgorithm, HealthResponse, ListParams,

@@ -11,8 +11,9 @@ use anchor_core::{Anchor, AnchorKind, ParsedAnchorMessage, create_anchor_script,
 use super::anchor_tx::{AnchorTransaction, CarrierData};
 use crate::error::{Result, WalletError};
 
-/// Maximum OP_RETURN payload size (legacy)
-pub const MAX_OP_RETURN_SIZE: usize = 80;
+/// Maximum OP_RETURN payload size
+/// Bitcoin Core v30+ supports up to 100KB with datacarriersize=100000
+pub const MAX_OP_RETURN_SIZE: usize = 100000;
 
 /// Builder for creating ANCHOR transactions
 #[derive(Debug)]

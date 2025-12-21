@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Globe, Search, PlusCircle, FileText, Wallet, User } from "lucide-react";
+import { Globe, Search, PlusCircle, FileText, Wallet, User, BookOpen } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getWalletBalance, formatSats } from "@/lib/api";
 
@@ -54,13 +54,15 @@ export function Header() {
               <User className="h-4 w-4" />
               <span>My Domains</span>
             </Link>
-            <Link
-              href="/docs"
+            <a
+              href="http://localhost:3900/kinds/dns.html"
+              target="_blank"
+              rel="noopener noreferrer"
               className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors"
             >
-              <FileText className="h-4 w-4" />
+              <BookOpen className="h-4 w-4" />
               <span>Docs</span>
-            </Link>
+            </a>
           </nav>
 
           {/* Wallet Balance */}

@@ -9,16 +9,15 @@
 mod canvas;
 mod config;
 mod db;
+mod error;
 mod handlers;
 mod indexer;
 mod models;
+mod services;
 
 use std::sync::Arc;
 
-use axum::{
-    routing::get,
-    Router,
-};
+use axum::{routing::{get, post}, Router};
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
 use tracing::info;
@@ -53,7 +52,7 @@ async fn main() -> anyhow::Result<()> {
     let canvas = CanvasManager::new(db.clone());
 
     // Create shared state
-    let state = Arc::new(AppState { db: db.clone(), canvas });
+    let state = AppState::new(db.clone(), canvas);
 
     // Start indexer in background
     let indexer = Arc::new(CanvasIndexer::new(db.clone(), config.clone())?);
@@ -70,6 +69,10 @@ async fn main() -> anyhow::Result<()> {
         .route("/stats", get(handlers::get_stats))
         .route("/pixel/{x}/{y}", get(handlers::get_pixel))
         .route("/recent", get(handlers::get_recent))
+        .route("/pixels/by-txids", post(handlers::get_pixels_by_txids))
+        .route("/pixels/by-address", get(handlers::get_pixels_by_address))
+        .route("/pixels/by-addresses", post(handlers::get_pixels_by_addresses))
+        .route("/pixels/my", get(handlers::get_my_pixels))
         .route("/canvas", get(handlers::get_canvas))
         .route("/canvas/preview", get(handlers::get_preview))
         .route("/canvas/region", get(handlers::get_region))

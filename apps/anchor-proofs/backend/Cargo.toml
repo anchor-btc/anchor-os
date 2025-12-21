@@ -12,6 +12,7 @@ path = "src/main.rs"
 
 [dependencies]
 anchor-core.workspace = true
+anchor-specs.workspace = true
 bitcoin.workspace = true
 bitcoincore-rpc.workspace = true
 tokio.workspace = true

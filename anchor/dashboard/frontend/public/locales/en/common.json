@@ -1240,7 +1240,7 @@
     "app-predictions": "Trustless lottery with DLC-based payouts on Bitcoin",
     "app-places": "Place permanent markers on a map using Bitcoin",
     "app-oracles": "Decentralized oracle network for Bitcoin with staking and reputation",
-    "app-pixel": "Collaborative pixel canvas powered by Bitcoin transactions",
+    "app-canvas": "Collaborative pixel canvas powered by Bitcoin transactions",
     "app-proof": "Proof of Existence - timestamp files on Bitcoin",
     "app-threads": "Social threads and messaging on Bitcoin using the ANCHOR protocol",
     "app-tokens": "UTXO-based tokens on Bitcoin - deploy, mint, transfer like Runes",

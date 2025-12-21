@@ -6,11 +6,13 @@ A **carrier** is the method used to embed Anchor message data within a Bitcoin t
 
 | Carrier | ID | Max Size | Prunable | Witness Discount | Status |
 |---------|-----|----------|----------|------------------|--------|
-| OP_RETURN | 0 | 80 bytes | Yes | No | Active |
+| OP_RETURN | 0 | 100 KB* | Yes | No | Active |
 | Inscription | 1 | ~4 MB | Yes | Yes (75%) | Active |
 | Stamps | 2 | ~8 KB | No | No | Active |
 | Taproot Annex | 3 | ~10 KB | Yes | Yes (75%) | Reserved |
 | Witness Data | 4 | ~4 MB | Yes | Yes (75%) | Active |
+
+*OP_RETURN size depends on `datacarriersize` setting. Bitcoin Core v30+ supports up to 100KB.
 
 ## OP_RETURN (Default)
 
@@ -24,7 +26,7 @@ OP_RETURN <anchor_message_bytes>
 
 | Property | Value |
 |----------|-------|
-| Max payload | 80 bytes (83 with opcode) |
+| Max payload | 100 KB (with `datacarriersize=100000`) |
 | UTXO impact | None (unspendable) |
 | Relay policy | Standard, widely relayed |
 | Prunable | Yes (by nodes with -prune) |
@@ -32,9 +34,10 @@ OP_RETURN <anchor_message_bytes>
 
 ### Best For
 
-- Short text messages (<70 chars with header)
-- Hashes and proofs (32-64 byte payloads)
+- Text messages of any size
+- Batch operations (thousands of pixels, etc.)
 - Maximum compatibility
+- Simple implementation
 
 ### Example
 
@@ -49,8 +52,14 @@ const message = createMessage({
 // Payload: 8 bytes (magic + kind + anchor_count + "gm")
 ```
 
-::: warning Size Limit
-Bitcoin Core's default policy limits OP_RETURN to 80 bytes. Messages exceeding this must use a different carrier.
+::: tip Bitcoin Core v30+
+Bitcoin Core v30+ supports `datacarriersize` up to 100KB, enabling much larger OP_RETURN payloads. 
+This is ideal for batch operations like painting thousands of pixels in a single transaction.
+
+Configure in `bitcoin.conf`:
+```
+datacarriersize=100000
+```
 :::
 
 ## Inscription (Ordinals-style)

@@ -15,7 +15,10 @@ use anchor_core::parse_transaction;
 
 use crate::config::Config;
 use crate::db::Database;
-use crate::models::{DnsOperation, DnsPayload};
+
+// Use anchor-specs for DNS protocol types
+use anchor_specs::dns::{DnsSpec, DnsOperation};
+use anchor_specs::KindSpec;
 
 /// DNS message kind (Custom(10))
 const DNS_KIND: u8 = 10;
@@ -186,11 +189,11 @@ impl Indexer {
                 continue;
             }
 
-            // Parse DNS payload
-            let payload = match DnsPayload::from_bytes(&message.body) {
-                Some(p) => p,
-                None => {
-                    debug!("Failed to parse DNS payload in tx {}", txid);
+            // Parse DNS payload using anchor-specs
+            let payload = match DnsSpec::from_bytes(&message.body) {
+                Ok(p) => p,
+                Err(e) => {
+                    debug!("Failed to parse DNS payload in tx {}: {}", txid, e);
                     continue;
                 }
             };

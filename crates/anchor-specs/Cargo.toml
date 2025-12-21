@@ -1,0 +1,17 @@
+[package]
+name = "anchor-specs"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Protocol specifications and validation for ANCHOR message kinds"
+
+[dependencies]
+anchor-core.workspace = true
+serde.workspace = true
+thiserror.workspace = true
+hex.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true
+

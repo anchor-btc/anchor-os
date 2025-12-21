@@ -9,10 +9,11 @@ import { Loader2 } from "lucide-react";
 function DashboardContent() {
   const searchParams = useSearchParams();
   const appId = searchParams.get("app");
+  const initialUrl = searchParams.get("url") || undefined;
 
   // If an app is selected via query param, show iframe view
   if (appId) {
-    return <IframeView appId={appId} />;
+    return <IframeView appId={appId} initialUrl={initialUrl} />;
   }
 
   // Otherwise show the widget dashboard

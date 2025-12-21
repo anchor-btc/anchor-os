@@ -12,6 +12,7 @@ WORKDIR /app
 # Copy workspace files
 COPY Cargo.toml Cargo.lock* ./
 COPY crates/anchor-core ./crates/anchor-core
+COPY crates/anchor-specs ./crates/anchor-specs
 COPY crates/anchor-wallet ./crates/anchor-wallet
 COPY crates/anchor-wallet-lib ./crates/anchor-wallet-lib
 

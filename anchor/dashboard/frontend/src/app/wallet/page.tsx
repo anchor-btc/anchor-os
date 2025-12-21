@@ -44,6 +44,7 @@ import {
   Shield,
   ShieldCheck,
   RotateCw,
+  ExternalLink,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { QRCodeSVG } from "qrcode.react";
@@ -890,9 +891,16 @@ function LocksSection({
                     </p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <span className="capitalize">{utxo.reason}</span>
-                      {utxo.asset_id && (
+                      {utxo.asset_id && utxo.asset_type === "domain" ? (
+                        <a
+                          href={`/?app=app-domains&url=${encodeURIComponent(`http://localhost:3400/domain/${utxo.asset_id}/manage`)}`}
+                          className="text-primary hover:text-primary/80 transition-colors inline-flex items-center gap-1"
+                        >
+                          • {utxo.asset_id}
+                        </a>
+                      ) : utxo.asset_id ? (
                         <span className="text-primary">• {utxo.asset_id}</span>
-                      )}
+                      ) : null}
                     </div>
                   </div>
                 </div>

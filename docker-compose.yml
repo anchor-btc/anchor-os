@@ -622,12 +622,12 @@ services:
       - full
       - app-threads
 
-  # Anchor Pixel - Collaborative Bitcoin Canvas
-  app-pixel-backend:
+  # Anchor Canvas - Collaborative Bitcoin Canvas
+  app-canvas-backend:
     build:
       context: .
       dockerfile: apps/anchor-canvas/backend/Dockerfile
-    container_name: anchor-app-pixel-backend
+    container_name: anchor-app-canvas-backend
     ports:
       - "3201:3201"
     environment:
@@ -657,27 +657,27 @@ services:
     restart: unless-stopped
     profiles:
       - full
-      - app-pixel
+      - app-canvas
 
-  app-pixel-frontend:
+  app-canvas-frontend:
     build:
       context: ./apps/anchor-canvas/frontend
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_URL: http://localhost:3201
         NEXT_PUBLIC_WALLET_URL: http://localhost:8001
-    container_name: anchor-app-pixel-frontend
+    container_name: anchor-app-canvas-frontend
     ports:
       - "3200:3200"
     depends_on:
-      app-pixel-backend:
+      app-canvas-backend:
         condition: service_healthy
     networks:
       - anchor-network
     restart: unless-stopped
     profiles:
       - full
-      - app-pixel
+      - app-canvas
 
   # Anchor Map - Bitcoin-Powered Map Markers
   app-places-backend:

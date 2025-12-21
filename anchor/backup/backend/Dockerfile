@@ -12,6 +12,7 @@ WORKDIR /app
 # Copy workspace files
 COPY Cargo.toml Cargo.lock* ./
 COPY crates/anchor-core ./crates/anchor-core
+COPY crates/anchor-specs ./crates/anchor-specs
 
 # Create dummy files for other workspace members
 RUN mkdir -p crates/anchor-indexer/src && echo "fn main() {}" > crates/anchor-indexer/src/main.rs

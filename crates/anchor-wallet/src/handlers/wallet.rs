@@ -110,3 +110,34 @@ pub async fn list_utxos_unlocked(
     }
 }
 
+/// Response for addresses list
+#[derive(Serialize, ToSchema)]
+pub struct AddressesResponse {
+    /// List of unique addresses in the wallet
+    pub addresses: Vec<String>,
+}
+
+/// List all addresses that have ever received funds (including those with 0 balance)
+#[utoipa::path(
+    get,
+    path = "/wallet/addresses",
+    tag = "Wallet",
+    responses(
+        (status = 200, description = "List of all addresses that have received funds", body = AddressesResponse),
+        (status = 500, description = "Internal server error")
+    )
+)]
+pub async fn list_addresses(
+    State(state): State<Arc<AppState>>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    match state.wallet.list_received_addresses() {
+        Ok(addresses) => {
+            Ok(Json(AddressesResponse { addresses }))
+        }
+        Err(e) => {
+            error!("Failed to list addresses: {}", e);
+            Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        }
+    }
+}
+

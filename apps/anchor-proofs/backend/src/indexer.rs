@@ -17,6 +17,8 @@ use crate::config::Config;
 use crate::db::Database;
 use crate::models::{ProofOperation, ProofPayload};
 
+use anchor_specs::KindSpec;
+
 /// Proof of Existence message kind (Custom(11))
 const PROOF_KIND: u8 = 11;
 
@@ -181,11 +183,11 @@ impl Indexer {
                 continue;
             }
 
-            // Parse proof payload
+            // Parse proof payload using anchor-specs
             let payload = match ProofPayload::from_bytes(&message.body) {
-                Some(p) => p,
-                None => {
-                    debug!("Failed to parse proof payload in tx {}", txid);
+                Ok(p) => p,
+                Err(e) => {
+                    debug!("Failed to parse proof payload in tx {}: {}", txid, e);
                     continue;
                 }
             };

@@ -15,8 +15,10 @@ use anchor_core::parse_transaction;
 
 use crate::config::Config;
 use crate::db::Database;
-use crate::models::{DeployFlags, TokenOperation};
+use crate::models::{DeployFlags, TokenOperation, TokenSpec};
 use crate::utxo::UtxoTracker;
+
+use anchor_specs::KindSpec;
 
 /// Token message kind (Custom(20))
 const TOKEN_KIND: u8 = 20;
@@ -187,11 +189,11 @@ impl Indexer {
                 continue;
             }
 
-            // Parse token operation
-            let operation = match TokenOperation::from_bytes(&message.body) {
-                Some(op) => op,
-                None => {
-                    debug!("Failed to parse token operation in tx {}", txid);
+            // Parse token operation using anchor-specs
+            let operation = match TokenSpec::from_bytes(&message.body) {
+                Ok(spec) => spec.operation,
+                Err(e) => {
+                    debug!("Failed to parse token operation in tx {}: {}", txid, e);
                     continue;
                 }
             };

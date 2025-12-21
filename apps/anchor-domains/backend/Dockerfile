@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y \
 # Copy workspace files
 COPY Cargo.toml Cargo.lock ./
 COPY crates/anchor-core ./crates/anchor-core
+COPY crates/anchor-specs ./crates/anchor-specs
 COPY apps/anchor-domains/backend ./apps/anchor-domains/backend
 
 # Create dummy files for other workspace members
@@ -62,30 +63,6 @@ RUN apt-get update && apt-get install -y \
 COPY --from=builder /app/target/release/anchor-domains-backend /app/anchor-domains-backend
 
 # Set environment variables
-ENV HOST=0.0.0.0
-ENV PORT=3006
-ENV RUST_LOG=anchor_domains_backend=info
-
-EXPOSE 3006
-
-CMD ["/app/anchor-domains-backend"]
-
-ENV HOST=0.0.0.0
-ENV PORT=3006
-ENV RUST_LOG=anchor_domains_backend=info
-
-EXPOSE 3006
-
-CMD ["/app/anchor-domains-backend"]
-
-ENV HOST=0.0.0.0
-ENV PORT=3006
-ENV RUST_LOG=anchor_domains_backend=info
-
-EXPOSE 3006
-
-CMD ["/app/anchor-domains-backend"]
-
 ENV HOST=0.0.0.0
 ENV PORT=3006
 ENV RUST_LOG=anchor_domains_backend=info

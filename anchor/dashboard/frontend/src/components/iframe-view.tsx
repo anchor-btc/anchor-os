@@ -17,45 +17,50 @@ import { cn } from "@/lib/utils";
 
 interface IframeViewProps {
   appId: string;
+  initialUrl?: string;
 }
 
-export function IframeView({ appId }: IframeViewProps) {
+export function IframeView({ appId, initialUrl }: IframeViewProps) {
   const router = useRouter();
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Find the app by ID
   const app = apps.find((a) => a.id === appId);
   const baseUrl = app?.url || "";
+  
+  // Use initialUrl if provided, otherwise use baseUrl
+  const startUrl = initialUrl || baseUrl;
 
   // URL and navigation state
-  const [currentUrl, setCurrentUrl] = useState(baseUrl);
-  const [inputUrl, setInputUrl] = useState(baseUrl);
+  const [currentUrl, setCurrentUrl] = useState(startUrl);
+  const [inputUrl, setInputUrl] = useState(startUrl);
   const [isLoading, setIsLoading] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
 
   // History for back/forward
-  const [history, setHistory] = useState<string[]>([baseUrl]);
+  const [history, setHistory] = useState<string[]>([startUrl]);
   const [historyIndex, setHistoryIndex] = useState(0);
 
   const canGoBack = historyIndex > 0;
   const canGoForward = historyIndex < history.length - 1;
 
-  // Reset state when appId changes
+  // Reset state when appId or initialUrl changes
   useEffect(() => {
     const newApp = apps.find((a) => a.id === appId);
     const newBaseUrl = newApp?.url || "";
+    const newStartUrl = initialUrl || newBaseUrl;
     
-    setCurrentUrl(newBaseUrl);
-    setInputUrl(newBaseUrl);
-    setHistory([newBaseUrl]);
+    setCurrentUrl(newStartUrl);
+    setInputUrl(newStartUrl);
+    setHistory([newStartUrl]);
     setHistoryIndex(0);
     setIsLoading(true);
     
     if (iframeRef.current) {
-      iframeRef.current.src = newBaseUrl;
+      iframeRef.current.src = newStartUrl;
     }
-  }, [appId]);
+  }, [appId, initialUrl]);
 
   // Listen for postMessage from iframe to get URL updates
   useEffect(() => {
@@ -84,7 +89,7 @@ export function IframeView({ appId }: IframeViewProps) {
 
   if (!app || !app.url) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-8rem)]">
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-5rem)]">
         <p className="text-muted-foreground mb-4">App not found or has no external URL</p>
         <button
           onClick={() => router.push("/")}
@@ -99,7 +104,7 @@ export function IframeView({ appId }: IframeViewProps) {
   // Handle apps that don't support iframe embedding
   if (app.supportsIframe === false) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-8rem)] gap-6">
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-5rem)] gap-6">
         <div className="flex flex-col items-center gap-3 text-center max-w-md">
           <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center">
             <ExternalLink className="w-8 h-8 text-muted-foreground" />
@@ -262,7 +267,7 @@ export function IframeView({ appId }: IframeViewProps) {
         "flex flex-col",
         isFullscreen
           ? "fixed inset-0 z-50 bg-background"
-          : "h-[calc(100vh-8rem)]"
+          : "h-[calc(100vh-5rem)]"
       )}
     >
       {/* Browser-like header bar */}

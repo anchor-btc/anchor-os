@@ -110,6 +110,22 @@ export interface DnsRecordInput {
   port?: number;
 }
 
+export interface PendingTransaction {
+  id: number;
+  txid: string;
+  domain_name: string;
+  operation: string;
+  records?: DnsRecordInput[];
+  carrier?: number;
+  created_at: string;
+}
+
+export interface PendingStatusResponse {
+  name: string;
+  has_pending: boolean;
+  pending?: PendingTransaction;
+}
+
 // API Functions
 
 export async function getStats(): Promise<DnsStats> {
@@ -221,6 +237,20 @@ export async function getDomainsByOwner(
   if (!res.ok) {
     throw new Error("Failed to fetch domains by owner");
   }
+  return res.json();
+}
+
+// Pending Transaction Functions
+
+export async function getPendingStatus(name: string): Promise<PendingStatusResponse> {
+  const res = await fetch(`${API_URL}/pending/${encodeURIComponent(name)}`);
+  if (!res.ok) throw new Error("Failed to fetch pending status");
+  return res.json();
+}
+
+export async function listPendingTransactions(): Promise<PendingTransaction[]> {
+  const res = await fetch(`${API_URL}/pending`);
+  if (!res.ok) throw new Error("Failed to fetch pending transactions");
   return res.json();
 }
 
