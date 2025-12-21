@@ -102,6 +102,6 @@ The Anchor Protocol powers several applications:
 - **[Anchor DNS](https://dns.anchor.dev)** - .bit domain registration
 - **[Anchor Proof](https://proof.anchor.dev)** - Document timestamping
 - **[Anchor Map](https://map.anchor.dev)** - Geographic markers
-- **[Anchor Pixel](https://pixel.anchor.dev)** - Collaborative canvas
+- **[Anchor Canvas](https://canvas.anchor.dev)** - Collaborative canvas
 
 

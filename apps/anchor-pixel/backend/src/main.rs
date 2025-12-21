@@ -1,4 +1,4 @@
-//! PixelMap Backend
+//! AnchorCanvas Backend
 //!
 //! A collaborative pixel canvas on Bitcoin using the Anchor protocol.
 //! This service provides:
@@ -28,7 +28,7 @@ use crate::canvas::CanvasManager;
 use crate::config::Config;
 use crate::db::Database;
 use crate::handlers::AppState;
-use crate::indexer::PixelIndexer;
+use crate::indexer::CanvasIndexer;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -36,14 +36,14 @@ async fn main() -> anyhow::Result<()> {
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| "pixelmap_backend=debug,tower_http=debug".into()),
+                .unwrap_or_else(|_| "anchor_canvas_backend=debug,tower_http=debug".into()),
         )
         .with(tracing_subscriber::fmt::layer())
         .init();
 
     // Load configuration
     let config = Config::from_env();
-    info!("Starting PixelMap Backend on {}:{}", config.host, config.port);
+    info!("Starting AnchorCanvas Backend on {}:{}", config.host, config.port);
 
     // Connect to database
     let db = Database::connect(&config.database_url).await?;
@@ -56,7 +56,7 @@ async fn main() -> anyhow::Result<()> {
     let state = Arc::new(AppState { db: db.clone(), canvas });
 
     // Start indexer in background
-    let indexer = Arc::new(PixelIndexer::new(db.clone(), config.clone())?);
+    let indexer = Arc::new(CanvasIndexer::new(db.clone(), config.clone())?);
     let indexer_clone = indexer.clone();
     tokio::spawn(async move {
         if let Err(e) = indexer_clone.start().await {
@@ -86,7 +86,7 @@ async fn main() -> anyhow::Result<()> {
     // Start server
     let addr = format!("{}:{}", config.host, config.port);
     let listener = tokio::net::TcpListener::bind(&addr).await?;
-    info!("PixelMap Backend listening on {}", addr);
+    info!("AnchorCanvas Backend listening on {}", addr);
 
     axum::serve(listener, app).await?;
 

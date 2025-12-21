@@ -62,7 +62,7 @@ async function fetchIndexerStats(): Promise<IndexerStats> {
 
 const kindIcons: Record<string, React.ElementType> = {
   Text: MessageSquare,
-  Pixel: Grid3X3,
+  Canvas: Grid3X3,
   Image: Image,
   Map: MapPin,
   DNS: Globe,
@@ -74,7 +74,7 @@ const kindIcons: Record<string, React.ElementType> = {
 
 const kindColors: Record<string, string> = {
   Text: "text-orange-500 bg-orange-500/10",
-  Pixel: "text-purple-500 bg-purple-500/10",
+  Canvas: "text-purple-500 bg-purple-500/10",
   Image: "text-pink-500 bg-pink-500/10",
   Map: "text-blue-500 bg-blue-500/10",
   DNS: "text-cyan-500 bg-cyan-500/10",

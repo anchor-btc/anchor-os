@@ -1,4 +1,4 @@
--- PixelMap Database Schema
+-- AnchorCanvas Database Schema
 -- A collaborative pixel canvas on Bitcoin using the Anchor protocol
 
 -- Canvas configuration

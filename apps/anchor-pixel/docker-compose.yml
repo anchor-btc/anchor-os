@@ -1,14 +1,14 @@
-# PixelMap - Standalone Docker Compose (Alternative)
+# AnchorCanvas - Standalone Docker Compose (Alternative)
 #
-# USE THIS ONLY if you want to run PixelMap independently.
+# USE THIS ONLY if you want to run AnchorCanvas independently.
 # 
 # RECOMMENDED: Use the main docker-compose.yml in the root directory instead:
 #   cd /path/to/anchor
 #   docker compose up -d
 #
-# This will start all Anchor services including PixelMap:
-#   - pixelmap-backend: http://localhost:3004
-#   - pixelmap-web: http://localhost:3005
+# This will start all Anchor services including AnchorCanvas:
+#   - anchor-canvas-backend: http://localhost:3004
+#   - anchor-canvas-web: http://localhost:3005
 #
 # =========================================================
 
@@ -16,13 +16,13 @@ services:
   # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
-    container_name: pixelmap-postgres
+    container_name: anchorcanvas-postgres
     environment:
       POSTGRES_USER: anchor
       POSTGRES_PASSWORD: anchor
       POSTGRES_DB: anchor
     volumes:
-      - pixelmap-postgres-data:/var/lib/postgresql/data
+      - anchorcanvas-postgres-data:/var/lib/postgresql/data
       - ../../docker/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
       - ../../docker/postgres/migrations:/docker-entrypoint-initdb.d/migrations:ro
     ports:
@@ -33,20 +33,20 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - pixelmap-network
+      - anchorcanvas-network
 
   # Bitcoin Core (regtest mode)
   bitcoin:
     build:
       context: ../../docker/bitcoin
       dockerfile: Dockerfile
-    container_name: pixelmap-bitcoin
+    container_name: anchorcanvas-bitcoin
     ports:
       - "18445:18443"
     volumes:
-      - pixelmap-bitcoin-data:/home/bitcoin/.bitcoin
+      - anchorcanvas-bitcoin-data:/home/bitcoin/.bitcoin
     networks:
-      - pixelmap-network
+      - anchorcanvas-network
     healthcheck:
       test: ["CMD", "bitcoin-cli", "-regtest", "-rpcuser=anchor", "-rpcpassword=anchor", "getblockchaininfo"]
       interval: 10s
@@ -58,7 +58,7 @@ services:
     build:
       context: ../../
       dockerfile: crates/anchor-wallet/Dockerfile
-    container_name: pixelmap-wallet
+    container_name: anchorcanvas-wallet
     environment:
       HOST: 0.0.0.0
       PORT: 3001
@@ -73,19 +73,19 @@ services:
       bitcoin:
         condition: service_healthy
     networks:
-      - pixelmap-network
+      - anchorcanvas-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # PixelMap Backend (API + Indexer)
+  # AnchorCanvas Backend (API + Indexer)
   backend:
     build:
       context: ../../
-      dockerfile: apps/pixelmap/backend/Dockerfile
-    container_name: pixelmap-backend
+      dockerfile: apps/anchor-pixel/backend/Dockerfile
+    container_name: anchorcanvas-backend
     environment:
       HOST: 0.0.0.0
       PORT: 3003
@@ -95,7 +95,7 @@ services:
       BITCOIN_RPC_PASSWORD: anchor
       WALLET_URL: http://wallet:3001
       POLL_INTERVAL_SECS: 5
-      RUST_LOG: pixelmap_backend=info
+      RUST_LOG: anchor_canvas_backend=info
     ports:
       - "3004:3003"
     depends_on:
@@ -106,19 +106,19 @@ services:
       wallet:
         condition: service_healthy
     networks:
-      - pixelmap-network
+      - anchorcanvas-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3003/health"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # PixelMap Frontend
+  # AnchorCanvas Frontend
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: pixelmap-frontend
+    container_name: anchorcanvas-frontend
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:3004
       NEXT_PUBLIC_WALLET_URL: http://localhost:3001
@@ -128,12 +128,12 @@ services:
       backend:
         condition: service_healthy
     networks:
-      - pixelmap-network
+      - anchorcanvas-network
 
 volumes:
-  pixelmap-postgres-data:
-  pixelmap-bitcoin-data:
+  anchorcanvas-postgres-data:
+  anchorcanvas-bitcoin-data:
 
 networks:
-  pixelmap-network:
+  anchorcanvas-network:
     driver: bridge

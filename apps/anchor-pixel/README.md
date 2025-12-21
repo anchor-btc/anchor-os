@@ -1,17 +1,17 @@
-# PixelMap
+# AnchorCanvas
 
 A collaborative pixel canvas on Bitcoin using the Anchor protocol. Similar to Reddit Place, but permanent and decentralized on the Bitcoin blockchain.
 
 ## Overview
 
-PixelMap allows users to paint pixels on a shared canvas by creating Bitcoin transactions. Each pixel is permanently recorded on the blockchain, creating a collaborative artwork that lives forever.
+AnchorCanvas allows users to paint pixels on a shared canvas by creating Bitcoin transactions. Each pixel is permanently recorded on the blockchain, creating a collaborative artwork that lives forever.
 
 - **Canvas Size**: 4580 x 4580 (~21 million pixels - Bitcoin's magic number)
 - **Protocol**: Uses Anchor protocol with State messages (kind = 2)
 
 ### Multi-Carrier Support
 
-PixelMap supports multiple carriers for embedding pixel data, allowing from small edits to massive drawings:
+AnchorCanvas supports multiple carriers for embedding pixel data, allowing from small edits to massive drawings:
 
 | Carrier | Max Size | ~Max Pixels | Best For |
 |---------|----------|-------------|----------|
@@ -25,11 +25,11 @@ This means you can paint an image up to **~746 x 746 pixels** in a single transa
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     PixelMap Stack                          │
+│                    AnchorCanvas Stack                        │
 ├─────────────────────────────────────────────────────────────┤
 │  ┌──────────────────┐  ┌──────────────────┐                 │
 │  │  Next.js Frontend│  │    REST API      │                 │
-│  │     (port 3005)  │  │   (port 3004)    │                 │
+│  │     (port 3200)  │  │   (port 3201)    │                 │
 │  └────────┬─────────┘  └────────┬─────────┘                 │
 │           │                     │                           │
 │           └──────────┬──────────┘                           │
@@ -53,67 +53,67 @@ This means you can paint an image up to **~746 x 746 pixels** in a single transa
 
 ## Features
 
-### 🎨 Canvas Tools
+### Canvas Tools
 - **Paint Tool** - Select and paint pixels with any color
 - **Brush Tool** - Adjustable brush size (1-21 pixels)
 - **Erase Tool** - Remove pixels from selection
 - **Pan & Zoom** - Navigate the massive canvas
 
-### 🖼️ Image Import
+### Image Import
 - Upload images and convert them to pixels
 - **Resize presets**: Tiny (32px) to XL (512px) or custom
 - **Interactive preview**: Drag to position before painting
 - **Threshold control**: Skip dark/transparent pixels
 - Real-time fee estimation
 
-### ⚡ Smart Carrier Selection
+### Smart Carrier Selection
 - Automatic carrier selection based on payload size
 - Manual override: choose OP_RETURN, Witness Data, or Inscription
 - See estimated fees and TX size before painting
 
-### 💰 Dynamic Fee Control
+### Dynamic Fee Control
 - Adjustable fee rate (1-100+ sat/vB)
 - Preset buttons: 1, 2, 5, 10, 25, 50 sat/vB
 - Fee updates in real-time as you select pixels
 
-### 🔄 Pending Pixels
+### Pending Pixels
 - Pixels stay visible after TX broadcast
 - Pulsing animation while waiting for confirmation
 - Auto-clears when indexed by the backend
-- "⏳ X pending" indicator on canvas
+- "X pending" indicator on canvas
 
 ## Quick Start
 
 ### Run with Main Anchor Stack (Recommended)
 
-PixelMap is integrated into the main Anchor docker-compose. This shares Bitcoin, PostgreSQL, and Wallet services:
+AnchorCanvas is integrated into the main Anchor docker-compose. This shares Bitcoin, PostgreSQL, and Wallet services:
 
 ```bash
 # From the anchor root directory
 docker compose up -d
 
-# View pixelmap logs
-docker compose logs -f pixelmap-backend pixelmap-web
+# View anchorcanvas logs
+docker compose logs -f app-pixel-backend app-pixel-frontend
 ```
 
 | Service | Port | Description |
 |---------|------|-------------|
-| PixelMap Frontend | 3005 | Web interface |
-| PixelMap Backend | 3004 | REST API & Indexer |
-| Wallet API | 3001 | Transaction creation (shared) |
-| Explorer | 3000 | Anchor Explorer (shared) |
+| AnchorCanvas Frontend | 3200 | Web interface |
+| AnchorCanvas Backend | 3201 | REST API & Indexer |
+| Wallet API | 8001 | Transaction creation (shared) |
+| Dashboard | 3000 | Anchor Dashboard (shared) |
 | PostgreSQL | 5432 | Database (shared) |
 | Bitcoin RPC | 18443 | Bitcoin Core (shared) |
 
-**Access PixelMap:** [http://localhost:3005](http://localhost:3005)
+**Access AnchorCanvas:** [http://localhost:3200](http://localhost:3200)
 
 ## Protocol Specification
 
-PixelMap uses the **Anchor Protocol** to embed pixel data in Bitcoin transactions. This section documents the complete schema so developers can build compatible wallets and tools.
+AnchorCanvas uses the **Anchor Protocol** to embed pixel data in Bitcoin transactions. This section documents the complete schema so developers can build compatible wallets and tools.
 
 ### Anchor Message Structure
 
-Every PixelMap transaction is an Anchor protocol message with `kind = 2` (State):
+Every AnchorCanvas transaction is an Anchor protocol message with `kind = 2` (State):
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -132,7 +132,7 @@ Every PixelMap transaction is an Anchor protocol message with `kind = 2` (State)
 | Kind | 1 byte | `0x02` | State message (used for pixel data) |
 | Anchor Count | 1 byte | `0x00-0xFF` | Number of parent references (usually 0) |
 | Anchors | 9 × N bytes | - | Optional parent txid prefixes (for replies) |
-| Body | variable | - | PixelMap pixel payload |
+| Body | variable | - | AnchorCanvas pixel payload |
 
 ### Pixel Payload Format
 
@@ -211,7 +211,7 @@ const pixels = [
 
 ### Carrier Selection
 
-PixelMap supports multiple carriers for embedding data. Choose based on your needs:
+AnchorCanvas supports multiple carriers for embedding data. Choose based on your needs:
 
 | Carrier | ID | Max Payload | Max Pixels | Fee Efficiency | Use Case |
 |---------|-----|-------------|------------|----------------|----------|
@@ -232,10 +232,10 @@ payload_size = 6 + (4 + num_pixels * 7)
 
 ### API Integration
 
-To create a PixelMap transaction via the Wallet API:
+To create an AnchorCanvas transaction via the Wallet API:
 
 ```bash
-curl -X POST http://localhost:3001/wallet/create-message \
+curl -X POST http://localhost:8001/wallet/create-message \
   -H "Content-Type: application/json" \
   -d '{
     "kind": 2,
@@ -249,7 +249,7 @@ curl -X POST http://localhost:3001/wallet/create-message \
 **Request body:**
 | Field | Type | Description |
 |-------|------|-------------|
-| `kind` | number | Must be `2` (State) for PixelMap |
+| `kind` | number | Must be `2` (State) for AnchorCanvas |
 | `body` | string | Hex-encoded pixel payload |
 | `body_is_hex` | boolean | Must be `true` |
 | `carrier` | number | 0=OP_RETURN, 1=Inscription, 4=WitnessData |
@@ -306,7 +306,7 @@ fn parse_pixel_payload(body: &[u8]) -> Vec<Pixel> {
 import struct
 
 def encode_pixel_payload(pixels):
-    """Encode pixels to bytes for PixelMap protocol."""
+    """Encode pixels to bytes for AnchorCanvas protocol."""
     data = struct.pack('>I', len(pixels))  # Big-endian u32
     for p in pixels:
         data += struct.pack('>HH', p['x'], p['y'])  # Big-endian u16
@@ -337,7 +337,7 @@ print(payload.hex())  # 00000001006400c8ff0000
 ### Backend (Rust)
 
 ```bash
-cd apps/pixelmap/backend
+cd apps/anchor-pixel/backend
 cargo build
 cargo run
 ```
@@ -350,14 +350,14 @@ Environment variables:
 ### Frontend (Next.js)
 
 ```bash
-cd apps/pixelmap/frontend
+cd apps/anchor-pixel/frontend
 npm install
 npm run dev
 ```
 
 Environment variables:
-- `NEXT_PUBLIC_API_URL` - PixelMap backend URL (default: http://localhost:3004)
-- `NEXT_PUBLIC_WALLET_URL` - Wallet API URL (default: http://localhost:3001)
+- `NEXT_PUBLIC_API_URL` - AnchorCanvas backend URL (default: http://localhost:3201)
+- `NEXT_PUBLIC_WALLET_URL` - Wallet API URL (default: http://localhost:8001)
 
 ## How It Works
 
@@ -389,7 +389,7 @@ Environment variables:
 
 ## Building Your Own Wallet
 
-You can create your own PixelMap-compatible wallet using any Bitcoin library. Here's what you need:
+You can create your own AnchorCanvas-compatible wallet using any Bitcoin library. Here's what you need:
 
 ### Minimal Implementation Checklist
 
@@ -408,7 +408,7 @@ You can create your own PixelMap-compatible wallet using any Bitcoin library. He
 PAYLOAD="00000001006400c8ff0000"
 
 # 2. Create transaction via Wallet API
-curl -s -X POST http://localhost:3001/wallet/create-message \
+curl -s -X POST http://localhost:8001/wallet/create-message \
   -H "Content-Type: application/json" \
   -d "{\"kind\": 2, \"body\": \"$PAYLOAD\", \"body_is_hex\": true}" | jq .
 

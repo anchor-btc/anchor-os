@@ -259,7 +259,7 @@ createMarker(
 
 ## Pixel Canvas Update
 
-Paint pixels on Anchor Pixel:
+Paint pixels on Anchor Canvas:
 
 ```typescript
 import { encodePixelPayload } from '@AnchorProtocol/anchor-sdk/pixel'

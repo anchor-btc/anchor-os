@@ -1,13 +1,13 @@
 [package]
-name = "pixelmap-backend"
+name = "anchor-canvas-backend"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 authors.workspace = true
-description = "Backend API and indexer for the PixelMap collaborative canvas on Bitcoin"
+description = "Backend API and indexer for the AnchorCanvas collaborative canvas on Bitcoin"
 
 [[bin]]
-name = "pixelmap-backend"
+name = "anchor-canvas-backend"
 path = "src/main.rs"
 
 [dependencies]

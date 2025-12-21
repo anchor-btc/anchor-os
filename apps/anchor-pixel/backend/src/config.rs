@@ -1,4 +1,4 @@
-//! Configuration for the PixelMap backend
+//! Configuration for the AnchorCanvas backend
 
 use std::env;
 
@@ -41,7 +41,7 @@ impl Config {
 
         Self {
             database_url: env::var("DATABASE_URL")
-                .unwrap_or_else(|_| "postgres://postgres:postgres@localhost:5432/pixelmap".to_string()),
+                .unwrap_or_else(|_| "postgres://postgres:postgres@localhost:5432/anchor".to_string()),
             bitcoin_rpc_url: env::var("BITCOIN_RPC_URL")
                 .unwrap_or_else(|_| "http://127.0.0.1:18443".to_string()),
             bitcoin_rpc_user: env::var("BITCOIN_RPC_USER")

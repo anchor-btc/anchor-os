@@ -1,4 +1,4 @@
-//! HTTP request handlers for the PixelMap API
+//! HTTP request handlers for the AnchorCanvas API
 
 use axum::{
     body::Body,
@@ -33,7 +33,7 @@ pub struct AppState {
 pub async fn health() -> Json<HealthResponse> {
     Json(HealthResponse {
         status: "ok".to_string(),
-        service: "pixelmap-backend".to_string(),
+        service: "anchor-canvas-backend".to_string(),
     })
 }
 

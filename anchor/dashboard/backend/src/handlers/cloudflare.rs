@@ -327,7 +327,7 @@ pub async fn get_exposable_services(
             port: 3300,
         },
         ExposableService {
-            name: "Anchor Pixel".to_string(),
+            name: "Anchor Canvas".to_string(),
             description: "Pixel art canvas on Bitcoin".to_string(),
             local_url: "http://app-pixel-frontend:3200".to_string(),
             port: 3200,

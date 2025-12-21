@@ -1,6 +1,6 @@
 # Kind 2: State
 
-The **State** kind is used for application state updates. It's designed for applications that need to track changes over time, such as Anchor Pixel's collaborative canvas.
+The **State** kind is used for application state updates. It's designed for applications that need to track changes over time, such as Anchor Canvas's collaborative canvas.
 
 ## Overview
 
@@ -21,7 +21,7 @@ The payload format is application-specific. The base State kind defines a minima
 
 ### Pixel State Format (Example)
 
-Used by Anchor Pixel for canvas updates:
+Used by Anchor Canvas for canvas updates:
 
 | Offset | Field | Type | Description |
 |--------|-------|------|-------------|
@@ -290,6 +290,6 @@ const increment = createMessage({
 
 - [Vote (Kind 3)](/kinds/vote) - For governance voting
 - [Pixel Encoder](/sdk/encoding#pixel) - Full encoder docs
-- [Anchor Pixel](https://pixel.anchor.dev) - Live application
+- [Anchor Canvas](https://canvas.anchor.dev) - Live application
 
 

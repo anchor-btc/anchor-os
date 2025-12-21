@@ -104,7 +104,7 @@ export const apps: App[] = [
   },
   {
     id: "app-pixel",
-    name: "Anchor Pixel",
+    name: "Anchor Canvas",
     description: "Collaborative pixel canvas powered by Bitcoin transactions",
     descriptionKey: "appDescriptions.app-pixel",
     icon: "Grid3X3",

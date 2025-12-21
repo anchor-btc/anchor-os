@@ -634,7 +634,7 @@ services:
       BITCOIN_RPC_PASSWORD: anchor
       WALLET_URL: http://core-wallet:8001
       POLL_INTERVAL_SECS: 5
-      RUST_LOG: pixelmap_backend=info
+      RUST_LOG: anchor_canvas_backend=info
     depends_on:
       core-postgres:
         condition: service_healthy

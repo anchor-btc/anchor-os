@@ -47,7 +47,7 @@ pub struct CarrierCount {
 fn get_kind_name(kind: i32) -> String {
     match kind {
         1 => "Text".to_string(),
-        2 => "Pixel".to_string(),
+        2 => "Canvas".to_string(),
         3 => "Image".to_string(),
         4 => "Map".to_string(),
         5 => "DNS".to_string(),

@@ -1,4 +1,4 @@
-//! Data models for the PixelMap API
+//! Data models for the AnchorCanvas API
 
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;

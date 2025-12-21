@@ -398,7 +398,7 @@ fn get_all_services() -> Vec<ServiceDefinition> {
         },
         ServiceDefinition {
             id: "app-pixel".to_string(),
-            name: "Anchor Pixel".to_string(),
+            name: "Anchor Canvas".to_string(),
             description: "Collaborative pixel canvas powered by Bitcoin".to_string(),
             category: ServiceCategory::App,
             docker_profiles: vec!["full".to_string(), "app-pixel".to_string()],

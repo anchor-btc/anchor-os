@@ -270,7 +270,7 @@ export default function Home() {
 
       {/* Footer stats bar */}
       <div className="h-8 bg-secondary/80 border-t border-gray-800 flex items-center px-4 text-xs text-gray-500">
-        <span>PixelMap v0.1.0</span>
+        <span>AnchorCanvas v0.1.0</span>
         <span className="mx-2">•</span>
         <span>Canvas: 4580 x 4580</span>
         <span className="mx-2">•</span>

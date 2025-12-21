@@ -4,7 +4,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "PixelMap - Bitcoin Canvas",
+  title: "AnchorCanvas - Bitcoin Canvas",
   description: "A collaborative pixel canvas on Bitcoin. Paint pixels, own them forever.",
   icons: {
     icon: "/favicon.ico",

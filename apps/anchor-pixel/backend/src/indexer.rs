@@ -1,4 +1,4 @@
-//! PixelMap transaction indexer
+//! AnchorCanvas transaction indexer
 //!
 //! Scans the Bitcoin blockchain for Anchor protocol transactions
 //! that contain pixel data (kind = State/2) and updates the database.
@@ -58,15 +58,15 @@ pub fn parse_pixel_payload(body: &[u8]) -> Result<Vec<Pixel>> {
     Ok(pixels)
 }
 
-/// PixelMap indexer that scans the blockchain for pixel transactions
-pub struct PixelIndexer {
+/// AnchorCanvas indexer that scans the blockchain for pixel transactions
+pub struct CanvasIndexer {
     db: Database,
     rpc: Client,
     config: Config,
     running: Arc<RwLock<bool>>,
 }
 
-impl PixelIndexer {
+impl CanvasIndexer {
     /// Create a new indexer
     pub fn new(db: Database, config: Config) -> Result<Self> {
         let auth = Auth::UserPass(config.bitcoin_rpc_user.clone(), config.bitcoin_rpc_password.clone());
@@ -90,7 +90,7 @@ impl PixelIndexer {
             *running = true;
         }
 
-        info!("Starting PixelMap indexer");
+        info!("Starting AnchorCanvas indexer");
 
         loop {
             if !*self.running.read().await {
@@ -104,7 +104,7 @@ impl PixelIndexer {
             sleep(Duration::from_secs(self.config.poll_interval_secs)).await;
         }
 
-        info!("PixelMap indexer stopped");
+        info!("AnchorCanvas indexer stopped");
         Ok(())
     }
 

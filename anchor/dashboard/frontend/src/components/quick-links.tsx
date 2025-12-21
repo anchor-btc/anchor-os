@@ -33,9 +33,9 @@ const links = [
     color: "yellow",
   },
   {
-    name: "PixelMap",
+    name: "AnchorCanvas",
     description: "Collaborative Bitcoin canvas",
-    href: "http://localhost:3005",
+    href: "http://localhost:3200",
     icon: Grid3X3,
     color: "purple",
   },

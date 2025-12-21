@@ -60,10 +60,10 @@ export default function DocsPage() {
         {/* Hero */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-white mb-4">
-            PixelMap <span className="text-primary">Protocol</span>
+            AnchorCanvas <span className="text-primary">Protocol</span>
           </h1>
           <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-            Build your own PixelMap-compatible wallet or tool. This documentation covers the complete
+            Build your own AnchorCanvas-compatible wallet or tool. This documentation covers the complete
             schema for encoding and decoding pixel data on Bitcoin.
           </p>
         </div>
@@ -131,7 +131,7 @@ export default function DocsPage() {
               Anchor Message Format
             </h2>
             <p className="text-gray-400 mb-4">
-              PixelMap uses the <strong className="text-white">Anchor Protocol</strong> to embed data in Bitcoin transactions.
+              AnchorCanvas uses the <strong className="text-white">Anchor Protocol</strong> to embed data in Bitcoin transactions.
               Each message has the following structure:
             </p>
             <CodeBlock code={`┌─────────────────────────────────────────────────────────────────────────┐
@@ -280,7 +280,7 @@ Each Pixel (7 bytes):
               Carrier Selection
             </h2>
             <p className="text-gray-400 mb-4">
-              PixelMap supports multiple Bitcoin transaction carriers. Choose based on your payload size and fee preferences:
+              AnchorCanvas supports multiple Bitcoin transaction carriers. Choose based on your payload size and fee preferences:
             </p>
             <div className="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
               <table className="w-full">
@@ -404,7 +404,7 @@ console.log(Buffer.from(payload).toString('hex'));
               <CodeBlock language="python" code={`import struct
 
 def encode_pixel_payload(pixels):
-    """Encode pixels to bytes for PixelMap protocol."""
+    """Encode pixels to bytes for AnchorCanvas protocol."""
     data = struct.pack('>I', len(pixels))  # Big-endian u32
     for p in pixels:
         data += struct.pack('>HH', p['x'], p['y'])  # Big-endian u16
@@ -450,7 +450,7 @@ print(payload.hex())
               API Integration
             </h2>
             <p className="text-gray-400 mb-4">
-              Create a PixelMap transaction via the Wallet API:
+              Create an AnchorCanvas transaction via the Wallet API:
             </p>
             <CodeBlock language="bash" code={`curl -X POST http://localhost:3001/wallet/create-message \\
   -H "Content-Type: application/json" \\
@@ -475,7 +475,7 @@ print(payload.hex())
                   <tr>
                     <td className="px-4 py-3 text-white font-mono">kind</td>
                     <td className="px-4 py-3 text-gray-300">number</td>
-                    <td className="px-4 py-3 text-gray-400">Must be <code className="text-primary">2</code> (State) for PixelMap</td>
+                    <td className="px-4 py-3 text-gray-400">Must be <code className="text-primary">2</code> (State) for AnchorCanvas</td>
                   </tr>
                   <tr>
                     <td className="px-4 py-3 text-white font-mono">body</td>
@@ -523,7 +523,7 @@ print(payload.hex())
         {/* Footer */}
         <footer className="mt-16 pt-8 border-t border-gray-800 text-center">
           <p className="text-gray-500">
-            PixelMap is part of the{" "}
+            AnchorCanvas is part of the{" "}
             <a href="https://github.com/AnchorProtocol" className="text-primary hover:underline">
               Anchor Protocol
             </a>{" "}

@@ -34,7 +34,7 @@ export function Header() {
             </div>
             <div>
               <h1 className="text-xl font-bold text-white tracking-tight">
-                Pixel<span className="text-primary">Map</span>
+                Anchor<span className="text-primary">Canvas</span>
               </h1>
               <p className="text-xs text-gray-500">Bitcoin Canvas</p>
             </div>
