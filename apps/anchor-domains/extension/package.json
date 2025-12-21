@@ -1,0 +1,10 @@
+{
+  "name": "anchor-domains-extension",
+  "version": "2.0.0",
+  "description": "Anchor Domains Chrome Extension - Resolve .btc, .sat, .anchor, .anc, .bit domains from Bitcoin blockchain",
+  "scripts": {
+    "build": "mkdir -p dist && cp -r manifest.json background.js popup.html popup.js icons dist/",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {}
+}

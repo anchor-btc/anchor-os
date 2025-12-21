@@ -1,0 +1,23 @@
+# Cargo configuration for the ANCHOR workspace
+# This enables stricter linting across all crates
+
+[build]
+# Uncomment to treat warnings as errors in CI:
+# rustflags = ["-D", "warnings"]
+
+[target.'cfg(all())']
+rustflags = [
+    # Enable more warnings
+    "-W", "unused_variables",
+    "-W", "unused_imports", 
+    "-W", "dead_code",
+    "-W", "unused_mut",
+    "-W", "unreachable_code",
+]
+
+[alias]
+# Convenient aliases for linting
+lint = "clippy --workspace --all-targets"
+lint-fix = "clippy --workspace --all-targets --fix --allow-dirty"
+fix-all = "fix --workspace --allow-dirty"
+

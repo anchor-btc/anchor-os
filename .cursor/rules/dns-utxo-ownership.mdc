@@ -1,0 +1,142 @@
+---
+description: DNS Domain UTXO Ownership Model - Critical rules for handling domain ownership UTXOs
+globs:
+  - "apps/anchor-dns/**"
+  - "crates/anchor-wallet/**"
+alwaysApply: false
+---
+
+# DNS Domain UTXO Ownership Model
+
+This document explains the critical ownership model for Anchor DNS domains and the UTXO locking mechanism that protects domain ownership.
+
+## Overview
+
+When a DNS domain is registered on the Anchor Protocol, a Bitcoin transaction is created. The TXID and VOUT of this transaction become the **ownership proof** for the domain. This UTXO MUST be protected from accidental spending.
+
+## Ownership Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         DNS DOMAIN OWNERSHIP FLOW                           │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  1. REGISTRATION                                                            │
+│     User registers "example.btc"                                            │
+│     → TX created: abc123...                                                 │
+│     → owner_txid = abc123:0                                                 │
+│     → UTXO abc123:0 is AUTO-LOCKED in wallet                               │
+│                                                                             │
+│  2. PROTECTION                                                              │
+│     Wallet excludes locked UTXOs from coin selection                        │
+│     → Normal transactions CANNOT spend domain UTXOs                         │
+│     → Domain ownership is protected                                         │
+│                                                                             │
+│  3. UPDATE (only through DNS app)                                           │
+│     User updates DNS records                                                │
+│     → DNS backend requests update with unlock_for_dns=true                  │
+│     → Wallet temporarily unlocks the domain UTXO                            │
+│     → New TX created spending the owner UTXO (cryptographic proof!)         │
+│     → New TX becomes new owner_txid                                         │
+│     → New UTXO is auto-locked                                               │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+## Critical Rules
+
+### 1. NEVER spend locked Domain UTXOs except through DNS update
+
+Domain UTXOs are locked with `LockReason::Domain { name }`. They should ONLY be spent when:
+- The user initiates a DNS update through the Anchor DNS app
+- The `unlock_for_dns: true` flag is passed to the wallet
+
+```rust
+// CORRECT: DNS update flow
+{
+    "kind": 10,  // DNS kind
+    "unlock_for_dns": true,
+    "domain_name": "example.btc",
+    "required_inputs": [{ "txid": "owner_txid", "vout": 0 }]
+}
+
+// WRONG: Normal transaction spending domain UTXO
+// This should be blocked by the lock mechanism!
+```
+
+### 2. Always include owner UTXO as required_input for updates
+
+When updating a domain, the owner UTXO MUST be spent as an input. This provides cryptographic proof of ownership:
+
+```rust
+// The anchor references the owner for indexer verification
+"additional_anchors": [{ "txid": owner_txid, "vout": owner_vout }]
+
+// The required_input SPENDS the owner UTXO (cryptographic proof)
+"required_inputs": [{ "txid": owner_txid, "vout": owner_vout }]
+```
+
+### 3. Transfer domain lock after successful update
+
+After a successful DNS update transaction:
+1. The old owner UTXO lock is removed
+2. The new transaction output becomes the new owner_txid
+3. The new UTXO is automatically locked
+
+```rust
+state.lock_manager.transfer_domain_lock(
+    domain_name,
+    old_txid, old_vout,
+    new_txid, new_vout
+)
+```
+
+### 4. Indexer updates owner_txid on successful updates
+
+The indexer uses `update_domain_with_new_owner()` which updates BOTH:
+- The domain records
+- The `owner_txid` and `owner_vout` fields
+
+This ensures future updates reference the new ownership UTXO.
+
+## Key Files
+
+| File | Purpose |
+|------|---------|
+| `crates/anchor-wallet/src/locked.rs` | LockManager implementation |
+| `crates/anchor-wallet/src/handlers.rs` | Wallet API with DNS unlock support |
+| `apps/anchor-dns/backend/src/handlers.rs` | DNS update flow with required_inputs |
+| `apps/anchor-dns/backend/src/indexer.rs` | Indexer with ownership transfer |
+| `apps/anchor-dns/backend/src/db.rs` | Database with update_domain_with_new_owner |
+
+## Lock Reasons
+
+```rust
+pub enum LockReason {
+    Manual,                              // User manually locked
+    Domain { name: String },             // DNS domain ownership UTXO
+    Token { ticker, amount },            // Token balance UTXO
+    Asset { asset_type, asset_id },      // Generic asset UTXO
+}
+```
+
+## Security Guarantees
+
+1. **Cryptographic Ownership**: Only the holder of the private key for the owner UTXO can update the domain
+2. **Accidental Spending Prevention**: Locked UTXOs are excluded from automatic coin selection
+3. **Ownership Transfer**: Each update transfers ownership to a new UTXO
+4. **Verification**: Indexer verifies anchor matches owner_txid before accepting updates
+
+## What Happens If...
+
+### Q: The wallet accidentally spends my domain UTXO?
+A: With the lock mechanism, this cannot happen. Domain UTXOs are locked and excluded from coin selection.
+
+### Q: Someone tries to update my domain without my key?
+A: They cannot spend the owner UTXO without the private key. The Bitcoin network rejects invalid signatures.
+
+### Q: My domain UTXO is spent but not through DNS update?
+A: The domain becomes permanently locked (no further updates possible). This is why we lock domain UTXOs!
+
+### Q: I want to transfer my domain to someone else?
+A: Use the Transfer operation (DnsOperation::Transfer) which changes the owner to a new address. [Note: Transfer is not fully implemented yet]

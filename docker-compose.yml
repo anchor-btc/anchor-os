@@ -99,7 +99,12 @@ services:
       WALLET_NAME: anchor_wallet
       HOST: 0.0.0.0
       PORT: 8001
+      ANCHOR_DOMAINS_URL: http://app-domains-backend:3401
+      ANCHOR_TOKENS_URL: http://app-tokens-backend:3501
+      ANCHOR_DATA_DIR: /data
       RUST_LOG: info
+    volumes:
+      - wallet-data:/data
     depends_on:
       core-bitcoin:
         condition: service_healthy
@@ -675,11 +680,11 @@ services:
       - app-pixel
 
   # Anchor Map - Bitcoin-Powered Map Markers
-  app-map-backend:
+  app-places-backend:
     build:
       context: .
-      dockerfile: apps/anchor-map/backend/Dockerfile
-    container_name: anchor-app-map-backend
+      dockerfile: apps/anchor-places/backend/Dockerfile
+    container_name: anchor-app-places-backend
     ports:
       - "3301:3301"
     environment:
@@ -709,34 +714,34 @@ services:
     restart: unless-stopped
     profiles:
       - full
-      - app-map
+      - app-places
 
-  app-map-frontend:
+  app-places-frontend:
     build:
-      context: ./apps/anchor-map/frontend
+      context: ./apps/anchor-places/frontend
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_URL: http://localhost:3301
         NEXT_PUBLIC_WALLET_URL: http://localhost:8001
-    container_name: anchor-app-map-frontend
+    container_name: anchor-app-places-frontend
     ports:
       - "3300:3300"
     depends_on:
-      app-map-backend:
+      app-places-backend:
         condition: service_healthy
     networks:
       - anchor-network
     restart: unless-stopped
     profiles:
       - full
-      - app-map
+      - app-places
 
   # Anchor DNS - Decentralized DNS on Bitcoin
-  app-dns-backend:
+  app-domains-backend:
     build:
       context: .
-      dockerfile: apps/anchor-dns/backend/Dockerfile
-    container_name: anchor-app-dns-backend
+      dockerfile: apps/anchor-domains/backend/Dockerfile
+    container_name: anchor-app-domains-backend
     ports:
       - "3401:3401"
     environment:
@@ -748,7 +753,7 @@ services:
       BITCOIN_RPC_PASSWORD: anchor
       WALLET_URL: http://core-wallet:8001
       POLL_INTERVAL_SECS: 5
-      RUST_LOG: bitdns_backend=info
+      RUST_LOG: anchor_domains_backend=info
     depends_on:
       core-postgres:
         condition: service_healthy
@@ -766,27 +771,27 @@ services:
     restart: unless-stopped
     profiles:
       - full
-      - app-dns
+      - app-domains
 
-  app-dns-frontend:
+  app-domains-frontend:
     build:
-      context: ./apps/anchor-dns/frontend
+      context: ./apps/anchor-domains/frontend
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_URL: http://localhost:3401
         NEXT_PUBLIC_WALLET_URL: http://localhost:8001
-    container_name: anchor-app-dns-frontend
+    container_name: anchor-app-domains-frontend
     ports:
       - "3400:3400"
     depends_on:
-      app-dns-backend:
+      app-domains-backend:
         condition: service_healthy
     networks:
       - anchor-network
     restart: unless-stopped
     profiles:
       - full
-      - app-dns
+      - app-domains
 
   # Anchor Proof - Proof of Existence
   app-proof-backend:
@@ -1027,16 +1032,16 @@ services:
       - anchor-landing-os
 
   # Anchor Lottery - Trustless Lottery with DLC Payouts
-  app-lottery-postgres:
+  app-predictions-postgres:
     image: postgres:16-alpine
-    container_name: anchor-app-lottery-postgres
+    container_name: anchor-app-predictions-postgres
     environment:
       POSTGRES_USER: anchor
       POSTGRES_PASSWORD: anchor
       POSTGRES_DB: anchor_lottery
     volumes:
       - lottery-postgres-data:/var/lib/postgresql/data
-      - ./apps/anchor-lottery/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - ./apps/anchor-predictions/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U anchor -d anchor_lottery"]
       interval: 5s
@@ -1047,19 +1052,19 @@ services:
     restart: unless-stopped
     profiles:
       - full
-      - app-lottery
+      - app-predictions
 
-  app-lottery-backend:
+  app-predictions-backend:
     build:
       context: .
-      dockerfile: apps/anchor-lottery/backend/Dockerfile
-    container_name: anchor-app-lottery-backend
+      dockerfile: apps/anchor-predictions/backend/Dockerfile
+    container_name: anchor-app-predictions-backend
     ports:
       - "3801:3801"
     environment:
       HOST: 0.0.0.0
       PORT: 3801
-      DATABASE_URL: postgres://anchor:anchor@app-lottery-postgres:5432/anchor_lottery
+      DATABASE_URL: postgres://anchor:anchor@app-predictions-postgres:5432/anchor_lottery
       BITCOIN_RPC_URL: http://core-bitcoin:18443
       BITCOIN_RPC_USER: anchor
       BITCOIN_RPC_PASSWORD: anchor
@@ -1067,7 +1072,7 @@ services:
       ORACLE_SERVICE_URL: http://app-oracles-backend:3701
       RUST_LOG: anchor_lottery_backend=info
     depends_on:
-      app-lottery-postgres:
+      app-predictions-postgres:
         condition: service_healthy
       core-bitcoin:
         condition: service_healthy
@@ -1083,26 +1088,26 @@ services:
     restart: unless-stopped
     profiles:
       - full
-      - app-lottery
+      - app-predictions
 
-  app-lottery-frontend:
+  app-predictions-frontend:
     build:
-      context: ./apps/anchor-lottery/frontend
+      context: ./apps/anchor-predictions/frontend
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_URL: http://localhost:3801
-    container_name: anchor-app-lottery-frontend
+    container_name: anchor-app-predictions-frontend
     ports:
       - "3800:3800"
     depends_on:
-      app-lottery-backend:
+      app-predictions-backend:
         condition: service_healthy
     networks:
       - anchor-network
     restart: unless-stopped
     profiles:
       - full
-      - app-lottery
+      - app-predictions
 
 volumes:
   bitcoin-data:
@@ -1119,6 +1124,7 @@ volumes:
   netdata-config:
   netdata-lib:
   netdata-cache:
+  wallet-data:
 
 networks:
   anchor-network:

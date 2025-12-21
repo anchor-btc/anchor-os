@@ -3,7 +3,7 @@
 use axum::{
     extract::State,
     http::StatusCode,
-    response::{IntoResponse, Response, Sse},
+    response::{IntoResponse, Sse},
     Json,
 };
 use axum::response::sse::{Event, KeepAlive};
@@ -410,12 +410,12 @@ fn get_all_services() -> Vec<ServiceDefinition> {
             depends_on: vec!["core-postgres".to_string(), "core-bitcoin".to_string(), "core-wallet".to_string()],
         },
         ServiceDefinition {
-            id: "app-map".to_string(),
+            id: "app-places".to_string(),
             name: "Anchor Map".to_string(),
             description: "Place permanent markers on a map using Bitcoin".to_string(),
             category: ServiceCategory::App,
-            docker_profiles: vec!["full".to_string(), "app-map".to_string()],
-            containers: vec!["anchor-app-map-frontend".to_string(), "anchor-app-map-backend".to_string()],
+            docker_profiles: vec!["full".to_string(), "app-places".to_string()],
+            containers: vec!["anchor-app-places-frontend".to_string(), "anchor-app-places-backend".to_string()],
             install_status: ServiceInstallStatus::NotInstalled,
             enabled: false,
             required: false,
@@ -423,12 +423,12 @@ fn get_all_services() -> Vec<ServiceDefinition> {
             depends_on: vec!["core-postgres".to_string(), "core-bitcoin".to_string(), "core-wallet".to_string()],
         },
         ServiceDefinition {
-            id: "app-dns".to_string(),
-            name: "Anchor DNS".to_string(),
-            description: "Decentralized DNS on Bitcoin".to_string(),
+            id: "app-domains".to_string(),
+            name: "Anchor Domains".to_string(),
+            description: "Decentralized DNS on Bitcoin - .btc, .sat, .anchor, .anc, .bit domains".to_string(),
             category: ServiceCategory::App,
-            docker_profiles: vec!["full".to_string(), "app-dns".to_string()],
-            containers: vec!["anchor-app-dns-frontend".to_string(), "anchor-app-dns-backend".to_string()],
+            docker_profiles: vec!["full".to_string(), "app-domains".to_string()],
+            containers: vec!["anchor-app-domains-frontend".to_string(), "anchor-app-domains-backend".to_string()],
             install_status: ServiceInstallStatus::NotInstalled,
             enabled: false,
             required: false,
@@ -475,12 +475,12 @@ fn get_all_services() -> Vec<ServiceDefinition> {
             depends_on: vec!["core-bitcoin".to_string()],
         },
         ServiceDefinition {
-            id: "app-lottery".to_string(),
+            id: "app-predictions".to_string(),
             name: "Anchor Lottery".to_string(),
             description: "Trustless lottery with DLC-based payouts".to_string(),
             category: ServiceCategory::App,
-            docker_profiles: vec!["full".to_string(), "app-lottery".to_string()],
-            containers: vec!["anchor-app-lottery-frontend".to_string(), "anchor-app-lottery-backend".to_string(), "anchor-app-lottery-postgres".to_string()],
+            docker_profiles: vec!["full".to_string(), "app-predictions".to_string()],
+            containers: vec!["anchor-app-predictions-frontend".to_string(), "anchor-app-predictions-backend".to_string(), "anchor-app-predictions-postgres".to_string()],
             install_status: ServiceInstallStatus::NotInstalled,
             enabled: false,
             required: false,
@@ -1562,16 +1562,16 @@ fn get_service_profiles(service: &str) -> Vec<String> {
     let service_deps: Vec<String> = match service {
         // Apps that need wallet
         "app-threads" => vec!["core-wallet".to_string(), "app-threads".to_string()],
-        "app-pixel" | "app-map" | "app-dns" | "app-proof" | "app-tokens" => {
+        "app-pixel" | "app-places" | "app-domains" | "app-proof" | "app-tokens" => {
             vec!["core-wallet".to_string(), service.to_string()]
         },
         // Oracles has its own postgres
         "app-oracles" => vec!["core-wallet".to_string(), "app-oracles".to_string()],
         // Lottery depends on oracles
-        "app-lottery" => vec![
+        "app-predictions" => vec![
             "core-wallet".to_string(),
             "app-oracles".to_string(),  // Lottery depends on oracles!
-            "app-lottery".to_string(),
+            "app-predictions".to_string(),
         ],
         // Core services
         "core-wallet" => vec!["core-wallet".to_string()],

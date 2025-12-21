@@ -35,8 +35,9 @@ pub struct Utxo {
     pub confirmations: i64,
 }
 
-/// Send request
+/// Send request (for OpenAPI schema)
 #[derive(Debug, Deserialize, ToSchema)]
+#[allow(dead_code)]
 pub struct SendRequest {
     pub address: String,
     pub amount: f64,
@@ -257,3 +258,407 @@ pub async fn mine_blocks(
     Ok(Json(result))
 }
 
+// ============================================================================
+// UTXO Lock Management Proxy Handlers
+// ============================================================================
+
+/// Locked UTXO info
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct LockedUtxo {
+    pub txid: String,
+    pub vout: u32,
+    pub reason: String,
+    pub asset_type: Option<String>,
+    pub asset_id: Option<String>,
+    pub locked_at: String,
+}
+
+/// Lock response
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct LockResponse {
+    pub success: bool,
+    pub message: String,
+    pub affected_count: usize,
+}
+
+/// Lock settings
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct LockSettings {
+    pub auto_lock_enabled: bool,
+    pub total_locked: usize,
+    pub last_sync: Option<String>,
+}
+
+/// Sync locks response
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct SyncLocksResponse {
+    pub success: bool,
+    pub domains_found: usize,
+    pub tokens_found: usize,
+    pub new_locks_added: usize,
+    pub stale_locks_removed: usize,
+}
+
+/// Domain asset
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct DomainAsset {
+    pub name: String,
+    pub txid: String,
+    pub record_count: i64,
+    pub block_height: Option<i32>,
+    pub created_at: Option<String>,
+    pub is_locked: bool,
+}
+
+/// Token asset
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct TokenAsset {
+    pub ticker: String,
+    pub balance: String,
+    pub decimals: i16,
+    pub utxo_count: i32,
+    pub is_locked: bool,
+}
+
+/// Assets overview
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct AssetsOverview {
+    pub domains: Vec<DomainAsset>,
+    pub tokens: Vec<TokenAsset>,
+    pub total_domains: usize,
+    pub total_token_types: usize,
+}
+
+/// List locked UTXOs
+#[utoipa::path(
+    get,
+    path = "/wallet/utxos/locked",
+    tag = "Locks",
+    responses(
+        (status = 200, description = "List of locked UTXOs", body = Vec<LockedUtxo>),
+        (status = 500, description = "Internal server error")
+    )
+)]
+pub async fn list_locked_utxos(
+    State(state): State<Arc<AppState>>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let url = format!("{}/wallet/utxos/locked", state.config.wallet_url);
+
+    let response = state.http_client.get(&url).send().await.map_err(|e| {
+        error!("Failed to connect to wallet service: {}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+    })?;
+
+    let utxos: Vec<LockedUtxo> = response.json().await.map_err(|e| {
+        error!("Failed to parse locked UTXOs: {}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+    })?;
+
+    Ok(Json(utxos))
+}
+
+/// List unlocked UTXOs
+#[utoipa::path(
+    get,
+    path = "/wallet/utxos/unlocked",
+    tag = "Locks",
+    responses(
+        (status = 200, description = "List of unlocked UTXOs", body = Vec<Utxo>),
+        (status = 500, description = "Internal server error")
+    )
+)]
+pub async fn list_unlocked_utxos(
+    State(state): State<Arc<AppState>>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let url = format!("{}/wallet/utxos/unlocked", state.config.wallet_url);
+
+    let response = state.http_client.get(&url).send().await.map_err(|e| {
+        error!("Failed to connect to wallet service: {}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+    })?;
+
+    let utxos: Vec<Utxo> = response.json().await.map_err(|e| {
+        error!("Failed to parse unlocked UTXOs: {}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+    })?;
+
+    Ok(Json(utxos))
+}
+
+/// Lock UTXOs request
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct LockRequest {
+    pub utxos: Vec<UtxoRef>,
+}
+
+/// UTXO reference
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct UtxoRef {
+    pub txid: String,
+    pub vout: u32,
+}
+
+/// Lock UTXOs
+#[utoipa::path(
+    post,
+    path = "/wallet/utxos/lock",
+    tag = "Locks",
+    request_body = LockRequest,
+    responses(
+        (status = 200, description = "UTXOs locked", body = LockResponse),
+        (status = 500, description = "Internal server error")
+    )
+)]
+pub async fn lock_utxos(
+    State(state): State<Arc<AppState>>,
+    Json(req): Json<LockRequest>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let url = format!("{}/wallet/utxos/lock", state.config.wallet_url);
+
+    let response = state
+        .http_client
+        .post(&url)
+        .json(&req)
+        .send()
+        .await
+        .map_err(|e| {
+            error!("Failed to connect to wallet service: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+        })?;
+
+    let result: LockResponse = response.json().await.map_err(|e| {
+        error!("Failed to parse lock response: {}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+    })?;
+
+    Ok(Json(result))
+}
+
+/// Unlock UTXOs request
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct UnlockRequest {
+    pub utxos: Vec<UtxoRef>,
+}
+
+/// Unlock UTXOs
+#[utoipa::path(
+    post,
+    path = "/wallet/utxos/unlock",
+    tag = "Locks",
+    request_body = UnlockRequest,
+    responses(
+        (status = 200, description = "UTXOs unlocked", body = LockResponse),
+        (status = 500, description = "Internal server error")
+    )
+)]
+pub async fn unlock_utxos(
+    State(state): State<Arc<AppState>>,
+    Json(req): Json<UnlockRequest>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let url = format!("{}/wallet/utxos/unlock", state.config.wallet_url);
+
+    let response = state
+        .http_client
+        .post(&url)
+        .json(&req)
+        .send()
+        .await
+        .map_err(|e| {
+            error!("Failed to connect to wallet service: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+        })?;
+
+    let result: LockResponse = response.json().await.map_err(|e| {
+        error!("Failed to parse unlock response: {}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+    })?;
+
+    Ok(Json(result))
+}
+
+/// Sync locks with app backends
+#[utoipa::path(
+    post,
+    path = "/wallet/utxos/sync-locks",
+    tag = "Locks",
+    responses(
+        (status = 200, description = "Locks synced", body = SyncLocksResponse),
+        (status = 500, description = "Internal server error")
+    )
+)]
+pub async fn sync_locks(
+    State(state): State<Arc<AppState>>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let url = format!("{}/wallet/utxos/sync-locks", state.config.wallet_url);
+
+    let response = state
+        .http_client
+        .post(&url)
+        .send()
+        .await
+        .map_err(|e| {
+            error!("Failed to connect to wallet service: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+        })?;
+
+    let result: SyncLocksResponse = response.json().await.map_err(|e| {
+        error!("Failed to parse sync response: {}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+    })?;
+
+    Ok(Json(result))
+}
+
+/// Get lock settings
+#[utoipa::path(
+    get,
+    path = "/wallet/locks/settings",
+    tag = "Locks",
+    responses(
+        (status = 200, description = "Lock settings", body = LockSettings),
+        (status = 500, description = "Internal server error")
+    )
+)]
+pub async fn get_lock_settings(
+    State(state): State<Arc<AppState>>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let url = format!("{}/wallet/locks/settings", state.config.wallet_url);
+
+    let response = state.http_client.get(&url).send().await.map_err(|e| {
+        error!("Failed to connect to wallet service: {}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+    })?;
+
+    let settings: LockSettings = response.json().await.map_err(|e| {
+        error!("Failed to parse lock settings: {}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+    })?;
+
+    Ok(Json(settings))
+}
+
+/// Set auto-lock request
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct SetAutoLockRequest {
+    pub enabled: bool,
+}
+
+/// Set auto-lock enabled/disabled
+#[utoipa::path(
+    post,
+    path = "/wallet/locks/auto-lock",
+    tag = "Locks",
+    request_body = SetAutoLockRequest,
+    responses(
+        (status = 200, description = "Auto-lock setting updated", body = LockResponse),
+        (status = 500, description = "Internal server error")
+    )
+)]
+pub async fn set_auto_lock(
+    State(state): State<Arc<AppState>>,
+    Json(req): Json<SetAutoLockRequest>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let url = format!("{}/wallet/locks/auto-lock", state.config.wallet_url);
+
+    let response = state
+        .http_client
+        .post(&url)
+        .json(&req)
+        .send()
+        .await
+        .map_err(|e| {
+            error!("Failed to connect to wallet service: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+        })?;
+
+    let result: LockResponse = response.json().await.map_err(|e| {
+        error!("Failed to parse auto-lock response: {}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+    })?;
+
+    Ok(Json(result))
+}
+
+/// Get all wallet assets
+#[utoipa::path(
+    get,
+    path = "/wallet/assets",
+    tag = "Assets",
+    responses(
+        (status = 200, description = "All wallet assets", body = AssetsOverview),
+        (status = 500, description = "Internal server error")
+    )
+)]
+pub async fn get_assets(
+    State(state): State<Arc<AppState>>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let url = format!("{}/wallet/assets", state.config.wallet_url);
+
+    let response = state.http_client.get(&url).send().await.map_err(|e| {
+        error!("Failed to connect to wallet service: {}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+    })?;
+
+    let assets: AssetsOverview = response.json().await.map_err(|e| {
+        error!("Failed to parse assets: {}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+    })?;
+
+    Ok(Json(assets))
+}
+
+/// Get wallet domains
+#[utoipa::path(
+    get,
+    path = "/wallet/assets/domains",
+    tag = "Assets",
+    responses(
+        (status = 200, description = "Wallet domains", body = Vec<DomainAsset>),
+        (status = 500, description = "Internal server error")
+    )
+)]
+pub async fn get_assets_domains(
+    State(state): State<Arc<AppState>>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let url = format!("{}/wallet/assets/domains", state.config.wallet_url);
+
+    let response = state.http_client.get(&url).send().await.map_err(|e| {
+        error!("Failed to connect to wallet service: {}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+    })?;
+
+    let domains: Vec<DomainAsset> = response.json().await.map_err(|e| {
+        error!("Failed to parse domains: {}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+    })?;
+
+    Ok(Json(domains))
+}
+
+/// Get wallet tokens
+#[utoipa::path(
+    get,
+    path = "/wallet/assets/tokens",
+    tag = "Assets",
+    responses(
+        (status = 200, description = "Wallet tokens", body = Vec<TokenAsset>),
+        (status = 500, description = "Internal server error")
+    )
+)]
+pub async fn get_assets_tokens(
+    State(state): State<Arc<AppState>>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let url = format!("{}/wallet/assets/tokens", state.config.wallet_url);
+
+    let response = state.http_client.get(&url).send().await.map_err(|e| {
+        error!("Failed to connect to wallet service: {}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+    })?;
+
+    let tokens: Vec<TokenAsset> = response.json().await.map_err(|e| {
+        error!("Failed to parse tokens: {}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+    })?;
+
+    Ok(Json(tokens))
+}

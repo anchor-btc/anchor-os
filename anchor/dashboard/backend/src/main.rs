@@ -59,6 +59,16 @@ pub struct AppState {
         handlers::wallet::list_utxos,
         handlers::wallet::get_transactions,
         handlers::wallet::mine_blocks,
+        handlers::wallet::list_locked_utxos,
+        handlers::wallet::list_unlocked_utxos,
+        handlers::wallet::lock_utxos,
+        handlers::wallet::unlock_utxos,
+        handlers::wallet::sync_locks,
+        handlers::wallet::get_lock_settings,
+        handlers::wallet::set_auto_lock,
+        handlers::wallet::get_assets,
+        handlers::wallet::get_assets_domains,
+        handlers::wallet::get_assets_tokens,
         handlers::node::get_node_config,
         handlers::node::switch_node,
         handlers::node::get_node_versions,
@@ -116,6 +126,17 @@ pub struct AppState {
         handlers::wallet::TransactionInfo,
         handlers::wallet::MineRequest,
         handlers::wallet::MineResponse,
+        handlers::wallet::LockedUtxo,
+        handlers::wallet::LockResponse,
+        handlers::wallet::LockSettings,
+        handlers::wallet::SyncLocksResponse,
+        handlers::wallet::DomainAsset,
+        handlers::wallet::TokenAsset,
+        handlers::wallet::AssetsOverview,
+        handlers::wallet::LockRequest,
+        handlers::wallet::UnlockRequest,
+        handlers::wallet::UtxoRef,
+        handlers::wallet::SetAutoLockRequest,
         handlers::node::NodeConfig,
         handlers::node::VersionInfo,
         handlers::node::SwitchVersionRequest,
@@ -308,7 +329,6 @@ async fn main() -> Result<()> {
             config.bitcoin_rpc_url.clone(),
             config.bitcoin_rpc_user.clone(),
             config.bitcoin_rpc_password.clone(),
-            config.wallet_url.clone(),
         );
     }
 
@@ -365,6 +385,16 @@ async fn main() -> Result<()> {
         .route("/wallet/balance", get(handlers::wallet::get_balance))
         .route("/wallet/address", get(handlers::wallet::get_new_address))
         .route("/wallet/utxos", get(handlers::wallet::list_utxos))
+        .route("/wallet/utxos/locked", get(handlers::wallet::list_locked_utxos))
+        .route("/wallet/utxos/unlocked", get(handlers::wallet::list_unlocked_utxos))
+        .route("/wallet/utxos/lock", post(handlers::wallet::lock_utxos))
+        .route("/wallet/utxos/unlock", post(handlers::wallet::unlock_utxos))
+        .route("/wallet/utxos/sync-locks", post(handlers::wallet::sync_locks))
+        .route("/wallet/locks/settings", get(handlers::wallet::get_lock_settings))
+        .route("/wallet/locks/auto-lock", post(handlers::wallet::set_auto_lock))
+        .route("/wallet/assets", get(handlers::wallet::get_assets))
+        .route("/wallet/assets/domains", get(handlers::wallet::get_assets_domains))
+        .route("/wallet/assets/tokens", get(handlers::wallet::get_assets_tokens))
         .route(
             "/wallet/transactions",
             get(handlers::wallet::get_transactions),

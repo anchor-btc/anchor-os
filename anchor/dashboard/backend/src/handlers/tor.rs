@@ -56,8 +56,6 @@ pub async fn get_tor_status(
     State(state): State<Arc<AppState>>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     use bollard::container::ListContainersOptions;
-    use bollard::exec::{CreateExecOptions, StartExecResults};
-    use futures::StreamExt;
     use std::collections::HashMap;
 
     // Check if container is running

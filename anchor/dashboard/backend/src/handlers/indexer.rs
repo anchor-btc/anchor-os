@@ -10,7 +10,6 @@ use bollard::exec::{CreateExecOptions, StartExecResults};
 use futures::StreamExt;
 use serde::Serialize;
 use std::sync::Arc;
-use tracing::error;
 use utoipa::ToSchema;
 
 use crate::AppState;

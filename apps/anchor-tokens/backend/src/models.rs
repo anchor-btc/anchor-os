@@ -36,31 +36,13 @@ impl TryFrom<u8> for TokenOperationType {
     }
 }
 
-impl TokenOperationType {
-    pub fn name(&self) -> &'static str {
-        match self {
-            TokenOperationType::Deploy => "DEPLOY",
-            TokenOperationType::Mint => "MINT",
-            TokenOperationType::Transfer => "TRANSFER",
-            TokenOperationType::Burn => "BURN",
-            TokenOperationType::Split => "SPLIT",
-        }
-    }
-}
-
 /// Deploy flags
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DeployFlags(pub u8);
 
 impl DeployFlags {
-    pub const NONE: u8 = 0x00;
-    pub const OPEN_MINT: u8 = 0x01;
     pub const FIXED_SUPPLY: u8 = 0x02;
     pub const BURNABLE: u8 = 0x04;
-
-    pub fn is_open_mint(&self) -> bool {
-        self.0 & Self::OPEN_MINT != 0
-    }
 
     pub fn is_fixed_supply(&self) -> bool {
         self.0 & Self::FIXED_SUPPLY != 0
@@ -113,16 +95,6 @@ pub enum TokenOperation {
 }
 
 impl TokenOperation {
-    /// Get the operation type
-    pub fn operation_type(&self) -> TokenOperationType {
-        match self {
-            TokenOperation::Deploy { .. } => TokenOperationType::Deploy,
-            TokenOperation::Mint { .. } => TokenOperationType::Mint,
-            TokenOperation::Transfer { .. } => TokenOperationType::Transfer,
-            TokenOperation::Burn { .. } => TokenOperationType::Burn,
-            TokenOperation::Split { .. } => TokenOperationType::Split,
-        }
-    }
 
     /// Parse a token operation from bytes
     pub fn from_bytes(bytes: &[u8]) -> Option<Self> {
@@ -512,8 +484,6 @@ pub struct ListParams {
     #[serde(default = "default_per_page")]
     pub per_page: i32,
     pub search: Option<String>,
-    pub sort_by: Option<String>,
-    pub sort_order: Option<String>,
 }
 
 fn default_page() -> i32 {

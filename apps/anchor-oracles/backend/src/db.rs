@@ -210,50 +210,6 @@ impl Database {
         }).collect())
     }
 
-    pub async fn insert_attestation(
-        &self,
-        oracle_id: i32,
-        txid: &[u8],
-        vout: i32,
-        block_height: Option<i32>,
-        category: i32,
-        event_id: &[u8],
-        event_description: Option<&str>,
-        outcome_data: &[u8],
-        schnorr_signature: &[u8],
-    ) -> Result<i32> {
-        let row: (i32,) = sqlx::query_as(
-            r#"
-            INSERT INTO attestations (oracle_id, txid, vout, block_height, category,
-                                      event_id, event_description, outcome_data, schnorr_signature)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-            ON CONFLICT (txid, vout) DO NOTHING
-            RETURNING id
-            "#,
-        )
-        .bind(oracle_id)
-        .bind(txid)
-        .bind(vout)
-        .bind(block_height)
-        .bind(category)
-        .bind(event_id)
-        .bind(event_description)
-        .bind(outcome_data)
-        .bind(schnorr_signature)
-        .fetch_one(&self.pool)
-        .await?;
-
-        // Update oracle stats
-        sqlx::query(
-            "UPDATE oracles SET total_attestations = total_attestations + 1, successful_attestations = successful_attestations + 1 WHERE id = $1"
-        )
-        .bind(oracle_id)
-        .execute(&self.pool)
-        .await?;
-
-        Ok(row.0)
-    }
-
     // Dispute operations
 
     pub async fn get_disputes(&self, status: Option<&str>, limit: i64) -> Result<Vec<Dispute>> {

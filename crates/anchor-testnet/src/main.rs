@@ -6,18 +6,19 @@
 
 mod config;
 mod generator;
+mod handlers;
 
 use crate::config::{GeneratorStats, SharedConfig, SharedStats, TestnetConfig};
-use crate::generator::MessageGenerator;
+use crate::generator::{CarrierType, MessageGenerator};
+use crate::handlers::{
+    get_config_handler, get_stats_handler, health_handler, pause_handler, resume_handler,
+    update_config_handler, AppState,
+};
 use anyhow::Result;
 use axum::{
-    extract::State,
-    http::StatusCode,
-    response::IntoResponse,
     routing::{get, post},
-    Json, Router,
+    Router,
 };
-use serde::Deserialize;
 use std::env;
 use std::sync::Arc;
 use std::time::Duration;
@@ -26,13 +27,6 @@ use tokio::time::sleep;
 use tower_http::cors::{Any, CorsLayer};
 use tracing::{error, info, warn};
 use tracing_subscriber::EnvFilter;
-
-/// Application state shared across handlers
-#[derive(Clone)]
-struct AppState {
-    config: SharedConfig,
-    stats: SharedStats,
-}
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -63,9 +57,12 @@ async fn main() -> Result<()> {
 
     {
         let cfg = config.read().await;
-    info!("📡 Wallet URL: {}", wallet_url);
+        info!("📡 Wallet URL: {}", wallet_url);
         info!("🌐 API Port: {}", api_port);
-        info!("⏱️  Interval: {}s - {}s", cfg.min_interval_secs, cfg.max_interval_secs);
+        info!(
+            "⏱️  Interval: {}s - {}s",
+            cfg.min_interval_secs, cfg.max_interval_secs
+        );
         info!("⛏️  Blocks per cycle: {}", cfg.blocks_per_cycle);
     }
 
@@ -77,7 +74,7 @@ async fn main() -> Result<()> {
         config: config.clone(),
         stats: stats.clone(),
     };
-    
+
     tokio::spawn(async move {
         start_api_server(app_state, api_port).await;
     });
@@ -141,7 +138,13 @@ async fn main() -> Result<()> {
         match generator.generate_message().await {
             Ok(Some(result)) => {
                 let type_icon = match result.message_type {
-                    config::MessageType::Text => if result.is_reply { "↩️" } else { "📝" },
+                    config::MessageType::Text => {
+                        if result.is_reply {
+                            "↩️"
+                        } else {
+                            "📝"
+                        }
+                    }
                     config::MessageType::Pixel => "🎨",
                     config::MessageType::Image => "🖼️",
                     config::MessageType::Map => "📍",
@@ -149,11 +152,11 @@ async fn main() -> Result<()> {
                     config::MessageType::Proof => "📜",
                 };
                 let carrier_icon = match result.carrier {
-                    generator::CarrierType::OpReturn => "📦",
-                    generator::CarrierType::Inscription => "✍️",
-                    generator::CarrierType::Stamps => "📮",
-                    generator::CarrierType::TaprootAnnex => "🌿",
-                    generator::CarrierType::WitnessData => "👁️",
+                    CarrierType::OpReturn => "📦",
+                    CarrierType::Inscription => "✍️",
+                    CarrierType::Stamps => "📮",
+                    CarrierType::TaprootAnnex => "🌿",
+                    CarrierType::WitnessData => "👁️",
                 };
                 info!(
                     "{} Created {} via {} {}: {}:{}",
@@ -215,125 +218,4 @@ async fn start_api_server(state: AppState, port: u16) {
 
     let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
     axum::serve(listener, app).await.unwrap();
-}
-
-/// Health check endpoint
-async fn health_handler() -> impl IntoResponse {
-    Json(serde_json::json!({ "status": "ok" }))
-}
-
-/// Get current configuration
-async fn get_config_handler(State(state): State<AppState>) -> impl IntoResponse {
-    let config = state.config.read().await;
-    Json(config.clone())
-}
-
-/// Request body for updating config
-#[derive(Debug, Deserialize)]
-struct UpdateConfigRequest {
-    #[serde(default)]
-    min_interval_secs: Option<u64>,
-    #[serde(default)]
-    max_interval_secs: Option<u64>,
-    #[serde(default)]
-    blocks_per_cycle: Option<u32>,
-    #[serde(default)]
-    enable_text: Option<bool>,
-    #[serde(default)]
-    enable_pixel: Option<bool>,
-    #[serde(default)]
-    enable_image: Option<bool>,
-    #[serde(default)]
-    enable_map: Option<bool>,
-    #[serde(default)]
-    enable_dns: Option<bool>,
-    #[serde(default)]
-    enable_proof: Option<bool>,
-    #[serde(default)]
-    weight_op_return: Option<u8>,
-    #[serde(default)]
-    weight_stamps: Option<u8>,
-    #[serde(default)]
-    weight_inscription: Option<u8>,
-    #[serde(default)]
-    weight_taproot_annex: Option<u8>,
-    #[serde(default)]
-    weight_witness_data: Option<u8>,
-}
-
-/// Update configuration
-async fn update_config_handler(
-    State(state): State<AppState>,
-    Json(req): Json<UpdateConfigRequest>,
-) -> impl IntoResponse {
-    let mut config = state.config.write().await;
-
-    // Update only provided fields
-    if let Some(v) = req.min_interval_secs {
-        config.min_interval_secs = v.max(1);
-    }
-    if let Some(v) = req.max_interval_secs {
-        config.max_interval_secs = v.max(config.min_interval_secs);
-    }
-    if let Some(v) = req.blocks_per_cycle {
-        config.blocks_per_cycle = v.max(1).min(10);
-    }
-    if let Some(v) = req.enable_text {
-        config.enable_text = v;
-    }
-    if let Some(v) = req.enable_pixel {
-        config.enable_pixel = v;
-    }
-    if let Some(v) = req.enable_image {
-        config.enable_image = v;
-    }
-    if let Some(v) = req.enable_map {
-        config.enable_map = v;
-    }
-    if let Some(v) = req.enable_dns {
-        config.enable_dns = v;
-    }
-    if let Some(v) = req.enable_proof {
-        config.enable_proof = v;
-    }
-    if let Some(v) = req.weight_op_return {
-        config.weight_op_return = v.min(100);
-    }
-    if let Some(v) = req.weight_stamps {
-        config.weight_stamps = v.min(100);
-    }
-    if let Some(v) = req.weight_inscription {
-        config.weight_inscription = v.min(100);
-    }
-    if let Some(v) = req.weight_taproot_annex {
-        config.weight_taproot_annex = v.min(100);
-    }
-    if let Some(v) = req.weight_witness_data {
-        config.weight_witness_data = v.min(100);
-    }
-
-    info!("📝 Configuration updated");
-    Json(config.clone())
-}
-
-/// Get generation statistics
-async fn get_stats_handler(State(state): State<AppState>) -> impl IntoResponse {
-    let stats = state.stats.read().await;
-    Json(stats.clone())
-}
-
-/// Pause generation
-async fn pause_handler(State(state): State<AppState>) -> impl IntoResponse {
-    let mut config = state.config.write().await;
-    config.paused = true;
-    info!("⏸️  Generator paused via API");
-    Json(serde_json::json!({ "paused": true }))
-}
-
-/// Resume generation
-async fn resume_handler(State(state): State<AppState>) -> impl IntoResponse {
-    let mut config = state.config.write().await;
-    config.paused = false;
-    info!("▶️  Generator resumed via API");
-    Json(serde_json::json!({ "paused": false }))
 }

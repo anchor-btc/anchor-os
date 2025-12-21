@@ -77,11 +77,6 @@ impl Database {
         Ok(Self { pool })
     }
 
-    /// Get the underlying pool
-    pub fn pool(&self) -> &PgPool {
-        &self.pool
-    }
-
     // ========================================================================
     // Indexer State
     // ========================================================================
@@ -431,41 +426,6 @@ impl Database {
             let txid: Vec<u8> = r.get("txid");
             let amount: String = r.get("amount");
             (txid, amount)
-        }))
-    }
-
-    /// Find a token UTXO by its outpoint (txid and vout)
-    pub async fn find_token_utxo_by_outpoint(
-        &self,
-        txid_hex: &str,
-        vout: i32,
-    ) -> Result<Option<TokenUtxo>> {
-        let txid_bytes = hex::decode(txid_hex).unwrap_or_default();
-        
-        let row = sqlx::query(
-            "SELECT u.id, u.token_id, t.ticker, u.txid, u.vout, u.amount::text as amount, t.decimals,
-                    u.owner_address, u.block_height, u.created_at, u.spent_txid IS NOT NULL as is_spent
-             FROM token_utxos u
-             JOIN tokens t ON t.id = u.token_id
-             WHERE u.txid = $1 AND u.vout = $2 AND u.spent_txid IS NULL"
-        )
-        .bind(&txid_bytes)
-        .bind(vout)
-        .fetch_optional(&self.pool)
-        .await?;
-
-        Ok(row.map(|row| TokenUtxo {
-            id: row.get("id"),
-            token_id: row.get("token_id"),
-            ticker: row.get("ticker"),
-            txid: hex::encode(row.get::<Vec<u8>, _>("txid")),
-            vout: row.get("vout"),
-            amount: row.get("amount"),
-            decimals: row.get("decimals"),
-            owner_address: row.get("owner_address"),
-            block_height: row.get("block_height"),
-            created_at: row.get::<DateTime<Utc>, _>("created_at"),
-            is_spent: row.get("is_spent"),
         }))
     }
 

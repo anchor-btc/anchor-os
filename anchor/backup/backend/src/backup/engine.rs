@@ -1,12 +1,10 @@
 //! Core backup engine using restic
 
-use anyhow::{Context, Result};
+use anyhow::{Result};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::path::Path;
-use std::process::Stdio;
 use tokio::process::Command;
-use tracing::{info, error, warn};
+use tracing::{info, error};
 use uuid::Uuid;
 
 use crate::config::Config;
@@ -257,30 +255,6 @@ impl BackupEngine {
         }
     }
     
-    /// Get repository stats
-    pub async fn stats(&self, target: &BackupTarget) -> Result<RepoStats> {
-        let env = self.get_restic_env(target);
-        
-        let mut cmd = Command::new("restic");
-        cmd.arg("stats");
-        cmd.arg("--json");
-        
-        for (key, value) in env {
-            cmd.env(key, value);
-        }
-        
-        let output = cmd.output().await?;
-        
-        if output.status.success() {
-            let stdout = String::from_utf8_lossy(&output.stdout);
-            let stats: RepoStats = serde_json::from_str(&stdout)
-                .unwrap_or_default();
-            Ok(stats)
-        } else {
-            Ok(RepoStats::default())
-        }
-    }
-    
     /// Parse backup output to extract stats
     fn parse_backup_output(&self, output: &str) -> (Option<i64>, Option<i64>) {
         // Parse JSON lines from restic backup output
@@ -298,39 +272,4 @@ impl BackupEngine {
         
         (size_bytes, files_count)
     }
-    
-    /// Prune old snapshots based on retention policy
-    pub async fn prune(&self, target: &BackupTarget, keep_last: u32) -> Result<()> {
-        info!("Pruning old snapshots, keeping last {}", keep_last);
-        
-        let env = self.get_restic_env(target);
-        
-        let mut cmd = Command::new("restic");
-        cmd.arg("forget");
-        cmd.arg("--prune");
-        cmd.arg("--keep-last").arg(keep_last.to_string());
-        
-        for (key, value) in env {
-            cmd.env(key, value);
-        }
-        
-        let output = cmd.output().await?;
-        
-        if output.status.success() {
-            info!("Prune completed successfully");
-            Ok(())
-        } else {
-            let stderr = String::from_utf8_lossy(&output.stderr);
-            error!("Prune failed: {}", stderr);
-            Err(anyhow::anyhow!("Prune failed: {}", stderr))
-        }
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct RepoStats {
-    #[serde(default)]
-    pub total_size: i64,
-    #[serde(default)]
-    pub total_file_count: i64,
 }

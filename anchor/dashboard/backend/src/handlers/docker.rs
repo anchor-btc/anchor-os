@@ -208,16 +208,16 @@ fn get_required_profiles(service: &str) -> Vec<String> {
     let service_deps: Vec<String> = match service {
         // Apps that need wallet
         "app-threads" => vec!["core-wallet".to_string(), "app-threads".to_string()],
-        "app-pixel" | "app-map" | "app-dns" | "app-proof" | "app-tokens" => {
+        "app-pixel" | "app-places" | "app-domains" | "app-proof" | "app-tokens" => {
             vec!["core-wallet".to_string(), service.to_string()]
         },
         // Oracles has its own postgres
         "app-oracles" => vec!["core-wallet".to_string(), "app-oracles".to_string()],
         // Lottery depends on oracles
-        "app-lottery" => vec![
+        "app-predictions" => vec![
             "core-wallet".to_string(),
             "app-oracles".to_string(),  // Lottery depends on oracles!
-            "app-lottery".to_string(),
+            "app-predictions".to_string(),
         ],
         // Core services
         "core-wallet" => vec!["core-wallet".to_string()],
@@ -266,18 +266,18 @@ fn extract_service_from_container(container_name: &str) -> Option<String> {
         ("app-threads-frontend", "app-threads"),
         ("app-pixel-backend", "app-pixel"),
         ("app-pixel-frontend", "app-pixel"),
-        ("app-map-backend", "app-map"),
-        ("app-map-frontend", "app-map"),
-        ("app-dns-backend", "app-dns"),
-        ("app-dns-frontend", "app-dns"),
+        ("app-places-backend", "app-places"),
+        ("app-places-frontend", "app-places"),
+        ("app-domains-backend", "app-domains"),
+        ("app-domains-frontend", "app-domains"),
         ("app-proof-backend", "app-proof"),
         ("app-proof-frontend", "app-proof"),
         ("app-tokens-backend", "app-tokens"),
         ("app-tokens-frontend", "app-tokens"),
         ("app-oracles-backend", "app-oracles"),
         ("app-oracles-frontend", "app-oracles"),
-        ("app-lottery-backend", "app-lottery"),
-        ("app-lottery-frontend", "app-lottery"),
+        ("app-predictions-backend", "app-predictions"),
+        ("app-predictions-frontend", "app-predictions"),
         ("core-fulcrum", "core-fulcrum"),
         ("core-electrs", "core-electrs"),
         ("core-indexer", "core-indexer"),

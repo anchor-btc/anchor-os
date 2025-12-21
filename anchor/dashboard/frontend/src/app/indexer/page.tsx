@@ -457,3 +457,6 @@ function StatCard({
 function formatLogLine(line: string): string {
   return line.replace(/\x1b\[[0-9;]*m/g, "").trim();
 }
+
+
+

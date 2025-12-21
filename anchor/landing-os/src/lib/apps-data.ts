@@ -17,7 +17,7 @@ export const apps: AppData[] = [
     category: "app",
   },
   {
-    id: "anchor-map",
+    id: "anchor-places",
     name: "Anchor Map",
     description: "Permanent geo-markers on the blockchain. Mark locations that last forever.",
     icon: "🗺️",
@@ -65,7 +65,7 @@ export const apps: AppData[] = [
     category: "app",
   },
   {
-    id: "anchor-lottery",
+    id: "anchor-predictions",
     name: "Anchor Lottery",
     description: "Trustless lottery with DLC payouts. Provably fair Bitcoin lottery.",
     icon: "🎰",

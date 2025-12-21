@@ -40,6 +40,7 @@
 mod config;
 mod error;
 mod transaction;
+mod types;
 mod wallet;
 
 pub use anchor_core::{
@@ -74,9 +75,9 @@ pub use anchor_core::carrier::{
 
 pub use config::WalletConfig;
 pub use error::{WalletError, Result};
-pub use transaction::{AnchorTransaction, TransactionBuilder};
+pub use transaction::{AnchorTransaction, TransactionBuilder, CarrierData, MAX_OP_RETURN_SIZE};
+pub use types::{Utxo, Balance};
 pub use wallet::AnchorWallet;
 
 /// Protocol version
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
-

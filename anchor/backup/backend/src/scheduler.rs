@@ -34,12 +34,6 @@ impl BackupScheduler {
         Ok(())
     }
     
-    pub async fn shutdown(&mut self) -> Result<()> {
-        self.scheduler.shutdown().await?;
-        info!("Backup scheduler stopped");
-        Ok(())
-    }
-    
     pub async fn update_schedule(
         &self,
         settings: &BackupSettings,

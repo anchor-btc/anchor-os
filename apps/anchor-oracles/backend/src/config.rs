@@ -10,7 +10,6 @@ pub struct Config {
     pub bitcoin_rpc_url: String,
     pub bitcoin_rpc_user: String,
     pub bitcoin_rpc_password: String,
-    pub wallet_service_url: String,
 }
 
 impl Config {
@@ -31,8 +30,6 @@ impl Config {
                 .unwrap_or_else(|_| "bitcoin".to_string()),
             bitcoin_rpc_password: env::var("BITCOIN_RPC_PASSWORD")
                 .unwrap_or_else(|_| "bitcoin".to_string()),
-            wallet_service_url: env::var("WALLET_SERVICE_URL")
-                .unwrap_or_else(|_| "http://localhost:8001".to_string()),
         }
     }
 }

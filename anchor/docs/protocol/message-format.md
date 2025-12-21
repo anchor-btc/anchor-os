@@ -212,3 +212,4 @@ function isValidAnchorMessage(bytes: Uint8Array): boolean {
 - [SDK Encoding](/sdk/encoding) - Use the TypeScript SDK
 
 
+

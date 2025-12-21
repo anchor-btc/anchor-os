@@ -59,12 +59,12 @@ export const dependencies: Record<string, string[]> = {
   "anchor-dashboard": ["core-bitcoin", "core-postgres"],
   "app-threads": ["core-postgres", "core-wallet"],
   "app-pixel": ["core-postgres", "core-bitcoin", "core-wallet"],
-  "app-map": ["core-postgres", "core-bitcoin", "core-wallet"],
-  "app-dns": ["core-postgres", "core-bitcoin", "core-wallet"],
+  "app-places": ["core-postgres", "core-bitcoin", "core-wallet"],
+  "app-domains": ["core-postgres", "core-bitcoin", "core-wallet"],
   "app-proof": ["core-postgres", "core-bitcoin", "core-wallet"],
   "app-tokens": ["core-postgres", "core-bitcoin", "core-wallet"],
   "app-oracles": ["core-bitcoin"],
-  "app-lottery": ["core-bitcoin", "app-oracles"],
+  "app-predictions": ["core-bitcoin", "app-oracles"],
 };
 
 // Required services that cannot be uninstalled
@@ -125,9 +125,9 @@ export const appToServiceMap: Record<string, string> = {
   // Dashboard
   "anchor-dashboard": "anchor-dashboard",
   // Apps
-  "app-dns": "app-dns",
-  "app-lottery": "app-lottery",
-  "app-map": "app-map",
+  "app-domains": "app-domains",
+  "app-predictions": "app-predictions",
+  "app-places": "app-places",
   "app-oracles": "app-oracles",
   "app-pixel": "app-pixel",
   "app-proof": "app-proof",
@@ -196,12 +196,12 @@ export const presets: PresetInfo[] = [
       "anchor-dashboard",
       "app-threads",
       "app-pixel",
-      "app-map",
-      "app-dns",
+      "app-places",
+      "app-domains",
       "app-proof",
       "app-tokens",
       "app-oracles",
-      "app-lottery",
+      "app-predictions",
     ],
     warning:
       "This configuration requires significant resources (RAM, CPU, disk space). Recommended for powerful machines only.",

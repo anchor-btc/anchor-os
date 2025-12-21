@@ -2,7 +2,6 @@
 
 use anyhow::Result;
 use tokio::process::Command;
-use tracing::{info, error};
 
 use crate::config::Config;
 use super::StorageInfo;
@@ -54,53 +53,4 @@ pub async fn get_storage_info(config: &Config) -> Result<StorageInfo> {
         used_bytes,
         available_bytes,
     })
-}
-
-/// Mount SMB share
-pub async fn mount_share(config: &Config) -> Result<()> {
-    if !config.smb_configured() {
-        return Err(anyhow::anyhow!("SMB not configured"));
-    }
-    
-    let mount_point = config.smb_mount_point.as_deref().unwrap_or("/mnt/nas");
-    let host = config.smb_host.as_deref().unwrap_or("");
-    let share = config.smb_share.as_deref().unwrap_or("");
-    let user = config.smb_user.as_deref().unwrap_or("guest");
-    let password = config.smb_password.as_deref().unwrap_or("");
-    
-    // Create mount point
-    tokio::fs::create_dir_all(mount_point).await?;
-    
-    // Mount SMB share
-    let output = Command::new("mount")
-        .args([
-            "-t", "cifs",
-            &format!("//{}/{}", host, share),
-            mount_point,
-            "-o", &format!("username={},password={}", user, password)
-        ])
-        .output()
-        .await?;
-    
-    if output.status.success() {
-        info!("SMB share mounted at {}", mount_point);
-        Ok(())
-    } else {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        error!("Failed to mount SMB share: {}", stderr);
-        Err(anyhow::anyhow!("Failed to mount: {}", stderr))
-    }
-}
-
-/// Check if SMB share is mounted
-pub async fn is_mounted(config: &Config) -> bool {
-    let mount_point = config.smb_mount_point.as_deref().unwrap_or("/mnt/nas");
-    
-    let output = Command::new("mountpoint")
-        .arg("-q")
-        .arg(mount_point)
-        .output()
-        .await;
-    
-    output.map(|o| o.status.success()).unwrap_or(false)
 }

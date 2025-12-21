@@ -14,7 +14,7 @@ use tracing::{info, error};
 use crate::backup::engine::{BackupEngine, BackupJob, BackupStatus, BackupTarget, BackupType};
 use crate::backup::{database, volumes};
 use crate::config::Config;
-use crate::storage::{self, StorageInfo, StorageType};
+use crate::storage::{self, StorageInfo};
 
 use crate::scheduler::BackupScheduler;
 

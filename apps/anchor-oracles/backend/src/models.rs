@@ -130,7 +130,6 @@ pub struct CategoryInfo {
 pub struct RegisterOracleRequest {
     pub pubkey: String,
     pub name: String,
-    pub description: Option<String>,
     pub categories: i32,
 }
 
@@ -139,9 +138,7 @@ pub struct RegisterOracleRequest {
 pub struct SubmitAttestationRequest {
     pub oracle_pubkey: String,
     pub event_id: String,
-    pub event_description: Option<String>,
     pub category: i32,
-    pub outcome_data: String,
 }
 
 /// Request to create event request
@@ -150,7 +147,6 @@ pub struct CreateEventRequest {
     pub category: i32,
     pub description: String,
     pub resolution_block: Option<i32>,
-    pub bounty_sats: Option<i64>,
 }
 
 pub fn category_name(category: i32) -> String {

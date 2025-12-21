@@ -175,9 +175,3 @@ impl CanvasManager {
     }
 }
 
-/// Calculate the number of zoom levels based on canvas size
-pub fn calculate_max_zoom() -> u32 {
-    let max_dim = CANVAS_WIDTH.max(CANVAS_HEIGHT);
-    (max_dim as f32 / TILE_SIZE as f32).log2().ceil() as u32
-}
-

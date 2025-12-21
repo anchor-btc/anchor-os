@@ -4,8 +4,6 @@ pub mod local;
 pub mod s3;
 pub mod smb;
 
-use anyhow::Result;
-use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

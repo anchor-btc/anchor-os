@@ -10,12 +10,12 @@ members = [
     "anchor/dashboard/backend",
     "anchor/backup/backend",
     "apps/anchor-canvas/backend",
-    "apps/anchor-map/backend",
-    "apps/anchor-dns/backend",
+    "apps/anchor-places/backend",
+    "apps/anchor-domains/backend",
     "apps/anchor-proofs/backend",
     "apps/anchor-tokens/backend",
     "apps/anchor-oracles/backend",
-    "apps/anchor-lottery/backend",
+    "apps/anchor-predictions/backend",
 ]
 
 [workspace.package]
@@ -24,6 +24,27 @@ edition = "2021"
 license = "MIT"
 authors = ["ANCHOR Protocol Contributors"]
 repository = "https://github.com/anchor-protocol/anchor"
+
+# Workspace-wide lint configuration
+[workspace.lints.rust]
+# Unused code detection
+unused_variables = "warn"
+unused_imports = "warn"
+dead_code = "warn"
+unused_mut = "warn"
+unreachable_code = "warn"
+
+# Code quality
+unsafe_code = "warn"
+missing_docs = "allow"  # Can be "warn" for stricter doc requirements
+
+[workspace.lints.clippy]
+# Clippy lints
+all = "warn"
+pedantic = "allow"  # Can be "warn" for stricter style
+nursery = "allow"
+unwrap_used = "allow"  # Can be "warn" to enforce Result handling
+expect_used = "allow"
 
 [workspace.dependencies]
 # Bitcoin
@@ -57,6 +78,8 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 hex = "0.4"
 chrono = { version = "0.4", features = ["serde"] }
 dotenvy = "0.15"
+dirs = "5"
+reqwest = { version = "0.12", features = ["json"] }
 
 # OpenAPI / Swagger
 utoipa = { version = "5", features = ["axum_extras", "chrono"] }
@@ -64,4 +87,10 @@ utoipa-swagger-ui = { version = "8", features = ["axum"] }
 
 # Internal crates
 anchor-core = { path = "crates/anchor-core" }
+
+
+
+
+
+
 

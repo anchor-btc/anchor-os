@@ -851,3 +851,134 @@ export async function clearReadNotifications(): Promise<NotificationActionRespon
   return res.json();
 }
 
+// ============================================================================
+// Wallet Lock and Asset Management
+// ============================================================================
+
+export interface LockedUtxo {
+  txid: string;
+  vout: number;
+  reason: string;
+  asset_type?: string;
+  asset_id?: string;
+  locked_at: string;
+}
+
+export interface LockResponse {
+  success: boolean;
+  message: string;
+  affected_count: number;
+}
+
+export interface LockSettings {
+  auto_lock_enabled: boolean;
+  total_locked: number;
+  last_sync?: string;
+}
+
+export interface SyncLocksResponse {
+  success: boolean;
+  domains_found: number;
+  tokens_found: number;
+  new_locks_added: number;
+  stale_locks_removed: number;
+}
+
+export interface DomainAsset {
+  name: string;
+  txid: string;
+  record_count: number;
+  block_height?: number;
+  created_at?: string;
+  is_locked: boolean;
+}
+
+export interface TokenAsset {
+  ticker: string;
+  balance: string;
+  decimals: number;
+  utxo_count: number;
+  is_locked: boolean;
+}
+
+export interface AssetsOverview {
+  domains: DomainAsset[];
+  tokens: TokenAsset[];
+  total_domains: number;
+  total_token_types: number;
+}
+
+export async function fetchLockedUtxos(): Promise<LockedUtxo[]> {
+  const res = await fetch(`${API_URL}/wallet/utxos/locked`);
+  if (!res.ok) throw new Error("Failed to fetch locked UTXOs");
+  return res.json();
+}
+
+export async function fetchUnlockedUtxos(): Promise<Utxo[]> {
+  const res = await fetch(`${API_URL}/wallet/utxos/unlocked`);
+  if (!res.ok) throw new Error("Failed to fetch unlocked UTXOs");
+  return res.json();
+}
+
+export async function lockUtxos(utxos: { txid: string; vout: number }[]): Promise<LockResponse> {
+  const res = await fetch(`${API_URL}/wallet/utxos/lock`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ utxos }),
+  });
+  if (!res.ok) throw new Error("Failed to lock UTXOs");
+  return res.json();
+}
+
+export async function unlockUtxos(utxos: { txid: string; vout: number }[]): Promise<LockResponse> {
+  const res = await fetch(`${API_URL}/wallet/utxos/unlock`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ utxos }),
+  });
+  if (!res.ok) throw new Error("Failed to unlock UTXOs");
+  return res.json();
+}
+
+export async function syncLocks(): Promise<SyncLocksResponse> {
+  const res = await fetch(`${API_URL}/wallet/utxos/sync-locks`, {
+    method: "POST",
+  });
+  if (!res.ok) throw new Error("Failed to sync locks");
+  return res.json();
+}
+
+export async function fetchLockSettings(): Promise<LockSettings> {
+  const res = await fetch(`${API_URL}/wallet/locks/settings`);
+  if (!res.ok) throw new Error("Failed to fetch lock settings");
+  return res.json();
+}
+
+export async function setAutoLock(enabled: boolean): Promise<LockResponse> {
+  const res = await fetch(`${API_URL}/wallet/locks/auto-lock`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ enabled }),
+  });
+  if (!res.ok) throw new Error("Failed to set auto-lock");
+  return res.json();
+}
+
+export async function fetchAssets(): Promise<AssetsOverview> {
+  const res = await fetch(`${API_URL}/wallet/assets`);
+  if (!res.ok) throw new Error("Failed to fetch assets");
+  return res.json();
+}
+
+export async function fetchAssetsDomains(): Promise<DomainAsset[]> {
+  const res = await fetch(`${API_URL}/wallet/assets/domains`);
+  if (!res.ok) throw new Error("Failed to fetch domain assets");
+  return res.json();
+}
+
+export async function fetchAssetsTokens(): Promise<TokenAsset[]> {
+  const res = await fetch(`${API_URL}/wallet/assets/tokens`);
+  if (!res.ok) throw new Error("Failed to fetch token assets");
+  return res.json();
+}
+

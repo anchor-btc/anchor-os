@@ -14,22 +14,6 @@ pub struct Pixel {
 }
 
 impl Pixel {
-    /// Create a new pixel
-    pub fn new(x: u32, y: u32, r: u8, g: u8, b: u8) -> Self {
-        Self { x, y, r, g, b }
-    }
-
-    /// Encode pixel to bytes (7 bytes: x:u16, y:u16, r:u8, g:u8, b:u8)
-    pub fn to_bytes(&self) -> [u8; 7] {
-        let mut bytes = [0u8; 7];
-        bytes[0..2].copy_from_slice(&(self.x as u16).to_be_bytes());
-        bytes[2..4].copy_from_slice(&(self.y as u16).to_be_bytes());
-        bytes[4] = self.r;
-        bytes[5] = self.g;
-        bytes[6] = self.b;
-        bytes
-    }
-
     /// Decode pixel from bytes
     pub fn from_bytes(bytes: &[u8]) -> Option<Self> {
         if bytes.len() < 7 {
@@ -94,14 +78,8 @@ pub struct RegionParams {
 /// Pagination parameters
 #[derive(Debug, Clone, Deserialize)]
 pub struct ListParams {
-    #[serde(default = "default_page")]
-    pub page: i32,
     #[serde(default = "default_per_page")]
     pub per_page: i32,
-}
-
-fn default_page() -> i32 {
-    1
 }
 
 fn default_per_page() -> i32 {

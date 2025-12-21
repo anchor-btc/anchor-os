@@ -315,15 +315,15 @@ pub async fn get_exposable_services(
             port: 8000,
         },
         ExposableService {
-            name: "Anchor DNS".to_string(),
-            description: "Decentralized DNS on Bitcoin".to_string(),
-            local_url: "http://app-dns-frontend:3400".to_string(),
+            name: "Anchor Domains".to_string(),
+            description: "Decentralized DNS on Bitcoin - .btc, .sat, .anchor, .anc, .bit domains".to_string(),
+            local_url: "http://app-domains-frontend:3400".to_string(),
             port: 3400,
         },
         ExposableService {
             name: "Anchor Map".to_string(),
             description: "Location-based messages on Bitcoin".to_string(),
-            local_url: "http://app-map-frontend:3300".to_string(),
+            local_url: "http://app-places-frontend:3300".to_string(),
             port: 3300,
         },
         ExposableService {

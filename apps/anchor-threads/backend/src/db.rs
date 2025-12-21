@@ -243,52 +243,52 @@ impl Database {
             bind_index += 1;
         }
 
-        if let Some(block_height) = params.block_height {
+        if params.block_height.is_some() {
             conditions.push(format!("m.block_height = ${}", bind_index));
             bind_index += 1;
         }
 
-        if let Some(block_min) = params.block_min {
+        if params.block_min.is_some() {
             conditions.push(format!("m.block_height >= ${}", bind_index));
             bind_index += 1;
         }
 
-        if let Some(block_max) = params.block_max {
+        if params.block_max.is_some() {
             conditions.push(format!("m.block_height <= ${}", bind_index));
             bind_index += 1;
         }
 
-        if let Some(kind) = params.kind {
+        if params.kind.is_some() {
             conditions.push(format!("m.kind = ${}", bind_index));
             bind_index += 1;
         }
 
-        if let Some(carrier) = params.carrier {
+        if params.carrier.is_some() {
             conditions.push(format!("m.carrier = ${}", bind_index));
             bind_index += 1;
         }
 
-        if let Some(ref text) = params.text {
+        if params.text.is_some() {
             conditions.push(format!("(convert_from(m.body, 'UTF8') ILIKE ${} OR encode(m.body, 'hex') ILIKE ${})", bind_index, bind_index));
             bind_index += 1;
         }
 
-        if let Some(ref from_date) = params.from_date {
+        if params.from_date.is_some() {
             conditions.push(format!("m.created_at >= ${}", bind_index));
             bind_index += 1;
         }
 
-        if let Some(ref to_date) = params.to_date {
+        if params.to_date.is_some() {
             conditions.push(format!("m.created_at <= ${}", bind_index));
             bind_index += 1;
         }
 
-        if let Some(min_size) = params.min_size {
+        if params.min_size.is_some() {
             conditions.push(format!("length(m.body) >= ${}", bind_index));
             bind_index += 1;
         }
 
-        if let Some(max_size) = params.max_size {
+        if params.max_size.is_some() {
             conditions.push(format!("length(m.body) <= ${}", bind_index));
             bind_index += 1;
         }

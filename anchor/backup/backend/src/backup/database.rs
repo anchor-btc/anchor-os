@@ -51,42 +51,6 @@ pub async fn pg_dump(config: &DatabaseConfig, output_path: &str) -> Result<Strin
     }
 }
 
-/// Dump MySQL/MariaDB database to a file
-pub async fn mysql_dump(config: &DatabaseConfig, output_path: &str) -> Result<String> {
-    let dump_file = format!("{}/{}.sql.gz", output_path, config.name);
-    
-    info!("Dumping MySQL database {} to {}", config.database, dump_file);
-    
-    // Create output directory if needed
-    if let Some(parent) = Path::new(&dump_file).parent() {
-        tokio::fs::create_dir_all(parent).await?;
-    }
-    
-    // Run mysqldump with gzip compression
-    let output = Command::new("sh")
-        .arg("-c")
-        .arg(format!(
-            "mysqldump -h {} -P {} -u {} -p'{}' {} | gzip > {}",
-            config.host,
-            config.port,
-            config.user,
-            config.password,
-            config.database,
-            dump_file
-        ))
-        .output()
-        .await?;
-    
-    if output.status.success() {
-        info!("Database dump completed: {}", dump_file);
-        Ok(dump_file)
-    } else {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        error!("mysqldump failed: {}", stderr);
-        Err(anyhow::anyhow!("mysqldump failed: {}", stderr))
-    }
-}
-
 /// Get list of Anchor databases to backup
 pub fn get_anchor_databases() -> Vec<DatabaseConfig> {
     vec![
@@ -107,8 +71,8 @@ pub fn get_anchor_databases() -> Vec<DatabaseConfig> {
             database: "anchor_oracles".to_string(),
         },
         DatabaseConfig {
-            name: "anchor-lottery".to_string(),
-            host: "app-lottery-postgres".to_string(),
+            name: "anchor-predictions".to_string(),
+            host: "app-predictions-postgres".to_string(),
             port: 5432,
             user: "anchor".to_string(),
             password: "anchor".to_string(),
@@ -123,32 +87,4 @@ pub fn get_anchor_databases() -> Vec<DatabaseConfig> {
             database: "mempool".to_string(),
         },
     ]
-}
-
-/// Restore PostgreSQL database from a dump file
-pub async fn pg_restore(config: &DatabaseConfig, dump_file: &str) -> Result<()> {
-    info!("Restoring PostgreSQL database {} from {}", config.database, dump_file);
-    
-    let output = Command::new("sh")
-        .arg("-c")
-        .arg(format!(
-            "gunzip -c {} | PGPASSWORD='{}' psql -h {} -p {} -U {} {}",
-            dump_file,
-            config.password,
-            config.host,
-            config.port,
-            config.user,
-            config.database
-        ))
-        .output()
-        .await?;
-    
-    if output.status.success() {
-        info!("Database restore completed");
-        Ok(())
-    } else {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        error!("pg_restore failed: {}", stderr);
-        Err(anyhow::anyhow!("pg_restore failed: {}", stderr))
-    }
 }

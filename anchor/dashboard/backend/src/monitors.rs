@@ -28,8 +28,6 @@ pub struct MonitorState {
     pub bitcoin_rpc_user: String,
     /// Bitcoin RPC password
     pub bitcoin_rpc_password: String,
-    /// Wallet service URL
-    pub wallet_url: String,
 }
 
 /// Create a notification in the database
@@ -369,7 +367,6 @@ pub fn start_monitors(
     bitcoin_rpc_url: String,
     bitcoin_rpc_user: String,
     bitcoin_rpc_password: String,
-    wallet_url: String,
 ) {
     let state = Arc::new(MonitorState {
         docker,
@@ -378,7 +375,6 @@ pub fn start_monitors(
         bitcoin_rpc_url,
         bitcoin_rpc_user,
         bitcoin_rpc_password,
-        wallet_url,
     });
     
     // Spawn container monitor

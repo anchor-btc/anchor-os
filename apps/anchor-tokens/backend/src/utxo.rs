@@ -208,68 +208,6 @@ impl UtxoTracker {
 
         Ok(true)
     }
-
-    /// Get token UTXOs for an address
-    pub async fn get_address_utxos(
-        &self,
-        address: &str,
-        token_id: Option<i32>,
-    ) -> Result<Vec<crate::models::TokenUtxo>> {
-        self.db.get_address_utxos(address, token_id).await
-    }
-
-    /// Get total balance for an address across all tokens
-    pub async fn get_address_balances(
-        &self,
-        address: &str,
-    ) -> Result<Vec<crate::models::TokenBalance>> {
-        self.db.get_address_balances(address).await
-    }
-
-    /// Select UTXOs for a transfer
-    /// Greedy selection: picks largest UTXOs first until target is met
-    pub async fn select_utxos_for_transfer(
-        &self,
-        address: &str,
-        token_id: i32,
-        target_amount: u128,
-    ) -> Result<Vec<(Vec<u8>, i32, u128)>> {
-        let utxos = self.db.get_address_utxos(address, Some(token_id)).await?;
-
-        // Sort by amount descending
-        let mut sorted_utxos: Vec<_> = utxos
-            .into_iter()
-            .filter(|u| !u.is_spent)
-            .map(|u| {
-                let amount: u128 = u.amount.parse().unwrap_or(0);
-                (hex::decode(&u.txid).unwrap_or_default(), u.vout, amount)
-            })
-            .collect();
-
-        sorted_utxos.sort_by(|a, b| b.2.cmp(&a.2));
-
-        // Greedy selection
-        let mut selected = Vec::new();
-        let mut total = 0u128;
-
-        for utxo in sorted_utxos {
-            if total >= target_amount {
-                break;
-            }
-            total += utxo.2;
-            selected.push(utxo);
-        }
-
-        if total < target_amount {
-            return Err(anyhow::anyhow!(
-                "Insufficient balance: have {}, need {}",
-                total,
-                target_amount
-            ));
-        }
-
-        Ok(selected)
-    }
 }
 
 #[cfg(test)]

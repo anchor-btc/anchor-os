@@ -149,6 +149,7 @@ pub enum MessageType {
 
 impl MessageType {
     /// Get the ANCHOR kind for this message type
+    #[allow(dead_code)]
     pub fn kind(&self) -> u8 {
         match self {
             MessageType::Text => 1,

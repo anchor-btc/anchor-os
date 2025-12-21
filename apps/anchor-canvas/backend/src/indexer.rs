@@ -211,13 +211,6 @@ impl CanvasIndexer {
 
         Ok(None)
     }
-
-    /// Reindex from a specific height (for handling reorgs)
-    pub async fn reindex_from(&self, height: i32) -> Result<()> {
-        info!("Reindexing from block {}", height);
-        self.db.handle_reorg(height).await?;
-        self.index_new_blocks().await
-    }
 }
 
 #[cfg(test)]

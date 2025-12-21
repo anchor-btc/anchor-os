@@ -6,10 +6,6 @@ use std::env;
 pub const CANVAS_WIDTH: u32 = 4580;
 pub const CANVAS_HEIGHT: u32 = 4580;
 
-/// Maximum pixels per transaction (based on OP_RETURN size limit)
-/// 80 bytes - 6 bytes protocol overhead = 74 bytes / 7 bytes per pixel = 10 pixels
-pub const MAX_PIXELS_PER_TX: usize = 10;
-
 /// Tile size for rendering (256x256 is standard for map tiles)
 pub const TILE_SIZE: u32 = 256;
 
@@ -24,8 +20,6 @@ pub struct Config {
     pub bitcoin_rpc_user: String,
     /// Bitcoin Core RPC password
     pub bitcoin_rpc_password: String,
-    /// Wallet API URL for creating transactions
-    pub wallet_url: String,
     /// Server host
     pub host: String,
     /// Server port
@@ -48,8 +42,6 @@ impl Config {
                 .unwrap_or_else(|_| "user".to_string()),
             bitcoin_rpc_password: env::var("BITCOIN_RPC_PASSWORD")
                 .unwrap_or_else(|_| "pass".to_string()),
-            wallet_url: env::var("WALLET_URL")
-                .unwrap_or_else(|_| "http://localhost:8001".to_string()),
             host: env::var("HOST").unwrap_or_else(|_| "0.0.0.0".to_string()),
             port: env::var("PORT")
                 .ok()

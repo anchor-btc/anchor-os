@@ -18,7 +18,7 @@ pub struct OracleRegistration {
     pub oracle_pubkey: [u8; 32],
     pub name: String,
     pub categories: i32,
-    pub stake_amount: i64,
+    pub _stake_amount: i64,
     pub metadata: Option<String>,
 }
 
@@ -61,7 +61,7 @@ impl OracleRegistration {
             oracle_pubkey,
             name,
             categories,
-            stake_amount,
+            _stake_amount: stake_amount,
             metadata,
         })
     }
@@ -69,11 +69,11 @@ impl OracleRegistration {
 
 /// Oracle attestation body parser
 pub struct OracleAttestationBody {
-    pub category: u8,
+    pub _category: u8,
     pub event_id: [u8; 32],
-    pub attestation_block: i64,
-    pub outcome_data: Vec<u8>,
-    pub schnorr_signature: [u8; 64],
+    pub _attestation_block: i64,
+    pub _outcome_data: Vec<u8>,
+    pub _schnorr_signature: [u8; 64],
 }
 
 impl OracleAttestationBody {
@@ -101,11 +101,11 @@ impl OracleAttestationBody {
         schnorr_signature.copy_from_slice(&body[43 + outcome_len..43 + outcome_len + 64]);
 
         Some(Self {
-            category,
+            _category: category,
             event_id,
-            attestation_block,
-            outcome_data,
-            schnorr_signature,
+            _attestation_block: attestation_block,
+            _outcome_data: outcome_data,
+            _schnorr_signature: schnorr_signature,
         })
     }
 }
@@ -210,7 +210,7 @@ impl Indexer {
                     AnchorKind::OracleAttestation => {
                         if let Some(att) = OracleAttestationBody::parse(&msg.body) {
                             // Find oracle from anchors (parent message)
-                            if let Some(anchor) = msg.canonical_parent() {
+                            if let Some(_anchor) = msg.canonical_parent() {
                                 // Look up oracle by txid prefix
                                 // For now, we'd need to resolve the anchor
                                 tracing::debug!(

@@ -6,7 +6,7 @@
 -- Each pixel can be colored by anyone via a Bitcoin transaction
 
 -- Estado atual de cada pixel (estado mais recente)
-CREATE TABLE pixel_state (
+CREATE TABLE IF NOT EXISTS pixel_state (
     id SERIAL PRIMARY KEY,
     x INTEGER NOT NULL CHECK (x >= 0 AND x < 4580),
     y INTEGER NOT NULL CHECK (y >= 0 AND y < 4580),
@@ -21,7 +21,7 @@ CREATE TABLE pixel_state (
 );
 
 -- Historico de alteracoes (para replay e auditoria)
-CREATE TABLE pixel_history (
+CREATE TABLE IF NOT EXISTS pixel_history (
     id SERIAL PRIMARY KEY,
     x INTEGER NOT NULL CHECK (x >= 0 AND x < 4580),
     y INTEGER NOT NULL CHECK (y >= 0 AND y < 4580),
@@ -34,34 +34,36 @@ CREATE TABLE pixel_history (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Estado do indexador
-CREATE TABLE indexer_state (
+-- Estado do indexador do Canvas (separado do indexer principal)
+CREATE TABLE IF NOT EXISTS canvas_indexer_state (
     id INTEGER PRIMARY KEY DEFAULT 1,
     last_block_hash BYTEA,
     last_block_height INTEGER DEFAULT 0,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    CONSTRAINT single_row CHECK (id = 1)
+    CONSTRAINT canvas_single_row CHECK (id = 1)
 );
 
--- Initialize indexer state
-INSERT INTO indexer_state (id, last_block_height) VALUES (1, 0);
+-- Initialize Canvas indexer state
+INSERT INTO canvas_indexer_state (id, last_block_height) 
+VALUES (1, 0) 
+ON CONFLICT (id) DO NOTHING;
 
 -- Indexes for efficient querying
-CREATE INDEX idx_pixel_state_coords ON pixel_state(x, y);
-CREATE INDEX idx_pixel_state_updated ON pixel_state(updated_at DESC);
-CREATE INDEX idx_pixel_state_block ON pixel_state(last_block_height DESC);
-CREATE INDEX idx_pixel_state_txid ON pixel_state(last_txid);
+CREATE INDEX IF NOT EXISTS idx_pixel_state_coords ON pixel_state(x, y);
+CREATE INDEX IF NOT EXISTS idx_pixel_state_updated ON pixel_state(updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_pixel_state_block ON pixel_state(last_block_height DESC);
+CREATE INDEX IF NOT EXISTS idx_pixel_state_txid ON pixel_state(last_txid);
 
-CREATE INDEX idx_pixel_history_coords ON pixel_history(x, y);
-CREATE INDEX idx_pixel_history_created ON pixel_history(created_at DESC);
-CREATE INDEX idx_pixel_history_block ON pixel_history(block_height DESC);
-CREATE INDEX idx_pixel_history_txid ON pixel_history(txid);
+CREATE INDEX IF NOT EXISTS idx_pixel_history_coords ON pixel_history(x, y);
+CREATE INDEX IF NOT EXISTS idx_pixel_history_created ON pixel_history(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_pixel_history_block ON pixel_history(block_height DESC);
+CREATE INDEX IF NOT EXISTS idx_pixel_history_txid ON pixel_history(txid);
 
 -- Spatial index for region queries (using btree on x,y is sufficient for our use case)
-CREATE INDEX idx_pixel_state_region ON pixel_state(x, y) INCLUDE (r, g, b);
+CREATE INDEX IF NOT EXISTS idx_pixel_state_region ON pixel_state(x, y) INCLUDE (r, g, b);
 
 -- Stats view for quick statistics
-CREATE VIEW canvas_stats AS
+CREATE OR REPLACE VIEW canvas_stats AS
 SELECT 
     COUNT(*) as total_pixels_painted,
     COUNT(DISTINCT last_txid) as total_transactions,
@@ -134,5 +136,11 @@ BEGIN
     ORDER BY ps.y, ps.x;
 END;
 $$ LANGUAGE plpgsql;
+
+
+
+
+
+
 
 

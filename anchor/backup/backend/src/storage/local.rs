@@ -3,7 +3,6 @@
 use anyhow::Result;
 use std::path::Path;
 use tokio::process::Command;
-use tracing::info;
 
 use super::StorageInfo;
 
@@ -47,43 +46,4 @@ pub async fn get_storage_info(backup_dir: &str) -> Result<StorageInfo> {
         used_bytes,
         available_bytes,
     })
-}
-
-/// Get size of backup directory
-pub async fn get_backup_size(backup_dir: &str) -> Result<i64> {
-    let output = Command::new("du")
-        .args(["-sb", backup_dir])
-        .output()
-        .await?;
-    
-    if output.status.success() {
-        let stdout = String::from_utf8_lossy(&output.stdout);
-        let size_str = stdout.split_whitespace().next().unwrap_or("0");
-        Ok(size_str.parse().unwrap_or(0))
-    } else {
-        Ok(0)
-    }
-}
-
-/// Clean up old backup files
-pub async fn cleanup_old_backups(backup_dir: &str, keep_days: u32) -> Result<()> {
-    info!("Cleaning up backups older than {} days in {}", keep_days, backup_dir);
-    
-    let output = Command::new("find")
-        .args([
-            backup_dir,
-            "-type", "f",
-            "-mtime", &format!("+{}", keep_days),
-            "-delete"
-        ])
-        .output()
-        .await?;
-    
-    if output.status.success() {
-        info!("Cleanup completed");
-        Ok(())
-    } else {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        Err(anyhow::anyhow!("Cleanup failed: {}", stderr))
-    }
 }

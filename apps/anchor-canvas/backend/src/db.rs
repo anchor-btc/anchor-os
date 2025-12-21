@@ -23,7 +23,7 @@ impl Database {
     /// Get the last indexed block height
     pub async fn get_last_block_height(&self) -> Result<i32> {
         let row: (i32,) =
-            sqlx::query_as("SELECT last_block_height FROM indexer_state WHERE id = 1")
+            sqlx::query_as("SELECT last_block_height FROM canvas_indexer_state WHERE id = 1")
                 .fetch_one(&self.pool)
                 .await?;
         Ok(row.0)
@@ -32,7 +32,7 @@ impl Database {
     /// Update the last indexed block
     pub async fn update_last_block(&self, block_hash: &[u8], block_height: i32) -> Result<()> {
         sqlx::query(
-            "UPDATE indexer_state SET last_block_hash = $1, last_block_height = $2, updated_at = NOW() WHERE id = 1"
+            "UPDATE canvas_indexer_state SET last_block_hash = $1, last_block_height = $2, updated_at = NOW() WHERE id = 1"
         )
         .bind(block_hash)
         .bind(block_height)
@@ -263,47 +263,6 @@ impl Database {
         .await?;
 
         Ok(rows)
-    }
-
-    /// Handle a blockchain reorganization
-    pub async fn handle_reorg(&self, from_height: i32) -> Result<u64> {
-        // Remove pixels from reorged blocks from history
-        let result = sqlx::query("DELETE FROM pixel_history WHERE block_height >= $1")
-            .bind(from_height)
-            .execute(&self.pool)
-            .await?;
-
-        // Rebuild current state from remaining history
-        sqlx::query(
-            r#"
-            WITH latest AS (
-                SELECT DISTINCT ON (x, y) x, y, r, g, b, txid, vout, block_height, created_at
-                FROM pixel_history
-                ORDER BY x, y, created_at DESC
-            )
-            INSERT INTO pixel_state (x, y, r, g, b, last_txid, last_vout, last_block_height, updated_at)
-            SELECT x, y, r, g, b, txid, vout, block_height, created_at
-            FROM latest
-            ON CONFLICT (x, y) DO UPDATE SET
-                r = EXCLUDED.r,
-                g = EXCLUDED.g,
-                b = EXCLUDED.b,
-                last_txid = EXCLUDED.last_txid,
-                last_vout = EXCLUDED.last_vout,
-                last_block_height = EXCLUDED.last_block_height,
-                updated_at = EXCLUDED.updated_at
-            "#,
-        )
-        .execute(&self.pool)
-        .await?;
-
-        // Update indexer state
-        sqlx::query("UPDATE indexer_state SET last_block_height = $1 - 1 WHERE id = 1")
-            .bind(from_height)
-            .execute(&self.pool)
-            .await?;
-
-        Ok(result.rows_affected())
     }
 }
 

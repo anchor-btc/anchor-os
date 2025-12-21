@@ -76,7 +76,7 @@ export default function AppsPage() {
   const services = servicesData?.services || [];
 
   // Helper to get install status for an app
-  // App IDs in apps.ts are already the service IDs (e.g., "app-dns", "core-bitcoin")
+  // App IDs in apps.ts are already the service IDs (e.g., "app-domains", "core-bitcoin")
   const getInstallStatus = (appId: string): ServiceInstallStatus => {
     if (installingService === appId) return "installing";
     if (installedServices.includes(appId)) return "installed";

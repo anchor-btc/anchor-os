@@ -28,4 +28,9 @@ hex.workspace = true
 dotenvy.workspace = true
 utoipa.workspace = true
 utoipa-swagger-ui.workspace = true
+chrono.workspace = true
+dirs.workspace = true
+reqwest.workspace = true
 
+[dev-dependencies]
+tempfile = "3"

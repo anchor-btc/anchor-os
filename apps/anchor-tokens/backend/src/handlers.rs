@@ -149,8 +149,8 @@ pub struct UtxoParams {
 
 /// Get address operation history
 pub async fn get_address_history(
-    State(state): State<AppState>,
-    Path(address): Path<String>,
+    State(_state): State<AppState>,
+    Path(_address): Path<String>,
     Query(params): Query<ListParams>,
 ) -> Result<Json<PaginatedResponse<TokenOperationResponse>>, AppError> {
     // For now, return empty - would need to query by address across all tokens
