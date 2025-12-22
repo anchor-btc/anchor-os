@@ -3,14 +3,27 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Copy anchor-ui first (local dependency)
+COPY libs/js/anchor-ui ./libs/js/anchor-ui
+
+# Build anchor-ui
+WORKDIR /app/libs/js/anchor-ui
+RUN npm install && npm run build
+
+# Move to frontend directory
+WORKDIR /app/frontend
+
 # Copy package files
-COPY package.json ./
+COPY apps/anchor-threads/frontend/package.json ./
+
+# Update the anchor-ui path for Docker context
+RUN sed -i 's|file:../../../libs/js/anchor-ui|file:/app/libs/js/anchor-ui|g' package.json
 
 # Install dependencies
 RUN npm install
 
 # Copy source files
-COPY . .
+COPY apps/anchor-threads/frontend/ .
 
 # Build-time environment variables for Next.js
 ARG NEXT_PUBLIC_API_URL=http://localhost:3101
@@ -35,9 +48,9 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 # Copy built files
-COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder /app/frontend/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next/static ./.next/static
 
 USER nextjs
 

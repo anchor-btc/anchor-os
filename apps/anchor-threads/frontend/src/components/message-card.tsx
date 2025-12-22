@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
+import { Card } from "@AnchorProtocol/ui";
 import { Message, truncateTxid, formatBlockHeight, hexToImageDataUrl, isImageMessage, CARRIER_INFO } from "@/lib/api";
 import {
   MessageSquare,
@@ -42,9 +43,9 @@ export function MessageCard({
   };
 
   return (
-    <article
+    <Card
       onClick={handleCardClick}
-      className={`bg-card border border-border rounded-lg p-4 hover:border-primary/50 hover:shadow-md transition-all cursor-pointer group ${
+      className={`p-4 hover:border-primary/50 hover:shadow-md transition-all cursor-pointer group ${
         isReply ? "ml-6 border-l-2 border-l-primary/30" : ""
       }`}
     >
@@ -57,8 +58,8 @@ export function MessageCard({
           {message.carrier !== undefined && (
             <span
               className={`px-2 py-0.5 rounded text-xs font-medium ${
-                CARRIER_INFO[message.carrier]?.bgColor || "bg-gray-100"
-              } ${CARRIER_INFO[message.carrier]?.textColor || "text-gray-700"}`}
+                CARRIER_INFO[message.carrier]?.bgColor || "bg-muted"
+              } ${CARRIER_INFO[message.carrier]?.textColor || "text-muted-foreground"}`}
               title={CARRIER_INFO[message.carrier]?.description || `Carrier: ${message.carrier_name}`}
             >
               {CARRIER_INFO[message.carrier]?.icon}{" "}
@@ -84,12 +85,12 @@ export function MessageCard({
       {showParent && parentAnchor && (
         <div className="mb-3 text-sm" onClick={handleInteractiveClick}>
           {parentAnchor.is_orphan ? (
-            <span className="flex items-center gap-1 text-yellow-500">
+            <span className="flex items-center gap-1 text-warning">
               <AlertTriangle className="h-3 w-3" />
               Parent not found
             </span>
           ) : parentAnchor.is_ambiguous ? (
-            <span className="flex items-center gap-1 text-yellow-500">
+            <span className="flex items-center gap-1 text-warning">
               <AlertTriangle className="h-3 w-3" />
               Ambiguous parent reference
             </span>
@@ -163,6 +164,6 @@ export function MessageCard({
           </span>
         </div>
       )}
-    </article>
+    </Card>
   );
 }

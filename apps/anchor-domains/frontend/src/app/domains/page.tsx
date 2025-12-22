@@ -27,7 +27,7 @@ export default function DomainsPage() {
     <div className="min-h-screen">
       <Header />
 
-      <main className="max-w-7xl mx-auto px-4 py-12">
+      <main className="max-w-6xl mx-auto px-4 py-12">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-white">Browse Domains</h1>

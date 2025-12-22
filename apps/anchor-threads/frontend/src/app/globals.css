@@ -1,17 +1,24 @@
-/* Import Anchor Design System base styles */
+/* Anchor UI Design System */
 @import "@AnchorProtocol/ui/styles/globals.css";
-/* Import Threads theme (Orange accent) */
 @import "@AnchorProtocol/ui/styles/themes/threads.css";
 
 /* App-specific overrides */
 :root {
-  /* Override primary to Bitcoin orange for Threads */
+  /* Primary color - Bitcoin orange for Threads */
   --primary: 33.1 93.9% 53.3%;
   --primary-foreground: 0 0% 100%;
   
-  /* Font overrides */
-  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), monospace;
+  /* Ring color */
+  --ring: 33.1 93.9% 53.3%;
+}
+
+/* Apply Geist fonts */
+body {
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+code, pre, .font-mono {
+  font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 /* Custom scrollbar */
@@ -147,6 +154,7 @@
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

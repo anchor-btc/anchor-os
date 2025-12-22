@@ -38,6 +38,11 @@
       "types": "./dist/src/utils/cn.d.ts",
       "import": "./dist/src/utils/cn.js",
       "require": "./dist/src/utils/cn.cjs"
+    },
+    "./layout": {
+      "types": "./dist/src/components/layout/index.d.ts",
+      "import": "./dist/src/components/layout/index.js",
+      "require": "./dist/src/components/layout/index.cjs"
     }
   },
   "files": [
@@ -45,14 +50,17 @@
     "src/styles"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && npm run postbuild",
+    "postbuild": "node -e \"const fs=require('fs');const path=require('path');const dir='./dist/src';const addUseClient=(f)=>{if(f.endsWith('.js')||f.endsWith('.cjs')){const p=path.join(dir,f);const c=fs.readFileSync(p,'utf8');if(!c.startsWith('\\\"use client\\\"')){fs.writeFileSync(p,'\\\"use client\\\";\\n'+c);}}}; fs.readdirSync(dir).forEach(f=>{const fp=path.join(dir,f);if(fs.statSync(fp).isDirectory()){fs.readdirSync(fp).forEach(sf=>{const sfp=path.join(fp,sf);if(fs.statSync(sfp).isDirectory()){fs.readdirSync(sfp).forEach(ssf=>addUseClient(path.join(f,sf,ssf)));}else{addUseClient(path.join(f,sf));}});}else{addUseClient(f);}});\"",
     "dev": "tsup --watch",
     "clean": "rm -rf dist",
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
     "react": ">=18.0.0",
-    "react-dom": ">=18.0.0"
+    "react-dom": ">=18.0.0",
+    "lucide-react": ">=0.400.0",
+    "next": ">=14.0.0"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.0",
@@ -62,6 +70,8 @@
   "devDependencies": {
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "lucide-react": "^0.400.0",
+    "next": "^15.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwindcss": "^3.4.16",
@@ -75,6 +85,36 @@
     "react",
     "tailwindcss",
     "ui"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AnchorProtocol/anchor.git",
+    "directory": "libs/js/anchor-ui"
+  }
+}
+
+
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AnchorProtocol/anchor.git",
+    "directory": "libs/js/anchor-ui"
+  }
+}
+
+
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AnchorProtocol/anchor.git",
+    "directory": "libs/js/anchor-ui"
+  }
+}
+
+
   ],
   "license": "MIT",
   "repository": {

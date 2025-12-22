@@ -14,6 +14,7 @@ import {
   hexToImageDataUrl,
   BTC_EXPLORER_URL,
 } from "@/lib/api";
+import { Button, Card, Container } from "@AnchorProtocol/ui";
 import {
   Loader2,
   MessageSquare,
@@ -79,21 +80,21 @@ export default function ThreadPage() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-20">
+      <Container className="flex justify-center py-20">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
+      </Container>
     );
   }
 
   if (error || !thread) {
     return (
-      <div className="text-center py-20">
-        <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
-        <h1 className="text-2xl font-bold mb-2">Thread Not Found</h1>
+      <Container className="text-center py-20">
+        <AlertTriangle className="h-12 w-12 text-warning mx-auto mb-4" />
+        <h1 className="text-2xl font-bold mb-2 text-foreground">Thread Not Found</h1>
         <p className="text-muted-foreground">
           The requested thread could not be found.
         </p>
-      </div>
+      </Container>
     );
   }
 
@@ -101,58 +102,60 @@ export default function ThreadPage() {
   const totalReplies = countTotalReplies(thread.replies);
 
   return (
-    <div className="space-y-6">
+    <Container className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/threads" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <ArrowLeft className="h-5 w-5 text-gray-600" />
+          <Button asChild variant="ghost" size="icon">
+            <Link href="/threads">
+              <ArrowLeft className="h-5 w-5" />
           </Link>
+          </Button>
           <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <MessageSquare className="h-6 w-6 text-orange-500" />
+            <h1 className="text-2xl font-bold flex items-center gap-2 text-foreground">
+              <MessageSquare className="h-6 w-6 text-primary" />
               Thread View
             </h1>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted-foreground">
               {thread.total_messages} message{thread.total_messages !== 1 ? "s" : ""} in this thread
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Button asChild variant="outline" size="sm">
           <a
             href={`${BTC_EXPLORER_URL}/tx/${txid}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg transition-colors"
-            title="View in BTC Explorer"
+              className="flex items-center gap-1.5"
           >
             <ExternalLink className="h-4 w-4" />
             BTC Explorer
           </a>
-          <Link
-            href={`/compose?parent=${txid}&vout=${vout}`}
-            className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition-colors"
-          >
+          </Button>
+          <Button asChild variant="accent">
+            <Link href={`/compose?parent=${txid}&vout=${vout}`} className="flex items-center gap-2">
             <Plus className="h-4 w-4" />
             Reply
           </Link>
+          </Button>
         </div>
       </div>
 
       {/* Parent Messages */}
       {hasParents && (
         <div className="space-y-3">
-          <div className="flex items-center gap-2 text-gray-500 text-sm">
+          <div className="flex items-center gap-2 text-muted-foreground text-sm">
             <ArrowUp className="h-4 w-4" />
             <span>Parent Messages</span>
           </div>
-          <div className="space-y-2 pl-4 border-l-2 border-orange-200">
+          <div className="space-y-2 pl-4 border-l-2 border-primary/20">
             {parentMessages.map(({ anchor, message: parent }) => (
               <ParentCard key={`${parent.txid}-${parent.vout}`} message={parent} index={anchor.index} />
             ))}
           </div>
           <div className="flex justify-center py-2">
-            <ArrowDown className="h-5 w-5 text-orange-400" />
+            <ArrowDown className="h-5 w-5 text-primary/50" />
           </div>
         </div>
       )}
@@ -163,7 +166,7 @@ export default function ThreadPage() {
       {/* Replies */}
       {thread.replies.length > 0 && (
         <div className="space-y-3">
-          <div className="flex items-center gap-2 text-gray-500 text-sm">
+          <div className="flex items-center gap-2 text-muted-foreground text-sm">
             <Reply className="h-4 w-4" />
             <span>{totalReplies} {totalReplies === 1 ? "Reply" : "Replies"}</span>
           </div>
@@ -177,20 +180,19 @@ export default function ThreadPage() {
 
       {/* No Replies */}
       {thread.replies.length === 0 && (
-        <div className="text-center py-12 bg-orange-50 rounded-xl border border-orange-100">
-          <MessageSquare className="h-10 w-10 text-orange-300 mx-auto mb-3" />
-          <h3 className="text-lg font-medium mb-2">No replies yet</h3>
-          <p className="text-gray-500 mb-4">Be the first to reply.</p>
-          <Link
-            href={`/compose?parent=${txid}&vout=${vout}`}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
-          >
+        <Card className="text-center py-12 bg-primary/5">
+          <MessageSquare className="h-10 w-10 text-primary/30 mx-auto mb-3" />
+          <h3 className="text-lg font-medium mb-2 text-foreground">No replies yet</h3>
+          <p className="text-muted-foreground mb-4">Be the first to reply.</p>
+          <Button asChild variant="accent">
+            <Link href={`/compose?parent=${txid}&vout=${vout}`} className="flex items-center gap-2">
             <Reply className="h-4 w-4" />
             Reply
           </Link>
-        </div>
+          </Button>
+        </Card>
       )}
-    </div>
+    </Container>
   );
 }
 
@@ -209,23 +211,23 @@ function MessageBody({ message, size = "md" }: { message: Message; size?: "sm" |
   if (isImage) {
     return (
       <div className="flex items-center gap-3">
-        <div className={`${imgSize} rounded-lg overflow-hidden border border-gray-200 bg-gray-50 flex items-center justify-center flex-shrink-0`}>
+        <div className={`${imgSize} rounded-lg overflow-hidden border border-border bg-secondary flex items-center justify-center flex-shrink-0`}>
           {imageDataUrl ? (
             <img src={imageDataUrl} alt="" className="object-cover w-full h-full" style={{ imageRendering: "pixelated" }} />
           ) : (
-            <ImageIcon className="h-5 w-5 text-gray-400" />
+            <ImageIcon className="h-5 w-5 text-muted-foreground" />
           )}
         </div>
-        <span className="text-sm text-gray-500">Image ({Math.floor(message.body_hex.length / 2)} bytes)</span>
+        <span className="text-sm text-muted-foreground">Image ({Math.floor(message.body_hex.length / 2)} bytes)</span>
       </div>
     );
   }
 
   if (message.body_text) {
-    return <p className={`${textSize} whitespace-pre-wrap break-words`}>{message.body_text}</p>;
+    return <p className={`${textSize} whitespace-pre-wrap break-words text-foreground`}>{message.body_text}</p>;
   }
 
-  return <p className="font-mono text-sm text-gray-400">{truncateTxid(message.body_hex, 32)}</p>;
+  return <p className="font-mono text-sm text-muted-foreground">{truncateTxid(message.body_hex, 32)}</p>;
 }
 
 // Root message card
@@ -233,10 +235,10 @@ function RootCard({ message }: { message: Message }) {
   const carrierInfo = message.carrier !== undefined ? CARRIER_INFO[message.carrier] : null;
 
   return (
-    <article className="bg-white border-2 border-orange-300 rounded-xl p-5 shadow-sm">
+    <Card className="p-5 border-2 border-primary/30">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2 text-sm flex-wrap">
-          <span className="px-2 py-1 bg-orange-500 text-white rounded text-xs font-medium">
+          <span className="px-2 py-1 bg-primary text-primary-foreground rounded text-xs font-medium">
             {message.kind_name}
           </span>
           {carrierInfo && (
@@ -244,16 +246,16 @@ function RootCard({ message }: { message: Message }) {
               {carrierInfo.icon} {carrierInfo.label}
             </span>
           )}
-          <span className="text-gray-400 flex items-center gap-1">
+          <span className="text-muted-foreground flex items-center gap-1">
             <Box className="h-3 w-3" />
             {formatBlockHeight(message.block_height)}
           </span>
-          <span className="text-gray-400 flex items-center gap-1">
+          <span className="text-muted-foreground flex items-center gap-1">
             <Clock className="h-3 w-3" />
             {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
           </span>
         </div>
-        <Link href={`/message/${message.txid}/${message.vout}`} className="text-sm text-orange-500 hover:text-orange-600 flex items-center gap-1">
+        <Link href={`/message/${message.txid}/${message.vout}`} className="text-sm text-primary hover:text-primary/80 flex items-center gap-1">
           Details <ChevronRight className="h-4 w-4" />
         </Link>
       </div>
@@ -263,33 +265,33 @@ function RootCard({ message }: { message: Message }) {
       </div>
 
       {message.anchors?.length > 0 && (
-        <div className="mb-4 p-3 bg-orange-50 rounded-lg text-sm">
-          <div className="flex items-center gap-2 font-medium text-orange-700 mb-2">
+        <div className="mb-4 p-3 bg-primary/5 rounded-lg text-sm">
+          <div className="flex items-center gap-2 font-medium text-primary mb-2">
             <Link2 className="h-4 w-4" />
             Anchors ({message.anchors.length})
           </div>
           {message.anchors.map((anchor, i) => (
-            <div key={i} className="text-xs text-gray-600">
+            <div key={i} className="text-xs text-muted-foreground">
               #{i}: {anchor.resolved_txid ? (
-                <Link href={`/thread/${anchor.resolved_txid}/${anchor.vout}`} className="text-orange-600 hover:underline font-mono">
+                <Link href={`/thread/${anchor.resolved_txid}/${anchor.vout}`} className="text-primary hover:underline font-mono">
                   {truncateTxid(anchor.resolved_txid)}:{anchor.vout}
                 </Link>
               ) : (
-                <span className="font-mono text-gray-400">{anchor.txid_prefix}...:{anchor.vout}</span>
+                <span className="font-mono text-muted-foreground">{anchor.txid_prefix}...:{anchor.vout}</span>
               )}
             </div>
           ))}
         </div>
       )}
 
-      <div className="flex items-center justify-between text-sm text-gray-400 pt-3 border-t border-gray-100">
+      <div className="flex items-center justify-between text-sm text-muted-foreground pt-3 border-t border-border">
         <span className="flex items-center gap-1">
           <MessageSquare className="h-4 w-4" />
           {message.reply_count} {message.reply_count === 1 ? "reply" : "replies"}
         </span>
         <span className="font-mono text-xs">{truncateTxid(message.txid)}:{message.vout}</span>
       </div>
-    </article>
+    </Card>
   );
 }
 
@@ -298,19 +300,21 @@ function ParentCard({ message, index }: { message: Message; index: number }) {
   return (
     <Link
       href={`/thread/${message.txid}/${message.vout}`}
-      className="block bg-white border border-gray-200 rounded-lg p-4 hover:border-orange-300 transition-colors"
+      className="block"
     >
-      <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
-        <span className="px-2 py-0.5 bg-orange-100 text-orange-600 rounded font-medium">Parent #{index + 1}</span>
+      <Card className="p-4 hover:border-primary/30 transition-colors">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+          <span className="px-2 py-0.5 bg-primary/10 text-primary rounded font-medium">Parent #{index + 1}</span>
         <span>{formatBlockHeight(message.block_height)}</span>
       </div>
       <MessageBody message={message} size="sm" />
-      <div className="flex items-center gap-2 mt-2 text-xs text-gray-400">
+        <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
         <span className="font-mono">{truncateTxid(message.txid)}</span>
         <span>•</span>
         <span>{message.reply_count} replies</span>
         <ExternalLink className="h-3 w-3 ml-auto" />
       </div>
+      </Card>
     </Link>
   );
 }
@@ -332,10 +336,10 @@ function ReplyCard({ message }: { message: Message }) {
   const carrierInfo = message.carrier !== undefined ? CARRIER_INFO[message.carrier] : null;
 
   return (
-    <article className="bg-white border border-gray-200 rounded-lg p-4 mb-2 hover:border-orange-200 transition-colors">
+    <Card className="p-4 mb-2 hover:border-primary/20 transition-colors">
       <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2 text-xs text-gray-500 flex-wrap">
-          <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded font-medium">{message.kind_name}</span>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+          <span className="px-2 py-0.5 bg-secondary text-muted-foreground rounded font-medium">{message.kind_name}</span>
           {carrierInfo && (
             <span className={`px-2 py-0.5 rounded font-medium ${carrierInfo.bgColor} ${carrierInfo.textColor}`}>
               {carrierInfo.icon} {carrierInfo.label}
@@ -351,10 +355,10 @@ function ReplyCard({ message }: { message: Message }) {
           </span>
         </div>
         <div className="flex items-center gap-2 text-xs">
-          <Link href={`/compose?parent=${message.txid}&vout=${message.vout}`} className="text-gray-400 hover:text-orange-500">
+          <Link href={`/compose?parent=${message.txid}&vout=${message.vout}`} className="text-muted-foreground hover:text-primary">
             Reply
           </Link>
-          <Link href={`/thread/${message.txid}/${message.vout}`} className="text-gray-400 hover:text-orange-500">
+          <Link href={`/thread/${message.txid}/${message.vout}`} className="text-muted-foreground hover:text-primary">
             <ChevronRight className="h-4 w-4" />
           </Link>
         </div>
@@ -364,13 +368,13 @@ function ReplyCard({ message }: { message: Message }) {
         <MessageBody message={message} size="md" />
       </div>
 
-      <div className="flex items-center justify-between text-xs text-gray-400">
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span className="flex items-center gap-1">
           <MessageSquare className="h-3 w-3" />
           {message.reply_count} {message.reply_count === 1 ? "reply" : "replies"}
         </span>
         <span className="font-mono">{truncateTxid(message.txid)}:{message.vout}</span>
       </div>
-    </article>
+    </Card>
   );
 }

@@ -25,6 +25,146 @@ export {
   CardContent,
 } from "./components/card";
 export { Input, type InputProps } from "./components/input";
+export {
+  Container,
+  containerSizes,
+  type ContainerProps,
+} from "./components/container";
+export {
+  Footer,
+  accentColors,
+  type FooterProps,
+} from "./components/footer";
+
+// Layout Components
+export {
+  AppShell,
+  type AppShellProps,
+  AppHeader,
+  headerVariants,
+  type AppHeaderProps,
+  type HeaderVariant,
+  AppMain,
+  type AppMainProps,
+  AppLogo,
+  accentGradients,
+  accentTextColors,
+  logoSizes,
+  type AppLogoProps,
+  type AccentColor,
+  type LogoSize,
+  NavLink,
+  accentActiveColors,
+  type NavLinkProps,
+  NavGroup,
+  gapSizes,
+  type NavGroupProps,
+} from "./components/layout";
+
+// Utilities
+export { cn } from "./utils/cn";
+
+// Re-export Tailwind preset for convenience
+export { anchorPreset } from "../tailwind.config";
+
+
+  type FooterProps,
+} from "./components/footer";
+
+// Layout Components
+export {
+  AppShell,
+  type AppShellProps,
+  AppHeader,
+  headerVariants,
+  type AppHeaderProps,
+  type HeaderVariant,
+  AppMain,
+  type AppMainProps,
+  AppLogo,
+  accentGradients,
+  accentTextColors,
+  logoSizes,
+  type AppLogoProps,
+  type AccentColor,
+  type LogoSize,
+  NavLink,
+  accentActiveColors,
+  type NavLinkProps,
+  NavGroup,
+  gapSizes,
+  type NavGroupProps,
+} from "./components/layout";
+
+// Utilities
+export { cn } from "./utils/cn";
+
+// Re-export Tailwind preset for convenience
+export { anchorPreset } from "../tailwind.config";
+
+
+  type FooterProps,
+} from "./components/footer";
+
+// Layout Components
+export {
+  AppShell,
+  type AppShellProps,
+  AppHeader,
+  headerVariants,
+  type AppHeaderProps,
+  type HeaderVariant,
+  AppMain,
+  type AppMainProps,
+  AppLogo,
+  accentGradients,
+  accentTextColors,
+  logoSizes,
+  type AppLogoProps,
+  type AccentColor,
+  type LogoSize,
+  NavLink,
+  accentActiveColors,
+  type NavLinkProps,
+  NavGroup,
+  gapSizes,
+  type NavGroupProps,
+} from "./components/layout";
+
+// Utilities
+export { cn } from "./utils/cn";
+
+// Re-export Tailwind preset for convenience
+export { anchorPreset } from "../tailwind.config";
+
+
+  type FooterProps,
+} from "./components/footer";
+
+// Layout Components
+export {
+  AppShell,
+  type AppShellProps,
+  AppHeader,
+  headerVariants,
+  type AppHeaderProps,
+  type HeaderVariant,
+  AppMain,
+  type AppMainProps,
+  AppLogo,
+  accentGradients,
+  accentTextColors,
+  logoSizes,
+  type AppLogoProps,
+  type AccentColor,
+  type LogoSize,
+  NavLink,
+  accentActiveColors,
+  type NavLinkProps,
+  NavGroup,
+  gapSizes,
+  type NavGroupProps,
+} from "./components/layout";
 
 // Utilities
 export { cn } from "./utils/cn";

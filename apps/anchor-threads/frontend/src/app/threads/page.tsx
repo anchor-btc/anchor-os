@@ -4,6 +4,7 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { fetchRootsFiltered, type Message, type FilterOptions, CARRIER_INFO } from "@/lib/api";
 import { MessageCard } from "@/components/message-card";
+import { Button, Card, Input, Container } from "@AnchorProtocol/ui";
 import Link from "next/link";
 import {
   Loader2,
@@ -16,8 +17,6 @@ import {
   X,
   Search,
   SlidersHorizontal,
-  ChevronDown,
-  ChevronUp,
 } from "lucide-react";
 
 const SORT_OPTIONS = [
@@ -153,120 +152,114 @@ export default function ThreadsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <Container className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link
-            href="/"
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5 text-gray-600" />
+          <Button asChild variant="ghost" size="icon">
+            <Link href="/">
+              <ArrowLeft className="h-5 w-5" />
           </Link>
+          </Button>
           <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <MessageSquare className="h-6 w-6 text-orange-500" />
+            <h1 className="text-2xl font-bold flex items-center gap-2 text-foreground">
+              <MessageSquare className="h-6 w-6 text-primary" />
               All Threads
             </h1>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted-foreground">
               {totalMessages.toLocaleString()} {activeFilterCount > 0 ? "matching" : "total"} threads
             </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <button
+          <Button
+            variant={showFilters || activeFilterCount > 0 ? "accent" : "outline"}
+            size="sm"
             onClick={() => {
               setTempFilters(filters);
               setShowFilters(!showFilters);
             }}
-            className={`flex items-center gap-2 px-4 py-2 text-sm rounded-lg transition-colors ${
-              showFilters || activeFilterCount > 0
-                ? "bg-orange-100 text-orange-700 border border-orange-300"
-                : "text-gray-600 hover:bg-gray-100 border border-gray-200"
-            }`}
           >
             <Filter className="h-4 w-4" />
             Filters
             {activeFilterCount > 0 && (
-              <span className="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">
+              <span className="bg-background text-primary text-xs px-2 py-0.5 rounded-full ml-1">
                 {activeFilterCount}
               </span>
             )}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
             onClick={() => refetch()}
             disabled={isRefetching}
-            className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 border border-gray-200 rounded-lg transition-colors disabled:opacity-50"
           >
             <RefreshCw className={`h-4 w-4 ${isRefetching ? "animate-spin" : ""}`} />
-          </button>
-          <Link
-            href="/compose"
-            className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition-colors"
-          >
+          </Button>
+          <Button asChild variant="accent">
+            <Link href="/compose" className="flex items-center gap-2">
             <Plus className="h-4 w-4" />
             New Thread
           </Link>
+          </Button>
         </div>
       </div>
 
       {/* Filter Panel */}
       {showFilters && (
-        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-lg animate-fade-in">
+        <Card className="p-6 animate-fade-in">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              <SlidersHorizontal className="h-5 w-5 text-orange-500" />
+            <h3 className="text-lg font-semibold flex items-center gap-2 text-foreground">
+              <SlidersHorizontal className="h-5 w-5 text-primary" />
               Advanced Filters
             </h3>
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setShowFilters(false)}
-              className="p-1 hover:bg-gray-100 rounded"
             >
-              <X className="h-5 w-5 text-gray-400" />
-            </button>
+              <X className="h-5 w-5" />
+            </Button>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Search Text */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Search Text
               </label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
+              <Input
+                leftElement={<Search className="h-4 w-4" />}
                   type="text"
                   placeholder="Search message content..."
                   value={tempFilters.text || ""}
                   onChange={(e) => updateTempFilter("text", e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
                 />
-              </div>
             </div>
 
             {/* Transaction ID */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Transaction ID
               </label>
-              <input
+              <Input
                 type="text"
                 placeholder="Full or partial txid..."
                 value={tempFilters.txid || ""}
                 onChange={(e) => updateTempFilter("txid", e.target.value)}
-                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none font-mono text-sm"
+                className="font-mono text-sm"
               />
             </div>
 
             {/* Message Type */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Message Type
               </label>
               <select
                 value={tempFilters.kind?.toString() || ""}
                 onChange={(e) => updateTempFilter("kind", e.target.value ? parseInt(e.target.value) : undefined)}
-                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none bg-white"
+                className="w-full h-9 px-3 rounded-md border border-input bg-transparent text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               >
                 {KIND_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -278,13 +271,13 @@ export default function ThreadsPage() {
 
             {/* Carrier Type */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Carrier Type
               </label>
               <select
                 value={tempFilters.carrier?.toString() || ""}
                 onChange={(e) => updateTempFilter("carrier", e.target.value ? parseInt(e.target.value) : undefined)}
-                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none bg-white"
+                className="w-full h-9 px-3 rounded-md border border-input bg-transparent text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               >
                 {CARRIER_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -296,30 +289,28 @@ export default function ThreadsPage() {
 
             {/* Block Height Range */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Block Height Range
               </label>
               <div className="flex gap-2">
-                <input
+                <Input
                   type="number"
                   placeholder="Min"
                   value={tempFilters.block_min || ""}
                   onChange={(e) => updateTempFilter("block_min", e.target.value ? parseInt(e.target.value) : undefined)}
-                  className="w-1/2 px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
                 />
-                <input
+                <Input
                   type="number"
                   placeholder="Max"
                   value={tempFilters.block_max || ""}
                   onChange={(e) => updateTempFilter("block_max", e.target.value ? parseInt(e.target.value) : undefined)}
-                  className="w-1/2 px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
                 />
               </div>
             </div>
 
             {/* Date Range */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Date Range
               </label>
               <div className="flex gap-2">
@@ -327,26 +318,26 @@ export default function ThreadsPage() {
                   type="datetime-local"
                   value={tempFilters.from_date?.slice(0, 16) || ""}
                   onChange={(e) => updateTempFilter("from_date", e.target.value ? new Date(e.target.value).toISOString() : undefined)}
-                  className="w-1/2 px-2 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm"
+                  className="w-1/2 h-9 px-2 rounded-md border border-input bg-transparent text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 />
                 <input
                   type="datetime-local"
                   value={tempFilters.to_date?.slice(0, 16) || ""}
                   onChange={(e) => updateTempFilter("to_date", e.target.value ? new Date(e.target.value).toISOString() : undefined)}
-                  className="w-1/2 px-2 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm"
+                  className="w-1/2 h-9 px-2 rounded-md border border-input bg-transparent text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 />
               </div>
             </div>
 
             {/* Sort Order */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Sort Order
               </label>
               <select
                 value={tempFilters.sort || "newest"}
                 onChange={(e) => updateTempFilter("sort", e.target.value as FilterOptions["sort"])}
-                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none bg-white"
+                className="w-full h-9 px-3 rounded-md border border-input bg-transparent text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               >
                 {SORT_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -358,73 +349,70 @@ export default function ThreadsPage() {
 
             {/* Body Size Range */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Body Size (bytes)
               </label>
               <div className="flex gap-2">
-                <input
+                <Input
                   type="number"
                   placeholder="Min"
                   value={tempFilters.min_size || ""}
                   onChange={(e) => updateTempFilter("min_size", e.target.value ? parseInt(e.target.value) : undefined)}
-                  className="w-1/2 px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
                 />
-                <input
+                <Input
                   type="number"
                   placeholder="Max"
                   value={tempFilters.max_size || ""}
                   onChange={(e) => updateTempFilter("max_size", e.target.value ? parseInt(e.target.value) : undefined)}
-                  className="w-1/2 px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
                 />
               </div>
             </div>
 
             {/* Min Replies */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Minimum Replies
               </label>
-              <input
+              <Input
                 type="number"
                 placeholder="0"
-                min="0"
+                min={0}
                 value={tempFilters.min_replies || ""}
                 onChange={(e) => updateTempFilter("min_replies", e.target.value ? parseInt(e.target.value) : undefined)}
-                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
               />
             </div>
           </div>
 
           {/* Filter Actions */}
-          <div className="flex items-center justify-between mt-6 pt-6 border-t border-gray-100">
-            <button
+          <div className="flex items-center justify-between mt-6 pt-6 border-t border-border">
+            <Button
+              variant="ghost"
               onClick={clearFilters}
-              className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
             >
               Clear all filters
-            </button>
+            </Button>
             <div className="flex gap-3">
-              <button
+              <Button
+                variant="outline"
                 onClick={() => setShowFilters(false)}
-                className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="accent"
                 onClick={applyFilters}
-                className="px-6 py-2 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 transition-colors"
               >
                 Apply Filters
-              </button>
+              </Button>
             </div>
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Active Filters Summary */}
       {activeFilterCount > 0 && !showFilters && (
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm text-gray-500">Active filters:</span>
+          <span className="text-sm text-muted-foreground">Active filters:</span>
           {filters.text && (
             <FilterTag label={`Text: "${filters.text}"`} onRemove={() => setFilters({ ...filters, text: undefined })} />
           )}
@@ -449,19 +437,21 @@ export default function ThreadsPage() {
           {filters.sort && filters.sort !== "newest" && (
             <FilterTag label={`Sort: ${SORT_OPTIONS.find((s) => s.value === filters.sort)?.label}`} onRemove={() => setFilters({ ...filters, sort: undefined })} />
           )}
-          <button
+          <Button
+            variant="link"
+            size="sm"
             onClick={clearFilters}
-            className="text-xs text-orange-600 hover:text-orange-700 ml-2"
+            className="text-xs"
           >
             Clear all
-          </button>
+          </Button>
         </div>
       )}
 
       {/* Threads list */}
       {isLoading ? (
         <div className="flex justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : sortedMessages.length > 0 ? (
         <div className="space-y-4">
@@ -472,21 +462,21 @@ export default function ThreadsPage() {
           {/* Load more trigger */}
           <div ref={loadMoreRef} className="py-6 flex justify-center">
             {isFetchingNextPage ? (
-              <div className="flex items-center gap-2 text-gray-500">
+              <div className="flex items-center gap-2 text-muted-foreground">
                 <Loader2 className="h-5 w-5 animate-spin" />
                 <span>Loading more threads...</span>
               </div>
             ) : hasNextPage ? (
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => fetchNextPage()}
-                className="px-6 py-3 text-sm text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-lg transition-colors"
               >
                 Load more threads
-              </button>
+              </Button>
             ) : (
               <div className="text-center">
-                <Anchor className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                <p className="text-sm text-gray-500">
+                <Anchor className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">
                   {activeFilterCount > 0 ? "No more matching threads" : "You've reached the beginning ⚓"}
                 </p>
               </div>
@@ -494,44 +484,40 @@ export default function ThreadsPage() {
           </div>
         </div>
       ) : (
-        <div className="text-center py-16 bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl border border-orange-100">
-          <Anchor className="h-16 w-16 text-orange-300 mx-auto mb-4" />
-          <h3 className="text-xl font-medium mb-2">
+        <Card className="text-center py-16 bg-gradient-to-br from-primary/5 to-warning/5">
+          <Anchor className="h-16 w-16 text-primary/30 mx-auto mb-4" />
+          <h3 className="text-xl font-medium mb-2 text-foreground">
             {activeFilterCount > 0 ? "No matching threads" : "No threads yet"}
           </h3>
-          <p className="text-gray-500 mb-6">
+          <p className="text-muted-foreground mb-6">
             {activeFilterCount > 0
               ? "Try adjusting your filters to find more results."
               : "Be the first to create an ANCHOR thread on the network."}
           </p>
           {activeFilterCount > 0 ? (
-            <button
-              onClick={clearFilters}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition-colors"
-            >
+            <Button variant="accent" onClick={clearFilters}>
               <X className="h-4 w-4" />
               Clear Filters
-            </button>
+            </Button>
           ) : (
-            <Link
-              href="/compose"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition-colors"
-            >
+            <Button asChild variant="accent">
+              <Link href="/compose" className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
               Create First Thread
             </Link>
+            </Button>
           )}
-        </div>
+        </Card>
       )}
-    </div>
+    </Container>
   );
 }
 
 function FilterTag({ label, onRemove }: { label: string; onRemove: () => void }) {
   return (
-    <span className="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm">
+    <span className="inline-flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">
       {label}
-      <button onClick={onRemove} className="hover:text-orange-900">
+      <button onClick={onRemove} className="hover:text-primary/80">
         <X className="h-3 w-3" />
       </button>
     </span>

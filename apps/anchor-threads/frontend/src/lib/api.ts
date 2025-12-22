@@ -326,6 +326,27 @@ export async function fetchNewAddress(): Promise<{ address: string }> {
   return res.json();
 }
 
+export interface WalletInfo {
+  address: string;
+  balance: WalletBalance;
+}
+
+export async function fetchWalletInfo(): Promise<WalletInfo> {
+  const res = await fetch(`${WALLET_URL}/wallet/info`);
+  if (!res.ok) throw new Error("Failed to get wallet info");
+  return res.json();
+}
+
+export async function fetchMessagesByAddress(
+  address: string,
+  page = 1,
+  perPage = 20
+): Promise<PaginatedResponse<Message>> {
+  const res = await fetch(`${API_URL}/messages/by-address/${address}?page=${page}&per_page=${perPage}`);
+  if (!res.ok) throw new Error("Failed to fetch messages by address");
+  return res.json();
+}
+
 export async function createMessage(
   req: CreateMessageRequest
 ): Promise<CreateMessageResponse> {

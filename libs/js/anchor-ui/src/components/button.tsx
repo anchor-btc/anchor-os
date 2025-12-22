@@ -43,6 +43,10 @@ export interface ButtonProps
    * Loading state - shows a spinner and disables the button
    */
   loading?: boolean;
+  /**
+   * When true, the button renders as a child element (useful for Link components)
+   */
+  asChild?: boolean;
 }
 
 /**
@@ -53,10 +57,19 @@ export interface ButtonProps
  * <Button variant="default">Click me</Button>
  * <Button variant="outline" size="sm">Small outline</Button>
  * <Button variant="accent">App accent color</Button>
+ * <Button asChild><Link href="/path">Link as Button</Link></Button>
  * ```
  */
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, loading, disabled, children, ...props }, ref) => {
+  ({ className, variant, size, loading, disabled, children, asChild, ...props }, ref) => {
+    // If asChild, render the first child with button styles
+    if (asChild && React.isValidElement(children)) {
+      return React.cloneElement(children as React.ReactElement<{ className?: string }>, {
+        className: cn(buttonVariants({ variant, size }), className, (children as React.ReactElement<{ className?: string }>).props.className),
+        ...props,
+      });
+    }
+
     return (
       <button
         className={cn(buttonVariants({ variant, size, className }))}

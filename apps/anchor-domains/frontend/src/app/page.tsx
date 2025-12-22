@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Header, SearchBox, DomainCard, StatsCard } from "@/components";
+import { SearchBox, DomainCard, StatsCard } from "@/components";
+import { Container } from "@AnchorProtocol/ui";
 import { resolveDomain, listDomains, type ResolveResponse } from "@/lib/api";
 import { SUPPORTED_TLDS } from "@/lib/dns-encoder";
 import { AlertCircle, CheckCircle } from "lucide-react";
@@ -82,10 +83,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen">
-      <Header />
-
-      <main className="max-w-7xl mx-auto px-4 py-12">
+    <Container className="space-y-12">
         {/* Hero Section */}
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
@@ -166,23 +164,117 @@ export default function HomePage() {
             </div>
           </div>
         )}
-      </main>
+    </Container>
+  );
+}
 
-      {/* Footer */}
-      <footer className="border-t border-slate-700 mt-12 py-8">
-        <div className="max-w-7xl mx-auto px-4 text-center text-slate-400">
-          <p>
-            Built on{" "}
-            <a
-              href="https://github.com/AnchorProtocol"
-              className="text-bitcoin-orange hover:underline"
-            >
-              Anchor Protocol
-            </a>{" "}
-            • Powered by Bitcoin
-          </p>
+                >
+                  Register this domain →
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Stats */}
+        <div className="mb-12">
+          <h2 className="text-xl font-bold text-white mb-4">Protocol Stats</h2>
+          <StatsCard />
         </div>
-      </footer>
-    </div>
+
+        {/* Recent Domains */}
+        {recentDomains && recentDomains.data.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-white">Recent Domains</h2>
+              <a
+                href="/domains"
+                className="text-bitcoin-orange hover:underline text-sm"
+              >
+                View all →
+              </a>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {recentDomains.data.map((domain) => (
+                <DomainCard key={domain.id} domain={domain} />
+              ))}
+            </div>
+          </div>
+        )}
+    </Container>
+  );
+}
+
+                >
+                  Register this domain →
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Stats */}
+        <div className="mb-12">
+          <h2 className="text-xl font-bold text-white mb-4">Protocol Stats</h2>
+          <StatsCard />
+        </div>
+
+        {/* Recent Domains */}
+        {recentDomains && recentDomains.data.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-white">Recent Domains</h2>
+              <a
+                href="/domains"
+                className="text-bitcoin-orange hover:underline text-sm"
+              >
+                View all →
+              </a>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {recentDomains.data.map((domain) => (
+                <DomainCard key={domain.id} domain={domain} />
+              ))}
+            </div>
+          </div>
+        )}
+    </Container>
+  );
+}
+
+                >
+                  Register this domain →
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Stats */}
+        <div className="mb-12">
+          <h2 className="text-xl font-bold text-white mb-4">Protocol Stats</h2>
+          <StatsCard />
+        </div>
+
+        {/* Recent Domains */}
+        {recentDomains && recentDomains.data.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-white">Recent Domains</h2>
+              <a
+                href="/domains"
+                className="text-bitcoin-orange hover:underline text-sm"
+              >
+                View all →
+              </a>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {recentDomains.data.map((domain) => (
+                <DomainCard key={domain.id} domain={domain} />
+              ))}
+            </div>
+          </div>
+        )}
+    </Container>
   );
 }

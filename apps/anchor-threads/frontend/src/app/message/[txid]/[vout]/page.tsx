@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { fetchMessage, fetchReplies, truncateTxid, formatBlockHeight, hexToImageDataUrl, CARRIER_INFO, BTC_EXPLORER_URL } from "@/lib/api";
 import { MessageCard } from "@/components/message-card";
+import { Button, Card, Container } from "@AnchorProtocol/ui";
 import {
   Loader2,
   MessageSquare,
@@ -27,10 +28,6 @@ import {
   Image as ImageIcon,
   Download,
   Package,
-  HardDrive,
-  Trash2,
-  Coins,
-  Percent,
   BookOpen,
   ArrowRight,
 } from "lucide-react";
@@ -74,21 +71,21 @@ export default function MessagePage() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-20">
+      <Container className="flex justify-center py-20">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
+      </Container>
     );
   }
 
   if (error || !message) {
     return (
-      <div className="text-center py-20">
-        <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
-        <h1 className="text-2xl font-bold mb-2">Message Not Found</h1>
+      <Container className="text-center py-20">
+        <AlertTriangle className="h-12 w-12 text-warning mx-auto mb-4" />
+        <h1 className="text-2xl font-bold mb-2 text-foreground">Message Not Found</h1>
         <p className="text-muted-foreground">
           The requested message could not be found.
         </p>
-      </div>
+      </Container>
     );
   }
 
@@ -122,11 +119,11 @@ export default function MessagePage() {
   const opReturnScript = "6a" + pushSize + fullPayloadHex;
 
   return (
-    <div className="space-y-8">
+    <Container className="space-y-8">
       {/* Message Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold mb-2">Message Details</h1>
+          <h1 className="text-2xl font-bold mb-2 text-foreground">Message Details</h1>
           <div className="flex items-center gap-2 text-muted-foreground">
             <span className="font-mono text-sm">{truncateTxid(txid, 12)}</span>
             <button
@@ -142,37 +139,39 @@ export default function MessagePage() {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <Button asChild variant="ghost" size="sm">
           <a
             href={`${BTC_EXPLORER_URL}/tx/${txid}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
-            title="View in local BTC Explorer"
+              className="flex items-center gap-2"
           >
             <ExternalLink className="h-4 w-4" />
             BTC Explorer
           </a>
+          </Button>
+          <Button asChild variant="ghost" size="sm">
           <a
             href={`https://mempool.space/tx/${txid}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+              className="flex items-center gap-2"
           >
             <ExternalLink className="h-4 w-4" />
             mempool.space
           </a>
-          <Link
-            href={`/thread/${txid}/${vout}`}
-            className="flex items-center gap-2 text-primary hover:underline"
-          >
+          </Button>
+          <Button asChild variant="link">
+            <Link href={`/thread/${txid}/${vout}`} className="flex items-center gap-2">
             <MessageSquare className="h-4 w-4" />
             View Thread
           </Link>
+          </Button>
         </div>
       </div>
 
       {/* Message Content */}
-      <article className="bg-card border border-border rounded-lg p-6">
+      <Card className="p-6">
         <div className="flex flex-wrap items-center gap-4 mb-4 text-sm text-muted-foreground">
           <span className="px-3 py-1 bg-primary/10 text-primary rounded-full font-medium">
             {message.kind_name}
@@ -203,9 +202,9 @@ export default function MessagePage() {
             <span className="text-sm text-muted-foreground flex items-center gap-2">
               <Link2 className="h-4 w-4" />
               {parentAnchor.is_orphan ? (
-                <span className="text-yellow-500">Parent not found</span>
+                <span className="text-warning">Parent not found</span>
               ) : parentAnchor.is_ambiguous ? (
-                <span className="text-yellow-500">Ambiguous reference</span>
+                <span className="text-warning">Ambiguous reference</span>
               ) : parentAnchor.resolved_txid ? (
                 <Link
                   href={`/message/${parentAnchor.resolved_txid}/${parentAnchor.vout}`}
@@ -246,7 +245,7 @@ export default function MessagePage() {
               </div>
             </div>
           ) : hasText ? (
-            <p className="text-lg whitespace-pre-wrap break-words">{message.body_text}</p>
+            <p className="text-lg whitespace-pre-wrap break-words text-foreground">{message.body_text}</p>
           ) : (
             <div>
               <p className="text-sm text-muted-foreground mb-2">Binary Data:</p>
@@ -256,16 +255,16 @@ export default function MessagePage() {
             </div>
           )}
         </div>
-      </article>
+      </Card>
 
       {/* Technical Details */}
-      <section className="bg-card border border-border rounded-xl overflow-hidden">
+      <Card className="overflow-hidden">
         <button
           onClick={() => setShowTechnical(!showTechnical)}
           className="w-full flex items-center justify-between p-5 hover:bg-secondary/50 transition-colors"
         >
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <Code className="h-5 w-5 text-orange-500" />
+          <h2 className="text-lg font-semibold flex items-center gap-2 text-foreground">
+            <Code className="h-5 w-5 text-primary" />
             Technical Details
           </h2>
           {showTechnical ? (
@@ -278,7 +277,7 @@ export default function MessagePage() {
         {showTechnical && (
           <div className="border-t border-border">
             {/* Tabs */}
-            <div className="flex border-b border-border bg-gray-50 overflow-x-auto">
+            <div className="flex border-b border-border bg-secondary/50 overflow-x-auto">
               <TabButton
                 active={activeTab === "overview"}
                 onClick={() => setActiveTab("overview")}
@@ -394,11 +393,11 @@ export default function MessagePage() {
 
               {activeTab === "payload" && (
                 <div className="space-y-6">
-                  {/* ANCHOR Payload - Always shown */}
+                  {/* ANCHOR Payload */}
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-medium flex items-center gap-2">
-                        <FileCode className="h-4 w-4 text-orange-500" />
+                      <h3 className="font-medium flex items-center gap-2 text-foreground">
+                        <FileCode className="h-4 w-4 text-primary" />
                         ANCHOR Payload
                       </h3>
                       <CopyButton
@@ -426,11 +425,10 @@ export default function MessagePage() {
 
                   {/* Carrier-specific Script Details */}
                   {message.carrier === 0 && (
-                    /* OP_RETURN Script */
                     <div>
                       <div className="flex items-center justify-between mb-3">
-                        <h3 className="font-medium flex items-center gap-2">
-                          <Code className="h-4 w-4 text-red-500" />
+                        <h3 className="font-medium flex items-center gap-2 text-foreground">
+                          <Code className="h-4 w-4 text-destructive" />
                           OP_RETURN Script
                         </h3>
                         <CopyButton
@@ -457,11 +455,10 @@ export default function MessagePage() {
                   )}
 
                   {message.carrier === 1 && (
-                    /* Inscription Witness Data */
                     <div>
                       <div className="flex items-center justify-between mb-3">
-                        <h3 className="font-medium flex items-center gap-2">
-                          <Code className="h-4 w-4 text-green-500" />
+                        <h3 className="font-medium flex items-center gap-2 text-foreground">
+                          <Code className="h-4 w-4 text-success" />
                           Inscription Envelope (Witness)
                         </h3>
                       </div>
@@ -490,98 +487,16 @@ export default function MessagePage() {
                         <Legend color="green" label="OP_TRUE (51)" />
                       </div>
                       <p className="mt-3 text-xs text-muted-foreground">
-                        Ordinals-style inscription using Taproot witness data. The envelope (OP_FALSE OP_IF...OP_ENDIF) 
-                        is skipped during execution, preserving the data while OP_TRUE makes the script succeed.
+                        Ordinals-style inscription using Taproot witness data.
                       </p>
-                      <div className="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
-                        <p className="text-xs font-medium text-green-700 mb-1">📝 Commit + Reveal Pattern</p>
-                        <p className="text-xs text-green-600">
-                          This inscription uses a 2-transaction pattern: a commit transaction creates a Taproot output, 
-                          then a reveal transaction spends it while exposing the inscription in the witness.
-                        </p>
-                      </div>
                     </div>
                   )}
 
-                  {message.carrier === 2 && (
-                    /* Stamps Multisig Script */
-                    <div>
-                      <div className="flex items-center justify-between mb-3">
-                        <h3 className="font-medium flex items-center gap-2">
-                          <Code className="h-4 w-4 text-pink-500" />
-                          Stamps Multisig Script
-                        </h3>
-                      </div>
-                      <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-5 overflow-x-auto shadow-inner">
-                        <code className="text-sm font-mono break-all leading-relaxed">
-                          <span className="text-red-400 bg-red-400/20 px-1 rounded">51</span>
-                          <span className="text-cyan-400 bg-cyan-400/20 px-1 rounded">21</span>
-                          <span className="text-gray-400">[33-byte pubkey with embedded data]</span>
-                          <span className="text-purple-400 bg-purple-400/20 px-1 rounded">51</span>
-                          <span className="text-yellow-400 bg-yellow-400/20 px-1 rounded">ae</span>
-                        </code>
-                      </div>
-                      <div className="flex flex-wrap gap-3 mt-3">
-                        <Legend color="red" label="OP_1 (51)" />
-                        <Legend color="cyan" label="Push 33 bytes (21)" />
-                        <Legend color="gray" label="Fake Public Key (data)" />
-                        <Legend color="purple" label="OP_1 (51)" />
-                        <Legend color="yellow" label="OP_CHECKMULTISIG (ae)" />
-                      </div>
-                      <p className="mt-3 text-xs text-muted-foreground">
-                        Data embedded in bare 1-of-1 multisig outputs using fake public keys. 
-                        The first byte (02/03) mimics a compressed pubkey, followed by 32 bytes of data.
-                      </p>
-                      <div className="mt-4 p-3 bg-pink-50 rounded-lg border border-pink-200">
-                        <p className="text-xs font-medium text-pink-700 mb-1">⚠️ Permanent & Unprunable</p>
-                        <p className="text-xs text-pink-600">
-                          Stamps data is stored in UTXOs that cannot be spent or pruned. This makes the data 
-                          permanently part of the UTXO set, increasing storage requirements for all nodes.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {message.carrier === 3 && (
-                    /* Taproot Annex */
-                    <div>
-                      <div className="flex items-center justify-between mb-3">
-                        <h3 className="font-medium flex items-center gap-2">
-                          <Code className="h-4 w-4 text-blue-500" />
-                          Taproot Annex
-                        </h3>
-                      </div>
-                      <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                        <p className="text-sm text-blue-700">
-                          Data stored in the Taproot annex field (witness item starting with 0x50).
-                          Currently reserved for future protocol upgrades.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {message.carrier === 4 && (
-                    /* Raw Witness Data */
-                    <div>
-                      <div className="flex items-center justify-between mb-3">
-                        <h3 className="font-medium flex items-center gap-2">
-                          <Code className="h-4 w-4 text-purple-500" />
-                          Raw Witness Data
-                        </h3>
-                      </div>
-                      <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-                        <p className="text-sm text-purple-700">
-                          Data stored directly in the SegWit witness section without a specific envelope format.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Body Hex - Always shown */}
+                  {/* Body Hex */}
                   {message.body_hex && (
                     <div>
                       <div className="flex items-center justify-between mb-3">
-                        <h3 className="font-medium flex items-center gap-2">
+                        <h3 className="font-medium flex items-center gap-2 text-foreground">
                           <Binary className="h-4 w-4 text-blue-500" />
                           Body Data ({bodySize} bytes)
                         </h3>
@@ -630,7 +545,7 @@ export default function MessagePage() {
                       
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                         {CARRIER_INFO[message.carrier].properties.map((prop, i) => (
-                          <div key={i} className="bg-white/80 rounded-lg p-3 border border-white">
+                          <div key={i} className="bg-background/80 rounded-lg p-3 border border-border">
                             <p className="text-xs text-muted-foreground mb-1">{prop.label}</p>
                             <p className={`text-sm font-medium ${CARRIER_INFO[message.carrier].textColor}`}>
                               {prop.value}
@@ -642,8 +557,8 @@ export default function MessagePage() {
                   </div>
 
                   {/* How This Carrier Works */}
-                  <div className="bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-xl p-5 space-y-4">
-                    <h4 className="font-medium flex items-center gap-2">
+                  <div className="bg-primary/5 border border-primary/20 rounded-xl p-5 space-y-4">
+                    <h4 className="font-medium flex items-center gap-2 text-foreground">
                       <BookOpen className="h-4 w-4 text-primary" />
                       How {CARRIER_INFO[message.carrier].label} Works
                     </h4>
@@ -651,8 +566,8 @@ export default function MessagePage() {
                   </div>
 
                   {/* UTXO Model Explanation */}
-                  <div className="bg-muted/50 border border-border rounded-xl p-5">
-                    <h4 className="font-medium flex items-center gap-2 mb-3">
+                  <div className="bg-secondary/50 border border-border rounded-xl p-5">
+                    <h4 className="font-medium flex items-center gap-2 mb-3 text-foreground">
                       <Layers className="h-4 w-4 text-primary" />
                       Understanding UTXOs
                     </h4>
@@ -662,7 +577,7 @@ export default function MessagePage() {
                       ANCHOR messages are embedded in these outputs or the witness data.
                     </p>
                     <div className="mt-4 flex items-center justify-center gap-3 text-xs flex-wrap">
-                      <div className="px-3 py-2 bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700 rounded font-mono">
+                      <div className="px-3 py-2 bg-success/10 border border-success/30 rounded font-mono">
                         UTXO (input)
                       </div>
                       <ArrowRight className="h-4 w-4 text-muted-foreground" />
@@ -671,55 +586,13 @@ export default function MessagePage() {
                       </div>
                       <ArrowRight className="h-4 w-4 text-muted-foreground" />
                       <div className="flex flex-col gap-1">
-                        <div className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700 rounded font-mono text-xs">
+                        <div className="px-3 py-1 bg-blue-500/10 border border-blue-500/30 rounded font-mono text-xs">
                           New UTXO
                         </div>
-                        <div className="px-3 py-1 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded font-mono text-xs">
+                        <div className="px-3 py-1 bg-destructive/10 border border-destructive/30 rounded font-mono text-xs">
                           ⚓ ANCHOR
                         </div>
                       </div>
-                    </div>
-                  </div>
-
-                  {/* Carrier Comparison */}
-                  <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
-                    <h4 className="font-medium mb-4 flex items-center gap-2">
-                      <Layers className="h-4 w-4 text-gray-500" />
-                      Carrier Comparison
-                    </h4>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b border-gray-200 dark:border-gray-700">
-                            <th className="text-left py-2 pr-4 font-medium text-muted-foreground">Carrier</th>
-                            <th className="text-left py-2 px-4 font-medium text-muted-foreground">Max Size</th>
-                            <th className="text-left py-2 px-4 font-medium text-muted-foreground">Prunable</th>
-                            <th className="text-left py-2 px-4 font-medium text-muted-foreground">UTXO Impact</th>
-                            <th className="text-left py-2 pl-4 font-medium text-muted-foreground">Fee Discount</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {Object.entries(CARRIER_INFO).map(([key, info]) => (
-                            <tr 
-                              key={key} 
-                              className={`border-b border-gray-100 dark:border-gray-800 ${Number(key) === message.carrier ? 'bg-orange-50 dark:bg-orange-900/20' : ''}`}
-                            >
-                              <td className="py-2 pr-4">
-                                <span className={`inline-flex items-center gap-1 ${Number(key) === message.carrier ? 'font-medium' : ''}`}>
-                                  {info.icon} {info.label}
-                                  {Number(key) === message.carrier && (
-                                    <span className="text-xs bg-orange-200 dark:bg-orange-800 text-orange-700 dark:text-orange-200 px-1.5 py-0.5 rounded ml-1">current</span>
-                                  )}
-                                </span>
-                              </td>
-                              <td className="py-2 px-4 text-muted-foreground">{info.properties[0]?.value || '-'}</td>
-                              <td className="py-2 px-4 text-muted-foreground">{info.properties[1]?.value || '-'}</td>
-                              <td className="py-2 px-4 text-muted-foreground">{info.properties[2]?.value || '-'}</td>
-                              <td className="py-2 pl-4 text-muted-foreground">{info.properties[3]?.value || '-'}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
                     </div>
                   </div>
                 </div>
@@ -745,17 +618,17 @@ export default function MessagePage() {
                   {message.anchors.map((anchor, i) => (
                     <div
                       key={i}
-                      className="bg-gradient-to-br from-gray-50 to-white border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow"
+                      className="bg-gradient-to-br from-secondary/50 to-background border border-border rounded-xl p-5 hover:shadow-md transition-shadow"
                     >
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
                           <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                            i === 0 ? "bg-orange-100 text-orange-600" : "bg-gray-100 text-gray-600"
+                            i === 0 ? "bg-primary/10 text-primary" : "bg-secondary text-muted-foreground"
                           }`}>
                             <span className="text-lg font-bold">#{i}</span>
                           </div>
                           <div>
-                            <p className="font-medium">
+                            <p className="font-medium text-foreground">
                               {i === 0 ? "Canonical Parent" : `Reference #${i}`}
                             </p>
                             <p className="text-xs text-muted-foreground">
@@ -769,19 +642,19 @@ export default function MessagePage() {
                       </div>
 
                       <div className="grid md:grid-cols-2 gap-4">
-                        <div className="bg-gray-50 rounded-lg p-3">
+                        <div className="bg-secondary/50 rounded-lg p-3">
                           <p className="text-xs text-muted-foreground mb-1">TxID Prefix (8 bytes)</p>
                           <p className="font-mono text-sm text-cyan-600 font-medium">{anchor.txid_prefix}</p>
                         </div>
-                        <div className="bg-gray-50 rounded-lg p-3">
+                        <div className="bg-secondary/50 rounded-lg p-3">
                           <p className="text-xs text-muted-foreground mb-1">Output Index</p>
                           <p className="font-mono text-sm text-pink-600 font-medium">{anchor.vout}</p>
                         </div>
                       </div>
 
                       {anchor.resolved_txid && (
-                        <div className="mt-4 bg-green-50 rounded-lg p-3 border border-green-100">
-                          <p className="text-xs text-green-600 mb-1 font-medium">✓ Resolved Transaction</p>
+                        <div className="mt-4 bg-success/10 rounded-lg p-3 border border-success/20">
+                          <p className="text-xs text-success mb-1 font-medium">✓ Resolved Transaction</p>
                           <Link
                             href={`/message/${anchor.resolved_txid}/${anchor.vout}`}
                             className="font-mono text-sm text-primary hover:underline break-all"
@@ -797,22 +670,21 @@ export default function MessagePage() {
             </div>
           </div>
         )}
-      </section>
+      </Card>
 
       {/* Replies */}
       <section>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold flex items-center gap-2">
+          <h2 className="text-xl font-semibold flex items-center gap-2 text-foreground">
             <MessageSquare className="h-5 w-5 text-primary" />
             Replies ({replies?.length || 0})
           </h2>
-          <Link
-            href={`/compose?parent=${txid}&vout=${vout}`}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium"
-          >
+          <Button asChild variant="accent">
+            <Link href={`/compose?parent=${txid}&vout=${vout}`} className="flex items-center gap-2">
             <MessageSquare className="h-4 w-4" />
             Reply
           </Link>
+          </Button>
         </div>
 
         {replies && replies.length > 0 ? (
@@ -822,16 +694,16 @@ export default function MessagePage() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-8 bg-card rounded-lg border border-border">
+          <Card className="text-center py-8">
             <MessageSquare className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
             <p className="text-muted-foreground">No replies yet</p>
             <p className="text-sm text-muted-foreground mt-1">
               Be the first to start the conversation!
             </p>
-          </div>
+          </Card>
         )}
       </section>
-    </div>
+    </Container>
   );
 }
 
@@ -852,14 +724,14 @@ function TabButton({
       onClick={onClick}
       className={`flex items-center gap-2 px-5 py-3 text-sm font-medium transition-colors relative ${
         active
-          ? "text-orange-600 bg-white"
-          : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+          ? "text-primary bg-background"
+          : "text-muted-foreground hover:text-foreground hover:bg-secondary"
       }`}
     >
       {icon}
       {label}
       {active && (
-        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500" />
+        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
       )}
     </button>
   );
@@ -919,12 +791,12 @@ function InfoRow({
   copied?: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between py-3 px-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+    <div className="flex items-center justify-between py-3 px-4 bg-secondary/50 rounded-lg hover:bg-secondary transition-colors">
       <div className="flex items-center gap-3 text-muted-foreground">
         {icon}
         <span className="text-sm font-medium text-foreground">{label}</span>
         {badge && (
-          <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">
+          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
             {badge}
           </span>
         )}
@@ -934,11 +806,11 @@ function InfoRow({
           {value}
         </span>
         {copyable && onCopy && (
-          <button onClick={onCopy} className="p-1.5 hover:bg-gray-200 rounded transition-colors">
+          <button onClick={onCopy} className="p-1.5 hover:bg-secondary rounded transition-colors">
             {copied ? (
-              <Check className="h-4 w-4 text-green-500" />
+              <Check className="h-4 w-4 text-success" />
             ) : (
-              <Copy className="h-4 w-4 text-gray-400" />
+              <Copy className="h-4 w-4 text-muted-foreground" />
             )}
           </button>
         )}
@@ -954,8 +826,8 @@ function CopyButton({ onCopy, copied }: { onCopy: () => void; copied: boolean })
       onClick={onCopy}
       className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
         copied
-          ? "bg-green-100 text-green-600"
-          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+          ? "bg-success/10 text-success"
+          : "bg-secondary text-muted-foreground hover:bg-secondary/80"
       }`}
     >
       {copied ? (
@@ -983,6 +855,9 @@ function Legend({ color, label }: { color: string; label: string }) {
     gray: "bg-gray-400",
     red: "bg-red-400",
     yellow: "bg-yellow-400",
+    cyan: "bg-cyan-400",
+    pink: "bg-pink-400",
+    green: "bg-green-400",
   };
 
   return (
@@ -996,9 +871,9 @@ function Legend({ color, label }: { color: string; label: string }) {
 // Status Badge Component
 function StatusBadge({ status }: { status: "resolved" | "orphan" | "ambiguous" }) {
   const styles = {
-    resolved: "bg-green-100 text-green-700 border-green-200",
-    orphan: "bg-yellow-100 text-yellow-700 border-yellow-200",
-    ambiguous: "bg-orange-100 text-orange-700 border-orange-200",
+    resolved: "bg-success/10 text-success border-success/20",
+    orphan: "bg-warning/10 text-warning border-warning/20",
+    ambiguous: "bg-primary/10 text-primary border-primary/20",
   };
 
   const labels = {
@@ -1023,8 +898,8 @@ function ExplorerLink({ href, label, highlight }: { href: string; label: string;
       rel="noopener noreferrer"
       className={`flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg transition-colors ${
         highlight
-          ? "bg-orange-100 hover:bg-orange-200 text-orange-700 border border-orange-200"
-          : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+          ? "bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20"
+          : "bg-secondary hover:bg-secondary/80 text-muted-foreground"
       }`}
     >
       <ExternalLink className="h-3.5 w-3.5" />
@@ -1043,9 +918,9 @@ function CarrierExplanation({ carrier }: { carrier: number }) {
           It creates a provably unspendable output that can store up to 80 bytes of arbitrary data.
         </p>
         <ul className="list-none space-y-1 ml-2 text-sm text-muted-foreground">
-          <li><span className="text-green-600 dark:text-green-400">✓</span> Prunable: Nodes can discard after validation</li>
-          <li><span className="text-green-600 dark:text-green-400">✓</span> No UTXO bloat: Doesn&apos;t create spendable outputs</li>
-          <li><span className="text-green-600 dark:text-green-400">✓</span> Standard: Relayed by all Bitcoin nodes</li>
+          <li><span className="text-success">✓</span> Prunable: Nodes can discard after validation</li>
+          <li><span className="text-success">✓</span> No UTXO bloat: Doesn&apos;t create spendable outputs</li>
+          <li><span className="text-success">✓</span> Standard: Relayed by all Bitcoin nodes</li>
         </ul>
       </>
     ),
@@ -1056,9 +931,9 @@ function CarrierExplanation({ carrier }: { carrier: number }) {
           using an envelope pattern. The data is revealed in a script-path spend.
         </p>
         <ul className="list-none space-y-1 ml-2 text-sm text-muted-foreground">
-          <li><span className="text-green-600 dark:text-green-400">✓</span> 75% fee discount (witness data)</li>
-          <li><span className="text-green-600 dark:text-green-400">✓</span> Up to ~4MB of data per transaction</li>
-          <li><span className="text-yellow-600 dark:text-yellow-400">!</span> Requires commit+reveal transaction pattern</li>
+          <li><span className="text-success">✓</span> 75% fee discount (witness data)</li>
+          <li><span className="text-success">✓</span> Up to ~4MB of data per transaction</li>
+          <li><span className="text-warning">!</span> Requires commit+reveal transaction pattern</li>
         </ul>
       </>
     ),
@@ -1069,9 +944,9 @@ function CarrierExplanation({ carrier }: { carrier: number }) {
           The &quot;public keys&quot; are actually data chunks, making the data permanent.
         </p>
         <ul className="list-none space-y-1 ml-2 text-sm text-muted-foreground">
-          <li><span className="text-red-600 dark:text-red-400">⚠</span> Creates permanent UTXOs that cannot be pruned</li>
-          <li><span className="text-red-600 dark:text-red-400">⚠</span> Increases node storage forever</li>
-          <li><span className="text-yellow-600 dark:text-yellow-400">!</span> Most expensive, but truly permanent</li>
+          <li><span className="text-destructive">⚠</span> Creates permanent UTXOs that cannot be pruned</li>
+          <li><span className="text-destructive">⚠</span> Increases node storage forever</li>
+          <li><span className="text-warning">!</span> Most expensive, but truly permanent</li>
         </ul>
       </>
     ),
@@ -1082,9 +957,9 @@ function CarrierExplanation({ carrier }: { carrier: number }) {
           It&apos;s the last element of the witness stack, prefixed with 0x50.
         </p>
         <ul className="list-none space-y-1 ml-2 text-sm text-muted-foreground">
-          <li><span className="text-green-600 dark:text-green-400">✓</span> Part of the signature hash</li>
-          <li><span className="text-yellow-600 dark:text-yellow-400">!</span> Not relayed by standard nodes</li>
-          <li><span className="text-yellow-600 dark:text-yellow-400">!</span> Requires libre relay or direct miner</li>
+          <li><span className="text-success">✓</span> Part of the signature hash</li>
+          <li><span className="text-warning">!</span> Not relayed by standard nodes</li>
+          <li><span className="text-warning">!</span> Requires libre relay or direct miner</li>
         </ul>
       </>
     ),
@@ -1095,9 +970,9 @@ function CarrierExplanation({ carrier }: { carrier: number }) {
           pushed data and returns true, making it always spendable.
         </p>
         <ul className="list-none space-y-1 ml-2 text-sm text-muted-foreground">
-          <li><span className="text-green-600 dark:text-green-400">✓</span> 75% fee discount (witness data)</li>
-          <li><span className="text-green-600 dark:text-green-400">✓</span> Up to ~4MB of data per transaction</li>
-          <li><span className="text-green-600 dark:text-green-400">✓</span> Prunable after validation</li>
+          <li><span className="text-success">✓</span> 75% fee discount (witness data)</li>
+          <li><span className="text-success">✓</span> Up to ~4MB of data per transaction</li>
+          <li><span className="text-success">✓</span> Prunable after validation</li>
         </ul>
       </>
     ),

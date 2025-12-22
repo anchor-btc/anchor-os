@@ -32,8 +32,8 @@ services:
 
   app-threads-frontend:
     build:
-      context: ../apps/anchor-threads/frontend
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: apps/anchor-threads/frontend/Dockerfile
       args:
         NEXT_PUBLIC_API_URL: http://localhost:3101
         NEXT_PUBLIC_WALLET_URL: http://localhost:8001
@@ -212,8 +212,8 @@ services:
 
   app-domains-frontend:
     build:
-      context: ../apps/anchor-domains/frontend
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: apps/anchor-domains/frontend/Dockerfile
       args:
         NEXT_PUBLIC_API_URL: http://localhost:3401
         NEXT_PUBLIC_WALLET_URL: http://localhost:8001
@@ -271,8 +271,8 @@ services:
 
   app-proofs-frontend:
     build:
-      context: ../apps/anchor-proofs/frontend
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: apps/anchor-proofs/frontend/Dockerfile
       args:
         NEXT_PUBLIC_API_URL: http://localhost:3501
         NEXT_PUBLIC_WALLET_URL: http://localhost:8001
@@ -330,8 +330,8 @@ services:
 
   app-tokens-frontend:
     build:
-      context: ../apps/anchor-tokens/frontend
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: apps/anchor-tokens/frontend/Dockerfile
       args:
         NEXT_PUBLIC_API_URL: http://localhost:3601
         NEXT_PUBLIC_WALLET_URL: http://localhost:8001
@@ -408,8 +408,8 @@ services:
 
   app-oracles-frontend:
     build:
-      context: ../apps/anchor-oracles/frontend
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: apps/anchor-oracles/frontend/Dockerfile
       args:
         NEXT_PUBLIC_API_URL: http://localhost:3701
     container_name: anchor-app-oracles-frontend
@@ -488,8 +488,8 @@ services:
 
   app-predictions-frontend:
     build:
-      context: ../apps/anchor-predictions/frontend
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: apps/anchor-predictions/frontend/Dockerfile
       args:
         NEXT_PUBLIC_API_URL: http://localhost:3801
     container_name: anchor-app-predictions-frontend

@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Button, Card, Input, Container } from "@AnchorProtocol/ui";
 import {
   createMessage,
   fetchWalletBalance,
@@ -133,32 +134,33 @@ function ComposeForm() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8">
+    <Container size="md" className="space-y-8">
       <div className="flex items-center gap-3">
         <PenLine className="h-8 w-8 text-primary" />
-        <h1 className="text-3xl font-bold">Compose Message</h1>
+        <h1 className="text-3xl font-bold text-foreground">Compose Message</h1>
       </div>
 
       {/* Wallet Info */}
-      <div className="bg-card border border-border rounded-lg p-4">
+      <Card className="p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Wallet className="h-5 w-5 text-primary" />
-            <span className="font-medium">Wallet Balance</span>
+            <span className="font-medium text-foreground">Wallet Balance</span>
           </div>
           {balanceLoading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            <span className="font-mono">
+            <span className="font-mono text-foreground">
               {balance?.total.toFixed(8)} BTC
             </span>
           )}
         </div>
 
         <div className="flex gap-2 mt-4">
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={handleGetAddress}
-            className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/80 transition-colors text-sm"
           >
             {copied ? (
               <Check className="h-4 w-4" />
@@ -166,11 +168,12 @@ function ComposeForm() {
               <Copy className="h-4 w-4" />
             )}
             {copied ? "Copied!" : "Get Address"}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => mineMutation.mutate()}
             disabled={mineMutation.isPending}
-            className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/80 transition-colors text-sm disabled:opacity-50"
           >
             {mineMutation.isPending ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -178,7 +181,7 @@ function ComposeForm() {
               <Hammer className="h-4 w-4" />
             )}
             Mine Block
-          </button>
+          </Button>
         </div>
 
         {address?.address && (
@@ -186,11 +189,11 @@ function ComposeForm() {
             {address.address}
           </p>
         )}
-      </div>
+      </Card>
 
       {/* Reply Info Banner */}
       {parentTxid && (
-        <div className="bg-primary/10 border border-primary/30 rounded-lg p-4">
+        <Card className="p-4 bg-primary/10 border-primary/30">
           <p className="text-sm font-medium text-primary mb-1">Replying to message:</p>
           <Link
             href={`/message/${parentTxid}/${parentVout}`}
@@ -198,27 +201,29 @@ function ComposeForm() {
           >
             {parentTxid}:{parentVout}
           </Link>
-        </div>
+        </Card>
       )}
 
       {/* Error */}
       {error && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 flex items-start gap-3">
-          <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+        <Card className="p-4 bg-destructive/10 border-destructive/30">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
           <div>
-            <p className="font-medium text-red-500">Error</p>
-            <p className="text-sm text-red-400">{error}</p>
+              <p className="font-medium text-destructive">Error</p>
+              <p className="text-sm text-destructive/80">{error}</p>
+            </div>
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Success */}
       {success && (
-        <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+        <Card className="p-4 bg-success/10 border-success/30">
           <div className="flex items-center justify-between mb-2">
-            <p className="font-medium text-green-500">Message Created!</p>
+            <p className="font-medium text-success">Message Created!</p>
             {success.carrier !== undefined && (
-              <span className="text-xs bg-green-500/20 text-green-600 px-2 py-1 rounded-full">
+              <span className="text-xs bg-success/20 text-success px-2 py-1 rounded-full">
                 {CARRIER_OPTIONS.find(c => c.value === success.carrier)?.icon}{" "}
                 {CARRIER_OPTIONS.find(c => c.value === success.carrier)?.label}
               </span>
@@ -226,29 +231,29 @@ function ComposeForm() {
           </div>
           <Link
             href={`/message/${success.txid}/${success.vout}`}
-            className="text-sm text-green-400 hover:underline font-mono break-all"
+            className="text-sm text-success/80 hover:underline font-mono break-all"
           >
             {success.txid}:{success.vout}
           </Link>
-        </div>
+        </Card>
       )}
 
       {/* Compose Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-2">Message</label>
+          <label className="block text-sm font-medium mb-2 text-foreground">Message</label>
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
             placeholder="Write your message here..."
             rows={5}
-            className="w-full bg-secondary border border-border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+            className="w-full bg-secondary border border-input rounded-md px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-none"
           />
         </div>
 
         {/* Carrier Selection */}
         <div>
-          <label className="block text-sm font-medium mb-2">
+          <label className="block text-sm font-medium mb-2 text-foreground">
             Data Carrier
           </label>
           <div className="grid grid-cols-3 gap-3">
@@ -265,7 +270,7 @@ function ComposeForm() {
               >
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-xl">{option.icon}</span>
-                  <span className="font-medium">{option.label}</span>
+                  <span className="font-medium text-foreground">{option.label}</span>
                 </div>
                 <p className="text-xs text-muted-foreground">{option.description}</p>
                 {carrier === option.value && (
@@ -277,57 +282,61 @@ function ComposeForm() {
             ))}
           </div>
           {carrier === 2 && (
-            <p className="mt-2 text-xs text-yellow-600 bg-yellow-50 p-2 rounded-lg">
-              ⚠️ Stamps are permanent and cannot be pruned. They increase storage requirements for all Bitcoin nodes.
+            <p className="mt-2 text-xs text-warning bg-warning/10 p-2 rounded-lg">
+              Stamps are permanent and cannot be pruned. They increase storage requirements for all Bitcoin nodes.
             </p>
           )}
           {carrier === 3 && (
-            <p className="mt-2 text-xs text-blue-600 bg-blue-50 p-2 rounded-lg">
-              🔗 Taproot Annex transactions are valid but not relayed by standard nodes. They need libre relay nodes or direct miner submission.
+            <p className="mt-2 text-xs text-primary bg-primary/10 p-2 rounded-lg">
+              Taproot Annex transactions are valid but not relayed by standard nodes. They need libre relay nodes or direct miner submission.
             </p>
           )}
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-2">
+            <label className="block text-sm font-medium mb-2 text-foreground">
               Parent TXID{" "}
               <span className="text-muted-foreground">(optional)</span>
             </label>
-            <input
+            <Input
               type="text"
               value={parentTxid}
               onChange={(e) => setParentTxid(e.target.value)}
               placeholder="Reply to message..."
-              className="w-full bg-secondary border border-border rounded-lg px-4 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 font-mono text-sm"
+              className="font-mono text-sm"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2">
+            <label className="block text-sm font-medium mb-2 text-foreground">
               Parent Vout
             </label>
-            <input
+            <Input
               type="number"
               value={parentVout}
               onChange={(e) => setParentVout(e.target.value)}
-              min="0"
-              className="w-full bg-secondary border border-border rounded-lg px-4 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+              min={0}
             />
           </div>
         </div>
 
-        <button
+        <Button
           type="submit"
+          variant="accent"
+          size="lg"
+          className="w-full"
           disabled={!body.trim() || createMutation.isPending}
-          className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          loading={createMutation.isPending}
         >
           {createMutation.isPending ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
+            "Creating & Mining..."
           ) : (
+            <>
             <Send className="h-5 w-5" />
+              Send Message
+            </>
           )}
-          {createMutation.isPending ? "Creating & Mining..." : "Send Message"}
-        </button>
+        </Button>
       </form>
 
       {/* Info */}
@@ -345,15 +354,15 @@ function ComposeForm() {
           to that message.
         </p>
       </div>
-    </div>
+    </Container>
   );
 }
 
 function LoadingFallback() {
   return (
-    <div className="max-w-2xl mx-auto flex justify-center py-20">
+    <Container size="md" className="flex justify-center py-20">
       <Loader2 className="h-8 w-8 animate-spin text-primary" />
-    </div>
+    </Container>
   );
 }
 

@@ -3,8 +3,9 @@ import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
+import { AppShell, AppMain } from "@AnchorProtocol/ui";
 import { Header } from "@/components/header";
-import { Footer } from "@/components/footer";
+import { ThreadsFooter } from "@/components/footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,8 +18,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ANCHOR Threads",
-  description: "Explore ANCHOR protocol messages on Bitcoin",
+  title: "Anchor Threads",
+  description: "Explore and create threaded messages on Bitcoin",
 };
 
 export default function RootLayout({
@@ -32,13 +33,12 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-gradient-radial`}
       >
         <Providers>
-          <div className="flex flex-col min-h-screen">
-            <Header />
-            <main className="container mx-auto px-4 py-8 max-w-6xl flex-1">
-              {children}
-            </main>
-            <Footer />
-          </div>
+          <AppShell
+            header={<Header />}
+            footer={<ThreadsFooter />}
+          >
+            <AppMain>{children}</AppMain>
+          </AppShell>
         </Providers>
         <Script src="http://localhost:8000/anchor-os-bridge.js" strategy="afterInteractive" />
       </body>

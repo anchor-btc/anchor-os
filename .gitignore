@@ -33,7 +33,7 @@ yarn-error.log*
 
 # Build outputs
 *.pem
-*.log
+*.log   
 
 # Docker
 docker-compose.override.yml

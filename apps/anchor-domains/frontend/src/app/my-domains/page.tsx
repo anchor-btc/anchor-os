@@ -51,7 +51,7 @@ export default function MyDomainsPage() {
     <div className="min-h-screen">
       <Header />
 
-      <main className="max-w-7xl mx-auto px-4 py-12">
+      <main className="max-w-6xl mx-auto px-4 py-12">
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-bitcoin-orange/20 rounded-lg">

@@ -1,37 +1,56 @@
 # Build stage
-FROM node:22-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Build arguments for environment variables
-ARG NEXT_PUBLIC_API_URL=http://localhost:3701
+# Copy anchor-ui first (local dependency)
+COPY libs/js/anchor-ui ./libs/js/anchor-ui
 
-# Set environment variables for build
-ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+# Build anchor-ui
+WORKDIR /app/libs/js/anchor-ui
+RUN npm install && npm run build
+
+# Move to frontend directory
+WORKDIR /app/frontend
 
 # Copy package files
-COPY package*.json ./
+COPY apps/anchor-oracles/frontend/package.json ./
+
+# Update the anchor-ui path for Docker context
+RUN sed -i 's|file:../../../libs/js/anchor-ui|file:/app/libs/js/anchor-ui|g' package.json
 
 # Install dependencies
-RUN npm ci
+RUN npm install
 
-# Copy source
-COPY . .
+# Copy source files
+COPY apps/anchor-oracles/frontend/ .
 
-# Build
+# Build-time environment variables for Next.js
+ARG NEXT_PUBLIC_API_URL=http://localhost:3701
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Build the application
 RUN npm run build
 
 # Production stage
-FROM node:22-alpine AS runner
+FROM node:20-alpine AS runner
 
 WORKDIR /app
 
 ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
-# Copy built application
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/public ./public
+# Create non-root user
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Copy built files
+COPY --from=builder /app/frontend/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next/static ./.next/static
+
+USER nextjs
 
 EXPOSE 3700
 
@@ -40,3 +59,56 @@ ENV HOSTNAME="0.0.0.0"
 
 CMD ["node", "server.js"]
 
+# Create non-root user
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Copy built files
+COPY --from=builder /app/frontend/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next/static ./.next/static
+
+USER nextjs
+
+EXPOSE 3700
+
+ENV PORT=3700
+ENV HOSTNAME="0.0.0.0"
+
+CMD ["node", "server.js"]
+
+# Create non-root user
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Copy built files
+COPY --from=builder /app/frontend/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next/static ./.next/static
+
+USER nextjs
+
+EXPOSE 3700
+
+ENV PORT=3700
+ENV HOSTNAME="0.0.0.0"
+
+CMD ["node", "server.js"]
+
+# Create non-root user
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Copy built files
+COPY --from=builder /app/frontend/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next/static ./.next/static
+
+USER nextjs
+
+EXPOSE 3700
+
+ENV PORT=3700
+ENV HOSTNAME="0.0.0.0"
+
+CMD ["node", "server.js"]

@@ -3,25 +3,36 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Build arguments for environment variables
-ARG NEXT_PUBLIC_API_URL=http://localhost:3501
-ARG NEXT_PUBLIC_WALLET_URL=http://localhost:8001
+# Copy anchor-ui first (local dependency)
+COPY libs/js/anchor-ui ./libs/js/anchor-ui
 
-# Set environment variables for build
-ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
-ENV NEXT_PUBLIC_WALLET_URL=$NEXT_PUBLIC_WALLET_URL
+# Build anchor-ui
+WORKDIR /app/libs/js/anchor-ui
+RUN npm install && npm run build
+
+# Move to frontend directory
+WORKDIR /app/frontend
 
 # Copy package files
-COPY package*.json ./
+COPY apps/anchor-proofs/frontend/package.json ./
+
+# Update the anchor-ui path for Docker context
+RUN sed -i 's|file:../../../libs/js/anchor-ui|file:/app/libs/js/anchor-ui|g' package.json
 
 # Install dependencies
 RUN npm install
 
-# Copy source code
-COPY . .
+# Copy source files
+COPY apps/anchor-proofs/frontend/ .
+
+# Build-time environment variables for Next.js
+ARG NEXT_PUBLIC_API_URL=http://localhost:3501
+ARG NEXT_PUBLIC_WALLET_URL=http://localhost:8001
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_WALLET_URL=$NEXT_PUBLIC_WALLET_URL
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # Build the application
-ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
 # Production stage
@@ -36,10 +47,43 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy necessary files
-COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# Copy built files
+COPY --from=builder /app/frontend/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next/static ./.next/static
+
+USER nextjs
+
+EXPOSE 3500
+
+ENV PORT=3500
+ENV HOSTNAME="0.0.0.0"
+
+CMD ["node", "server.js"]
+
+COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next/static ./.next/static
+
+USER nextjs
+
+EXPOSE 3500
+
+ENV PORT=3500
+ENV HOSTNAME="0.0.0.0"
+
+CMD ["node", "server.js"]
+
+COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next/static ./.next/static
+
+USER nextjs
+
+EXPOSE 3500
+
+ENV PORT=3500
+ENV HOSTNAME="0.0.0.0"
+
+CMD ["node", "server.js"]
+
+COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next/static ./.next/static
 
 USER nextjs
 

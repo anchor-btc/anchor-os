@@ -1,65 +1,53 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Eye, Users, FileCheck, AlertTriangle, Calendar, BookOpen } from "lucide-react";
-import { cn } from "@/lib/utils";
-
-const navItems = [
-  { href: "/", label: "Dashboard", icon: Eye },
-  { href: "/oracles", label: "Oracles", icon: Users },
-  { href: "/events", label: "Events", icon: Calendar },
-  { href: "/disputes", label: "Disputes", icon: AlertTriangle },
-  { href: "/docs", label: "Docs", icon: BookOpen },
-];
+import {
+  AppHeader,
+  AppLogo,
+  NavLink,
+  NavGroup,
+  Container,
+  Button,
+} from "@AnchorProtocol/ui";
+import { Eye, Users, Calendar, AlertTriangle, BookOpen } from "lucide-react";
 
 export function Header() {
-  const pathname = usePathname();
-
   return (
-    <header className="border-b border-white/10 bg-black/50 backdrop-blur-sm sticky top-0 z-50">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center">
-              <Eye className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold text-white">Anchor Oracles</h1>
-              <p className="text-xs text-gray-400">Decentralized Oracle Network</p>
-            </div>
-          </Link>
+    <AppHeader variant="dark">
+      <Container>
+        <nav className="flex items-center justify-between h-16">
+          <AppLogo
+            appName="Oracles"
+            appIcon={Eye}
+            accentColor="purple"
+            subtitle="Decentralized Oracle Network"
+          />
 
-          <nav className="flex items-center gap-1">
-            {navItems.map(({ href, label, icon: Icon }) => {
-              const isActive = pathname === href || (href !== "/" && pathname.startsWith(href));
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className={cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-colors",
-                    isActive
-                      ? "bg-purple-500/20 text-purple-400"
-                      : "text-gray-400 hover:text-white hover:bg-white/5"
-                  )}
-                >
-                  <Icon className="w-4 h-4" />
-                  {label}
-                </Link>
-              );
-            })}
-          </nav>
+          <NavGroup gap="sm">
+            <NavLink href="/" icon={Eye} accentColor="purple">
+              Dashboard
+            </NavLink>
+            <NavLink href="/oracles" icon={Users} accentColor="purple">
+              Oracles
+            </NavLink>
+            <NavLink href="/events" icon={Calendar} accentColor="purple">
+              Events
+            </NavLink>
+            <NavLink href="/disputes" icon={AlertTriangle} accentColor="purple">
+              Disputes
+            </NavLink>
+            <NavLink href="http://localhost:3900/apps/oracles" icon={BookOpen} external>
+              Docs
+            </NavLink>
+          </NavGroup>
 
-          <Link
-            href="/register"
-            className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium transition-colors"
-          >
-            Become an Oracle
-          </Link>
-        </div>
-      </div>
-    </header>
+          <Button asChild variant="default" className="bg-purple-600 hover:bg-purple-700">
+            <Link href="/register">
+              Become an Oracle
+            </Link>
+          </Button>
+        </nav>
+      </Container>
+    </AppHeader>
   );
 }
-
