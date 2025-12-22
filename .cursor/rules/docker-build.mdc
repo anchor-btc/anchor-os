@@ -16,24 +16,24 @@ alwaysApply: true
 
 Use this reference to know which service to rebuild based on which files you changed:
 
-### Dashboard (`anchor/dashboard/`)
+### Dashboard (`admin/dashboard/`)
 
 | Path | Service | Build Command |
 |------|---------|---------------|
-| `anchor/dashboard/frontend/**` | anchor-dashboard-frontend | `docker compose build anchor-dashboard-frontend && docker compose up -d anchor-dashboard-frontend` |
-| `anchor/dashboard/backend/**` | anchor-dashboard-backend | `docker compose build anchor-dashboard-backend && docker compose up -d anchor-dashboard-backend` |
+| `admin/dashboard/frontend/**` | anchor-dashboard-frontend | `docker compose build anchor-dashboard-frontend && docker compose up -d anchor-dashboard-frontend` |
+| `admin/dashboard/backend/**` | anchor-dashboard-backend | `docker compose build anchor-dashboard-backend && docker compose up -d anchor-dashboard-backend` |
 
-### Backup (`anchor/backup/`)
-
-| Path | Service | Build Command |
-|------|---------|---------------|
-| `anchor/backup/backend/**` | core-backup | `docker compose build core-backup && docker compose up -d core-backup` |
-
-### Docs (`anchor/docs/`)
+### Backup (`admin/backup/`)
 
 | Path | Service | Build Command |
 |------|---------|---------------|
-| `anchor/docs/**` | anchor-docs | `docker compose build anchor-docs && docker compose up -d anchor-docs` |
+| `admin/backup/backend/**` | core-backup | `docker compose build core-backup && docker compose up -d core-backup` |
+
+### Docs (`sites/docs/`)
+
+| Path | Service | Build Command |
+|------|---------|---------------|
+| `sites/docs/**` | anchor-docs | `docker compose build anchor-docs && docker compose up -d anchor-docs` |
 
 ### Core Services (`crates/`)
 

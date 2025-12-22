@@ -57,7 +57,7 @@ services:
   wallet:
     build:
       context: ../../
-      dockerfile: crates/anchor-wallet/Dockerfile
+      dockerfile: internal/anchor-wallet/Dockerfile
     container_name: anchorcanvas-wallet
     environment:
       HOST: 0.0.0.0

@@ -10,27 +10,27 @@ alwaysApply: false
 
 # Anchor Protocol Documentation Sync
 
-Quando houver alterações nos arquivos do protocolo, SDK ou encoders, **SEMPRE** atualize a documentação correspondente em `/anchor/docs/`.
+Quando houver alterações nos arquivos do protocolo, SDK ou encoders, **SEMPRE** atualize a documentação correspondente em `/sites/docs/`.
 
 ## Arquivos Monitorados → Documentação
 
 ### SDK Core (`packages/anchor-sdk/src/`)
 | Arquivo Alterado | Atualizar Documentação |
 |------------------|------------------------|
-| `types.ts` | `/anchor/docs/protocol/message-format.md`, `/anchor/docs/sdk/api-reference.md` |
-| `encoder.ts` | `/anchor/docs/sdk/encoding.md` |
-| `parser.ts` | `/anchor/docs/sdk/parsing.md` |
-| `wallet.ts` | `/anchor/docs/sdk/wallet.md` |
-| Novo enum `AnchorKind` | `/anchor/docs/kinds/index.md` + criar novo arquivo de kind |
+| `types.ts` | `/sites/docs/protocol/message-format.md`, `/sites/docs/sdk/api-reference.md` |
+| `encoder.ts` | `/sites/docs/sdk/encoding.md` |
+| `parser.ts` | `/sites/docs/sdk/parsing.md` |
+| `wallet.ts` | `/sites/docs/sdk/wallet.md` |
+| Novo enum `AnchorKind` | `/sites/docs/kinds/index.md` + criar novo arquivo de kind |
 
 ### Encoders de Apps (`apps/*/frontend/src/lib/*-encoder.ts`)
 | App | Kind | Documentação |
 |-----|------|--------------|
-| `anchor-dns` | 10 | `/anchor/docs/kinds/dns.md` |
-| `anchor-proof` | 11 | `/anchor/docs/kinds/proof.md` |
-| `anchor-tokens` | 20 | `/anchor/docs/kinds/token.md` |
-| `anchor-pixel` | 2 | `/anchor/docs/kinds/state.md` |
-| `anchor-map` | 5 | `/anchor/docs/kinds/geomarker.md` |
+| `anchor-dns` | 10 | `/sites/docs/kinds/dns.md` |
+| `anchor-proof` | 11 | `/sites/docs/kinds/proof.md` |
+| `anchor-tokens` | 20 | `/sites/docs/kinds/token.md` |
+| `anchor-pixel` | 2 | `/sites/docs/kinds/state.md` |
+| `anchor-map` | 5 | `/sites/docs/kinds/geomarker.md` |
 
 ## Regras de Atualização
 
@@ -45,7 +45,7 @@ export enum TokenOperation {
 }
 ```
 
-**Ação:** Atualizar `/anchor/docs/kinds/token.md`:
+**Ação:** Atualizar `/sites/docs/kinds/token.md`:
 - Adicionar na tabela de Operations
 - Documentar Payload Format
 - Adicionar exemplo de encoding/decoding
@@ -61,9 +61,9 @@ export enum AnchorKind {
 ```
 
 **Ações:**
-1. Criar `/anchor/docs/kinds/newkind.md` seguindo o template
-2. Atualizar `/anchor/docs/kinds/index.md` (tabela de referência)
-3. Atualizar `/anchor/docs/.vitepress/config.ts` (sidebar)
+1. Criar `/sites/docs/kinds/newkind.md` seguindo o template
+2. Atualizar `/sites/docs/kinds/index.md` (tabela de referência)
+3. Atualizar `/sites/docs/.vitepress/config.ts` (sidebar)
 
 ### 3. Mudanças na Interface
 Quando interfaces TypeScript forem alteradas:
@@ -73,7 +73,7 @@ Quando interfaces TypeScript forem alteradas:
 ### 4. Novos Exemplos
 Quando um novo padrão de uso for implementado nos apps:
 
-**Ação:** Adicionar em `/anchor/docs/examples/`:
+**Ação:** Adicionar em `/sites/docs/examples/`:
 - `create-message.md` - novos tipos de mensagem
 - `reply-to-message.md` - novos padrões de threading
 - `parse-transaction.md` - novos parsers
@@ -145,17 +145,17 @@ function decodeNomeDoKind(bytes: Uint8Array): NomeDoKindPayload {
 
 Antes de finalizar qualquer alteração no protocolo/SDK:
 
-- [ ] Documentação do kind atualizada (`/anchor/docs/kinds/`)
-- [ ] API Reference atualizada (`/anchor/docs/sdk/api-reference.md`)
-- [ ] Exemplos atualizados se necessário (`/anchor/docs/examples/`)
+- [ ] Documentação do kind atualizada (`/sites/docs/kinds/`)
+- [ ] API Reference atualizada (`/sites/docs/sdk/api-reference.md`)
+- [ ] Exemplos atualizados se necessário (`/sites/docs/examples/`)
 - [ ] Sidebar do VitePress atualizada se novo arquivo (`config.ts`)
-- [ ] Tabela de kinds index atualizada (`/anchor/docs/kinds/index.md`)
+- [ ] Tabela de kinds index atualizada (`/sites/docs/kinds/index.md`)
 
 ## Comandos Úteis
 
 ```bash
 # Verificar docs localmente
-cd /Users/miguelmedeiros/code/anchor/anchor/docs
+cd /Users/miguelmedeiros/code/anchor/sites/docs
 npm run dev
 
 # Build para produção

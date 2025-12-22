@@ -1,15 +1,19 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/anchor-core",
-    "crates/anchor-specs",
-    "crates/anchor-indexer",
-    "crates/anchor-wallet",
-    "crates/anchor-testnet",
-    "crates/anchor-wallet-lib",
+    # Public SDK libraries (libs/rust/)
+    "libs/rust/anchor-core",
+    "libs/rust/anchor-specs",
+    "libs/rust/anchor-wallet-lib",
+    # Internal services (internal/)
+    "internal/anchor-indexer",
+    "internal/anchor-wallet",
+    "internal/anchor-testnet",
+    # Admin tools
+    "admin/dashboard/backend",
+    "admin/backup/backend",
+    # Apps
     "apps/anchor-threads/backend",
-    "anchor/dashboard/backend",
-    "anchor/backup/backend",
     "apps/anchor-canvas/backend",
     "apps/anchor-places/backend",
     "apps/anchor-domains/backend",
@@ -90,9 +94,10 @@ reqwest = { version = "0.12", features = ["json"] }
 utoipa = { version = "5", features = ["axum_extras", "chrono"] }
 utoipa-swagger-ui = { version = "8", features = ["axum"] }
 
-# Internal crates
-anchor-core = { path = "crates/anchor-core" }
-anchor-specs = { path = "crates/anchor-specs" }
+# Public SDK crates (libs/rust/)
+anchor-core = { path = "libs/rust/anchor-core" }
+anchor-specs = { path = "libs/rust/anchor-specs" }
+anchor-wallet-lib = { path = "libs/rust/anchor-wallet-lib" }
 
 
 

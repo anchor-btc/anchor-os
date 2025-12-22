@@ -64,7 +64,7 @@ services:
   core-indexer:
     build:
       context: .
-      dockerfile: ./crates/anchor-indexer/Dockerfile
+      dockerfile: ./internal/anchor-indexer/Dockerfile
     container_name: anchor-core-indexer
     environment:
       BITCOIN_RPC_URL: http://core-bitcoin:18443
@@ -88,7 +88,7 @@ services:
   core-wallet:
     build:
       context: .
-      dockerfile: ./crates/anchor-wallet/Dockerfile
+      dockerfile: ./internal/anchor-wallet/Dockerfile
     container_name: anchor-core-wallet
     ports:
       - "8001:8001"
@@ -124,7 +124,7 @@ services:
   core-testnet:
     build:
       context: .
-      dockerfile: ./crates/anchor-testnet/Dockerfile
+      dockerfile: ./internal/anchor-testnet/Dockerfile
     container_name: anchor-core-testnet
     ports:
       - "8002:8002"
@@ -157,7 +157,7 @@ services:
   core-backup:
     build:
       context: .
-      dockerfile: anchor/backup/backend/Dockerfile
+      dockerfile: admin/backup/backend/Dockerfile
     container_name: anchor-core-backup
     ports:
       - "8003:8003"
@@ -512,7 +512,7 @@ services:
   anchor-dashboard-backend:
     build:
       context: .
-      dockerfile: anchor/dashboard/backend/Dockerfile
+      dockerfile: admin/dashboard/backend/Dockerfile
     container_name: anchor-dashboard-backend
     ports:
       - "8010:8010"
@@ -551,7 +551,7 @@ services:
 
   anchor-dashboard-frontend:
     build:
-      context: ./anchor/dashboard/frontend
+      context: ./admin/dashboard/frontend
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_URL: http://localhost:8010
@@ -795,11 +795,11 @@ services:
       - app-domains
 
   # Anchor Proof - Proof of Existence
-  app-proof-backend:
+  app-proofs-backend:
     build:
       context: .
       dockerfile: apps/anchor-proofs/backend/Dockerfile
-    container_name: anchor-app-proof-backend
+    container_name: anchor-app-proofs-backend
     ports:
       - "3501:3501"
     environment:
@@ -831,18 +831,18 @@ services:
       - full
       - app-proof
 
-  app-proof-frontend:
+  app-proofs-frontend:
     build:
       context: ./apps/anchor-proofs/frontend
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_URL: http://localhost:3501
         NEXT_PUBLIC_WALLET_URL: http://localhost:8001
-    container_name: anchor-app-proof-frontend
+    container_name: anchor-app-proofs-frontend
     ports:
       - "3500:3500"
     depends_on:
-      app-proof-backend:
+      app-proofs-backend:
         condition: service_healthy
     networks:
       - anchor-network
@@ -986,7 +986,7 @@ services:
   # Anchor Docs - Protocol Documentation
   anchor-docs:
     build:
-      context: ./anchor/docs
+      context: ./sites/docs
       dockerfile: Dockerfile
     container_name: anchor-docs
     ports:
@@ -1003,7 +1003,7 @@ services:
   # Anchor Protocol Landing Page
   anchor-landing-protocol:
     build:
-      context: ./anchor/landing-protocol
+      context: ./sites/landing-protocol
       dockerfile: Dockerfile
     container_name: anchor-landing-protocol
     ports:
@@ -1019,7 +1019,7 @@ services:
   # Anchor OS Landing Page
   anchor-landing-os:
     build:
-      context: ./anchor/landing-os
+      context: ./sites/landing-os
       dockerfile: Dockerfile
     container_name: anchor-landing-os
     ports:

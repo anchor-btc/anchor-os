@@ -49,21 +49,42 @@ anchor/
 ├── docker/
 │   ├── bitcoin/                # Bitcoin Core regtest setup
 │   └── postgres/               # Database schema & migrations
-├── crates/
-│   ├── anchor-core/            # Core library (types, parsing, carriers)
-│   ├── anchor-wallet-lib/      # Rust Wallet SDK
+│
+├── libs/                       # 📦 PUBLIC SDKs (for third-party developers)
+│   ├── rust/
+│   │   ├── anchor-core/        # Core library (types, parsing, carriers)
+│   │   ├── anchor-specs/       # Protocol specs for all message kinds
+│   │   └── anchor-wallet-lib/  # Rust Wallet SDK
+│   └── js/
+│       └── anchor-sdk/         # TypeScript SDK (Node.js + Browser)
+│
+├── internal/                   # 🔒 INTERNAL SERVICES (not for external use)
 │   ├── anchor-indexer/         # Blockchain indexer
 │   ├── anchor-wallet/          # Transaction creation API
 │   └── anchor-testnet/         # Test transaction generator
-├── packages/
-│   └── anchor-sdk/             # TypeScript SDK (Node.js + Browser)
-├── explorer/
-│   ├── backend/                # REST API (Axum)
-│   └── frontend/               # Web UI (Next.js)
-├── apps/
-│   └── pixelmap/               # PixelMap - Collaborative canvas app
-│       ├── backend/            # Rust indexer & API
-│       └── frontend/           # Next.js web interface
+│
+├── admin/                      # 🛠️ ADMIN TOOLS (node operators)
+│   ├── dashboard/              # Node management dashboard
+│   │   ├── backend/
+│   │   └── frontend/
+│   └── backup/                 # Backup service
+│       └── backend/
+│
+├── sites/                      # 🌐 PUBLIC WEBSITES
+│   ├── docs/                   # Protocol documentation (VitePress)
+│   ├── landing-protocol/       # anchorprotocol.com
+│   └── landing-os/             # anchoros.com
+│
+├── apps/                       # ANCHOR Protocol applications
+│   ├── anchor-threads/         # Threaded conversations
+│   ├── anchor-canvas/          # Collaborative pixel canvas
+│   ├── anchor-places/          # Geographic markers
+│   ├── anchor-domains/         # DNS on Bitcoin
+│   ├── anchor-proofs/          # Proof of existence
+│   ├── anchor-tokens/          # Token operations
+│   ├── anchor-oracles/         # Oracle attestations
+│   └── anchor-predictions/     # Prediction markets
+│
 └── Cargo.toml                  # Rust workspace
 ```
 
@@ -257,6 +278,8 @@ Anchors use a 64-bit prefix of the parent's txid, providing:
 
 ## SDKs
 
+See the [libs/](libs/) directory for full SDK documentation.
+
 ### TypeScript SDK (`@AnchorProtocol/sdk`)
 
 Works in Node.js and browsers.
@@ -298,7 +321,7 @@ The `anchor-wallet-lib` crate provides a Rust SDK for building ANCHOR protocol w
 
 ```toml
 [dependencies]
-anchor-wallet-lib = { path = "crates/anchor-wallet-lib" }
+anchor-wallet-lib = { path = "libs/rust/anchor-wallet-lib" }
 # Or when published:
 # anchor-wallet-lib = "0.1"
 ```
@@ -370,11 +393,22 @@ let config = WalletConfig::regtest("http://127.0.0.1:18443", "user", "pass")
 
 ## Applications
 
-### PixelMap - Collaborative Bitcoin Canvas
+All apps are in the [apps/](apps/) directory. Each app has its own backend (Rust) and frontend (Next.js).
 
-PixelMap is a collaborative pixel art canvas built on the Anchor protocol. Think Reddit Place, but permanent and decentralized on Bitcoin.
+| App | Port | Description |
+|-----|------|-------------|
+| **Anchor Threads** | 3010-3011 | Threaded conversations (forum-style) |
+| **Anchor Canvas** | 3020-3021 | Collaborative pixel canvas (Reddit Place) |
+| **Anchor Places** | 3030-3031 | Geographic markers on Bitcoin |
+| **Anchor Domains** | 3040-3041 | DNS on Bitcoin (.btc, .satoshi, etc.) |
+| **Anchor Proofs** | 3050-3051 | Proof of existence (document timestamping) |
+| **Anchor Tokens** | 3060-3061 | Token operations |
+| **Anchor Oracles** | 3070-3071 | Oracle attestations |
+| **Anchor Predictions** | 3080-3081 | Prediction markets |
 
-**Access:** [http://localhost:3005](http://localhost:3005)
+### Anchor Canvas - Collaborative Bitcoin Canvas
+
+A collaborative pixel art canvas built on the Anchor protocol. Think Reddit Place, but permanent and decentralized on Bitcoin.
 
 #### Features
 
@@ -386,19 +420,18 @@ PixelMap is a collaborative pixel art canvas built on the Anchor protocol. Think
 - **Image Import**: Upload images and convert to pixels with preview
 - **Interactive Positioning**: Drag imported images before painting
 - **Dynamic Fees**: Adjustable fee rate (1-100+ sat/vB)
-- **Pending Pixels**: Visual feedback while waiting for confirmation
 
 #### Quick Start
 
 ```bash
-# PixelMap is included in the main docker-compose
+# All apps are included in docker-compose
 docker compose up -d
 
-# Open PixelMap
-open http://localhost:3005
+# Open Anchor Canvas
+open http://localhost:3021
 ```
 
-See [apps/pixelmap/README.md](apps/pixelmap/README.md) for detailed documentation.
+See [apps/anchor-canvas/README.md](apps/anchor-canvas/README.md) for detailed documentation.
 
 ---
 
@@ -422,27 +455,37 @@ cargo run -p anchor-wallet
 # Run testnet generator locally
 cargo run -p anchor-testnet
 
-# Test wallet library
+# Test SDK libraries
+cargo test -p anchor-core
+cargo test -p anchor-specs
 cargo test -p anchor-wallet-lib
 ```
 
-### Frontend Development
+### Dashboard Development
 
 ```bash
-cd explorer/frontend
+cd admin/dashboard/frontend
 npm install
 npm run dev
 ```
 
-### PixelMap Development
+### Documentation Development
 
 ```bash
-# Backend (Rust)
-cd apps/pixelmap/backend
+cd sites/docs
+npm install
+npm run dev
+```
+
+### App Development
+
+```bash
+# Backend (Rust) - example with anchor-canvas
+cd apps/anchor-canvas/backend
 cargo run
 
 # Frontend (Next.js)
-cd apps/pixelmap/frontend
+cd apps/anchor-canvas/frontend
 npm install
 npm run dev
 ```
@@ -451,13 +494,13 @@ npm run dev
 
 ```bash
 # Build specific service
-docker compose build pixelmap-web
+docker compose build app-canvas-frontend
 
 # Rebuild and restart
-docker compose up -d pixelmap-web --force-recreate
+docker compose up -d app-canvas-frontend --force-recreate
 
 # View logs
-docker compose logs -f pixelmap-backend pixelmap-web
+docker compose logs -f app-canvas-backend app-canvas-frontend
 ```
 
 ## License
