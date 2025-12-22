@@ -40,7 +40,10 @@
     "shutdown": "Shutdown Services",
     "restartAll": "Restart All Services",
     "confirmShutdown": "Are you sure you want to shutdown all services? The dashboard will remain available.",
-    "confirmRestart": "Are you sure you want to restart all services? This may take a few minutes."
+    "confirmRestart": "Are you sure you want to restart all services? This may take a few minutes.",
+    "editOrder": "Edit Order",
+    "done": "Done",
+    "resetOrder": "Reset Order"
   },
   "greetings": {
     "goodMorning": "Good morning",

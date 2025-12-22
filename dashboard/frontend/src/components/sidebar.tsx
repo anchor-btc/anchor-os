@@ -1,10 +1,25 @@
 "use client";
 
-import { useState, useEffect, useMemo, memo } from "react";
+import { useState, useEffect, memo, useCallback } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import {
   Anchor,
   LayoutDashboard,
@@ -44,15 +59,22 @@ import {
   ChevronRight,
   Clock,
   Blocks,
+  GripVertical,
+  Pencil,
+  Check,
+  RotateCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { apps, getAppStatus } from "@/lib/apps";
+import { apps } from "@/lib/apps";
+import { getAppStatus } from "@/lib/apps";
 import { fetchContainers, startContainer, stopContainer, fetchUserProfile, fetchInstallationStatus, shutdownAll, restartAll, fetchBlockchainInfo } from "@/lib/api";
 import { getServiceIdFromAppId } from "@/lib/service-rules";
 import { MultiLogsModal } from "./multi-logs-modal";
 import { MultiTerminalModal } from "./multi-terminal-modal";
 import { NotificationBell } from "./notification-bell";
 import { useAuth } from "@/contexts/auth-context";
+import { SortableItem, SortableCategory } from "./sidebar-sortable";
+import { useSidebarOrder, CategoryKey, DEFAULT_CATEGORY_ORDER } from "@/hooks/use-sidebar-order";
 
 // Memoized Clock component - manages its own state to avoid sidebar re-renders
 const SidebarClock = memo(function SidebarClock() {
@@ -127,9 +149,6 @@ const iconMap: Record<string, React.ElementType> = {
   Activity,
 };
 
-// Categories that can be collapsed
-type CategoryKey = "protocol" | "apps" | "explorers" | "networking" | "electrum" | "storage" | "monitoring";
-
 // Default expanded state - all expanded by default
 const DEFAULT_EXPANDED: Record<CategoryKey, boolean> = {
   protocol: true,
@@ -139,6 +158,28 @@ const DEFAULT_EXPANDED: Record<CategoryKey, boolean> = {
   electrum: true,
   storage: true,
   monitoring: true,
+};
+
+// Category config with icons and translation keys
+const categoryConfig: Record<CategoryKey, { icon: React.ElementType; labelKey: string }> = {
+  protocol: { icon: Anchor, labelKey: "sidebar.protocol" },
+  apps: { icon: AppWindow, labelKey: "sidebar.apps" },
+  explorers: { icon: Search, labelKey: "sidebar.explorers" },
+  networking: { icon: Network, labelKey: "sidebar.networking" },
+  electrum: { icon: Zap, labelKey: "sidebar.electrum" },
+  storage: { icon: Database, labelKey: "sidebar.storage" },
+  monitoring: { icon: Activity, labelKey: "sidebar.monitoring" },
+};
+
+// Map category keys to app categories
+const categoryToAppCategory: Record<CategoryKey, string> = {
+  protocol: "anchor",
+  apps: "app",
+  explorers: "explorer",
+  networking: "networking",
+  electrum: "electrum",
+  storage: "storage",
+  monitoring: "monitoring",
 };
 
 export function Sidebar() {
@@ -157,6 +198,30 @@ export function Sidebar() {
   
   // Collapsed categories state with localStorage persistence
   const [expandedCategories, setExpandedCategories] = useState<Record<CategoryKey, boolean>>(DEFAULT_EXPANDED);
+  
+  // Sidebar order hook for drag-and-drop
+  const {
+    categoryOrder,
+    setCategoryOrder,
+    getSortedItems,
+    setItemOrder,
+    isEditMode,
+    toggleEditMode,
+    resetOrder,
+    isLoaded: isOrderLoaded,
+  } = useSidebarOrder();
+
+  // DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
   
   // Load collapsed state from localStorage on mount
   useEffect(() => {
@@ -299,15 +364,12 @@ export function Sidebar() {
     }
   };
 
-  // Filter apps by category AND installation status
-  const appsList = apps.filter((app) => app.category === "app" && isServiceInstalled(app.id));
-  const explorersList = apps.filter((app) => app.category === "explorer" && isServiceInstalled(app.id));
-  const networkingList = apps.filter((app) => app.category === "networking" && isServiceInstalled(app.id));
-  // New kernel subcategories
-  const electrumList = apps.filter((app) => app.category === "electrum" && isServiceInstalled(app.id));
-  const anchorList = apps.filter((app) => app.category === "anchor" && isServiceInstalled(app.id));
-  const storageList = apps.filter((app) => app.category === "storage" && isServiceInstalled(app.id));
-  const monitoringList = apps.filter((app) => app.category === "monitoring" && isServiceInstalled(app.id));
+  // Get apps by category, filtered by installation status
+  const getAppsForCategory = useCallback((category: CategoryKey) => {
+    const appCategory = categoryToAppCategory[category];
+    const filtered = apps.filter((app) => app.category === appCategory && isServiceInstalled(app.id));
+    return getSortedItems(category, filtered);
+  }, [getSortedItems, isServiceInstalled]);
 
   const getAppStatusInfo = (appContainers: string[]) => {
     const status = getAppStatus(
@@ -393,21 +455,26 @@ export function Sidebar() {
     
     return (
       <button
-        onClick={() => toggleCategory(category)}
-        className="w-full flex items-center justify-between px-3 py-1.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors group"
+        onClick={() => !isEditMode && toggleCategory(category)}
+        className={cn(
+          "w-full flex items-center justify-between px-3 py-1.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors group",
+          isEditMode && "cursor-default"
+        )}
       >
         <div className="flex items-center gap-2">
           <Icon className="w-3 h-3" />
           <span>{label}</span>
           <span className="text-[9px] opacity-60 font-normal">({count})</span>
         </div>
-        <div className="transition-transform duration-200">
-          {isExpanded ? (
-            <ChevronDown className="w-3 h-3 opacity-50 group-hover:opacity-100" />
-          ) : (
-            <ChevronRight className="w-3 h-3 opacity-50 group-hover:opacity-100" />
-          )}
-        </div>
+        {!isEditMode && (
+          <div className="transition-transform duration-200">
+            {isExpanded ? (
+              <ChevronDown className="w-3 h-3 opacity-50 group-hover:opacity-100" />
+            ) : (
+              <ChevronRight className="w-3 h-3 opacity-50 group-hover:opacity-100" />
+            )}
+          </div>
+        )}
       </button>
     );
   };
@@ -433,86 +500,146 @@ export function Sidebar() {
         />
         <Icon className="w-4 h-4 shrink-0" />
         <span className="truncate flex-1">{app.name}</span>
-        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setLogsContainers(app.containers);
-            }}
-            className="p-1 hover:bg-muted rounded transition-colors"
-            title="View Logs"
-          >
-            <ScrollText className="w-3 h-3" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setTerminalContainers(app.containers);
-            }}
-            className="p-1 hover:bg-muted rounded transition-colors"
-            title="Open Terminal"
-          >
-            <SquareTerminal className="w-3 h-3" />
-          </button>
-        </div>
+        {!isEditMode && (
+          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setLogsContainers(app.containers);
+              }}
+              className="p-1 hover:bg-muted rounded transition-colors"
+              title="View Logs"
+            >
+              <ScrollText className="w-3 h-3" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setTerminalContainers(app.containers);
+              }}
+              className="p-1 hover:bg-muted rounded transition-colors"
+              title="Open Terminal"
+            >
+              <SquareTerminal className="w-3 h-3" />
+            </button>
+          </div>
+        )}
       </>
     );
 
-    // Internal dashboard link
-    if (hasInternalUrl) {
-      return (
-        <Link
-          key={app.id}
-          href={app.internalUrl!}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors group"
-        >
-          {content}
-        </Link>
-      );
-    }
-
-    // External app that doesn't support iframe - open in new tab directly
-    if (hasExternalUrl && app.supportsIframe === false) {
-      return (
-        <a
-          key={app.id}
-          href={app.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors group"
-        >
-          {content}
-        </a>
-      );
-    }
-
-    // External app/explorer - use iframe view with query param
-    if (hasExternalUrl) {
-      return (
-        <Link
-          key={app.id}
-          href={`/?app=${app.id}`}
-          className={cn(
-            "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors group",
-            isActiveInIframe
-              ? "bg-primary/10 text-primary"
-              : "text-muted-foreground hover:text-foreground hover:bg-muted"
-          )}
-        >
-          {content}
-        </Link>
-      );
-    }
+    const itemContent = (
+      <>
+        {/* Internal dashboard link */}
+        {hasInternalUrl ? (
+          <Link
+            href={app.internalUrl!}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors group"
+          >
+            {content}
+          </Link>
+        ) : hasExternalUrl && app.supportsIframe === false ? (
+          /* External app that doesn't support iframe - open in new tab directly */
+          <a
+            href={app.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors group"
+          >
+            {content}
+          </a>
+        ) : hasExternalUrl ? (
+          /* External app/explorer - use iframe view with query param */
+          <Link
+            href={`/?app=${app.id}`}
+            className={cn(
+              "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors group",
+              isActiveInIframe
+                ? "bg-primary/10 text-primary"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+            )}
+          >
+            {content}
+          </Link>
+        ) : (
+          <div
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground/60 cursor-default group"
+          >
+            {content}
+          </div>
+        )}
+      </>
+    );
 
     return (
-      <div
-        key={app.id}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground/60 cursor-default group"
-      >
-        {content}
-      </div>
+      <SortableItem key={app.id} id={app.id} isEditMode={isEditMode}>
+        {itemContent}
+      </SortableItem>
+    );
+  };
+
+  // Handle drag end for categories
+  const handleCategoryDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (over && active.id !== over.id) {
+      const oldIndex = categoryOrder.indexOf(active.id as CategoryKey);
+      const newIndex = categoryOrder.indexOf(over.id as CategoryKey);
+      const newOrder = arrayMove(categoryOrder, oldIndex, newIndex);
+      setCategoryOrder(newOrder);
+    }
+  };
+
+  // Handle drag end for items within a category
+  const handleItemDragEnd = (category: CategoryKey) => (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (over && active.id !== over.id) {
+      const items = getAppsForCategory(category);
+      const itemIds = items.map((item) => item.id);
+      const oldIndex = itemIds.indexOf(active.id as string);
+      const newIndex = itemIds.indexOf(over.id as string);
+      const newOrder = arrayMove(itemIds, oldIndex, newIndex);
+      setItemOrder(category, newOrder);
+    }
+  };
+
+  // Render a category with its items
+  const renderCategory = (category: CategoryKey) => {
+    const items = getAppsForCategory(category);
+    if (items.length === 0) return null;
+
+    const config = categoryConfig[category];
+    const isExpanded = expandedCategories[category] || isEditMode;
+
+    return (
+      <SortableCategory key={category} id={category} isEditMode={isEditMode}>
+        <div className="pt-4">
+          <CategoryHeader
+            category={category}
+            icon={config.icon}
+            label={t(config.labelKey)}
+            count={items.length}
+          />
+          {isExpanded && (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleItemDragEnd(category)}
+            >
+              <SortableContext
+                items={items.map((item) => item.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="mt-1 space-y-0.5">
+                  {items.map(renderServiceItem)}
+                </div>
+              </SortableContext>
+            </DndContext>
+          )}
+        </div>
+      </SortableCategory>
     );
   };
 
@@ -670,131 +797,56 @@ export function Sidebar() {
             </div>
           ))}
 
-          {/* Anchor Protocol */}
-          {anchorList.length > 0 && (
-            <div className="pt-4">
-              <CategoryHeader
-                category="protocol"
-                icon={Anchor}
-                label={t("sidebar.protocol")}
-                count={anchorList.length}
-              />
-              {expandedCategories.protocol && (
-                <div className="mt-1 space-y-0.5">
-                  {anchorList.map(renderServiceItem)}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Apps */}
-          {appsList.length > 0 && (
-            <div className="pt-4">
-              <CategoryHeader
-                category="apps"
-                icon={AppWindow}
-                label={t("sidebar.apps")}
-                count={appsList.length}
-              />
-              {expandedCategories.apps && (
-                <div className="mt-1 space-y-0.5">
-                  {appsList.map(renderServiceItem)}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Explorers */}
-          {explorersList.length > 0 && (
-            <div className="pt-4">
-              <CategoryHeader
-                category="explorers"
-                icon={Search}
-                label={t("sidebar.explorers")}
-                count={explorersList.length}
-              />
-              {expandedCategories.explorers && (
-                <div className="mt-1 space-y-0.5">
-                  {explorersList.map(renderServiceItem)}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Networking */}
-          {networkingList.length > 0 && (
-            <div className="pt-4">
-              <CategoryHeader
-                category="networking"
-                icon={Network}
-                label={t("sidebar.networking")}
-                count={networkingList.length}
-              />
-              {expandedCategories.networking && (
-                <div className="mt-1 space-y-0.5">
-                  {networkingList.map(renderServiceItem)}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Electrum Servers */}
-          {electrumList.length > 0 && (
-            <div className="pt-4">
-              <CategoryHeader
-                category="electrum"
-                icon={Zap}
-                label={t("sidebar.electrum")}
-                count={electrumList.length}
-              />
-              {expandedCategories.electrum && (
-                <div className="mt-1 space-y-0.5">
-                  {electrumList.map(renderServiceItem)}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Storage / Infrastructure */}
-          {storageList.length > 0 && (
-            <div className="pt-4">
-              <CategoryHeader
-                category="storage"
-                icon={Database}
-                label={t("sidebar.storage")}
-                count={storageList.length}
-              />
-              {expandedCategories.storage && (
-                <div className="mt-1 space-y-0.5">
-                  {storageList.map(renderServiceItem)}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Monitoring */}
-          {monitoringList.length > 0 && (
-            <div className="pt-4">
-              <CategoryHeader
-                category="monitoring"
-                icon={Activity}
-                label={t("sidebar.monitoring")}
-                count={monitoringList.length}
-              />
-              {expandedCategories.monitoring && (
-                <div className="mt-1 space-y-0.5">
-                  {monitoringList.map(renderServiceItem)}
-                </div>
-              )}
-            </div>
-          )}
+          {/* Dynamic Categories with Drag-and-Drop */}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleCategoryDragEnd}
+          >
+            <SortableContext
+              items={categoryOrder}
+              strategy={verticalListSortingStrategy}
+            >
+              {categoryOrder.map(renderCategory)}
+            </SortableContext>
+          </DndContext>
         </nav>
 
-        {/* Footer - Clock & Block Height */}
+        {/* Footer - Edit Mode Toggle & Clock & Block Height */}
         <div className="border-t border-border px-4 py-3 shrink-0 bg-muted/30">
           <div className="flex items-center justify-between text-xs">
-            <SidebarClock />
-            <SidebarBlockHeight />
+            {isEditMode ? (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={toggleEditMode}
+                  className="flex items-center gap-1.5 px-2 py-1 bg-primary text-primary-foreground rounded text-[10px] font-medium hover:bg-primary/90 transition-colors"
+                >
+                  <Check className="w-3 h-3" />
+                  {t("sidebar.done", "Done")}
+                </button>
+                <button
+                  onClick={resetOrder}
+                  className="flex items-center gap-1.5 px-2 py-1 bg-muted text-muted-foreground rounded text-[10px] font-medium hover:bg-muted/80 transition-colors"
+                  title={t("sidebar.resetOrder", "Reset Order")}
+                >
+                  <RotateCw className="w-3 h-3" />
+                </button>
+              </div>
+            ) : (
+              <>
+                <SidebarClock />
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={toggleEditMode}
+                    className="p-1 text-muted-foreground hover:text-foreground transition-colors rounded hover:bg-muted"
+                    title={t("sidebar.editOrder", "Edit Order")}
+                  >
+                    <Pencil className="w-3 h-3" />
+                  </button>
+                  <SidebarBlockHeight />
+                </div>
+              </>
+            )}
           </div>
         </div>
       </aside>

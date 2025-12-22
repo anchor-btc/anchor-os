@@ -40,7 +40,10 @@
     "shutdown": "Desligar Serviços",
     "restartAll": "Reiniciar Todos",
     "confirmShutdown": "Tem certeza que deseja desligar todos os serviços? O dashboard permanecerá disponível.",
-    "confirmRestart": "Tem certeza que deseja reiniciar todos os serviços? Isso pode levar alguns minutos."
+    "confirmRestart": "Tem certeza que deseja reiniciar todos os serviços? Isso pode levar alguns minutos.",
+    "editOrder": "Editar Ordem",
+    "done": "Concluído",
+    "resetOrder": "Resetar Ordem"
   },
   "greetings": {
     "goodMorning": "Bom dia",
