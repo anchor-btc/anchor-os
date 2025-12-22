@@ -10,6 +10,24 @@ Anchor Proofs is a Bitcoin-powered proof of existence service. Users can timesta
 - **Backend**: Rust (Axum) with PostgreSQL
 - **Spec Crate**: `anchor-specs` (ProofSpec)
 
+## Carrier Types
+
+Choose how your proof is embedded on the Bitcoin blockchain:
+
+| Carrier | ID | Description | Best For |
+|---------|-----|-------------|----------|
+| **OP_RETURN** | `0` | Standard Bitcoin output | Quick proofs, minimal data |
+| **Inscription** | `1` | Ordinals-style inscription | Permanent, collectible proofs |
+| **Stamps** | `2` | Bare multisig (unprunable) | Maximum permanence guarantee |
+| **Witness Data** | `4` | Tapscript witness data | Large payloads, 75% fee savings |
+
+### Carrier Recommendations
+
+- **Hash only (no metadata)**: Use **OP_RETURN** - fastest and simplest
+- **With filename/description**: Use **Witness Data** - 75% cheaper than OP_RETURN
+- **Need Ordinal NFT**: Use **Inscription** - proof becomes an Ordinal
+- **Critical permanence**: Use **Stamps** - cannot be pruned by nodes
+
 ## Features
 
 - **Stamp Documents**: Create timestamped proofs for any file
