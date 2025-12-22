@@ -3,7 +3,7 @@
 use anyhow::Result;
 use tokio::process::Command;
 
-use crate::config::Config;
+use crate::backup_config::BackupConfig as Config;
 use super::StorageInfo;
 
 /// Get SMB storage info

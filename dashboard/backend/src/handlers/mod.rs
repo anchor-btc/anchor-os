@@ -1,6 +1,7 @@
 //! HTTP request handlers
 
 pub mod auth;
+pub mod backup;
 pub mod bitcoin;
 pub mod cloudflare;
 pub mod docker;

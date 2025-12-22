@@ -3,7 +3,7 @@
 use std::env;
 
 #[derive(Debug, Clone)]
-pub struct Config {
+pub struct BackupConfig {
     pub host: String,
     pub port: u16,
     
@@ -25,7 +25,7 @@ pub struct Config {
     pub restic_password: String,
 }
 
-impl Config {
+impl BackupConfig {
     pub fn from_env() -> Self {
         dotenvy::dotenv().ok();
 

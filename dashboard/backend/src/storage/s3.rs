@@ -2,7 +2,7 @@
 
 use anyhow::Result;
 
-use crate::config::Config;
+use crate::backup_config::BackupConfig as Config;
 use super::StorageInfo;
 
 /// Get S3 storage info

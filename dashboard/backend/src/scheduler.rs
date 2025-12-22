@@ -10,8 +10,8 @@ use uuid::Uuid;
 
 use crate::backup::engine::{BackupEngine, BackupJob, BackupStatus, BackupTarget, BackupType};
 use crate::backup::{database, volumes};
-use crate::config::Config;
-use crate::handlers::BackupSettings;
+use crate::backup_config::BackupConfig as Config;
+use crate::handlers::backup::BackupSettings;
 
 pub struct BackupScheduler {
     scheduler: JobScheduler,

@@ -41,4 +41,5 @@ docker-compose.override.yml
 .playwright-mcp/
 .cursor/plans/
 
-data/backups
+# Runtime data
+data/

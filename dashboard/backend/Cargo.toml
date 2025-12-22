@@ -48,3 +48,9 @@ regex = "1"
 # JWT
 jsonwebtoken = "9"
 
+# Backup dependencies
+uuid = { version = "1", features = ["v4", "serde"] }
+async-trait = "0.1"
+tokio-cron-scheduler = "0.13"
+croner = "2"
+

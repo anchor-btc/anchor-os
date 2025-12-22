@@ -2,9 +2,13 @@
 //!
 //! Control panel for managing the entire Anchor stack.
 
+mod backup;
+mod backup_config;
 mod config;
 mod handlers;
 mod monitors;
+mod scheduler;
+mod storage;
 
 use anyhow::Result;
 use axum::{

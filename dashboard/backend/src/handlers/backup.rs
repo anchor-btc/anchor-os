@@ -13,14 +13,14 @@ use tracing::{info, error};
 
 use crate::backup::engine::{BackupEngine, BackupJob, BackupStatus, BackupTarget, BackupType};
 use crate::backup::{database, volumes};
-use crate::config::Config;
+use crate::backup_config::BackupConfig;
 use crate::storage::{self, StorageInfo};
 
 use crate::scheduler::BackupScheduler;
 
-/// Application state
-pub struct AppState {
-    pub config: Config,
+/// Backup application state
+pub struct BackupState {
+    pub config: BackupConfig,
     pub engine: BackupEngine,
     pub current_job: Arc<RwLock<Option<BackupJob>>>,
     pub job_history: Arc<RwLock<Vec<BackupJob>>>,
@@ -29,8 +29,8 @@ pub struct AppState {
     pub host_backup_path: Option<String>,
 }
 
-impl AppState {
-    pub async fn new(config: Config) -> Self {
+impl BackupState {
+    pub async fn new(config: BackupConfig) -> Self {
         let engine = BackupEngine::new(config.clone());
         let scheduler = BackupScheduler::new().await.expect("Failed to create scheduler");
         
@@ -213,7 +213,7 @@ pub async fn health() -> impl IntoResponse {
 }
 
 /// Get backup status
-pub async fn get_status(State(state): State<Arc<AppState>>) -> impl IntoResponse {
+pub async fn get_status(State(state): State<Arc<BackupState>>) -> impl IntoResponse {
     let current_job = state.current_job.read().await.clone();
     let history = state.job_history.read().await;
     let last_backup = history.last().cloned();
@@ -237,7 +237,7 @@ pub async fn get_status(State(state): State<Arc<AppState>>) -> impl IntoResponse
 
 /// Start a backup
 pub async fn start_backup(
-    State(state): State<Arc<AppState>>,
+    State(state): State<Arc<BackupState>>,
     Json(req): Json<StartBackupRequest>,
 ) -> impl IntoResponse {
     // Check if backup is already running
@@ -286,7 +286,7 @@ pub async fn start_backup(
 }
 
 async fn run_backup(
-    state: Arc<AppState>,
+    state: Arc<BackupState>,
     target: BackupTarget,
     include_dbs: bool,
     include_vols: bool,
@@ -417,7 +417,7 @@ async fn run_backup(
 }
 
 /// Get backup history
-pub async fn get_history(State(state): State<Arc<AppState>>) -> impl IntoResponse {
+pub async fn get_history(State(state): State<Arc<BackupState>>) -> impl IntoResponse {
     let history = state.job_history.read().await;
     
     Json(HistoryResponse {
@@ -427,7 +427,7 @@ pub async fn get_history(State(state): State<Arc<AppState>>) -> impl IntoRespons
 }
 
 /// Get storage targets
-pub async fn get_targets(State(state): State<Arc<AppState>>) -> impl IntoResponse {
+pub async fn get_targets(State(state): State<Arc<BackupState>>) -> impl IntoResponse {
     let mut targets = Vec::new();
     
     // Local storage
@@ -450,7 +450,7 @@ pub async fn get_targets(State(state): State<Arc<AppState>>) -> impl IntoRespons
 
 /// Restore from backup
 pub async fn restore(
-    State(state): State<Arc<AppState>>,
+    State(state): State<Arc<BackupState>>,
     Json(req): Json<RestoreRequest>,
 ) -> impl IntoResponse {
     let target = match req.target.as_deref() {
@@ -486,7 +486,7 @@ pub async fn list_volumes() -> impl IntoResponse {
 
 /// List snapshots
 pub async fn list_snapshots(
-    State(state): State<Arc<AppState>>,
+    State(state): State<Arc<BackupState>>,
     Path(target): Path<String>,
 ) -> impl IntoResponse {
     let backup_target = match target.as_str() {
@@ -505,14 +505,14 @@ pub async fn list_snapshots(
 }
 
 /// Get settings
-pub async fn get_settings(State(state): State<Arc<AppState>>) -> impl IntoResponse {
+pub async fn get_settings(State(state): State<Arc<BackupState>>) -> impl IntoResponse {
     let settings = state.settings.read().await;
     Json(settings.clone())
 }
 
 /// Save settings
 pub async fn save_settings(
-    State(state): State<Arc<AppState>>,
+    State(state): State<Arc<BackupState>>,
     Json(new_settings): Json<BackupSettings>,
 ) -> impl IntoResponse {
     // Update settings
@@ -554,7 +554,7 @@ pub async fn save_settings(
 }
 
 /// List local backup files
-pub async fn list_local_files(State(state): State<Arc<AppState>>) -> impl IntoResponse {
+pub async fn list_local_files(State(state): State<Arc<BackupState>>) -> impl IntoResponse {
     let backup_dir = &state.config.backup_dir;
     
     let mut files = Vec::new();

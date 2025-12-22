@@ -9,9 +9,8 @@ members = [
     "internal/anchor-indexer",
     "internal/anchor-wallet",
     "internal/anchor-testnet",
-    # Admin tools
-    "admin/dashboard/backend",
-    "admin/backup/backend",
+    # Dashboard (includes backup functionality)
+    "dashboard/backend",
     # Apps
     "apps/anchor-threads/backend",
     "apps/anchor-canvas/backend",

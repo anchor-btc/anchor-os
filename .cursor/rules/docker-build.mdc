@@ -4,7 +4,7 @@ globs:
   - anchor/**/*
   - apps/**/*
   - crates/**/*
-  - docker/**/*
+  - infra/**/*
 alwaysApply: true
 ---
 
@@ -16,18 +16,18 @@ alwaysApply: true
 
 Use this reference to know which service to rebuild based on which files you changed:
 
-### Dashboard (`admin/dashboard/`)
+### Dashboard (`dashboard/`)
 
 | Path | Service | Build Command |
 |------|---------|---------------|
-| `admin/dashboard/frontend/**` | anchor-dashboard-frontend | `docker compose build anchor-dashboard-frontend && docker compose up -d anchor-dashboard-frontend` |
-| `admin/dashboard/backend/**` | anchor-dashboard-backend | `docker compose build anchor-dashboard-backend && docker compose up -d anchor-dashboard-backend` |
+| `dashboard/frontend/**` | anchor-dashboard-frontend | `docker compose build anchor-dashboard-frontend && docker compose up -d anchor-dashboard-frontend` |
+| `dashboard/backend/**` | anchor-dashboard-backend | `docker compose build anchor-dashboard-backend && docker compose up -d anchor-dashboard-backend` |
 
-### Backup (`admin/backup/`)
+### Backup (`dashboard/`)
 
 | Path | Service | Build Command |
 |------|---------|---------------|
-| `admin/backup/backend/**` | core-backup | `docker compose build core-backup && docker compose up -d core-backup` |
+| `dashboard/backend/**` | core-backup | `docker compose build core-backup && docker compose up -d core-backup` |
 
 ### Docs (`sites/docs/`)
 
@@ -43,15 +43,15 @@ Use this reference to know which service to rebuild based on which files you cha
 | `crates/anchor-wallet/**` | core-wallet | `docker compose build core-wallet && docker compose up -d core-wallet` |
 | `crates/anchor-testnet/**` | core-testnet | `docker compose build core-testnet && docker compose up -d core-testnet` |
 
-### Docker Configs (`docker/`)
+### Docker Configs (`infra/`)
 
 | Path | Service | Build Command |
 |------|---------|---------------|
-| `docker/bitcoin-core/**` | core-bitcoin | `docker compose build core-bitcoin && docker compose up -d core-bitcoin` |
-| `docker/electrs/**` | core-electrs | `docker compose build core-electrs && docker compose up -d core-electrs` |
-| `docker/fulcrum/**` | core-fulcrum | `docker compose build core-fulcrum && docker compose up -d core-fulcrum` |
-| `docker/postgres/**` | core-postgres | `docker compose up -d core-postgres` (no build needed, uses image) |
-| `docker/tor/**` | networking-tor | `docker compose up -d networking-tor` (no build needed, uses image) |
+| `infra/bitcoin-core/**` | core-bitcoin | `docker compose build core-bitcoin && docker compose up -d core-bitcoin` |
+| `infra/electrs/**` | core-electrs | `docker compose build core-electrs && docker compose up -d core-electrs` |
+| `infra/fulcrum/**` | core-fulcrum | `docker compose build core-fulcrum && docker compose up -d core-fulcrum` |
+| `infra/postgres/**` | core-postgres | `docker compose up -d core-postgres` (no build needed, uses image) |
+| `infra/tor/**` | networking-tor | `docker compose up -d networking-tor` (no build needed, uses image) |
 
 ### Apps (`apps/`)
 

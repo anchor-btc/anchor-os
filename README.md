@@ -46,7 +46,7 @@ ANCHOR enables embedding messages in Bitcoin transactions that can reference pre
 ```
 anchor/
 ├── docker-compose.yml          # Orchestrates all services
-├── docker/
+├── infra/
 │   ├── bitcoin/                # Bitcoin Core regtest setup
 │   └── postgres/               # Database schema & migrations
 │
@@ -63,12 +63,9 @@ anchor/
 │   ├── anchor-wallet/          # Transaction creation API
 │   └── anchor-testnet/         # Test transaction generator
 │
-├── admin/                      # 🛠️ ADMIN TOOLS (node operators)
-│   ├── dashboard/              # Node management dashboard
-│   │   ├── backend/
-│   │   └── frontend/
-│   └── backup/                 # Backup service
-│       └── backend/
+├── dashboard/                  # 🛠️ NODE MANAGEMENT (includes backup)
+│   ├── backend/                # Dashboard API + Backup service
+│   └── frontend/               # Dashboard web UI
 │
 ├── sites/                      # 🌐 PUBLIC WEBSITES
 │   ├── docs/                   # Protocol documentation (VitePress)
@@ -464,7 +461,7 @@ cargo test -p anchor-wallet-lib
 ### Dashboard Development
 
 ```bash
-cd admin/dashboard/frontend
+cd dashboard/frontend
 npm install
 npm run dev
 ```

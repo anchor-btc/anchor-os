@@ -7,7 +7,7 @@ use tokio::process::Command;
 use tracing::{info, error};
 use uuid::Uuid;
 
-use crate::config::Config;
+use crate::backup_config::BackupConfig as Config;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BackupJob {
