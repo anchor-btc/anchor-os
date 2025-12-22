@@ -1,17 +1,13 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Anchor UI Design System */
+@import "@AnchorProtocol/ui/styles/globals.css";
+@import "@AnchorProtocol/ui/styles/themes/predictions.css";
 
+/* App-specific overrides */
 :root {
-  --background: #0a0a0a;
-  --foreground: #ededed;
-}
-
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    sans-serif;
+  /* Amber accent for Predictions */
+  --primary: 38 92% 50%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 38 92% 50%;
 }
 
 /* Custom scrollbar */
@@ -21,16 +17,27 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
+  background: hsl(var(--secondary));
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: hsl(var(--muted));
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: hsl(var(--muted-foreground));
+}
+
+/* Selection */
+::selection {
+  background: rgba(245, 158, 11, 0.3);
+}
+
+/* Focus ring */
+*:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
 }
 
 /* Lottery ball animation */
@@ -49,4 +56,3 @@ body {
 .lottery-ball:nth-child(4) { animation-delay: 0.3s; }
 .lottery-ball:nth-child(5) { animation-delay: 0.4s; }
 .lottery-ball:nth-child(6) { animation-delay: 0.5s; }
-

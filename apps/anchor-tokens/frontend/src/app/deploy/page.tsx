@@ -5,7 +5,6 @@ import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Coins, Check, AlertCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { Header } from "@/components/header";
 import { createDeployTx, broadcastTx, mineBlocks } from "@/lib/api";
 
 export default function DeployPage() {
@@ -86,55 +85,49 @@ export default function DeployPage() {
 
   if (txid) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900">
-        <Header />
-        <main className="max-w-2xl mx-auto px-4 py-8">
-          <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-8 text-center">
-            <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Check className="w-8 h-8 text-green-400" />
-            </div>
-            <h1 className="text-2xl font-bold mb-2">Token Deployed!</h1>
-            <p className="text-gray-400 mb-6">
-              Your token <span className="text-orange-400 font-bold">{formData.ticker.toUpperCase()}</span> has been deployed successfully.
-            </p>
-            <p className="font-mono text-sm bg-gray-900 p-3 rounded-lg break-all mb-6">
-              {txid}
-            </p>
-            <div className="flex justify-center gap-4">
-              <Link
-                href={`/token/${formData.ticker.toUpperCase()}`}
-                className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg transition-colors"
-              >
-                View Token
-              </Link>
-              <button
-                onClick={() => {
-                  setTxid(null);
-                  setFormData({
-                    ticker: "",
-                    decimals: 8,
-                    maxSupply: "21000000",
-                    mintLimit: "",
-                    openMint: true,
-                    burnable: true,
-                  });
-                }}
-                className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-lg transition-colors"
-              >
-                Deploy Another
-              </button>
-            </div>
+      <main className="max-w-2xl mx-auto px-4 py-8">
+        <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-8 text-center">
+          <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Check className="w-8 h-8 text-green-400" />
           </div>
-        </main>
-      </div>
+          <h1 className="text-2xl font-bold mb-2">Token Deployed!</h1>
+          <p className="text-gray-400 mb-6">
+            Your token <span className="text-orange-400 font-bold">{formData.ticker.toUpperCase()}</span> has been deployed successfully.
+          </p>
+          <p className="font-mono text-sm bg-gray-900 p-3 rounded-lg break-all mb-6">
+            {txid}
+          </p>
+          <div className="flex justify-center gap-4">
+            <Link
+              href={`/token/${formData.ticker.toUpperCase()}`}
+              className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg transition-colors"
+            >
+              View Token
+            </Link>
+            <button
+              onClick={() => {
+                setTxid(null);
+                setFormData({
+                  ticker: "",
+                  decimals: 8,
+                  maxSupply: "21000000",
+                  mintLimit: "",
+                  openMint: true,
+                  burnable: true,
+                });
+              }}
+              className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-lg transition-colors"
+            >
+              Deploy Another
+            </button>
+          </div>
+        </div>
+      </main>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900">
-      <Header />
-
-      <main className="max-w-2xl mx-auto px-4 py-8">
+    <main className="max-w-2xl mx-auto px-4 py-8">
         <Link
           href="/"
           className="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-6"
@@ -274,7 +267,6 @@ export default function DeployPage() {
             </button>
           </form>
         </div>
-      </main>
-    </div>
+    </main>
   );
 }

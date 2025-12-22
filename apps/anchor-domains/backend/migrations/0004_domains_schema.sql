@@ -2,15 +2,15 @@
 -- A decentralized DNS system on Bitcoin using the Anchor protocol
 
 -- Domains indexer state
-CREATE TABLE IF NOT EXISTS domains_indexer_state (
+CREATE TABLE IF NOT EXISTS anchor_domains_indexer_state (
     id INTEGER PRIMARY KEY DEFAULT 1,
     last_block_hash BYTEA,
     last_block_height INTEGER DEFAULT 0,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    CONSTRAINT domains_single_row CHECK (id = 1)
+    CONSTRAINT anchor_domains_single_row CHECK (id = 1)
 );
 
-INSERT INTO domains_indexer_state (id, last_block_height) 
+INSERT INTO anchor_domains_indexer_state (id, last_block_height) 
 VALUES (1, 0) 
 ON CONFLICT (id) DO NOTHING;
 
@@ -80,7 +80,7 @@ CREATE INDEX IF NOT EXISTS idx_domains_name_search ON domains
     USING gin(to_tsvector('simple', name));
 
 -- Stats view
-CREATE OR REPLACE VIEW domains_stats AS
+CREATE OR REPLACE VIEW anchor_domains_stats AS
 SELECT 
     COUNT(DISTINCT d.id) as total_domains,
     COUNT(DISTINCT r.id) FILTER (WHERE r.is_active = TRUE) as total_records,

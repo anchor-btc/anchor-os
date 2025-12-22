@@ -3,7 +3,6 @@
 import { use, useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { Header } from "@/components";
 import {
   getDomain,
   updateDomain,
@@ -161,35 +160,26 @@ export default function ManageDomainPage({
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
-        <Header />
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="h-10 w-10 text-bitcoin-orange animate-spin" />
-        </div>
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-10 w-10 text-bitcoin-orange animate-spin" />
       </div>
     );
   }
 
   if (!domain) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
-        <Header />
-        <div className="max-w-4xl mx-auto px-4 py-20 text-center">
-          <AlertCircle className="h-16 w-16 text-red-400 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-white mb-2">Domain Not Found</h1>
-          <p className="text-slate-400">
-            The domain &quot;{decodedName}&quot; could not be found.
-          </p>
-        </div>
+      <div className="max-w-4xl mx-auto px-4 py-20 text-center">
+        <AlertCircle className="h-16 w-16 text-red-400 mx-auto mb-4" />
+        <h1 className="text-2xl font-bold text-white mb-2">Domain Not Found</h1>
+        <p className="text-slate-400">
+          The domain &quot;{decodedName}&quot; could not be found.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
-      <Header />
-
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Navigation */}
         <Link
           href={`/domain/${encodeURIComponent(decodedName)}`}
@@ -467,7 +457,6 @@ export default function ManageDomainPage({
             making your changes permanent on the blockchain.
           </p>
         </div>
-      </main>
-    </div>
+    </main>
   );
 }

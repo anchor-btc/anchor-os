@@ -2,14 +2,10 @@
 
 import { ArrowLeft, Book, Coins, Zap, Shield, Code } from "lucide-react";
 import Link from "next/link";
-import { Header } from "@/components/header";
 
 export default function DocsPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900">
-      <Header />
-
-      <main className="max-w-4xl mx-auto px-4 py-8">
+    <main className="max-w-4xl mx-auto px-4 py-8">
         <Link
           href="/"
           className="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-6"
@@ -180,7 +176,6 @@ SPLIT:  [0x05][token_id][count][[output_idx][amount]...]`}
             </div>
           </section>
         </div>
-      </main>
-    </div>
+    </main>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Header, DomainCard } from "@/components";
+import { DomainCard } from "@/components";
 import { listDomains } from "@/lib/api";
 import { Search, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 
@@ -24,11 +24,8 @@ export default function DomainsPage() {
   };
 
   return (
-    <div className="min-h-screen">
-      <Header />
-
-      <main className="max-w-6xl mx-auto px-4 py-12">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+    <div className="space-y-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-white">Browse Domains</h1>
             <p className="text-slate-400">
@@ -113,7 +110,6 @@ export default function DomainsPage() {
             )}
           </div>
         )}
-      </main>
     </div>
   );
 }

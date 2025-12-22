@@ -1,8 +1,8 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { fetchStats, fetchWalletBalance, formatNumber } from "@/lib/api";
-import { BookOpen, Palette, Wallet, Grid3X3, Zap, Box } from "lucide-react";
+import { fetchStats, formatNumber } from "@/lib/api";
+import { BookOpen, Palette, Grid3X3, Zap, Box } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -13,12 +13,6 @@ export function Header() {
     queryKey: ["stats"],
     queryFn: fetchStats,
     refetchInterval: 10000,
-  });
-
-  const { data: balance } = useQuery({
-    queryKey: ["balance"],
-    queryFn: fetchWalletBalance,
-    refetchInterval: 30000,
   });
 
   return (
@@ -84,18 +78,6 @@ export function Header() {
           <span>Docs</span>
         </a>
       </nav>
-
-      {/* Divider */}
-      <div className="w-px h-6 bg-white/10" />
-
-      {/* Wallet */}
-      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.06]">
-        <Wallet size={16} className="text-amber-500" />
-        <span className="text-sm font-mono text-white/90">
-          {balance ? balance.total.toFixed(4) : "—"}
-        </span>
-        <span className="text-xs text-white/40">BTC</span>
-      </div>
     </header>
   );
 }

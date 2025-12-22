@@ -37,7 +37,7 @@ export default function RootLayout({
             header={<Header />}
             footer={<ThreadsFooter />}
           >
-            <AppMain>{children}</AppMain>
+            <AppMain size="lg">{children}</AppMain>
           </AppShell>
         </Providers>
         <Script src="http://localhost:8000/anchor-os-bridge.js" strategy="afterInteractive" />

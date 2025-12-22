@@ -2,20 +2,14 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { MapPin, Bitcoin, Activity, BookOpen, User } from "lucide-react";
-import { fetchStats, fetchWalletBalance, formatNumber } from "@/lib/api";
+import { MapPin, Activity, BookOpen, User } from "lucide-react";
+import { fetchStats, formatNumber } from "@/lib/api";
 
 export function Header() {
   const { data: stats } = useQuery({
     queryKey: ["stats"],
     queryFn: fetchStats,
     refetchInterval: 30000,
-  });
-
-  const { data: balance } = useQuery({
-    queryKey: ["balance"],
-    queryFn: fetchWalletBalance,
-    refetchInterval: 10000,
   });
 
   return (
@@ -81,18 +75,7 @@ export function Header() {
           <BookOpen className="w-4 h-4" />
           <span className="text-sm hidden md:inline">Docs</span>
         </Link>
-
-        {/* Wallet Balance */}
-        {balance && (
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-bitcoin/10 rounded-lg border border-bitcoin/20">
-            <Bitcoin className="w-4 h-4 text-bitcoin" />
-            <span className="text-bitcoin font-mono text-sm">
-              {formatNumber(balance.total)} sats
-            </span>
-          </div>
-        )}
       </div>
     </header>
   );
 }
-

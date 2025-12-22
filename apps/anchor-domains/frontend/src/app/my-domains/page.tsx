@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Header, DomainCard } from "@/components";
+import { DomainCard } from "@/components";
 import { getWalletUtxos, getDomainsByOwner, listPendingTransactions } from "@/lib/api";
 import type { PendingTransaction } from "@/lib/api";
 import { Loader2, User, Globe, Clock } from "lucide-react";
@@ -48,11 +48,8 @@ export default function MyDomainsPage() {
   const isLoading = utxosLoading || domainsLoading;
 
   return (
-    <div className="min-h-screen">
-      <Header />
-
-      <main className="max-w-6xl mx-auto px-4 py-12">
-        <div className="mb-8">
+    <div className="space-y-8">
+      <div>
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-bitcoin-orange/20 rounded-lg">
               <User className="h-6 w-6 text-bitcoin-orange" />
@@ -150,8 +147,6 @@ export default function MyDomainsPage() {
             is transferred to a new UTXO in your wallet.
           </p>
         </div>
-      </main>
     </div>
   );
 }
-

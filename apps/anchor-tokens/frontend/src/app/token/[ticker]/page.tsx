@@ -15,7 +15,6 @@ import {
   Plus,
 } from "lucide-react";
 import { useState } from "react";
-import { Header } from "@/components/header";
 import { MintForm } from "@/components/mint-form";
 import { TransferForm } from "@/components/transfer-form";
 import { getToken, getTokenHolders, getTokenHistory } from "@/lib/api";
@@ -62,44 +61,35 @@ export default function TokenPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900">
-        <Header />
-        <main className="max-w-4xl mx-auto px-4 py-8">
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-gray-800 rounded w-1/4" />
-            <div className="h-48 bg-gray-800 rounded-xl" />
-          </div>
-        </main>
-      </div>
+      <main className="max-w-4xl mx-auto px-4 py-8">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-gray-800 rounded w-1/4" />
+          <div className="h-48 bg-gray-800 rounded-xl" />
+        </div>
+      </main>
     );
   }
 
   if (!token) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900">
-        <Header />
-        <main className="max-w-4xl mx-auto px-4 py-8">
-          <div className="text-center py-16">
-            <Coins className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-            <p className="text-xl text-gray-400">Token not found</p>
-            <Link
-              href="/tokens"
-              className="inline-flex items-center gap-2 mt-4 text-orange-400 hover:text-orange-300"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to tokens
-            </Link>
-          </div>
-        </main>
-      </div>
+      <main className="max-w-4xl mx-auto px-4 py-8">
+        <div className="text-center py-16">
+          <Coins className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+          <p className="text-xl text-gray-400">Token not found</p>
+          <Link
+            href="/tokens"
+            className="inline-flex items-center gap-2 mt-4 text-orange-400 hover:text-orange-300"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to tokens
+          </Link>
+        </div>
+      </main>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900">
-      <Header />
-
-      <main className="max-w-4xl mx-auto px-4 py-8">
+    <main className="max-w-4xl mx-auto px-4 py-8">
         <Link
           href="/tokens"
           className="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-6"
@@ -360,7 +350,6 @@ export default function TokenPage() {
             </div>
           )}
         </div>
-      </main>
-    </div>
+    </main>
   );
 }

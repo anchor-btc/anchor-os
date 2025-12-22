@@ -1,22 +1,13 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Anchor UI Design System */
+@import "@AnchorProtocol/ui/styles/globals.css";
+@import "@AnchorProtocol/ui/styles/themes/proofs.css";
 
+/* App-specific overrides for dark theme */
 :root {
-  --foreground-rgb: 255, 255, 255;
-  --background-start-rgb: 15, 23, 42;
-  --background-end-rgb: 15, 23, 42;
-}
-
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
-  min-height: 100vh;
+  /* Emerald accent for Proofs */
+  --primary: 160.1 84.1% 39.4%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 160.1 84.1% 39.4%;
 }
 
 /* Print styles for certificate */
@@ -72,16 +63,16 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: rgb(30, 41, 59);
+  background: hsl(var(--secondary));
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgb(71, 85, 105);
+  background: hsl(var(--muted));
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgb(100, 116, 139);
+  background: hsl(var(--muted-foreground));
 }
 
 /* Selection */
@@ -91,6 +82,6 @@ body {
 
 /* Focus ring */
 *:focus-visible {
-  outline: 2px solid rgb(16, 185, 129);
+  outline: 2px solid hsl(var(--ring));
   outline-offset: 2px;
 }

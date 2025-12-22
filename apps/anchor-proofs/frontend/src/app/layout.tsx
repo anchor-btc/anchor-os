@@ -18,44 +18,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         <Providers>
           <AppShell
             header={<Header />}
             footer={<ProofsFooter />}
           >
-            <AppMain>{children}</AppMain>
-          </AppShell>
-        </Providers>
-        <Script src="http://localhost:8000/anchor-os-bridge.js" strategy="afterInteractive" />
-      </body>
-    </html>
-  );
-}
-
-          >
-            <AppMain>{children}</AppMain>
-          </AppShell>
-        </Providers>
-        <Script src="http://localhost:8000/anchor-os-bridge.js" strategy="afterInteractive" />
-      </body>
-    </html>
-  );
-}
-
-          >
-            <AppMain>{children}</AppMain>
-          </AppShell>
-        </Providers>
-        <Script src="http://localhost:8000/anchor-os-bridge.js" strategy="afterInteractive" />
-      </body>
-    </html>
-  );
-}
-
-          >
-            <AppMain>{children}</AppMain>
+            <AppMain size="lg">{children}</AppMain>
           </AppShell>
         </Providers>
         <Script src="http://localhost:8000/anchor-os-bridge.js" strategy="afterInteractive" />

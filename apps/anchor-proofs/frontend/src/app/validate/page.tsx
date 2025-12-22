@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Header, FileUpload, ProofCard, type FileUploadResult } from "@/components";
+import { FileUpload, ProofCard, type FileUploadResult } from "@/components";
 import { validateHash, type ValidationResult } from "@/lib/api";
 import { HashAlgorithm, getAlgorithmName } from "@/lib/proof-encoder";
 import {
@@ -61,10 +61,7 @@ export default function ValidatePage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900">
-      <Header />
-
-      <main className="max-w-3xl mx-auto px-4 py-12">
+    <main className="max-w-3xl mx-auto px-4 py-12">
         <div className="flex items-center gap-3 mb-2">
           <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center">
             <Shield className="w-5 h-5 text-emerald-500" />
@@ -227,7 +224,6 @@ export default function ValidatePage() {
             </div>
           )}
         </div>
-      </main>
-    </div>
+    </main>
   );
 }

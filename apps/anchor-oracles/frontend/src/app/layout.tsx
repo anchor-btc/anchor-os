@@ -18,31 +18,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased min-h-screen bg-gradient-to-b from-gray-950 to-black">
+      <body className="dark antialiased min-h-screen bg-gradient-to-b from-gray-950 to-black">
         <Providers>
           <AppShell
             header={<Header />}
             footer={<OraclesFooter />}
           >
-            <AppMain>{children}</AppMain>
+            <AppMain size="lg">{children}</AppMain>
           </AppShell>
         </Providers>
         <Script src="http://localhost:8000/anchor-os-bridge.js" strategy="afterInteractive" />
-      </body>
-    </html>
-  );
-}
-
-      </body>
-    </html>
-  );
-}
-
-      </body>
-    </html>
-  );
-}
-
       </body>
     </html>
   );

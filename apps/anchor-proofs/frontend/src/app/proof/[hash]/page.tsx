@@ -3,7 +3,6 @@
 import { useParams, useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { Header } from "@/components";
 import { getProofByHash, revokeProof, mineBlocks } from "@/lib/api";
 import { formatFileSize } from "@/lib/hash";
 import {
@@ -62,46 +61,37 @@ export default function ProofDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-900">
-        <Header />
-        <main className="max-w-4xl mx-auto px-4 py-12">
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
-          </div>
-        </main>
-      </div>
+      <main className="max-w-4xl mx-auto px-4 py-12">
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+        </div>
+      </main>
     );
   }
 
   if (error || !proof) {
     return (
-      <div className="min-h-screen bg-slate-900">
-        <Header />
-        <main className="max-w-4xl mx-auto px-4 py-12">
-          <Link
-            href="/proofs"
-            className="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-8"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Proofs
-          </Link>
-          <div className="text-center py-20">
-            <XCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-white mb-2">Proof Not Found</h2>
-            <p className="text-slate-400">
-              No proof exists for this hash in our records.
-            </p>
-          </div>
-        </main>
-      </div>
+      <main className="max-w-4xl mx-auto px-4 py-12">
+        <Link
+          href="/proofs"
+          className="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-8"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Proofs
+        </Link>
+        <div className="text-center py-20">
+          <XCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-white mb-2">Proof Not Found</h2>
+          <p className="text-slate-400">
+            No proof exists for this hash in our records.
+          </p>
+        </div>
+      </main>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-900">
-      <Header />
-
-      <main className="max-w-4xl mx-auto px-4 py-12">
+    <main className="max-w-4xl mx-auto px-4 py-12">
         <Link
           href="/proofs"
           className="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-8"
@@ -314,7 +304,6 @@ export default function ProofDetailPage() {
             </div>
           </div>
         )}
-      </main>
-    </div>
+    </main>
   );
 }

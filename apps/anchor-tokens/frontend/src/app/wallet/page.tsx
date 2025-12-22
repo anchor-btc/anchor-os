@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Wallet, Coins, ArrowRightLeft, Search, ExternalLink, RefreshCw } from "lucide-react";
-import { Header } from "@/components/header";
 import { BalanceDisplay } from "@/components/balance-display";
 import Link from "next/link";
 import { 
@@ -76,10 +75,7 @@ export default function WalletPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900">
-      <Header />
-
-      <main className="max-w-4xl mx-auto px-4 py-8">
+    <main className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
@@ -342,7 +338,6 @@ export default function WalletPage() {
             </div>
           </>
         )}
-      </main>
-    </div>
+    </main>
   );
 }

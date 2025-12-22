@@ -3,7 +3,6 @@
 import { use } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { Header } from "@/components";
 import { getDomain, getDomainHistory, getPendingStatus, getRecordTypeColor, truncateTxid } from "@/lib/api";
 import {
   Globe,
@@ -84,47 +83,38 @@ export default function DomainDetailPage({
 
   if (isLoading) {
     return (
-      <div className="min-h-screen">
-        <Header />
-        <main className="max-w-4xl mx-auto px-4 py-12">
-          <div className="flex items-center justify-center py-24">
-            <Loader2 className="h-8 w-8 animate-spin text-bitcoin-orange" />
-          </div>
-        </main>
-      </div>
+      <main className="max-w-4xl mx-auto px-4 py-12">
+        <div className="flex items-center justify-center py-24">
+          <Loader2 className="h-8 w-8 animate-spin text-bitcoin-orange" />
+        </div>
+      </main>
     );
   }
 
   if (error || !domain) {
     return (
-      <div className="min-h-screen">
-        <Header />
-        <main className="max-w-4xl mx-auto px-4 py-12">
-          <div className="text-center py-24">
-            <Globe className="h-16 w-16 text-slate-600 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-white mb-2">
-              Domain Not Found
-            </h1>
-            <p className="text-slate-400 mb-4">
-              The domain &quot;{decodedName}&quot; is not registered.
-            </p>
-            <Link
-              href="/register"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-bitcoin-orange text-white rounded-lg hover:bg-orange-600 transition-colors"
-            >
-              Register this domain
-            </Link>
-          </div>
-        </main>
-      </div>
+      <main className="max-w-4xl mx-auto px-4 py-12">
+        <div className="text-center py-24">
+          <Globe className="h-16 w-16 text-slate-600 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-white mb-2">
+            Domain Not Found
+          </h1>
+          <p className="text-slate-400 mb-4">
+            The domain &quot;{decodedName}&quot; is not registered.
+          </p>
+          <Link
+            href="/register"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-bitcoin-orange text-white rounded-lg hover:bg-orange-600 transition-colors"
+          >
+            Register this domain
+          </Link>
+        </div>
+      </main>
     );
   }
 
   return (
-    <div className="min-h-screen">
-      <Header />
-
-      <main className="max-w-4xl mx-auto px-4 py-12">
+    <main className="max-w-4xl mx-auto px-4 py-12">
         {/* Back Link */}
         <Link
           href="/domains"
@@ -378,7 +368,6 @@ export default function DomainDetailPage({
             </div>
           </div>
         )}
-      </main>
-    </div>
+    </main>
   );
 }

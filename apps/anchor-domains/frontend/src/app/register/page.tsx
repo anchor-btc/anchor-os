@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Header } from "@/components";
 import {
   checkAvailability,
   registerDomain,
@@ -132,10 +131,8 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen">
-      <Header />
-
-      <main className="max-w-3xl mx-auto px-4 py-12">
+    <div className="max-w-3xl mx-auto space-y-6">
+      <div>
         <h1 className="text-3xl font-bold text-white mb-2">
           Register a Domain
         </h1>
@@ -416,7 +413,7 @@ export default function RegisterPage() {
             </button>
           </form>
         )}
-      </main>
+      </div>
     </div>
   );
 }

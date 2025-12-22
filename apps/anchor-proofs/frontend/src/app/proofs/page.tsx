@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Header, ProofCard } from "@/components";
+import { ProofCard } from "@/components";
 import { listProofs } from "@/lib/api";
 import {
   Search,
@@ -38,10 +38,7 @@ export default function ProofsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900">
-      <Header />
-
-      <main className="max-w-6xl mx-auto px-4 py-12">
+    <main className="max-w-6xl mx-auto px-4 py-12">
         <div className="flex items-center gap-3 mb-2">
           <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center">
             <List className="w-5 h-5 text-emerald-500" />
@@ -191,7 +188,6 @@ export default function ProofsPage() {
             )}
           </div>
         )}
-      </main>
-    </div>
+    </main>
   );
 }
