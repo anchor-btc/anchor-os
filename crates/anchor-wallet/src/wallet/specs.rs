@@ -339,9 +339,6 @@ impl WalletService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use anchor_specs::dns::DnsRecord;
-    use anchor_specs::token::{DeployFlags, TokenAllocation};
-    use anchor_specs::proof::{ProofEntry, ProofMetadata};
 
     #[test]
     fn test_text_spec_validation() {

@@ -80,11 +80,11 @@ pub async fn list_containers(
                         .ports
                         .unwrap_or_default()
                         .into_iter()
-                        .filter_map(|p| {
-                            if let (Some(public), Some(private)) = (p.public_port, Some(p.private_port)) {
-                                Some(format!("{}:{}", public, private))
+                        .map(|p| {
+                            if let Some(public) = p.public_port {
+                                format!("{}:{}", public, p.private_port)
                             } else {
-                                Some(format!("{}", p.private_port))
+                                format!("{}", p.private_port)
                             }
                         })
                         .collect();

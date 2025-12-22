@@ -66,7 +66,7 @@ pub fn create_and_broadcast_witness_data_tx(
     // Calculate dynamic fee based on data script size and fee_rate
     // Reveal tx: ~100 base vbytes + witness data (gets 75% discount)
     let script_size = data_script.len();
-    let reveal_vbytes = 100 + (script_size + 3) / 4; // witness weight / 4
+    let reveal_vbytes = 100 + script_size.div_ceil(4); // witness weight / 4
     let reveal_fee = std::cmp::max(15000, reveal_vbytes as u64 * fee_rate);
     let commit_fee = std::cmp::max(12000, 150 * fee_rate); // Commit tx is ~150 vbytes
 

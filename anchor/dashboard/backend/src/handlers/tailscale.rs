@@ -215,7 +215,7 @@ pub async fn connect_tailscale(
     let exec_options = CreateExecOptions {
         attach_stdout: Some(true),
         attach_stderr: Some(true),
-        cmd: Some(cmd.iter().map(|s| *s).collect()),
+        cmd: Some(cmd.to_vec()),
         ..Default::default()
     };
 

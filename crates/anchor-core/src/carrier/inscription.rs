@@ -288,14 +288,14 @@ impl Carrier for InscriptionCarrier {
         let envelope_overhead = 50;
 
         // Chunk overhead: each 520-byte chunk needs push opcode
-        let num_chunks = (payload_size + self.chunk_size - 1) / self.chunk_size;
+        let num_chunks = payload_size.div_ceil(self.chunk_size);
         let chunk_overhead = num_chunks * 3; // OP_PUSHDATA2 + 2 length bytes
 
         let witness_size = envelope_overhead + chunk_overhead + payload_size;
 
         // Witness discount: 1/4 weight
         let weight_units = witness_size;
-        let vbytes = (weight_units + 3) / 4;
+        let vbytes = weight_units.div_ceil(4);
 
         (vbytes as f64 * fee_rate).ceil() as u64
     }

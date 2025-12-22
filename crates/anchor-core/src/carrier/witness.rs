@@ -265,7 +265,7 @@ impl Carrier for WitnessCarrier {
     fn estimate_fee(&self, payload_size: usize, fee_rate: f64) -> u64 {
         // Calculate witness size
         // Each chunk: varint length + data
-        let num_chunks = (payload_size + self.chunk_size - 1) / self.chunk_size;
+        let num_chunks = payload_size.div_ceil(self.chunk_size);
 
         // Marker + chunks
         let items = 1 + num_chunks;
@@ -280,7 +280,7 @@ impl Carrier for WitnessCarrier {
 
         // Witness discount: 1/4 weight
         let weight_units = total_witness;
-        let vbytes = (weight_units + 3) / 4;
+        let vbytes = weight_units.div_ceil(4);
 
         (vbytes as f64 * fee_rate).ceil() as u64
     }

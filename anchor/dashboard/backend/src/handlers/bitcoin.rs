@@ -76,7 +76,7 @@ pub struct NodeStatus {
 pub async fn get_blockchain_info(
     State(state): State<Arc<AppState>>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
-    let url = format!("{}", state.config.bitcoin_rpc_url);
+    let url = state.config.bitcoin_rpc_url.to_string();
 
     let response = state
         .http_client
@@ -132,7 +132,7 @@ pub async fn get_blockchain_info(
 pub async fn get_mempool_info(
     State(state): State<Arc<AppState>>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
-    let url = format!("{}", state.config.bitcoin_rpc_url);
+    let url = state.config.bitcoin_rpc_url.to_string();
 
     let response = state
         .http_client
@@ -188,7 +188,7 @@ pub async fn get_mempool_info(
 pub async fn get_network_info(
     State(state): State<Arc<AppState>>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
-    let url = format!("{}", state.config.bitcoin_rpc_url);
+    let url = state.config.bitcoin_rpc_url.to_string();
 
     let response = state
         .http_client
@@ -244,7 +244,7 @@ pub async fn get_network_info(
 pub async fn get_node_status(
     State(state): State<Arc<AppState>>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
-    let url = format!("{}", state.config.bitcoin_rpc_url);
+    let url = state.config.bitcoin_rpc_url.to_string();
 
     // Fetch all info in parallel using batch RPC
     let batch_request = vec![

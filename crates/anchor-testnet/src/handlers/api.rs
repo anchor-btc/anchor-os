@@ -75,7 +75,7 @@ pub async fn update_config_handler(
         config.max_interval_secs = v.max(config.min_interval_secs);
     }
     if let Some(v) = req.blocks_per_cycle {
-        config.blocks_per_cycle = v.max(1).min(10);
+        config.blocks_per_cycle = v.clamp(1, 10);
     }
     if let Some(v) = req.enable_text {
         config.enable_text = v;

@@ -13,6 +13,9 @@ rustflags = [
     "-W", "dead_code",
     "-W", "unused_mut",
     "-W", "unreachable_code",
+    # Allow clippy lints that are style-related and require significant refactoring
+    "-A", "clippy::too_many_arguments",
+    "-A", "clippy::type_complexity",
 ]
 
 [alias]

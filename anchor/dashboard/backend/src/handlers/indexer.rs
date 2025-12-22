@@ -197,7 +197,7 @@ pub async fn get_indexer_stats(
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?;
     
-    let last_indexed_block = if last_block.is_empty() || last_block == "" {
+    let last_indexed_block = if last_block.is_empty() {
         None
     } else {
         last_block.parse::<i64>().ok()

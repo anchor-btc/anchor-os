@@ -282,7 +282,7 @@ impl MarkerIndexer {
 
                         debug!(
                             "Found text message with anchor: prefix={}, vout={}",
-                            hex::encode(&parent_anchor.txid_prefix),
+                            hex::encode(parent_anchor.txid_prefix),
                             parent_anchor.vout
                         );
 
@@ -317,7 +317,7 @@ impl MarkerIndexer {
                             None => {
                                 debug!(
                                     "Could not resolve anchor to marker: prefix={}, vout={}",
-                                    hex::encode(&parent_anchor.txid_prefix),
+                                    hex::encode(parent_anchor.txid_prefix),
                                     parent_anchor.vout
                                 );
                             }

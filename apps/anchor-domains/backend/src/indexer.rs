@@ -260,7 +260,7 @@ impl Indexer {
                                     "Update for {} rejected: anchor doesn't match owner. \
                                     Anchor prefix (reversed): {:?}, Owner suffix: {:?}",
                                     payload.name, 
-                                    hex::encode(&prefix_reversed),
+                                    hex::encode(prefix_reversed),
                                     hex::encode(owner_suffix)
                                 );
                             }

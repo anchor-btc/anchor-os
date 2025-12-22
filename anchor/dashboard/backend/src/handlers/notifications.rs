@@ -120,7 +120,7 @@ pub async fn list_notifications(
 
     // Pagination
     let page = query.page.unwrap_or(1).max(1);
-    let limit = query.limit.unwrap_or(50).min(100).max(1);
+    let limit = query.limit.unwrap_or(50).clamp(1, 100);
     let offset = (page - 1) * limit;
 
     // Build WHERE clause dynamically

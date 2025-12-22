@@ -10,12 +10,6 @@ mod replies;
 
 use anyhow::Result;
 use sqlx::postgres::PgPool;
-
-pub use categories::*;
-pub use indexer_state::*;
-pub use markers::*;
-pub use replies::*;
-
 /// Database connection pool wrapper
 #[derive(Clone)]
 pub struct Database {
@@ -27,11 +21,6 @@ impl Database {
     pub async fn connect(database_url: &str) -> Result<Self> {
         let pool = PgPool::connect(database_url).await?;
         Ok(Self { pool })
-    }
-
-    /// Get the underlying pool reference
-    pub fn pool(&self) -> &PgPool {
-        &self.pool
     }
 }
 

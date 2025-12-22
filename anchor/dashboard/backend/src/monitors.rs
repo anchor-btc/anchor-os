@@ -132,7 +132,7 @@ pub async fn container_monitor(state: Arc<MonitorState>) {
                     if let (Some(id), Some(container_state)) = (container.id.clone(), container.state.clone()) {
                         let name = container.names
                             .and_then(|n| n.first().map(|s| s.trim_start_matches('/').to_string()))
-                            .unwrap_or_else(|| id);
+                            .unwrap_or(id);
                         current_states.insert(name, container_state);
                     }
                 }

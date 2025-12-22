@@ -508,7 +508,7 @@ impl Database {
         };
 
         let replies = self.get_thread_replies(&root).await?;
-        let total = self.count_thread_messages(&replies) + 1;
+        let total = Self::count_thread_messages(&replies) + 1;
 
         Ok(Some(ThreadResponse {
             root,
@@ -537,10 +537,10 @@ impl Database {
     }
 
     /// Count messages in a thread tree
-    fn count_thread_messages(&self, nodes: &[ThreadNodeResponse]) -> i64 {
+    fn count_thread_messages(nodes: &[ThreadNodeResponse]) -> i64 {
         let mut count = nodes.len() as i64;
         for node in nodes {
-            count += self.count_thread_messages(&node.replies);
+            count += Self::count_thread_messages(&node.replies);
         }
         count
     }

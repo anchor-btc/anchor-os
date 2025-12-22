@@ -695,8 +695,8 @@ mod tests {
         let spec = TokenSpec::deploy(
             "TEST",
             8,
-            21_000_000_00000000,
-            Some(1000_00000000),
+            2_100_000_000_000_000,
+            Some(100_000_000_000),
             DeployFlags::new().with_open_mint().with_burnable(),
         );
 

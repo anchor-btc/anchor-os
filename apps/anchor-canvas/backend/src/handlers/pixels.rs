@@ -103,7 +103,7 @@ pub async fn get_pixels_by_txids(
     let txids_bytes: Result<Vec<Vec<u8>>, _> = payload
         .txids
         .iter()
-        .map(|txid_hex| hex::decode(txid_hex))
+        .map(hex::decode)
         .collect();
 
     let txids_bytes = match txids_bytes {
@@ -169,7 +169,7 @@ pub async fn get_pixels_by_address(
         ));
     }
 
-    let per_page = params.per_page.min(500).max(1);
+    let per_page = params.per_page.clamp(1, 500);
     let page = params.page.max(0);
     let offset = page * per_page;
 
@@ -228,7 +228,7 @@ pub async fn get_pixels_by_addresses(
         }));
     }
 
-    let per_page = payload.per_page.min(500).max(1);
+    let per_page = payload.per_page.clamp(1, 500);
 
     // Get pixels
     let pixels = match state.db.get_pixels_by_addresses(&payload.addresses, per_page).await {
@@ -282,7 +282,7 @@ pub async fn get_my_pixels(
     Query(params): Query<ListParams>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     // Allow up to 50000 pixels for my pixels page (user's own pixels)
-    let per_page = params.per_page.min(50000).max(1);
+    let per_page = params.per_page.clamp(1, 50000);
     
     // Get wallet URL from environment
     let wallet_url = std::env::var("WALLET_URL").unwrap_or_else(|_| "http://core-wallet:3001".to_string());

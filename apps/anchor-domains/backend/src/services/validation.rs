@@ -61,7 +61,7 @@ pub fn parse_txid_list(txids_str: &str) -> AppResult<Vec<Vec<u8>>> {
 pub fn parse_txids(txids: &[String]) -> AppResult<Vec<Vec<u8>>> {
     let result: Result<Vec<Vec<u8>>, _> = txids
         .iter()
-        .map(|txid| hex::decode(txid))
+        .map(hex::decode)
         .collect();
 
     result.map_err(|e| AppError::bad_request(format!("Invalid txid hex format: {}", e)))

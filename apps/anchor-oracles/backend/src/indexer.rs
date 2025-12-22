@@ -215,7 +215,7 @@ impl Indexer {
                                 // For now, we'd need to resolve the anchor
                                 tracing::debug!(
                                     "Indexed attestation for event {:?} at vout {}",
-                                    hex::encode(&att.event_id),
+                                    hex::encode(att.event_id),
                                     vout
                                 );
                             }

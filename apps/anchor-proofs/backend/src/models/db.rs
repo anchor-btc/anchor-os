@@ -41,7 +41,7 @@ impl ProofRow {
             vout: self.vout,
             block_height: self.block_height,
             is_revoked: self.is_revoked,
-            revoked_txid: self.revoked_txid.as_ref().map(|t| hex::encode(t)),
+            revoked_txid: self.revoked_txid.as_ref().map(hex::encode),
             created_at: self.created_at,
         }
     }

@@ -165,7 +165,7 @@ pub async fn list_utxos(
 pub async fn get_transactions(
     State(state): State<Arc<AppState>>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
-    let url = format!("{}", state.config.bitcoin_rpc_url);
+    let url = state.config.bitcoin_rpc_url.to_string();
 
     let response = state
         .http_client

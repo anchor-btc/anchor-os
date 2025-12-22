@@ -71,7 +71,7 @@ pub fn create_and_broadcast_annex_tx(
     // Reveal tx: ~150 base vbytes + witness data (gets 75% discount)
     // Annex is in witness, so it gets the discount too
     let annex_size = annex_data.len();
-    let reveal_vbytes = 150 + (annex_size + 64 + 3) / 4; // 64 for schnorr sig
+    let reveal_vbytes = 150 + (annex_size + 64).div_ceil(4); // 64 for schnorr sig
     let reveal_fee = std::cmp::max(15000, reveal_vbytes as u64 * fee_rate);
     let commit_fee = std::cmp::max(12000, 150 * fee_rate); // Commit tx is ~150 vbytes
 

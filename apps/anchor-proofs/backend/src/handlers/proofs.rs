@@ -174,7 +174,7 @@ pub async fn get_my_proofs(
     State(state): State<Arc<AppState>>,
     Query(params): Query<ListParams>,
 ) -> Result<Json<GetProofsByAddressResponse>> {
-    let per_page = params.per_page.min(500).max(1);
+    let per_page = params.per_page.clamp(1, 500);
 
     // Fetch all addresses from the wallet
     let addresses = state.wallet.get_wallet_addresses().await?;

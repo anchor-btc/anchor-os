@@ -10,9 +10,6 @@ mod indexer;
 use anyhow::Result;
 use sqlx::postgres::PgPool;
 
-pub use pixels::*;
-pub use indexer::*;
-
 /// Database connection pool wrapper
 #[derive(Clone)]
 pub struct Database {
@@ -25,10 +22,4 @@ impl Database {
         let pool = PgPool::connect(database_url).await?;
         Ok(Self { pool })
     }
-
-    /// Get a reference to the connection pool
-    pub fn pool(&self) -> &PgPool {
-        &self.pool
-    }
 }
-

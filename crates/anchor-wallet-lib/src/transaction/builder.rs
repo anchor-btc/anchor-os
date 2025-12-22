@@ -125,7 +125,7 @@ impl TransactionBuilder {
     /// Build the parsed anchor message
     fn build_message(&self) -> ParsedAnchorMessage {
         ParsedAnchorMessage {
-            kind: self.kind.clone(),
+            kind: self.kind,
             anchors: self.anchors.clone(),
             body: self.body.clone(),
         }

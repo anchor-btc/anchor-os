@@ -35,38 +35,11 @@ fn default_per_page() -> i32 {
     100
 }
 
-/// Paginated response
-#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
-pub struct PaginatedResponse<T> {
-    pub data: Vec<T>,
-    pub total: i64,
-    pub page: i32,
-    pub per_page: i32,
-    pub total_pages: i32,
-}
-
 /// Health check response
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct HealthResponse {
     pub status: String,
     pub service: String,
-}
-
-/// Create pixel request
-#[derive(Debug, Clone, Deserialize, ToSchema)]
-pub struct CreatePixelRequest {
-    pub pixels: Vec<PixelInput>,
-    pub carrier: Option<u8>,
-}
-
-/// Input for a single pixel
-#[derive(Debug, Clone, Deserialize, ToSchema)]
-pub struct PixelInput {
-    pub x: u32,
-    pub y: u32,
-    pub r: u8,
-    pub g: u8,
-    pub b: u8,
 }
 
 /// Create transaction response
@@ -139,4 +112,3 @@ pub struct GetPixelsByAddressResponse {
     pub page: i32,
     pub per_page: i32,
 }
-

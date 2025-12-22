@@ -664,7 +664,7 @@ pub async fn get_services(
         for service in &mut services {
             let all_running = service.containers.iter().all(|container_name| {
                 containers.iter().any(|c| {
-                    c.names.as_ref().map_or(false, |names| {
+                    c.names.as_ref().is_some_and(|names| {
                         names.iter().any(|n| n.trim_start_matches('/') == container_name)
                     }) && c.state.as_deref() == Some("running")
                 })
@@ -672,7 +672,7 @@ pub async fn get_services(
 
             let any_exists = service.containers.iter().any(|container_name| {
                 containers.iter().any(|c| {
-                    c.names.as_ref().map_or(false, |names| {
+                    c.names.as_ref().is_some_and(|names| {
                         names.iter().any(|n| n.trim_start_matches('/') == container_name)
                     })
                 })
@@ -1069,13 +1069,13 @@ pub async fn uninstall_service(
 
     // Check if other services depend on this one
     for other_service in &all_services {
-        if services.get(&other_service.id).copied().unwrap_or(false) {
-            if other_service.depends_on.contains(&req.service_id) {
-                return Err((
-                    StatusCode::BAD_REQUEST,
-                    format!("Cannot uninstall '{}' - service '{}' depends on it", req.service_id, other_service.id),
-                ));
-            }
+        if services.get(&other_service.id).copied().unwrap_or(false)
+            && other_service.depends_on.contains(&req.service_id)
+        {
+            return Err((
+                StatusCode::BAD_REQUEST,
+                format!("Cannot uninstall '{}' - service '{}' depends on it", req.service_id, other_service.id),
+            ));
         }
     }
 
@@ -1437,7 +1437,7 @@ pub async fn stream_installation(
         if let Ok(output) = cleanup_created {
             let removed = String::from_utf8_lossy(&output.stdout);
             if !removed.trim().is_empty() {
-                yield Ok(Event::default().data(format!("[CLEANUP] Removed stuck containers")));
+                yield Ok(Event::default().data("[CLEANUP] Removed stuck containers"));
             }
         }
         

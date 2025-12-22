@@ -3,8 +3,6 @@
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-use anchor_specs::state::PixelData;
-
 /// A single pixel with coordinates and color (API representation)
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct Pixel {
@@ -15,6 +13,7 @@ pub struct Pixel {
     pub b: u8,
 }
 
+#[cfg(test)]
 impl Pixel {
     /// Create a new pixel
     pub fn new(x: u32, y: u32, r: u8, g: u8, b: u8) -> Self {
@@ -23,6 +22,7 @@ impl Pixel {
 
     /// Decode pixel from bytes
     pub fn from_bytes(bytes: &[u8]) -> Option<Self> {
+        use anchor_specs::state::PixelData;
         PixelData::from_bytes(bytes).map(|pd| Self {
             x: pd.x as u32,
             y: pd.y as u32,
@@ -34,24 +34,9 @@ impl Pixel {
 
     /// Encode pixel to bytes
     pub fn to_bytes(&self) -> Vec<u8> {
+        use anchor_specs::state::PixelData;
         let pd = PixelData::new(self.x as u16, self.y as u16, self.r, self.g, self.b);
         pd.to_bytes()
-    }
-
-    /// Convert to PixelData for protocol encoding
-    pub fn to_pixel_data(&self) -> PixelData {
-        PixelData::new(self.x as u16, self.y as u16, self.r, self.g, self.b)
-    }
-
-    /// Create from PixelData
-    pub fn from_pixel_data(pd: &PixelData) -> Self {
-        Self {
-            x: pd.x as u32,
-            y: pd.y as u32,
-            r: pd.r,
-            g: pd.g,
-            b: pd.b,
-        }
     }
 }
 
@@ -102,4 +87,3 @@ pub struct RecentPixel {
     pub block_height: Option<i32>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
-

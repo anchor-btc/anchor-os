@@ -146,7 +146,7 @@ impl Carrier for AnnexCarrier {
 
     fn can_handle(&self, payload_size: usize) -> bool {
         // Only handle if broadcast is allowed OR we're in decode-only mode
-        (self.allow_broadcast || true) && payload_size <= Self::MAX_SIZE
+        payload_size <= Self::MAX_SIZE
     }
 
     fn encode(&self, message: &ParsedAnchorMessage) -> CarrierResult<CarrierOutput> {
@@ -212,7 +212,7 @@ impl Carrier for AnnexCarrier {
 
         // Witness discount: 1/4 weight
         let weight_units = witness_size;
-        let vbytes = (weight_units + 3) / 4;
+        let vbytes = weight_units.div_ceil(4);
 
         (vbytes as f64 * fee_rate).ceil() as u64
     }

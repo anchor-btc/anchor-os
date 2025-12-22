@@ -124,13 +124,13 @@ pub async fn get_node_config(
             // Try to get version from image tag
             let version = containers.first()
                 .and_then(|c| c.image.as_ref())
-                .and_then(|img| {
+                .map(|img| {
                     // Extract version from image name if available
                     if img.contains("bitcoin-core") {
                         // For now, assume default version
-                        Some(DEFAULT_VERSION.to_string())
+                        DEFAULT_VERSION.to_string()
                     } else {
-                        Some(DEFAULT_VERSION.to_string())
+                        DEFAULT_VERSION.to_string()
                     }
                 });
             

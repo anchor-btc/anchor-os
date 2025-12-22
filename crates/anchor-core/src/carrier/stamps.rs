@@ -123,7 +123,7 @@ impl StampsCarrier {
         }
 
         // Add burn pubkey (makes it unspendable)
-        builder = builder.push_slice(&Self::BURN_PUBKEY);
+        builder = builder.push_slice(Self::BURN_PUBKEY);
 
         // Total keys = data chunks + burn key
         let total_keys = (chunks.len() + 1) as i64;
@@ -282,10 +282,10 @@ impl Carrier for StampsCarrier {
 
     fn estimate_fee(&self, payload_size: usize, fee_rate: f64) -> u64 {
         // Calculate number of chunks needed
-        let num_chunks = (payload_size + Self::DATA_PER_CHUNK - 1) / Self::DATA_PER_CHUNK;
+        let num_chunks = payload_size.div_ceil(Self::DATA_PER_CHUNK);
 
         // Calculate number of outputs needed
-        let num_outputs = (num_chunks + self.max_keys_per_script - 1) / self.max_keys_per_script;
+        let num_outputs = num_chunks.div_ceil(self.max_keys_per_script);
 
         // Each output: 8 (value) + 1 (script_len varint) + script
         // Script: 1 (OP_1) + N*(1 + 33) + 1 (OP_N) + 1 (OP_CHECKMULTISIG)

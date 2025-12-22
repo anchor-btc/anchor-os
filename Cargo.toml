@@ -41,11 +41,15 @@ missing_docs = "allow"  # Can be "warn" for stricter doc requirements
 
 [workspace.lints.clippy]
 # Clippy lints
-all = "warn"
+all = { level = "warn", priority = -1 }
 pedantic = "allow"  # Can be "warn" for stricter style
 nursery = "allow"
 unwrap_used = "allow"  # Can be "warn" to enforce Result handling
 expect_used = "allow"
+# Database functions often have many parameters - allow up to 15
+too_many_arguments = "allow"
+# SQLx query results use complex tuple types - this is expected
+type_complexity = "allow"
 
 [workspace.dependencies]
 # Bitcoin

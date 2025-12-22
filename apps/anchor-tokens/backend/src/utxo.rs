@@ -117,7 +117,7 @@ impl UtxoTracker {
             } else {
                 debug!(
                     "UTXO not found for anchor prefix: {}:{}",
-                    hex::encode(&anchor.txid_prefix),
+                    hex::encode(anchor.txid_prefix),
                     anchor.vout
                 );
             }
@@ -216,7 +216,7 @@ mod tests {
 
     #[test]
     fn test_allocation_sum() {
-        let allocations = vec![
+        let allocations = [
             TokenAllocation {
                 output_index: 0,
                 amount: 500,
