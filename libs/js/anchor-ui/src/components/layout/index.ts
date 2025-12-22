@@ -22,3 +22,28 @@ export {
   type NavLinkProps,
 } from "./nav-link";
 export { NavGroup, gapSizes, type NavGroupProps } from "./nav-group";
+
+// Fullscreen layout components
+export { FullscreenShell, type FullscreenShellProps } from "./fullscreen-shell";
+export {
+  AppSidebar,
+  AppSidebarSection,
+  type AppSidebarProps,
+  type AppSidebarSectionProps,
+} from "./app-sidebar";
+export {
+  AppToolbar,
+  AppToolbarGroup,
+  AppToolbarSeparator,
+  AppToolbarButton,
+  type AppToolbarProps,
+  type AppToolbarGroupProps,
+  type AppToolbarButtonProps,
+} from "./app-toolbar";
+export {
+  OverlayControls,
+  OverlayControlsGroup,
+  type OverlayControlsProps,
+  type OverlayControlsGroupProps,
+  type OverlayPosition,
+} from "./overlay-controls";

@@ -1,9 +1,17 @@
 "use client";
 
-import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { MapPin, Activity, BookOpen, User } from "lucide-react";
 import { fetchStats, formatNumber } from "@/lib/api";
+import {
+  AppHeader,
+  AppLogo,
+  NavLink,
+  NavGroup,
+  Container,
+} from "@AnchorProtocol/ui";
+import { MapPin, Activity, BookOpen, User, Home } from "lucide-react";
+
+const DOCS_URL = "http://localhost:3900/apps/places";
 
 export function Header() {
   const { data: stats } = useQuery({
@@ -13,69 +21,64 @@ export function Header() {
   });
 
   return (
-    <header className="h-16 bg-secondary/80 backdrop-blur-sm border-b border-map-border flex items-center px-6 z-50">
-      {/* Logo */}
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
-          <MapPin className="w-5 h-5 text-white" />
-        </div>
-        <div>
-          <h1 className="font-heading text-xl text-foreground tracking-wide">
-            Anchor Places
-          </h1>
-          <p className="text-xs text-secondary-foreground">
-            Pin on Bitcoin
-          </p>
-        </div>
-      </div>
+    <AppHeader variant="blur">
+      <Container>
+        <nav className="flex items-center h-16 gap-6">
+          <AppLogo
+            appName="Places"
+            appIcon={MapPin}
+            accentColor="blue"
+            subtitle="Pin Messages on Bitcoin"
+          />
 
-      {/* Stats */}
-      <div className="flex items-center gap-6 ml-auto">
-        {stats && (
-          <>
-            <div className="flex items-center gap-2 text-sm">
-              <MapPin className="w-4 h-4 text-primary" />
-              <span className="text-foreground font-medium">
-                {formatNumber(stats.total_markers)}
-              </span>
-              <span className="text-secondary-foreground">markers</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm">
-              <Activity className="w-4 h-4 text-accent" />
-              <span className="text-foreground font-medium">
-                {formatNumber(stats.total_replies)}
-              </span>
-              <span className="text-secondary-foreground">replies</span>
-            </div>
-            {stats.last_block_height && (
+          {/* Divider */}
+          <div className="w-px h-6 bg-white/10" />
+
+          {/* Stats */}
+          {stats && (
+            <div className="hidden md:flex items-center gap-4">
               <div className="flex items-center gap-2 text-sm">
-                <span className="text-secondary-foreground">Block</span>
-                <span className="text-foreground font-mono">
-                  #{stats.last_block_height}
+                <MapPin className="w-4 h-4 text-blue-500" />
+                <span className="text-foreground font-medium">
+                  {formatNumber(stats.total_markers)}
                 </span>
+                <span className="text-muted-foreground">markers</span>
               </div>
-            )}
-          </>
-        )}
+              <div className="flex items-center gap-2 text-sm">
+                <Activity className="w-4 h-4 text-cyan-400" />
+                <span className="text-foreground font-medium">
+                  {formatNumber(stats.total_replies)}
+                </span>
+                <span className="text-muted-foreground">replies</span>
+              </div>
+              {stats.last_block_height && (
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-muted-foreground">Block</span>
+                  <span className="text-foreground font-mono">
+                    #{stats.last_block_height}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
 
-        {/* My Places Link */}
-        <Link
-          href="/my-places"
-          className="flex items-center gap-2 px-3 py-1.5 text-secondary-foreground hover:text-primary transition-colors"
-        >
-          <User className="w-4 h-4" />
-          <span className="text-sm hidden md:inline">My Places</span>
-        </Link>
+          {/* Spacer */}
+          <div className="flex-1" />
 
-        {/* Docs Link */}
-        <Link
-          href="/docs"
-          className="flex items-center gap-2 px-3 py-1.5 text-secondary-foreground hover:text-primary transition-colors"
-        >
-          <BookOpen className="w-4 h-4" />
-          <span className="text-sm hidden md:inline">Docs</span>
-        </Link>
-      </div>
-    </header>
+          {/* Navigation */}
+          <NavGroup gap="sm">
+            <NavLink href="/" icon={Home} accentColor="blue">
+              Map
+            </NavLink>
+            <NavLink href="/my-places" icon={User} accentColor="blue">
+              My Places
+            </NavLink>
+            <NavLink href={DOCS_URL} icon={BookOpen} external>
+              Docs
+            </NavLink>
+          </NavGroup>
+        </nav>
+      </Container>
+    </AppHeader>
   );
 }

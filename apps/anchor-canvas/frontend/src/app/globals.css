@@ -1,28 +1,26 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+/* Anchor UI Design System */
+@import "@AnchorProtocol/ui/styles/globals.css";
+@import "@AnchorProtocol/ui/styles/themes/canvas.css";
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
+/* App-specific overrides */
 :root {
-  --background: #0a0a0a;
-  --foreground: #fafafa;
+  /* Primary color - Rose for Canvas */
+  --primary: 349.7 89.2% 60.2%;
+  --primary-foreground: 0 0% 100%;
+  
+  /* Ring color */
+  --ring: 349.7 89.2% 60.2%;
 }
 
-* {
-  box-sizing: border-box;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
+/* Apply fonts */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-geist-sans), 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+code, pre, .font-mono {
+  font-family: var(--font-geist-mono), 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 }
 
 /* Custom scrollbar - subtle */
@@ -76,9 +74,9 @@ body {
 
 /* Button styles - Apple-like */
 .btn-primary {
-  @apply px-5 py-2.5 bg-orange-500 text-white font-medium rounded-lg 
-         hover:bg-orange-600 transition-all duration-150 
-         shadow-lg shadow-orange-500/25 active:scale-[0.98];
+  @apply px-5 py-2.5 bg-rose-500 text-white font-medium rounded-lg 
+         hover:bg-rose-600 transition-all duration-150 
+         shadow-lg shadow-rose-500/25 active:scale-[0.98];
 }
 
 .btn-secondary {
@@ -117,7 +115,7 @@ body {
   width: 32px;
   height: 32px;
   border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top-color: #f97316;
+  border-top-color: #f43f5e;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -171,7 +169,7 @@ body {
 /* Focus states */
 input:focus, button:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.4);
+  box-shadow: 0 0 0 2px rgba(244, 63, 94, 0.4);
 }
 
 /* Range input styling */
@@ -188,7 +186,7 @@ input[type="range"]::-webkit-slider-thumb {
   appearance: none;
   width: 14px;
   height: 14px;
-  background: #f97316;
+  background: #f43f5e;
   border-radius: 50%;
   cursor: pointer;
   transition: transform 0.15s ease;

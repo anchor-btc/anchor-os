@@ -1,42 +1,25 @@
 import type { Config } from "tailwindcss";
+import { anchorPreset } from "@AnchorProtocol/ui";
 
 export default {
+  presets: [anchorPreset],
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./node_modules/@AnchorProtocol/ui/dist/**/*.{js,mjs}",
   ],
   theme: {
     extend: {
       colors: {
-        // Dark theme inspired by Zapin.me
-        background: "#0a0a0f",
-        foreground: "#e8e8e8",
-        primary: {
-          DEFAULT: "#FF6B35",
-          foreground: "#ffffff",
-          dark: "#cc5429",
-        },
-        secondary: {
-          DEFAULT: "#12121a",
-          foreground: "#9ca3af",
-        },
-        accent: {
-          DEFAULT: "#00d9ff",
-          dark: "#00a8c4",
-        },
-        bitcoin: {
-          DEFAULT: "#f7931a",
-          dark: "#c47614",
-        },
-        // Category colors
+        // Category colors for markers
         category: {
-          general: "#FF6B35",
-          tourism: "#3B82F6",
-          commerce: "#10B981",
-          event: "#8B5CF6",
-          warning: "#EF4444",
-          historic: "#F59E0B",
+          general: "#3B82F6", // blue-500
+          tourism: "#06B6D4", // cyan-500
+          commerce: "#10B981", // emerald-500
+          event: "#8B5CF6", // violet-500
+          warning: "#EF4444", // red-500
+          historic: "#F59E0B", // amber-500
         },
         // Map related
         map: {
@@ -47,8 +30,6 @@ export default {
       },
       fontFamily: {
         heading: ["Archivo Black", "Impact", "sans-serif"],
-        mono: ["JetBrains Mono", "Fira Code", "monospace"],
-        sans: ["Inter", "system-ui", "sans-serif"],
       },
       animation: {
         "pulse-slow": "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
@@ -59,8 +40,8 @@ export default {
       },
       keyframes: {
         glow: {
-          "0%": { boxShadow: "0 0 5px rgba(255, 107, 53, 0.5)" },
-          "100%": { boxShadow: "0 0 20px rgba(255, 107, 53, 0.8)" },
+          "0%": { boxShadow: "0 0 5px rgba(59, 130, 246, 0.5)" },
+          "100%": { boxShadow: "0 0 20px rgba(59, 130, 246, 0.8)" },
         },
         "bounce-in": {
           "0%": { transform: "scale(0)", opacity: "0" },
@@ -77,11 +58,10 @@ export default {
         },
       },
       backgroundImage: {
-        "gradient-radial": "radial-gradient(circle at 50% 0%, rgba(255, 107, 53, 0.1) 0%, transparent 50%)",
+        "gradient-radial": "radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.1) 0%, transparent 50%)",
         "gradient-dark": "linear-gradient(180deg, #0a0a0f 0%, #12121a 100%)",
       },
     },
   },
   plugins: [],
 } satisfies Config;
-

@@ -4,7 +4,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "AnchorCanvas - Bitcoin Canvas",
+  title: "Anchor Canvas - Collaborative Pixel Art on Bitcoin",
   description: "A collaborative pixel canvas on Bitcoin. Paint pixels, own them forever.",
   icons: {
     icon: "/favicon.ico",
@@ -18,16 +18,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased min-h-screen bg-background">
+      <body className="dark antialiased min-h-screen bg-background">
         <Providers>
-          <div className="flex flex-col min-h-screen">
-            {children}
-          </div>
+          {children}
         </Providers>
         <Script src="http://localhost:8000/anchor-os-bridge.js" strategy="afterInteractive" />
       </body>
     </html>
   );
 }
-
-

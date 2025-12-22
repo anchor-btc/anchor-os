@@ -1,13 +1,12 @@
 /**
  * Anchor Canvas Theme
- * Color: Purple (#a855f7)
+ * Color: Rose (#f43f5e)
  */
 
 :root {
-  --app-accent: 271.5 81.3% 55.9%;
+  --app-accent: 349.7 89.2% 60.2%;
 }
 
 .dark {
-  --app-accent: 271.5 81.3% 55.9%;
+  --app-accent: 349.7 89.2% 60.2%;
 }
-

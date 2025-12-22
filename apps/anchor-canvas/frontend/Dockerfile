@@ -3,23 +3,34 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Build arguments for environment variables (needed at build time for Next.js)
+# Copy anchor-ui first (local dependency)
+COPY libs/js/anchor-ui ./libs/js/anchor-ui
+
+# Build anchor-ui
+WORKDIR /app/libs/js/anchor-ui
+RUN npm install && npm run build
+
+# Move to frontend directory
+WORKDIR /app/frontend
+
+# Copy package files
+COPY apps/anchor-canvas/frontend/package.json ./
+
+# Update the anchor-ui path for Docker context
+RUN sed -i 's|file:../../../libs/js/anchor-ui|file:/app/libs/js/anchor-ui|g' package.json
+
+# Install dependencies
+RUN npm install
+
+# Copy source files
+COPY apps/anchor-canvas/frontend/ .
+
+# Build-time environment variables for Next.js
 ARG NEXT_PUBLIC_API_URL=http://localhost:3201
 ARG NEXT_PUBLIC_WALLET_URL=http://localhost:8001
-
-# Set environment variables for build
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_WALLET_URL=$NEXT_PUBLIC_WALLET_URL
 ENV NEXT_TELEMETRY_DISABLED=1
-
-# Copy package files
-COPY package.json package-lock.json* ./
-
-# Install dependencies
-RUN npm ci
-
-# Copy source files
-COPY . .
 
 # Build the application
 RUN npm run build
@@ -31,19 +42,21 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV PORT=3200
 
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy built application
-COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# Copy built files
+COPY --from=builder /app/frontend/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/frontend/.next/static ./.next/static
 
 USER nextjs
 
 EXPOSE 3200
+
+ENV PORT=3200
+ENV HOSTNAME="0.0.0.0"
 
 CMD ["node", "server.js"]

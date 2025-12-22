@@ -89,7 +89,33 @@ export {
   NavGroup,
   gapSizes,
   type NavGroupProps,
+  // Fullscreen layout components
+  FullscreenShell,
+  type FullscreenShellProps,
+  AppSidebar,
+  AppSidebarSection,
+  type AppSidebarProps,
+  type AppSidebarSectionProps,
+  AppToolbar,
+  AppToolbarGroup,
+  AppToolbarSeparator,
+  AppToolbarButton,
+  type AppToolbarProps,
+  type AppToolbarGroupProps,
+  type AppToolbarButtonProps,
+  OverlayControls,
+  OverlayControlsGroup,
+  type OverlayControlsProps,
+  type OverlayControlsGroupProps,
+  type OverlayPosition,
 } from "./components/layout";
+
+// Mini Footer for fullscreen apps
+export {
+  MiniFooter,
+  MiniFooterDivider,
+  type MiniFooterProps,
+} from "./components/mini-footer";
 
 // Utilities
 export { cn } from "./utils/cn";

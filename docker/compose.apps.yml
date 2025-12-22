@@ -93,8 +93,8 @@ services:
 
   app-canvas-frontend:
     build:
-      context: ../apps/anchor-canvas/frontend
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: apps/anchor-canvas/frontend/Dockerfile
       args:
         NEXT_PUBLIC_API_URL: http://localhost:3201
         NEXT_PUBLIC_WALLET_URL: http://localhost:8001
@@ -152,8 +152,8 @@ services:
 
   app-places-frontend:
     build:
-      context: ../apps/anchor-places/frontend
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: apps/anchor-places/frontend/Dockerfile
       args:
         NEXT_PUBLIC_API_URL: http://localhost:3301
         NEXT_PUBLIC_WALLET_URL: http://localhost:8001

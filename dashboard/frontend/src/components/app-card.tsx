@@ -113,6 +113,18 @@ const colorMap: Record<string, { bg: string; border: string; text: string; glow:
     text: "text-emerald-500",
     glow: "shadow-emerald-500/20",
   },
+  rose: {
+    bg: "bg-rose-500/10",
+    border: "border-rose-500/30",
+    text: "text-rose-500",
+    glow: "shadow-rose-500/20",
+  },
+  pink: {
+    bg: "bg-pink-500/10",
+    border: "border-pink-500/30",
+    text: "text-pink-500",
+    glow: "shadow-pink-500/20",
+  },
 };
 
 interface AppCardProps {

@@ -1,4 +1,5 @@
 export { Header } from "./header";
+export { PlacesFooter } from "./footer";
 export { MapComponent } from "./map";
 export { MarkerPopup } from "./marker-popup";
 export { CreateMarkerPanel } from "./create-marker-panel";

@@ -18,15 +18,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased min-h-screen bg-background font-sans">
+      <body className="dark antialiased min-h-screen bg-background font-sans">
         <Providers>
-          <div className="flex flex-col min-h-screen">
-            {children}
-          </div>
+          {children}
         </Providers>
         <Script src="http://localhost:8000/anchor-os-bridge.js" strategy="afterInteractive" />
       </body>
     </html>
   );
 }
-
