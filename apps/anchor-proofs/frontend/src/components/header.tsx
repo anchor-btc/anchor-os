@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileCheck, Home, Shield, List, FileText } from "lucide-react";
+import { FileCheck, Home, Shield, List, FileText, User } from "lucide-react";
 
 const navigation = [
   { name: "Home", href: "/", icon: Home },
   { name: "Stamp", href: "/stamp", icon: FileCheck },
   { name: "Validate", href: "/validate", icon: Shield },
   { name: "Proofs", href: "/proofs", icon: List },
+  { name: "My Proofs", href: "/my-proofs", icon: User },
   { name: "Docs", href: "/docs", icon: FileText },
 ];
 
@@ -25,7 +26,7 @@ export function Header() {
               <FileCheck className="w-5 h-5 text-white" />
             </div>
             <span className="text-xl font-bold text-white">
-              Anchor<span className="text-emerald-500">Proof</span>
+              Anchor<span className="text-emerald-500">Proofs</span>
             </span>
           </Link>
 

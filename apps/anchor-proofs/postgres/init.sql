@@ -30,6 +30,8 @@ CREATE TABLE IF NOT EXISTS proofs (
     -- Transaction info
     txid BYTEA NOT NULL,
     vout INTEGER NOT NULL DEFAULT 0,
+    -- Creator info (for My Proofs feature)
+    creator_address VARCHAR(100),
     -- Block info
     block_hash BYTEA,
     block_height INTEGER,
@@ -95,6 +97,9 @@ CREATE INDEX IF NOT EXISTS idx_proofs_mime_type ON proofs(mime_type) WHERE mime_
 
 -- For txid_prefix lookups (first 8 bytes)
 CREATE INDEX IF NOT EXISTS idx_proofs_txid_prefix ON proofs(substring(txid from 1 for 8));
+
+-- Creator address index (for My Proofs feature)
+CREATE INDEX IF NOT EXISTS idx_proofs_creator_address ON proofs(creator_address) WHERE creator_address IS NOT NULL;
 
 -- Batch entries indexes
 CREATE INDEX IF NOT EXISTS idx_batch_entries_txid ON proof_batch_entries(batch_txid, batch_vout);
@@ -337,6 +342,65 @@ BEGIN
     RETURN EXISTS (
         SELECT 1 FROM proofs WHERE file_hash = p_file_hash AND hash_algo = p_hash_algo
     );
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to get proofs by creator addresses (for My Proofs feature)
+CREATE OR REPLACE FUNCTION get_proofs_by_addresses(
+    p_addresses TEXT[],
+    p_limit INTEGER DEFAULT 100
+)
+RETURNS TABLE (
+    id INTEGER,
+    hash_algo SMALLINT,
+    file_hash BYTEA,
+    filename VARCHAR(255),
+    mime_type VARCHAR(100),
+    file_size BIGINT,
+    description TEXT,
+    txid BYTEA,
+    vout INTEGER,
+    block_height INTEGER,
+    is_revoked BOOLEAN,
+    created_at TIMESTAMP WITH TIME ZONE
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        p.id,
+        p.hash_algo,
+        p.file_hash,
+        p.filename,
+        p.mime_type,
+        p.file_size,
+        p.description,
+        p.txid,
+        p.vout,
+        p.block_height,
+        p.is_revoked,
+        p.created_at
+    FROM proofs p
+    WHERE p.creator_address = ANY(p_addresses)
+    ORDER BY p.created_at DESC
+    LIMIT p_limit;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to get proof stats by creator addresses
+CREATE OR REPLACE FUNCTION get_proofs_stats_by_addresses(
+    p_addresses TEXT[]
+)
+RETURNS TABLE (
+    total_proofs BIGINT,
+    unique_transactions BIGINT
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        COUNT(*)::bigint as total_proofs,
+        COUNT(DISTINCT p.txid)::bigint as unique_transactions
+    FROM proofs p
+    WHERE p.creator_address = ANY(p_addresses);
 END;
 $$ LANGUAGE plpgsql;
 

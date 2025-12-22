@@ -1,11 +1,13 @@
-//! AnchorProofs Backend
+//! Anchor Proofs Backend
 //! Proof of Existence service using the Anchor Protocol
 
 mod config;
 mod db;
+mod error;
 mod handlers;
 mod indexer;
 mod models;
+mod services;
 
 use anyhow::Result;
 use axum::{
@@ -34,6 +36,7 @@ use crate::indexer::Indexer;
         handlers::list_proofs,
         handlers::get_proof,
         handlers::get_proof_by_id,
+        handlers::get_my_proofs,
         handlers::validate_hash,
         handlers::stamp,
         handlers::stamp_batch,
@@ -51,6 +54,7 @@ use crate::indexer::Indexer;
         models::RevokeRequest,
         models::ValidateRequest,
         models::CreateTxResponse,
+        models::GetProofsByAddressResponse,
     )),
     tags(
         (name = "Health", description = "Health check endpoints"),
@@ -72,11 +76,14 @@ async fn main() -> Result<()> {
         .finish();
     tracing::subscriber::set_global_default(subscriber)?;
 
-    info!("Starting AnchorProofs backend");
+    info!("Starting Anchor Proofs backend");
 
     // Load configuration
     let config = Config::from_env();
-    info!("Configuration loaded: host={}, port={}", config.host, config.port);
+    info!(
+        "Configuration loaded: host={}, port={}",
+        config.host, config.port
+    );
 
     // Connect to database
     let db = Database::new(&config.database_url).await?;
@@ -100,10 +107,7 @@ async fn main() -> Result<()> {
     }
 
     // Create app state
-    let state = AppState {
-        db,
-        wallet_url: config.wallet_url.clone(),
-    };
+    let state = AppState::new(db, config.wallet_url.clone());
 
     // Configure CORS
     let cors = CorsLayer::new()
@@ -119,8 +123,9 @@ async fn main() -> Result<()> {
         .route("/api/stats", get(handlers::get_stats))
         // Proofs
         .route("/api/proofs", get(handlers::list_proofs))
-        .route("/api/proof/:hash", get(handlers::get_proof))
-        .route("/api/proof/id/:id", get(handlers::get_proof_by_id))
+        .route("/api/proofs/my", get(handlers::get_my_proofs))
+        .route("/api/proof/{hash}", get(handlers::get_proof))
+        .route("/api/proof/id/{id}", get(handlers::get_proof_by_id))
         // Validation
         .route("/api/validate", post(handlers::validate_hash))
         // Stamp
@@ -137,7 +142,10 @@ async fn main() -> Result<()> {
     // Start server
     let addr: SocketAddr = format!("{}:{}", config.host, config.port).parse()?;
     info!("Server listening on {}", addr);
-    info!("Swagger UI available at http://{}:{}/swagger-ui", config.host, config.port);
+    info!(
+        "Swagger UI available at http://{}:{}/swagger-ui",
+        config.host, config.port
+    );
 
     let listener = tokio::net::TcpListener::bind(addr).await?;
     axum::serve(listener, app).await?;

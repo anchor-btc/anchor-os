@@ -5,14 +5,23 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Header, FileUpload, type FileUploadResult } from "@/components";
 import { stampProof, mineBlocks, type StampRequest } from "@/lib/api";
 import { HashAlgorithm, getAlgorithmName } from "@/lib/proof-encoder";
-import { Loader2, CheckCircle, AlertCircle, FileCheck } from "lucide-react";
+import { Loader2, CheckCircle, AlertCircle, FileCheck, Radio } from "lucide-react";
+
+// Carrier types matching anchor-core
+const CARRIERS = [
+  { id: 0, name: "OP_RETURN", description: "Standard, fast confirmation" },
+  { id: 1, name: "Inscription", description: "Ordinals-style, permanent" },
+  { id: 2, name: "Stamps", description: "Bare multisig, unprunable" },
+  { id: 4, name: "Witness Data", description: "Tapscript, 75% fee discount" },
+];
 
 export default function StampPage() {
   const queryClient = useQueryClient();
   const [fileResult, setFileResult] = useState<FileUploadResult | null>(null);
   const [selectedAlgo, setSelectedAlgo] = useState<HashAlgorithm>(HashAlgorithm.SHA256);
+  const [selectedCarrier, setSelectedCarrier] = useState<number>(0);
   const [description, setDescription] = useState("");
-  const [success, setSuccess] = useState<{ txid: string } | null>(null);
+  const [success, setSuccess] = useState<{ txid: string; carrier: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const stampMutation = useMutation({
@@ -31,12 +40,13 @@ export default function StampPage() {
         mime_type: fileResult.mimeType,
         file_size: fileResult.fileSize,
         description: description || undefined,
+        carrier: selectedCarrier,
       };
 
       return stampProof(request);
     },
     onSuccess: async (data) => {
-      setSuccess({ txid: data.txid });
+      setSuccess({ txid: data.txid, carrier: data.carrier_name });
       setError(null);
       // Mine a block to confirm
       try {
@@ -97,9 +107,15 @@ export default function StampPage() {
             <p className="text-slate-300 mb-4">
               Your file has been timestamped on the Bitcoin blockchain.
             </p>
-            <div className="bg-slate-800/50 rounded-lg p-4 mb-4">
-              <p className="text-sm text-slate-400 mb-1">Transaction ID:</p>
-              <p className="font-mono text-white break-all">{success.txid}</p>
+            <div className="bg-slate-800/50 rounded-lg p-4 mb-4 space-y-3">
+              <div>
+                <p className="text-sm text-slate-400 mb-1">Transaction ID:</p>
+                <p className="font-mono text-white break-all">{success.txid}</p>
+              </div>
+              <div>
+                <p className="text-sm text-slate-400 mb-1">Carrier Used:</p>
+                <p className="text-white">{success.carrier}</p>
+              </div>
             </div>
             <div className="flex gap-3">
               <button
@@ -109,7 +125,7 @@ export default function StampPage() {
                 Stamp Another File
               </button>
               <a
-                href={`http://localhost:3000/tx/${success.txid}`}
+                href={`http://localhost:4000/tx/${success.txid}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition-colors"
@@ -175,6 +191,43 @@ export default function StampPage() {
                       ? fileResult.sha256.hex
                       : fileResult.sha512.hex}
                   </p>
+                </div>
+              </div>
+            )}
+
+            {/* Carrier Selection */}
+            {fileResult && (
+              <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-6">
+                <label className="block text-sm font-medium text-slate-300 mb-4">
+                  Carrier Type
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  {CARRIERS.map((carrier) => (
+                    <button
+                      key={carrier.id}
+                      type="button"
+                      onClick={() => setSelectedCarrier(carrier.id)}
+                      className={`p-4 rounded-lg border-2 transition-all text-left ${
+                        selectedCarrier === carrier.id
+                          ? "border-emerald-500 bg-emerald-500/10"
+                          : "border-slate-600 hover:border-slate-500"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <Radio
+                          className={`w-4 h-4 ${
+                            selectedCarrier === carrier.id
+                              ? "text-emerald-500"
+                              : "text-slate-500"
+                          }`}
+                        />
+                        <span className="font-medium text-white">{carrier.name}</span>
+                      </div>
+                      <div className="text-xs text-slate-400 ml-6">
+                        {carrier.description}
+                      </div>
+                    </button>
+                  ))}
                 </div>
               </div>
             )}

@@ -1,4 +1,4 @@
-//! AnchorProofs Indexer
+//! Anchor Proofs Indexer
 //! Scans the blockchain for Proof of Existence transactions
 
 use anyhow::{Context, Result};
@@ -36,7 +36,10 @@ impl Indexer {
         // Connect to Bitcoin Core
         let rpc = Client::new(
             &config.bitcoin_rpc_url,
-            Auth::UserPass(config.bitcoin_rpc_user.clone(), config.bitcoin_rpc_password.clone()),
+            Auth::UserPass(
+                config.bitcoin_rpc_user.clone(),
+                config.bitcoin_rpc_password.clone(),
+            ),
         )
         .context("Failed to connect to Bitcoin RPC")?;
 
@@ -60,7 +63,7 @@ impl Indexer {
 
     /// Run the indexer loop
     pub async fn run(&self) -> Result<()> {
-        info!("Starting AnchorProofs indexer loop");
+        info!("Starting Anchor Proofs indexer loop");
 
         loop {
             match self.index_new_blocks().await {
@@ -150,6 +153,52 @@ impl Indexer {
         Ok(message_count)
     }
 
+    /// Extract creator address from transaction inputs
+    fn extract_creator_address(&self, tx: &Transaction) -> Option<String> {
+        // Try to get the address from the first input's previous output
+        // This requires looking up the previous transaction which we can do via RPC
+        if tx.input.is_empty() || tx.is_coinbase() {
+            return None;
+        }
+
+        let first_input = &tx.input[0];
+        let prev_txid = first_input.previous_output.txid;
+        let prev_vout = first_input.previous_output.vout;
+
+        // Get the previous transaction
+        let prev_tx_result: Result<serde_json::Value, _> = self.rpc.call(
+            "getrawtransaction",
+            &[
+                serde_json::json!(prev_txid.to_string()),
+                serde_json::json!(true),
+            ],
+        );
+
+        if let Ok(prev_tx) = prev_tx_result {
+            if let Some(vout_array) = prev_tx.get("vout").and_then(|v| v.as_array()) {
+                if let Some(output) = vout_array.get(prev_vout as usize) {
+                    if let Some(script_pub_key) = output.get("scriptPubKey") {
+                        // Try to get address from scriptPubKey
+                        if let Some(address) = script_pub_key.get("address").and_then(|a| a.as_str())
+                        {
+                            return Some(address.to_string());
+                        }
+                        // Fallback to addresses array (older format)
+                        if let Some(addresses) =
+                            script_pub_key.get("addresses").and_then(|a| a.as_array())
+                        {
+                            if let Some(first_addr) = addresses.first().and_then(|a| a.as_str()) {
+                                return Some(first_addr.to_string());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        None
+    }
+
     /// Index a single transaction
     async fn index_transaction(
         &self,
@@ -173,6 +222,9 @@ impl Indexer {
         if messages.is_empty() {
             return Ok(0);
         }
+
+        // Extract creator address (only do this once per transaction)
+        let creator_address = self.extract_creator_address(tx);
 
         let mut proof_count = 0;
 
@@ -208,15 +260,12 @@ impl Indexer {
                             .hash_exists(&entry.hash, entry.algorithm as i16)
                             .await?
                         {
-                            debug!(
-                                "Hash already registered: {}",
-                                hex::encode(&entry.hash)
-                            );
+                            debug!("Hash already registered: {}", hex::encode(&entry.hash));
                             continue;
                         }
 
                         self.db
-                            .create_proof(
+                            .create_proof_with_creator(
                                 entry.algorithm as i16,
                                 &entry.hash,
                                 &entry.metadata.filename,
@@ -227,14 +276,16 @@ impl Indexer {
                                 vout as i32,
                                 block_hash,
                                 block_height,
+                                creator_address.as_deref(),
                             )
                             .await?;
 
                         info!(
-                            "Registered proof: {} ({}) in tx {}",
+                            "Registered proof: {} ({}) in tx {} (creator: {:?})",
                             hex::encode(&entry.hash[..8]),
                             entry.algorithm.name(),
-                            txid
+                            txid,
+                            creator_address
                         );
                         proof_count += 1;
                     }
@@ -259,9 +310,7 @@ impl Indexer {
                                     );
                                     proof_count += 1;
                                 } else {
-                                    debug!(
-                                        "Revoke rejected: anchor doesn't match original txid"
-                                    );
+                                    debug!("Revoke rejected: anchor doesn't match original txid");
                                 }
                             }
                         }
@@ -278,10 +327,7 @@ impl Indexer {
                             .hash_exists(&entry.hash, entry.algorithm as i16)
                             .await?
                         {
-                            debug!(
-                                "Hash already registered: {}",
-                                hex::encode(&entry.hash)
-                            );
+                            debug!("Hash already registered: {}", hex::encode(&entry.hash));
                             batch_index += 1;
                             continue;
                         }
@@ -302,9 +348,9 @@ impl Indexer {
                             )
                             .await?;
 
-                        // Also create a regular proof entry
+                        // Also create a regular proof entry with creator address
                         self.db
-                            .create_proof(
+                            .create_proof_with_creator(
                                 entry.algorithm as i16,
                                 &entry.hash,
                                 &entry.metadata.filename,
@@ -315,15 +361,17 @@ impl Indexer {
                                 vout as i32,
                                 block_hash,
                                 block_height,
+                                creator_address.as_deref(),
                             )
                             .await?;
 
                         info!(
-                            "Registered batch proof {}: {} ({}) in tx {}",
+                            "Registered batch proof {}: {} ({}) in tx {} (creator: {:?})",
                             batch_index,
                             hex::encode(&entry.hash[..8]),
                             entry.algorithm.name(),
-                            txid
+                            txid,
+                            creator_address
                         );
                         proof_count += 1;
                         batch_index += 1;

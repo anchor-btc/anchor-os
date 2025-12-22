@@ -221,17 +221,42 @@ impl WalletService {
     }
 
     /// List all addresses that have ever received funds (including those with 0 balance)
+    /// Also includes addresses from current UTXOs to capture all address types
     pub fn list_received_addresses(&self) -> Result<Vec<String>> {
         self.with_wallet_check(|| {
+            use std::collections::HashSet;
+            let mut all_addresses: HashSet<String> = HashSet::new();
+            
+            // 1. Get addresses from list_received_by_address
             // address_filter: None (all addresses)
             // minconf: Some(0) (include unconfirmed)
             // include_empty: Some(true) (include addresses with 0 balance)
             // include_watchonly: None
             let received = self.rpc.list_received_by_address(None, Some(0), Some(true), None)?;
-            Ok(received
-                .into_iter()
-                .map(|r| r.address.assume_checked().to_string())
-                .collect())
+            for r in received {
+                all_addresses.insert(r.address.assume_checked().to_string());
+            }
+            
+            // 2. Get addresses from current UTXOs (captures taproot and other address types)
+            if let Ok(utxos) = self.rpc.list_unspent(None, None, None, None, None) {
+                for u in utxos {
+                    if let Some(addr) = u.address {
+                        all_addresses.insert(addr.assume_checked().to_string());
+                    }
+                }
+            }
+            
+            // 3. Get addresses from list_transactions (past transactions)
+            // This captures addresses used in spent outputs
+            if let Ok(txs) = self.rpc.list_transactions(None, Some(1000), None, Some(true)) {
+                for tx in txs {
+                    if let Some(addr) = tx.detail.address {
+                        all_addresses.insert(addr.assume_checked().to_string());
+                    }
+                }
+            }
+            
+            Ok(all_addresses.into_iter().collect())
         })
     }
 

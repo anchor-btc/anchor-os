@@ -202,7 +202,7 @@ export default function ProofDetailPage() {
                   <Copy className="w-4 h-4" />
                 </button>
                 <a
-                  href={`http://localhost:3000/tx/${proof.txid}`}
+                  href={`http://localhost:4000/tx/${proof.txid}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-2 text-emerald-500 hover:text-emerald-400 transition-colors"
@@ -251,7 +251,7 @@ export default function ProofDetailPage() {
                 </code>
               </div>
               <a
-                href={`http://localhost:3000/tx/${proof.revoked_txid}`}
+                href={`http://localhost:4000/tx/${proof.revoked_txid}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2 text-emerald-500 hover:text-emerald-400 transition-colors flex-shrink-0"

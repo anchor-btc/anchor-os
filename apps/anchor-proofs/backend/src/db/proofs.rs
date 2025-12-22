@@ -1,91 +1,12 @@
-//! Database operations for AnchorProofs
+//! Proof database operations
 
-use anyhow::{Context, Result};
-use sqlx::postgres::PgPoolOptions;
-use sqlx::PgPool;
-use tracing::info;
+use anyhow::Result;
 
-use crate::models::{HashAlgorithm, Proof, ProofListItem, ProofStats};
+use super::Database;
+use crate::models::{Proof, ProofListItem, ProofRow, ProofStats};
 
-/// Database wrapper
-#[derive(Clone)]
-pub struct Database {
-    pool: PgPool,
-}
-
-/// Proof row structure from database
-#[derive(sqlx::FromRow)]
-pub struct ProofRow {
-    pub id: i32,
-    pub hash_algo: i16,
-    pub file_hash: Vec<u8>,
-    pub filename: Option<String>,
-    pub mime_type: Option<String>,
-    pub file_size: Option<i64>,
-    pub description: Option<String>,
-    pub txid: Vec<u8>,
-    pub vout: i32,
-    pub block_height: Option<i32>,
-    pub is_revoked: bool,
-    pub revoked_txid: Option<Vec<u8>>,
-    pub created_at: chrono::DateTime<chrono::Utc>,
-}
-
+#[allow(dead_code)]
 impl Database {
-    /// Create a new database connection pool
-    pub async fn new(database_url: &str) -> Result<Self> {
-        let pool = PgPoolOptions::new()
-            .max_connections(10)
-            .connect(database_url)
-            .await
-            .context("Failed to connect to database")?;
-
-        info!("Connected to database");
-
-        Ok(Self { pool })
-    }
-
-    /// Get the last indexed block height
-    pub async fn get_last_block_height(&self) -> Result<i32> {
-        let row: (i32,) = sqlx::query_as(
-            "SELECT last_block_height FROM anchorproof_indexer_state WHERE id = 1",
-        )
-        .fetch_one(&self.pool)
-        .await?;
-
-        Ok(row.0)
-    }
-
-    /// Update the last indexed block
-    pub async fn update_last_block(&self, block_hash: &[u8], height: i32) -> Result<()> {
-        sqlx::query(
-            "UPDATE anchorproof_indexer_state SET last_block_hash = $1, last_block_height = $2 WHERE id = 1",
-        )
-        .bind(block_hash)
-        .bind(height)
-        .execute(&self.pool)
-        .await?;
-
-        Ok(())
-    }
-
-    /// Handle blockchain reorganization
-    pub async fn handle_reorg(&self, from_height: i32) -> Result<()> {
-        // Delete proofs from orphaned blocks
-        sqlx::query("DELETE FROM proofs WHERE block_height >= $1")
-            .bind(from_height)
-            .execute(&self.pool)
-            .await?;
-
-        // Update indexer state
-        sqlx::query("UPDATE anchorproof_indexer_state SET last_block_height = $1 WHERE id = 1")
-            .bind(from_height - 1)
-            .execute(&self.pool)
-            .await?;
-
-        Ok(())
-    }
-
     /// Check if a transaction output is already indexed
     pub async fn tx_exists(&self, txid: &[u8], vout: i32) -> Result<bool> {
         let row: (bool,) = sqlx::query_as(
@@ -151,6 +72,47 @@ impl Database {
         Ok(row.0)
     }
 
+    /// Create a new proof with creator address
+    #[allow(clippy::too_many_arguments)]
+    pub async fn create_proof_with_creator(
+        &self,
+        hash_algo: i16,
+        file_hash: &[u8],
+        filename: &Option<String>,
+        mime_type: &Option<String>,
+        file_size: Option<i64>,
+        description: &Option<String>,
+        txid: &[u8],
+        vout: i32,
+        block_hash: Option<&[u8]>,
+        block_height: Option<i32>,
+        creator_address: Option<&str>,
+    ) -> Result<i32> {
+        let row: (i32,) = sqlx::query_as(
+            r#"
+            INSERT INTO proofs (hash_algo, file_hash, filename, mime_type, file_size, description, txid, vout, block_hash, block_height, creator_address)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+            ON CONFLICT (file_hash, hash_algo) DO NOTHING
+            RETURNING id
+            "#,
+        )
+        .bind(hash_algo)
+        .bind(file_hash)
+        .bind(filename)
+        .bind(mime_type)
+        .bind(file_size)
+        .bind(description)
+        .bind(txid)
+        .bind(vout)
+        .bind(block_hash)
+        .bind(block_height)
+        .bind(creator_address)
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(row.0)
+    }
+
     /// Create a batch entry
     #[allow(clippy::too_many_arguments)]
     pub async fn create_batch_entry(
@@ -191,7 +153,7 @@ impl Database {
         Ok(row.0)
     }
 
-    /// Find proof by hash
+    /// Find proof by hash (returns raw row for indexer use)
     pub async fn find_proof_by_hash(&self, hash: &[u8], algo: i16) -> Result<Option<ProofRow>> {
         let row = sqlx::query_as::<_, ProofRow>(
             "SELECT * FROM proofs WHERE file_hash = $1 AND hash_algo = $2",
@@ -217,7 +179,7 @@ impl Database {
         Ok(())
     }
 
-    /// Get proof by hash
+    /// Get proof by hash (returns API type)
     pub async fn get_proof_by_hash(&self, hash: &[u8], algo: Option<i16>) -> Result<Option<Proof>> {
         let row = if let Some(a) = algo {
             sqlx::query_as::<_, ProofRow>(
@@ -234,7 +196,7 @@ impl Database {
                 .await?
         };
 
-        Ok(row.map(Self::row_to_proof))
+        Ok(row.map(|r| r.to_proof()))
     }
 
     /// Get proof by ID
@@ -244,7 +206,7 @@ impl Database {
             .fetch_optional(&self.pool)
             .await?;
 
-        Ok(row.map(Self::row_to_proof))
+        Ok(row.map(|r| r.to_proof()))
     }
 
     /// List proofs with pagination
@@ -282,7 +244,7 @@ impl Database {
                 .await?
         };
 
-        let items = rows.into_iter().map(Self::row_to_list_item).collect();
+        let items = rows.into_iter().map(|r| r.to_list_item()).collect();
 
         Ok((items, total.0))
     }
@@ -317,7 +279,7 @@ impl Database {
         .fetch_one(&self.pool)
         .await?;
 
-        let items = rows.into_iter().map(Self::row_to_list_item).collect();
+        let items = rows.into_iter().map(|r| r.to_list_item()).collect();
 
         Ok((items, total.0))
     }
@@ -355,50 +317,55 @@ impl Database {
         })
     }
 
-    /// Convert database row to Proof
-    fn row_to_proof(row: ProofRow) -> Proof {
-        let algo = HashAlgorithm::try_from(row.hash_algo as u8).unwrap_or(HashAlgorithm::Sha256);
-        let txid_hex = hex::encode(&row.txid);
-        let txid_prefix = hex::encode(&row.txid[..8.min(row.txid.len())]);
-
-        Proof {
-            id: row.id,
-            hash_algo: row.hash_algo,
-            hash_algo_name: algo.name().to_string(),
-            file_hash: hex::encode(&row.file_hash),
-            filename: row.filename,
-            mime_type: row.mime_type,
-            file_size: row.file_size,
-            description: row.description,
-            txid: txid_hex,
-            txid_prefix,
-            vout: row.vout,
-            block_height: row.block_height,
-            is_revoked: row.is_revoked,
-            revoked_txid: row.revoked_txid.map(|t| hex::encode(&t)),
-            created_at: row.created_at,
+    /// Get proofs by creator addresses (for My Proofs feature)
+    pub async fn get_proofs_by_addresses(
+        &self,
+        addresses: &[String],
+        limit: i32,
+    ) -> Result<Vec<ProofListItem>> {
+        if addresses.is_empty() {
+            return Ok(vec![]);
         }
+
+        let rows = sqlx::query_as::<_, ProofRow>(
+            r#"
+            SELECT * FROM proofs 
+            WHERE creator_address = ANY($1)
+            ORDER BY created_at DESC 
+            LIMIT $2
+            "#,
+        )
+        .bind(addresses)
+        .bind(limit)
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(rows.into_iter().map(|r| r.to_list_item()).collect())
     }
 
-    /// Convert database row to ProofListItem
-    fn row_to_list_item(row: ProofRow) -> ProofListItem {
-        let algo = HashAlgorithm::try_from(row.hash_algo as u8).unwrap_or(HashAlgorithm::Sha256);
-        let txid_hex = hex::encode(&row.txid);
-        let txid_prefix = hex::encode(&row.txid[..8.min(row.txid.len())]);
-
-        ProofListItem {
-            id: row.id,
-            hash_algo: row.hash_algo,
-            hash_algo_name: algo.name().to_string(),
-            file_hash: hex::encode(&row.file_hash),
-            filename: row.filename,
-            mime_type: row.mime_type,
-            file_size: row.file_size,
-            txid: txid_hex,
-            txid_prefix,
-            block_height: row.block_height,
-            is_revoked: row.is_revoked,
-            created_at: row.created_at,
+    /// Get proof stats by creator addresses
+    pub async fn get_proofs_stats_by_addresses(
+        &self,
+        addresses: &[String],
+    ) -> Result<(i64, i64)> {
+        if addresses.is_empty() {
+            return Ok((0, 0));
         }
+
+        let row: (i64, i64) = sqlx::query_as(
+            r#"
+            SELECT 
+                COUNT(*)::bigint as total_proofs,
+                COUNT(DISTINCT txid)::bigint as unique_transactions
+            FROM proofs 
+            WHERE creator_address = ANY($1)
+            "#,
+        )
+        .bind(addresses)
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok((row.0, row.1))
     }
 }
+

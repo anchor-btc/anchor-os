@@ -16,7 +16,7 @@ export default function DocsPage() {
           <h1 className="text-3xl font-bold text-white">Documentation</h1>
         </div>
         <p className="text-slate-400 mb-8">
-          Learn how AnchorProofs works and how to use it to timestamp your files.
+          Learn how Anchor Proofs works and how to use it to timestamp your files.
         </p>
 
         {/* What is Proof of Existence */}
@@ -116,7 +116,7 @@ export default function DocsPage() {
           </h2>
           <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-6">
             <p className="text-slate-300 mb-4">
-              AnchorProofs uses the Anchor Protocol with Kind 11 (Proof of Existence).
+              Anchor Proofs uses the Anchor Protocol with Kind 11 (Proof of Existence).
               The payload format is:
             </p>
             <pre className="bg-slate-700/50 rounded-lg p-4 text-sm text-emerald-300 overflow-x-auto">

@@ -244,3 +244,24 @@ export async function mineBlocks(count = 1): Promise<void> {
     body: JSON.stringify({ blocks: count }),
   });
 }
+
+// My Proofs types and functions
+
+export interface MyProofsResponse {
+  proofs: ProofListItem[];
+  total_proofs: number;
+  unique_transactions: number;
+  page: number;
+  per_page: number;
+}
+
+/**
+ * Fetch proofs created by the connected wallet
+ */
+export async function getMyProofs(perPage = 100): Promise<MyProofsResponse> {
+  const response = await fetch(`${API_BASE}/api/proofs/my?per_page=${perPage}`);
+  if (!response.ok) {
+    throw new Error("Failed to fetch my proofs");
+  }
+  return response.json();
+}
