@@ -1,9 +1,20 @@
--- AnchorCanvas Database Schema
+-- Canvas Schema
 -- A collaborative pixel canvas on Bitcoin using the Anchor protocol
+-- Canvas: 4580 x 4580 = ~21 million pixels (Bitcoin's magic number)
 
--- Canvas configuration
--- 4580 x 4580 = ~21 million pixels (Bitcoin's magic number)
--- Each pixel can be colored by anyone via a Bitcoin transaction
+-- Canvas indexer state (separate from main anchor indexer)
+CREATE TABLE IF NOT EXISTS canvas_indexer_state (
+    id INTEGER PRIMARY KEY DEFAULT 1,
+    last_block_hash BYTEA,
+    last_block_height INTEGER DEFAULT 0,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    CONSTRAINT canvas_single_row CHECK (id = 1)
+);
+
+-- Initialize canvas indexer state
+INSERT INTO canvas_indexer_state (id, last_block_height) 
+VALUES (1, 0) 
+ON CONFLICT (id) DO NOTHING;
 
 -- Estado atual de cada pixel (estado mais recente)
 CREATE TABLE IF NOT EXISTS pixel_state (
@@ -16,7 +27,6 @@ CREATE TABLE IF NOT EXISTS pixel_state (
     last_txid BYTEA NOT NULL,
     last_vout INTEGER NOT NULL DEFAULT 0,
     last_block_height INTEGER,
-    creator_address VARCHAR(100),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE(x, y)
 );
@@ -32,23 +42,8 @@ CREATE TABLE IF NOT EXISTS pixel_history (
     txid BYTEA NOT NULL,
     vout INTEGER NOT NULL,
     block_height INTEGER,
-    creator_address VARCHAR(100),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
-
--- Estado do indexador do Canvas (separado do indexer principal)
-CREATE TABLE IF NOT EXISTS canvas_indexer_state (
-    id INTEGER PRIMARY KEY DEFAULT 1,
-    last_block_hash BYTEA,
-    last_block_height INTEGER DEFAULT 0,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    CONSTRAINT canvas_single_row CHECK (id = 1)
-);
-
--- Initialize Canvas indexer state
-INSERT INTO canvas_indexer_state (id, last_block_height) 
-VALUES (1, 0) 
-ON CONFLICT (id) DO NOTHING;
 
 -- Indexes for efficient querying
 CREATE INDEX IF NOT EXISTS idx_pixel_state_coords ON pixel_state(x, y);
@@ -60,10 +55,8 @@ CREATE INDEX IF NOT EXISTS idx_pixel_history_coords ON pixel_history(x, y);
 CREATE INDEX IF NOT EXISTS idx_pixel_history_created ON pixel_history(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_pixel_history_block ON pixel_history(block_height DESC);
 CREATE INDEX IF NOT EXISTS idx_pixel_history_txid ON pixel_history(txid);
-CREATE INDEX IF NOT EXISTS idx_pixel_history_creator ON pixel_history(creator_address);
-CREATE INDEX IF NOT EXISTS idx_pixel_state_creator ON pixel_state(creator_address);
 
--- Spatial index for region queries (using btree on x,y is sufficient for our use case)
+-- Spatial index for region queries
 CREATE INDEX IF NOT EXISTS idx_pixel_state_region ON pixel_state(x, y) INCLUDE (r, g, b);
 
 -- Stats view for quick statistics
@@ -140,11 +133,4 @@ BEGIN
     ORDER BY ps.y, ps.x;
 END;
 $$ LANGUAGE plpgsql;
-
-
-
-
-
-
-
 

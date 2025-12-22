@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-const BACKUP_API_URL = process.env.NEXT_PUBLIC_BACKUP_URL || "http://localhost:8003";
+const BACKUP_API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8010";
 
 interface BackupJob {
   id: string;

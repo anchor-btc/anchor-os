@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { HardDrive, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import Link from "next/link";
 
-const BACKUP_URL = process.env.NEXT_PUBLIC_BACKUP_URL || "http://localhost:8003";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8010";
 
 interface BackupStatus {
   running: boolean;
@@ -20,7 +20,7 @@ interface BackupStatus {
 }
 
 async function fetchBackupStatus(): Promise<BackupStatus> {
-  const res = await fetch(`${BACKUP_URL}/backup/status`);
+  const res = await fetch(`${API_URL}/backup/status`);
   if (!res.ok) throw new Error("Failed to fetch backup status");
   return res.json();
 }

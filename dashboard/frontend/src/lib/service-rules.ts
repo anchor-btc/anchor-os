@@ -51,7 +51,6 @@ export const dependencies: Record<string, string[]> = {
   "core-indexer": ["core-bitcoin", "core-postgres"],
   "core-wallet": ["core-bitcoin"],
   "core-testnet": ["core-wallet", "core-indexer"],
-  "core-backup": ["core-postgres"],
   "explorer-mempool": ["core-bitcoin", "core-electrs"],
   "explorer-btc-rpc": ["core-bitcoin"],
   "explorer-esplora": ["core-bitcoin"],
@@ -74,7 +73,6 @@ export const requiredServices = [
   "core-indexer",
   "core-wallet",
   "core-testnet",
-  "core-backup",
   "anchor-dashboard",
 ];
 
@@ -110,7 +108,6 @@ export const appToServiceMap: Record<string, string> = {
   "core-indexer": "core-indexer",
   "core-wallet": "core-wallet",
   "core-testnet": "core-testnet",
-  "core-backup": "core-backup",
   // Explorers
   "explorer-mempool": "explorer-mempool",
   "explorer-btc-rpc": "explorer-btc-rpc",
@@ -167,7 +164,6 @@ export const presets: PresetInfo[] = [
       "core-indexer",
       "core-wallet",
       "core-testnet",
-      "core-backup",
       "explorer-mempool",
       "anchor-dashboard",
     ],
@@ -184,7 +180,6 @@ export const presets: PresetInfo[] = [
       "core-indexer",
       "core-wallet",
       "core-testnet",
-      "core-backup",
       "explorer-mempool",
       "explorer-btc-rpc",
       "explorer-esplora",

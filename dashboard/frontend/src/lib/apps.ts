@@ -370,18 +370,6 @@ export const apps: App[] = [
   // STORAGE / INFRASTRUCTURE (alphabetical)
   // =============================================
   {
-    id: "core-backup",
-    name: "Backup",
-    description: "Backup and restore Docker volumes, databases, and configs",
-    descriptionKey: "appDescriptions.core-backup",
-    icon: "HardDrive",
-    color: "slate",
-    internalUrl: "/backup",
-    port: 8003,
-    containers: ["anchor-core-backup"],
-    category: "storage",
-  },
-  {
     id: "core-bitcoin",
     name: "Bitcoin Node",
     description: "Bitcoin Core - full-featured node with mining support",

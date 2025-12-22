@@ -16,7 +16,7 @@ impl Database {
                 total_replies,
                 last_block_height,
                 last_update
-            FROM anchormap_stats
+            FROM places_stats
             "#,
         )
         .fetch_one(&self.pool)

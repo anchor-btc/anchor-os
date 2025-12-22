@@ -34,4 +34,5 @@ ENV BITCOIN_NETWORK=${NETWORK}
 EXPOSE 8332 8333 18332 18333 18443 18444 38332 38333 29000 29001 29002
 
 # Use shell form to allow variable expansion
-CMD bitcoind -${BITCOIN_NETWORK} -printtoconsole
+# Note: rpcbind must be passed via command line for Bitcoin Core v30+
+CMD bitcoind -${BITCOIN_NETWORK} -rpcbind=0.0.0.0 -rpcallowip=0.0.0.0/0 -printtoconsole

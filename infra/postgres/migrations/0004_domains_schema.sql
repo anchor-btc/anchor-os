@@ -1,16 +1,16 @@
--- BitDNS Schema Migration
+-- Domains Schema Migration
 -- A decentralized DNS system on Bitcoin using the Anchor protocol
 
--- BitDNS indexer state
-CREATE TABLE IF NOT EXISTS bitdns_indexer_state (
+-- Domains indexer state
+CREATE TABLE IF NOT EXISTS domains_indexer_state (
     id INTEGER PRIMARY KEY DEFAULT 1,
     last_block_hash BYTEA,
     last_block_height INTEGER DEFAULT 0,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    CONSTRAINT bitdns_single_row CHECK (id = 1)
+    CONSTRAINT domains_single_row CHECK (id = 1)
 );
 
-INSERT INTO bitdns_indexer_state (id, last_block_height) 
+INSERT INTO domains_indexer_state (id, last_block_height) 
 VALUES (1, 0) 
 ON CONFLICT (id) DO NOTHING;
 
@@ -80,7 +80,7 @@ CREATE INDEX IF NOT EXISTS idx_domains_name_search ON domains
     USING gin(to_tsvector('simple', name));
 
 -- Stats view
-CREATE OR REPLACE VIEW bitdns_stats AS
+CREATE OR REPLACE VIEW domains_stats AS
 SELECT 
     COUNT(DISTINCT d.id) as total_domains,
     COUNT(DISTINCT r.id) FILTER (WHERE r.is_active = TRUE) as total_records,

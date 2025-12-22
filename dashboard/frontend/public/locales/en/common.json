@@ -1257,67 +1257,6 @@
     "core-indexer": "Indexes ANCHOR messages from the blockchain",
     "core-testnet": "Automatically generates test transactions and mines blocks",
     "core-wallet": "REST API for creating and broadcasting transactions",
-    "core-backup": "Backup and restore Docker volumes, databases, and configs",
-    "core-bitcoin": "Bitcoin Core - full-featured node with mining support",
-    "core-postgres": "PostgreSQL database for storing indexed data",
-    "monitoring-netdata": "Real-time system and container monitoring dashboard"
-  }
-}
-
-    "explorer-bitfeed": "Real-time Bitcoin transaction visualizer",
-    "explorer-btc-rpc": "Simple and lightweight Bitcoin block explorer",
-    "explorer-esplora": "Blockstream's full-featured Bitcoin block explorer with REST API",
-    "explorer-mempool": "Full Bitcoin block explorer powered by mempool.space",
-    "networking-cloudflare": "Expose Anchor services to the internet via Cloudflare",
-    "networking-tailscale": "Connect your Anchor stack to your Tailscale network",
-    "networking-tor": "Privacy network for anonymous Bitcoin connections and hidden services",
-    "core-electrs": "Electrum Server - lightweight and efficient",
-    "core-fulcrum": "Electrum Server - high-performance alternative",
-    "anchor-docs": "Protocol documentation - kinds, SDK, examples, and API reference",
-    "core-indexer": "Indexes ANCHOR messages from the blockchain",
-    "core-testnet": "Automatically generates test transactions and mines blocks",
-    "core-wallet": "REST API for creating and broadcasting transactions",
-    "core-backup": "Backup and restore Docker volumes, databases, and configs",
-    "core-bitcoin": "Bitcoin Core - full-featured node with mining support",
-    "core-postgres": "PostgreSQL database for storing indexed data",
-    "monitoring-netdata": "Real-time system and container monitoring dashboard"
-  }
-}
-
-    "explorer-bitfeed": "Real-time Bitcoin transaction visualizer",
-    "explorer-btc-rpc": "Simple and lightweight Bitcoin block explorer",
-    "explorer-esplora": "Blockstream's full-featured Bitcoin block explorer with REST API",
-    "explorer-mempool": "Full Bitcoin block explorer powered by mempool.space",
-    "networking-cloudflare": "Expose Anchor services to the internet via Cloudflare",
-    "networking-tailscale": "Connect your Anchor stack to your Tailscale network",
-    "networking-tor": "Privacy network for anonymous Bitcoin connections and hidden services",
-    "core-electrs": "Electrum Server - lightweight and efficient",
-    "core-fulcrum": "Electrum Server - high-performance alternative",
-    "anchor-docs": "Protocol documentation - kinds, SDK, examples, and API reference",
-    "core-indexer": "Indexes ANCHOR messages from the blockchain",
-    "core-testnet": "Automatically generates test transactions and mines blocks",
-    "core-wallet": "REST API for creating and broadcasting transactions",
-    "core-backup": "Backup and restore Docker volumes, databases, and configs",
-    "core-bitcoin": "Bitcoin Core - full-featured node with mining support",
-    "core-postgres": "PostgreSQL database for storing indexed data",
-    "monitoring-netdata": "Real-time system and container monitoring dashboard"
-  }
-}
-
-    "explorer-bitfeed": "Real-time Bitcoin transaction visualizer",
-    "explorer-btc-rpc": "Simple and lightweight Bitcoin block explorer",
-    "explorer-esplora": "Blockstream's full-featured Bitcoin block explorer with REST API",
-    "explorer-mempool": "Full Bitcoin block explorer powered by mempool.space",
-    "networking-cloudflare": "Expose Anchor services to the internet via Cloudflare",
-    "networking-tailscale": "Connect your Anchor stack to your Tailscale network",
-    "networking-tor": "Privacy network for anonymous Bitcoin connections and hidden services",
-    "core-electrs": "Electrum Server - lightweight and efficient",
-    "core-fulcrum": "Electrum Server - high-performance alternative",
-    "anchor-docs": "Protocol documentation - kinds, SDK, examples, and API reference",
-    "core-indexer": "Indexes ANCHOR messages from the blockchain",
-    "core-testnet": "Automatically generates test transactions and mines blocks",
-    "core-wallet": "REST API for creating and broadcasting transactions",
-    "core-backup": "Backup and restore Docker volumes, databases, and configs",
     "core-bitcoin": "Bitcoin Core - full-featured node with mining support",
     "core-postgres": "PostgreSQL database for storing indexed data",
     "monitoring-netdata": "Real-time system and container monitoring dashboard"

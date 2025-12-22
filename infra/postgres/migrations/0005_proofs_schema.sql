@@ -1,16 +1,16 @@
--- AnchorProof Schema Migration
+-- Proofs Schema Migration
 -- Proof of Existence system on Bitcoin using the Anchor protocol
 
--- AnchorProof indexer state
-CREATE TABLE IF NOT EXISTS anchorproof_indexer_state (
+-- Proofs indexer state
+CREATE TABLE IF NOT EXISTS proofs_indexer_state (
     id INTEGER PRIMARY KEY DEFAULT 1,
     last_block_hash BYTEA,
     last_block_height INTEGER DEFAULT 0,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    CONSTRAINT anchorproof_single_row CHECK (id = 1)
+    CONSTRAINT proofs_single_row CHECK (id = 1)
 );
 
-INSERT INTO anchorproof_indexer_state (id, last_block_height) 
+INSERT INTO proofs_indexer_state (id, last_block_height) 
 VALUES (1, 0) 
 ON CONFLICT (id) DO NOTHING;
 
@@ -83,7 +83,7 @@ CREATE INDEX IF NOT EXISTS idx_proofs_search ON proofs
     USING gin(to_tsvector('simple', COALESCE(filename, '') || ' ' || COALESCE(description, '')));
 
 -- Stats view
-CREATE OR REPLACE VIEW anchorproof_stats AS
+CREATE OR REPLACE VIEW proofs_stats AS
 SELECT 
     COUNT(*) as total_proofs,
     COUNT(*) FILTER (WHERE NOT is_revoked) as active_proofs,
@@ -97,7 +97,7 @@ SELECT
 FROM proofs;
 
 -- Triggers
-CREATE OR REPLACE FUNCTION update_anchorproof_indexer_timestamp()
+CREATE OR REPLACE FUNCTION update_proofs_indexer_timestamp()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = NOW();
@@ -105,11 +105,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS tr_anchorproof_indexer_updated_at ON anchorproof_indexer_state;
-CREATE TRIGGER tr_anchorproof_indexer_updated_at
-    BEFORE UPDATE ON anchorproof_indexer_state
+DROP TRIGGER IF EXISTS tr_proofs_indexer_updated_at ON proofs_indexer_state;
+CREATE TRIGGER tr_proofs_indexer_updated_at
+    BEFORE UPDATE ON proofs_indexer_state
     FOR EACH ROW
-    EXECUTE FUNCTION update_anchorproof_indexer_timestamp();
+    EXECUTE FUNCTION update_proofs_indexer_timestamp();
 
 CREATE OR REPLACE FUNCTION log_proof_history()
 RETURNS TRIGGER AS $$

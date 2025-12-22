@@ -223,7 +223,6 @@ fn get_required_profiles(service: &str) -> Vec<String> {
         "core-wallet" => vec!["core-wallet".to_string()],
         "core-indexer" => vec!["core-indexer".to_string()],
         "core-testnet" => vec!["core-wallet".to_string(), "core-indexer".to_string(), "core-testnet".to_string()],
-        "core-backup" => vec!["core-backup".to_string()],
         "core-fulcrum" => vec!["core-fulcrum".to_string()],
         "core-electrs" => vec!["core-electrs".to_string()],
         // Explorers - mempool needs electrs!
@@ -283,7 +282,6 @@ fn extract_service_from_container(container_name: &str) -> Option<String> {
         ("core-indexer", "core-indexer"),
         ("core-wallet", "core-wallet"),
         ("core-testnet", "core-testnet"),
-        ("core-backup", "core-backup"),
         ("core-bitcoin", "core-bitcoin"),
         ("core-postgres", "core-postgres"),
         ("explorer-btc-rpc", "explorer-btc-rpc"),

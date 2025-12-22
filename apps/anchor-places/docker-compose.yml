@@ -12,7 +12,7 @@ services:
   #     POSTGRES_DB: anchor
   #   volumes:
   #     - anchormap_postgres_data:/var/lib/postgresql/data
-  #     - ../../docker/postgres/migrations:/docker-entrypoint-initdb.d:ro
+  #     - ../../infra/postgres/migrations:/docker-entrypoint-initdb.d:ro
   #   ports:
   #     - "5432:5432"
   #   healthcheck:

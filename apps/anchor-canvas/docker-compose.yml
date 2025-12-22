@@ -23,8 +23,8 @@ services:
       POSTGRES_DB: anchor
     volumes:
       - anchorcanvas-postgres-data:/var/lib/postgresql/data
-      - ../../docker/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
-      - ../../docker/postgres/migrations:/docker-entrypoint-initdb.d/migrations:ro
+      - ../../infra/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - ../../infra/postgres/migrations:/docker-entrypoint-initdb.d/migrations:ro
     ports:
       - "5433:5432"
     healthcheck:
@@ -38,7 +38,7 @@ services:
   # Bitcoin Core (regtest mode)
   bitcoin:
     build:
-      context: ../../docker/bitcoin
+      context: ../../infra/bitcoin
       dockerfile: Dockerfile
     container_name: anchorcanvas-bitcoin
     ports:

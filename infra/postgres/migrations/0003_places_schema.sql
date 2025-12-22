@@ -1,18 +1,18 @@
--- AnchorMap Schema
+-- Places Schema
 -- A Bitcoin-powered map markers application using the Anchor protocol
 -- Markers are stored on-chain with lat/lng coordinates and messages
 
--- AnchorMap indexer state (separate from main anchor indexer)
-CREATE TABLE IF NOT EXISTS anchormap_indexer_state (
+-- Places indexer state (separate from main anchor indexer)
+CREATE TABLE IF NOT EXISTS places_indexer_state (
     id INTEGER PRIMARY KEY DEFAULT 1,
     last_block_hash BYTEA,
     last_block_height INTEGER DEFAULT 0,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    CONSTRAINT anchormap_single_row CHECK (id = 1)
+    CONSTRAINT places_single_row CHECK (id = 1)
 );
 
--- Initialize anchormap indexer state
-INSERT INTO anchormap_indexer_state (id, last_block_height) 
+-- Initialize places indexer state
+INSERT INTO places_indexer_state (id, last_block_height) 
 VALUES (1, 0) 
 ON CONFLICT (id) DO NOTHING;
 
@@ -102,7 +102,7 @@ CREATE INDEX IF NOT EXISTS idx_replies_txid ON marker_replies(txid);
 CREATE INDEX IF NOT EXISTS idx_markers_creator ON markers(creator_address);
 
 -- Stats view for quick statistics
-CREATE OR REPLACE VIEW anchormap_stats AS
+CREATE OR REPLACE VIEW places_stats AS
 SELECT 
     COUNT(*) as total_markers,
     COUNT(DISTINCT txid) as total_transactions,

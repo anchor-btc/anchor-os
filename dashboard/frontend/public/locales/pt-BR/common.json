@@ -1257,7 +1257,6 @@
     "core-indexer": "Indexa mensagens ANCHOR da blockchain",
     "core-testnet": "Gera automaticamente transações de teste e minera blocos",
     "core-wallet": "API REST para criar e transmitir transações",
-    "core-backup": "Backup e restauração de volumes Docker, bancos de dados e configs",
     "core-bitcoin": "Bitcoin Core - nó completo com suporte a mineração",
     "core-postgres": "Banco de dados PostgreSQL para armazenar dados indexados",
     "monitoring-netdata": "Painel de monitoramento de sistema e containers em tempo real"

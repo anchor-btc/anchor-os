@@ -46,8 +46,19 @@ services:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql
-      - ./infra/postgres/migrations:/docker-entrypoint-initdb.d/migrations
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/00-base.sql
+      - ./infra/postgres/migrations/0001_core_carrier.sql:/docker-entrypoint-initdb.d/01-core-carrier.sql
+      - ./infra/postgres/migrations/0002_canvas_schema.sql:/docker-entrypoint-initdb.d/02-canvas.sql
+      - ./infra/postgres/migrations/0003_places_schema.sql:/docker-entrypoint-initdb.d/03-places.sql
+      - ./infra/postgres/migrations/0004_domains_schema.sql:/docker-entrypoint-initdb.d/04-domains.sql
+      - ./infra/postgres/migrations/0005_proofs_schema.sql:/docker-entrypoint-initdb.d/05-proofs.sql
+      - ./infra/postgres/migrations/0006_anchor_tokens_schema.sql:/docker-entrypoint-initdb.d/06-tokens.sql
+      - ./infra/postgres/migrations/0010_dashboard_settings.sql:/docker-entrypoint-initdb.d/10-dashboard-settings.sql
+      - ./infra/postgres/migrations/0011_dashboard_tor.sql:/docker-entrypoint-initdb.d/11-dashboard-tor.sql
+      - ./infra/postgres/migrations/0012_dashboard_electrum.sql:/docker-entrypoint-initdb.d/12-dashboard-electrum.sql
+      - ./infra/postgres/migrations/0013_dashboard_installation.sql:/docker-entrypoint-initdb.d/13-dashboard-installation.sql
+      - ./infra/postgres/migrations/0014_dashboard_profile.sql:/docker-entrypoint-initdb.d/14-dashboard-profile.sql
+      - ./infra/postgres/migrations/0015_dashboard_notifications.sql:/docker-entrypoint-initdb.d/15-dashboard-notifications.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U anchor -d anchor"]
       interval: 5s
@@ -883,7 +894,7 @@ services:
       POSTGRES_DB: anchor_oracles
     volumes:
       - oracles-postgres-data:/var/lib/postgresql/data
-      - ./apps/anchor-oracles/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - ./infra/postgres/migrations/0020_oracles_schema.sql:/docker-entrypoint-initdb.d/01-init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U anchor -d anchor_oracles"]
       interval: 5s
@@ -1007,7 +1018,7 @@ services:
       POSTGRES_DB: anchor_lottery
     volumes:
       - lottery-postgres-data:/var/lib/postgresql/data
-      - ./apps/anchor-predictions/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - ./infra/postgres/migrations/0021_predictions_schema.sql:/docker-entrypoint-initdb.d/01-init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U anchor -d anchor_lottery"]
       interval: 5s

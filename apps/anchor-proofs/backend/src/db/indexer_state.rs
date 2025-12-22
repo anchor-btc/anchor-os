@@ -8,7 +8,7 @@ impl Database {
     /// Get the last indexed block height
     pub async fn get_last_block_height(&self) -> Result<i32> {
         let row: (i32,) = sqlx::query_as(
-            "SELECT last_block_height FROM anchorproof_indexer_state WHERE id = 1",
+            "SELECT last_block_height FROM proofs_indexer_state WHERE id = 1",
         )
         .fetch_one(&self.pool)
         .await?;
@@ -19,7 +19,7 @@ impl Database {
     /// Update the last indexed block
     pub async fn update_last_block(&self, block_hash: &[u8], height: i32) -> Result<()> {
         sqlx::query(
-            "UPDATE anchorproof_indexer_state SET last_block_hash = $1, last_block_height = $2 WHERE id = 1",
+            "UPDATE proofs_indexer_state SET last_block_hash = $1, last_block_height = $2 WHERE id = 1",
         )
         .bind(block_hash)
         .bind(height)
@@ -38,7 +38,7 @@ impl Database {
             .await?;
 
         // Update indexer state
-        sqlx::query("UPDATE anchorproof_indexer_state SET last_block_height = $1 WHERE id = 1")
+        sqlx::query("UPDATE proofs_indexer_state SET last_block_height = $1 WHERE id = 1")
             .bind(from_height - 1)
             .execute(&self.pool)
             .await?;
