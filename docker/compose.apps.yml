@@ -1,0 +1,507 @@
+# =============================================
+# ANCHOR APPS
+# Threads, Canvas, Places, Domains, Proofs, Tokens, Oracles, Predictions
+# =============================================
+
+services:
+  # =============================================
+  # ANCHOR THREADS - Social messaging on Bitcoin
+  # =============================================
+  app-threads-backend:
+    build:
+      context: ..
+      dockerfile: ./apps/anchor-threads/backend/Dockerfile
+    container_name: anchor-app-threads-backend
+    ports:
+      - "3101:3101"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3101
+      DATABASE_URL: postgres://anchor:anchor@core-postgres:5432/anchor
+      RUST_LOG: info
+    depends_on:
+      core-postgres:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    profiles:
+      - minimum
+      - default
+      - full
+      - app-threads
+
+  app-threads-frontend:
+    build:
+      context: ../apps/anchor-threads/frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:3101
+        NEXT_PUBLIC_WALLET_URL: http://localhost:8001
+        NEXT_PUBLIC_BTC_EXPLORER_URL: http://localhost:4000
+    container_name: anchor-app-threads-frontend
+    ports:
+      - "3100:3100"
+    depends_on:
+      - app-threads-backend
+      - core-wallet
+    networks:
+      - anchor-network
+    profiles:
+      - minimum
+      - default
+      - full
+      - app-threads
+
+  # =============================================
+  # ANCHOR CANVAS - Collaborative Bitcoin Canvas
+  # =============================================
+  app-canvas-backend:
+    build:
+      context: ..
+      dockerfile: apps/anchor-canvas/backend/Dockerfile
+    container_name: anchor-app-canvas-backend
+    ports:
+      - "3201:3201"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3201
+      DATABASE_URL: postgres://anchor:anchor@core-postgres:5432/anchor
+      BITCOIN_RPC_URL: http://core-bitcoin:18443
+      BITCOIN_RPC_USER: anchor
+      BITCOIN_RPC_PASSWORD: anchor
+      WALLET_URL: http://core-wallet:8001
+      POLL_INTERVAL_SECS: 5
+      RUST_LOG: anchor_canvas_backend=info
+    depends_on:
+      core-postgres:
+        condition: service_healthy
+      core-bitcoin:
+        condition: service_healthy
+      core-wallet:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3201/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    profiles:
+      - full
+      - app-canvas
+
+  app-canvas-frontend:
+    build:
+      context: ../apps/anchor-canvas/frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:3201
+        NEXT_PUBLIC_WALLET_URL: http://localhost:8001
+    container_name: anchor-app-canvas-frontend
+    ports:
+      - "3200:3200"
+    depends_on:
+      app-canvas-backend:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    restart: unless-stopped
+    profiles:
+      - full
+      - app-canvas
+
+  # =============================================
+  # ANCHOR PLACES - Bitcoin-Powered Map Markers
+  # =============================================
+  app-places-backend:
+    build:
+      context: ..
+      dockerfile: apps/anchor-places/backend/Dockerfile
+    container_name: anchor-app-places-backend
+    ports:
+      - "3301:3301"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3301
+      DATABASE_URL: postgres://anchor:anchor@core-postgres:5432/anchor
+      BITCOIN_RPC_URL: http://core-bitcoin:18443
+      BITCOIN_RPC_USER: anchor
+      BITCOIN_RPC_PASSWORD: anchor
+      WALLET_URL: http://core-wallet:8001
+      POLL_INTERVAL_SECS: 5
+      RUST_LOG: anchor_places_backend=info
+    depends_on:
+      core-postgres:
+        condition: service_healthy
+      core-bitcoin:
+        condition: service_healthy
+      core-wallet:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3301/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    profiles:
+      - full
+      - app-places
+
+  app-places-frontend:
+    build:
+      context: ../apps/anchor-places/frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:3301
+        NEXT_PUBLIC_WALLET_URL: http://localhost:8001
+        NEXT_PUBLIC_BLOCK_EXPLORER_URL: http://localhost:4000
+    container_name: anchor-app-places-frontend
+    ports:
+      - "3300:3300"
+    depends_on:
+      app-places-backend:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    restart: unless-stopped
+    profiles:
+      - full
+      - app-places
+
+  # =============================================
+  # ANCHOR DOMAINS - Decentralized DNS on Bitcoin
+  # =============================================
+  app-domains-backend:
+    build:
+      context: ..
+      dockerfile: apps/anchor-domains/backend/Dockerfile
+    container_name: anchor-app-domains-backend
+    ports:
+      - "3401:3401"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3401
+      DATABASE_URL: postgres://anchor:anchor@core-postgres:5432/anchor
+      BITCOIN_RPC_URL: http://core-bitcoin:18443
+      BITCOIN_RPC_USER: anchor
+      BITCOIN_RPC_PASSWORD: anchor
+      WALLET_URL: http://core-wallet:8001
+      POLL_INTERVAL_SECS: 5
+      RUST_LOG: anchor_domains_backend=info
+    depends_on:
+      core-postgres:
+        condition: service_healthy
+      core-bitcoin:
+        condition: service_healthy
+      core-wallet:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3401/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    profiles:
+      - full
+      - app-domains
+
+  app-domains-frontend:
+    build:
+      context: ../apps/anchor-domains/frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:3401
+        NEXT_PUBLIC_WALLET_URL: http://localhost:8001
+    container_name: anchor-app-domains-frontend
+    ports:
+      - "3400:3400"
+    depends_on:
+      app-domains-backend:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    restart: unless-stopped
+    profiles:
+      - full
+      - app-domains
+
+  # =============================================
+  # ANCHOR PROOFS - Proof of Existence
+  # =============================================
+  app-proofs-backend:
+    build:
+      context: ..
+      dockerfile: apps/anchor-proofs/backend/Dockerfile
+    container_name: anchor-app-proofs-backend
+    ports:
+      - "3501:3501"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3501
+      DATABASE_URL: postgres://anchor:anchor@core-postgres:5432/anchor
+      BITCOIN_RPC_URL: http://core-bitcoin:18443
+      BITCOIN_RPC_USER: anchor
+      BITCOIN_RPC_PASSWORD: anchor
+      WALLET_URL: http://core-wallet:8001
+      POLL_INTERVAL_SECS: 5
+      RUST_LOG: anchorproofs_backend=info
+    depends_on:
+      core-postgres:
+        condition: service_healthy
+      core-bitcoin:
+        condition: service_healthy
+      core-wallet:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3501/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    profiles:
+      - full
+      - app-proof
+
+  app-proofs-frontend:
+    build:
+      context: ../apps/anchor-proofs/frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:3501
+        NEXT_PUBLIC_WALLET_URL: http://localhost:8001
+    container_name: anchor-app-proofs-frontend
+    ports:
+      - "3500:3500"
+    depends_on:
+      app-proofs-backend:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    restart: unless-stopped
+    profiles:
+      - full
+      - app-proof
+
+  # =============================================
+  # ANCHOR TOKENS - UTXO-based Token Protocol
+  # =============================================
+  app-tokens-backend:
+    build:
+      context: ..
+      dockerfile: apps/anchor-tokens/backend/Dockerfile
+    container_name: anchor-app-tokens-backend
+    ports:
+      - "3601:3601"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3601
+      DATABASE_URL: postgres://anchor:anchor@core-postgres:5432/anchor
+      BITCOIN_RPC_URL: http://core-bitcoin:18443
+      BITCOIN_RPC_USER: anchor
+      BITCOIN_RPC_PASSWORD: anchor
+      WALLET_URL: http://core-wallet:8001
+      POLL_INTERVAL_SECS: 5
+      RUST_LOG: anchor_tokens_backend=info
+    depends_on:
+      core-postgres:
+        condition: service_healthy
+      core-bitcoin:
+        condition: service_healthy
+      core-wallet:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3601/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    profiles:
+      - full
+      - app-tokens
+
+  app-tokens-frontend:
+    build:
+      context: ../apps/anchor-tokens/frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:3601
+        NEXT_PUBLIC_WALLET_URL: http://localhost:8001
+    container_name: anchor-app-tokens-frontend
+    ports:
+      - "3600:3600"
+    depends_on:
+      app-tokens-backend:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    restart: unless-stopped
+    profiles:
+      - full
+      - app-tokens
+
+  # =============================================
+  # ANCHOR ORACLES - Decentralized Oracle Network
+  # =============================================
+  app-oracles-postgres:
+    image: postgres:16-alpine
+    container_name: anchor-app-oracles-postgres
+    environment:
+      POSTGRES_USER: anchor
+      POSTGRES_PASSWORD: anchor
+      POSTGRES_DB: anchor_oracles
+    volumes:
+      - oracles-postgres-data:/var/lib/postgresql/data
+      - ../apps/anchor-oracles/backend/migrations/0020_oracles_schema.sql:/docker-entrypoint-initdb.d/01-init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U anchor -d anchor_oracles"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - anchor-network
+    restart: unless-stopped
+    profiles:
+      - full
+      - app-oracles
+
+  app-oracles-backend:
+    build:
+      context: ..
+      dockerfile: apps/anchor-oracles/backend/Dockerfile
+    container_name: anchor-app-oracles-backend
+    ports:
+      - "3701:3701"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3701
+      DATABASE_URL: postgres://anchor:anchor@app-oracles-postgres:5432/anchor_oracles
+      BITCOIN_RPC_URL: http://core-bitcoin:18443
+      BITCOIN_RPC_USER: anchor
+      BITCOIN_RPC_PASSWORD: anchor
+      WALLET_SERVICE_URL: http://core-wallet:8001
+      RUST_LOG: anchor_oracles_backend=info
+    depends_on:
+      app-oracles-postgres:
+        condition: service_healthy
+      core-bitcoin:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3701/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    profiles:
+      - full
+      - app-oracles
+
+  app-oracles-frontend:
+    build:
+      context: ../apps/anchor-oracles/frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:3701
+    container_name: anchor-app-oracles-frontend
+    ports:
+      - "3700:3700"
+    depends_on:
+      app-oracles-backend:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    restart: unless-stopped
+    profiles:
+      - full
+      - app-oracles
+
+  # =============================================
+  # ANCHOR PREDICTIONS - Trustless Predictions with DLC Payouts
+  # =============================================
+  app-predictions-postgres:
+    image: postgres:16-alpine
+    container_name: anchor-app-predictions-postgres
+    environment:
+      POSTGRES_USER: anchor
+      POSTGRES_PASSWORD: anchor
+      POSTGRES_DB: anchor_lottery
+    volumes:
+      - lottery-postgres-data:/var/lib/postgresql/data
+      - ../apps/anchor-predictions/backend/migrations/0021_predictions_schema.sql:/docker-entrypoint-initdb.d/01-init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U anchor -d anchor_lottery"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - anchor-network
+    restart: unless-stopped
+    profiles:
+      - full
+      - app-predictions
+
+  app-predictions-backend:
+    build:
+      context: ..
+      dockerfile: apps/anchor-predictions/backend/Dockerfile
+    container_name: anchor-app-predictions-backend
+    ports:
+      - "3801:3801"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3801
+      DATABASE_URL: postgres://anchor:anchor@app-predictions-postgres:5432/anchor_lottery
+      BITCOIN_RPC_URL: http://core-bitcoin:18443
+      BITCOIN_RPC_USER: anchor
+      BITCOIN_RPC_PASSWORD: anchor
+      WALLET_SERVICE_URL: http://core-wallet:8001
+      ORACLE_SERVICE_URL: http://app-oracles-backend:3701
+      RUST_LOG: anchor_lottery_backend=info
+    depends_on:
+      app-predictions-postgres:
+        condition: service_healthy
+      core-bitcoin:
+        condition: service_healthy
+      app-oracles-backend:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3801/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    profiles:
+      - full
+      - app-predictions
+
+  app-predictions-frontend:
+    build:
+      context: ../apps/anchor-predictions/frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:3801
+    container_name: anchor-app-predictions-frontend
+    ports:
+      - "3800:3800"
+    depends_on:
+      app-predictions-backend:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    restart: unless-stopped
+    profiles:
+      - full
+      - app-predictions
+

@@ -1,0 +1,55 @@
+# =============================================
+# ANCHOR SITES
+# Docs, Landing Pages
+# =============================================
+
+services:
+  # Anchor Docs - Protocol Documentation
+  anchor-docs:
+    build:
+      context: ../sites/docs
+      dockerfile: Dockerfile
+    container_name: anchor-docs
+    ports:
+      - "3900:3900"
+    networks:
+      - anchor-network
+    restart: unless-stopped
+    profiles:
+      - minimum
+      - default
+      - full
+      - anchor-docs
+
+  # Anchor Protocol Landing Page
+  anchor-landing-protocol:
+    build:
+      context: ../sites/landing-protocol
+      dockerfile: Dockerfile
+    container_name: anchor-landing-protocol
+    ports:
+      - "3950:3000"
+    networks:
+      - anchor-network
+    restart: unless-stopped
+    profiles:
+      - default
+      - full
+      - anchor-landing-protocol
+
+  # Anchor OS Landing Page
+  anchor-landing-os:
+    build:
+      context: ../sites/landing-os
+      dockerfile: Dockerfile
+    container_name: anchor-landing-os
+    ports:
+      - "3951:3000"
+    networks:
+      - anchor-network
+    restart: unless-stopped
+    profiles:
+      - default
+      - full
+      - anchor-landing-os
+

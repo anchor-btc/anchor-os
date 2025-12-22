@@ -1,0 +1,55 @@
+# =============================================
+# ELECTRUM SERVERS
+# Electrs, Fulcrum
+# =============================================
+
+services:
+  # Electrs - Electrum Server for address indexing (default electrum server)
+  core-electrs:
+    build:
+      context: ../infra/electrs
+      dockerfile: Dockerfile
+    container_name: anchor-core-electrs
+    environment:
+      ELECTRS_NETWORK: regtest
+      ELECTRS_DAEMON_RPC_ADDR: core-bitcoin:18443
+      ELECTRS_DAEMON_P2P_ADDR: core-bitcoin:18444
+      ELECTRS_ELECTRUM_RPC_ADDR: 0.0.0.0:50001
+      ELECTRS_AUTH: anchor:anchor
+      ELECTRS_DB_DIR: /data
+    volumes:
+      - electrs-data:/data
+    ports:
+      - "50001:50001"
+    depends_on:
+      core-bitcoin:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    restart: unless-stopped
+    profiles:
+      - default
+      - full
+      - core-electrs
+
+  # Fulcrum - High-performance Electrum Server (alternative to electrs)
+  core-fulcrum:
+    build:
+      context: ../infra/fulcrum
+      dockerfile: Dockerfile
+    image: anchor-fulcrum:latest
+    container_name: anchor-core-fulcrum
+    volumes:
+      - fulcrum-data:/data
+    ports:
+      - "50001:50001"
+    depends_on:
+      core-bitcoin:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    restart: unless-stopped
+    profiles:
+      - minimum
+      - core-fulcrum
+

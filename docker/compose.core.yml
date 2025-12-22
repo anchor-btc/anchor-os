@@ -1,0 +1,171 @@
+# =============================================
+# CORE SERVICES
+# Bitcoin Core, PostgreSQL, Indexer, Wallet, Testnet
+# =============================================
+
+services:
+  # Bitcoin Core Node (always required - base for all profiles)
+  core-bitcoin:
+    build:
+      context: ../infra/bitcoin-core
+      dockerfile: Dockerfile
+      args:
+        BITCOIN_VERSION: "30.0"
+        NETWORK: regtest
+    container_name: anchor-core-bitcoin
+    ports:
+      - "18443:18443"  # RPC (regtest)
+      - "18444:18444"  # P2P (regtest)
+      - "8332:8332"    # RPC (mainnet)
+      - "8333:8333"    # P2P (mainnet)
+      - "29000:29000"  # ZMQ rawblock
+      - "29001:29001"  # ZMQ rawtx
+      - "29002:29002"  # ZMQ sequence
+    volumes:
+      - bitcoin-data:/home/bitcoin/.bitcoin
+    healthcheck:
+      test: ["CMD", "bitcoin-cli", "-regtest", "-rpcuser=anchor", "-rpcpassword=anchor", "getblockchaininfo"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+    networks:
+      - anchor-network
+    profiles:
+      - minimum
+      - default
+      - full
+      - core-bitcoin
+
+  core-postgres:
+    image: postgres:16-alpine
+    container_name: anchor-core-postgres
+    environment:
+      POSTGRES_USER: anchor
+      POSTGRES_PASSWORD: anchor
+      POSTGRES_DB: anchor
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      # Base initialization
+      - ../infra/postgres/init.sql:/docker-entrypoint-initdb.d/00-base.sql
+      # Core services migrations
+      - ../internal/anchor-indexer/migrations/0001_core_carrier.sql:/docker-entrypoint-initdb.d/01-core-carrier.sql
+      # App migrations
+      - ../apps/anchor-canvas/backend/migrations/0002_canvas_schema.sql:/docker-entrypoint-initdb.d/02-canvas.sql
+      - ../apps/anchor-places/backend/migrations/0003_places_schema.sql:/docker-entrypoint-initdb.d/03-places.sql
+      - ../apps/anchor-domains/backend/migrations/0004_domains_schema.sql:/docker-entrypoint-initdb.d/04-domains.sql
+      - ../apps/anchor-proofs/backend/migrations/0005_proofs_schema.sql:/docker-entrypoint-initdb.d/05-proofs.sql
+      - ../apps/anchor-tokens/backend/migrations/0006_anchor_tokens_schema.sql:/docker-entrypoint-initdb.d/06-tokens.sql
+      # Dashboard migrations
+      - ../dashboard/backend/migrations/0010_dashboard_settings.sql:/docker-entrypoint-initdb.d/10-dashboard-settings.sql
+      - ../dashboard/backend/migrations/0011_dashboard_tor.sql:/docker-entrypoint-initdb.d/11-dashboard-tor.sql
+      - ../dashboard/backend/migrations/0012_dashboard_electrum.sql:/docker-entrypoint-initdb.d/12-dashboard-electrum.sql
+      - ../dashboard/backend/migrations/0013_dashboard_installation.sql:/docker-entrypoint-initdb.d/13-dashboard-installation.sql
+      - ../dashboard/backend/migrations/0014_dashboard_profile.sql:/docker-entrypoint-initdb.d/14-dashboard-profile.sql
+      - ../dashboard/backend/migrations/0015_dashboard_notifications.sql:/docker-entrypoint-initdb.d/15-dashboard-notifications.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U anchor -d anchor"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - anchor-network
+    profiles:
+      - minimum
+      - default
+      - full
+      - core-postgres
+
+  core-indexer:
+    build:
+      context: ..
+      dockerfile: ./internal/anchor-indexer/Dockerfile
+    container_name: anchor-core-indexer
+    environment:
+      BITCOIN_RPC_URL: http://core-bitcoin:18443
+      BITCOIN_RPC_USER: anchor
+      BITCOIN_RPC_PASSWORD: anchor
+      DATABASE_URL: postgres://anchor:anchor@core-postgres:5432/anchor
+      RUST_LOG: info
+    depends_on:
+      core-bitcoin:
+        condition: service_healthy
+      core-postgres:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    profiles:
+      - minimum
+      - default
+      - full
+      - core-indexer
+
+  core-wallet:
+    build:
+      context: ..
+      dockerfile: ./internal/anchor-wallet/Dockerfile
+    container_name: anchor-core-wallet
+    ports:
+      - "8001:8001"
+    environment:
+      BITCOIN_RPC_URL: http://core-bitcoin:18443
+      BITCOIN_RPC_USER: anchor
+      BITCOIN_RPC_PASSWORD: anchor
+      WALLET_NAME: anchor_wallet
+      HOST: 0.0.0.0
+      PORT: 8001
+      ANCHOR_DOMAINS_URL: http://app-domains-backend:3401
+      ANCHOR_TOKENS_URL: http://app-tokens-backend:3501
+      ANCHOR_DATA_DIR: /data
+      RUST_LOG: info
+    volumes:
+      - wallet-data:/data
+    depends_on:
+      core-bitcoin:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    profiles:
+      - minimum
+      - default
+      - full
+      - core-wallet
+
+  core-testnet:
+    build:
+      context: ..
+      dockerfile: ./internal/anchor-testnet/Dockerfile
+    container_name: anchor-core-testnet
+    ports:
+      - "8002:8002"
+    environment:
+      WALLET_URL: http://core-wallet:8001
+      API_PORT: 8002
+      MIN_INTERVAL_SECS: 5
+      MAX_INTERVAL_SECS: 15
+      BLOCKS_PER_CYCLE: 1
+      INITIAL_BLOCKS: 101
+      RUST_LOG: info
+    depends_on:
+      - core-wallet
+      - core-indexer
+    networks:
+      - anchor-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    profiles:
+      - minimum
+      - default
+      - full
+      - core-testnet
+

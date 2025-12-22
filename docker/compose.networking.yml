@@ -1,0 +1,69 @@
+# =============================================
+# NETWORKING
+# Tailscale, Cloudflare, Tor
+# =============================================
+
+services:
+  # Tailscale VPN
+  networking-tailscale:
+    image: tailscale/tailscale:latest
+    container_name: anchor-networking-tailscale
+    hostname: anchor-stack
+    environment:
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+      - TS_EXTRA_ARGS=--reset --accept-dns=false
+    volumes:
+      - tailscale-data:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    networks:
+      - anchor-network
+    restart: unless-stopped
+    profiles:
+      - full
+      - networking-tailscale
+
+  # Cloudflare Tunnel
+  networking-cloudflare:
+    image: cloudflare/cloudflared:latest
+    container_name: anchor-networking-cloudflare
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN:-}
+    networks:
+      - anchor-network
+    restart: unless-stopped
+    profiles:
+      - full
+      - networking-cloudflare
+
+  # Tor Proxy - Privacy network for Bitcoin
+  networking-tor:
+    image: dperson/torproxy:latest
+    container_name: anchor-networking-tor
+    ports:
+      - "9050:9050"   # SOCKS5 Proxy
+      - "9051:9051"   # Control Port
+    environment:
+      - TOR_NewCircuitPeriod=30
+      - PASSWORD=anchor
+    volumes:
+      - tor-data:/var/lib/tor
+    networks:
+      - anchor-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s --socks5-hostname localhost:9050 https://check.torproject.org/api/ip | grep -q IsTor || exit 1"]
+      interval: 60s
+      timeout: 30s
+      retries: 3
+      start_period: 120s
+    profiles:
+      - minimum
+      - default
+      - full
+      - networking-tor
+

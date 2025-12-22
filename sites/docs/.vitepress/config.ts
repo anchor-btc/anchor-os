@@ -25,6 +25,7 @@ export default defineConfig({
       { text: 'Kinds', link: '/kinds/' },
       { text: 'SDK', link: '/sdk/getting-started' },
       { text: 'Examples', link: '/examples/create-message' },
+      { text: 'Development', link: '/development/' },
       {
         text: 'Apps',
         items: [
@@ -87,6 +88,18 @@ export default defineConfig({
             { text: 'Create a Message', link: '/examples/create-message' },
             { text: 'Reply to a Message', link: '/examples/reply-to-message' },
             { text: 'Parse a Transaction', link: '/examples/parse-transaction' },
+          ]
+        }
+      ],
+      '/development/': [
+        {
+          text: 'Development Guide',
+          items: [
+            { text: 'Overview', link: '/development/' },
+            { text: 'Project Structure', link: '/development/project-structure' },
+            { text: 'Docker Setup', link: '/development/docker' },
+            { text: 'Scripts', link: '/development/scripts' },
+            { text: 'Makefile', link: '/development/makefile' },
           ]
         }
       ]

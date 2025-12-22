@@ -32,9 +32,9 @@ features:
   - icon: 🔐
     title: Bitcoin Security
     details: Inherit Bitcoin's immutability and timestamping. No separate consensus or token required.
-  - icon: 🌐
-    title: SDK Ready
-    details: TypeScript SDK for encoding, parsing, and broadcasting messages. Wallet integration included.
+  - icon: 🛠️
+    title: Developer Friendly
+    details: TypeScript SDK, modular Docker setup, automation scripts, and comprehensive documentation.
 
 ---
 
@@ -103,3 +103,12 @@ The Anchor Protocol powers several applications. See [all applications](/apps/) 
 - **[Anchor Domains](https://domains.anchor.dev)** - .btc, .sat, .anchor, .anc, .bit domain registration
 - **[Anchor Proofs](https://proofs.anchor.dev)** - Document timestamping
 - **[Anchor Places](/apps/places)** - Geographic markers
+
+## Development
+
+Want to contribute? Check out our [Development Guide](/development/) for:
+
+- [Project Structure](/development/project-structure) - Understand the monorepo architecture
+- [Docker Setup](/development/docker) - Run the full stack locally
+- [Scripts](/development/scripts) - Automation for common tasks
+- [Makefile](/development/makefile) - Quick commands for development

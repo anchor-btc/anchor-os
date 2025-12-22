@@ -1,0 +1,167 @@
+# =============================================
+# BLOCK EXPLORERS
+# Mempool, BTC-RPC Explorer, Esplora, Bitfeed
+# =============================================
+
+services:
+  explorer-mempool-db:
+    image: mariadb:10.11
+    container_name: anchor-explorer-mempool-db
+    environment:
+      MYSQL_DATABASE: mempool
+      MYSQL_USER: mempool
+      MYSQL_PASSWORD: mempool
+      MYSQL_ROOT_PASSWORD: admin
+    volumes:
+      - mempool-db-data:/var/lib/mysql
+    networks:
+      - anchor-network
+    restart: unless-stopped
+    profiles:
+      - default
+      - full
+      - explorer-mempool
+
+  explorer-mempool-api:
+    image: mempool/backend:latest
+    container_name: anchor-explorer-mempool-api
+    environment:
+      MEMPOOL_BACKEND: "electrum"
+      MEMPOOL_NETWORK: "regtest"
+      CORE_RPC_HOST: "core-bitcoin"
+      CORE_RPC_PORT: "18443"
+      CORE_RPC_USERNAME: "anchor"
+      CORE_RPC_PASSWORD: "anchor"
+      ELECTRUM_HOST: "core-electrs"
+      ELECTRUM_PORT: "50001"
+      ELECTRUM_TLS_ENABLED: "false"
+      DATABASE_ENABLED: "true"
+      DATABASE_HOST: "explorer-mempool-db"
+      DATABASE_PORT: "3306"
+      DATABASE_DATABASE: "mempool"
+      DATABASE_USERNAME: "mempool"
+      DATABASE_PASSWORD: "mempool"
+    depends_on:
+      - explorer-mempool-db
+      - core-bitcoin
+      - core-electrs
+    networks:
+      - anchor-network
+    restart: unless-stopped
+    profiles:
+      - default
+      - full
+      - explorer-mempool
+
+  explorer-mempool-web:
+    image: mempool/frontend:latest
+    container_name: anchor-explorer-mempool-web
+    ports:
+      - "4000:8080"
+    environment:
+      FRONTEND_HTTP_PORT: "8080"
+      BACKEND_MAINNET_HTTP_HOST: "explorer-mempool-api"
+    depends_on:
+      - explorer-mempool-api
+    networks:
+      - anchor-network
+    restart: unless-stopped
+    profiles:
+      - default
+      - full
+      - explorer-mempool
+
+  explorer-btc-rpc:
+    image: getumbrel/btc-rpc-explorer:v3.3.0
+    container_name: anchor-explorer-btc-rpc
+    ports:
+      - "4010:3002"
+    environment:
+      BTCEXP_HOST: 0.0.0.0
+      BTCEXP_PORT: 3002
+      BTCEXP_BITCOIND_HOST: core-bitcoin
+      BTCEXP_BITCOIND_PORT: 18443
+      BTCEXP_BITCOIND_USER: anchor
+      BTCEXP_BITCOIND_PASS: anchor
+      BTCEXP_BITCOIND_RPC_TIMEOUT: 10000
+      BTCEXP_ADDRESS_API: electrum
+      BTCEXP_ELECTRUM_SERVERS: tcp://core-electrs:50001
+      BTCEXP_SLOW_DEVICE_MODE: "false"
+      BTCEXP_NO_INMEMORY_RPC_CACHE: "false"
+      BTCEXP_PRIVACY_MODE: "false"
+      BTCEXP_NO_RATES: "true"
+      BTCEXP_RPC_ALLOWALL: "true"
+      BTCEXP_BASIC_AUTH_PASSWORD: ""
+    depends_on:
+      core-bitcoin:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    restart: unless-stopped
+    profiles:
+      - minimum
+      - full
+      - explorer-btc-rpc
+
+  # Esplora - Blockstream Block Explorer
+  explorer-esplora:
+    image: blockstream/esplora:latest
+    container_name: anchor-explorer-esplora
+    ports:
+      - "4030:80"      # Web UI
+    environment:
+      - DEBUG=info
+    volumes:
+      - esplora-data:/data
+    command: ["/srv/explorer/run.sh", "bitcoin-regtest", "explorer"]
+    depends_on:
+      core-bitcoin:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    restart: unless-stopped
+    profiles:
+      - full
+      - explorer-esplora
+
+  # Bitfeed - Real-time Bitcoin Transaction Visualizer
+  explorer-bitfeed-api:
+    image: ghcr.io/bitfeed-project/bitfeed-server:v2.1.2
+    container_name: anchor-explorer-bitfeed-api
+    environment:
+      PORT: "5000"
+      BITCOIN_HOST: "core-bitcoin"
+      BITCOIN_ZMQ_RAWBLOCK_PORT: "29000"
+      BITCOIN_ZMQ_RAWTX_PORT: "29001"
+      BITCOIN_ZMQ_SEQUENCE_PORT: "29002"
+      BITCOIN_RPC_PORT: "18443"
+      BITCOIN_RPC_USER: "anchor"
+      BITCOIN_RPC_PASS: "anchor"
+    depends_on:
+      core-bitcoin:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    restart: unless-stopped
+    profiles:
+      - full
+      - explorer-bitfeed
+
+  explorer-bitfeed-web:
+    image: ghcr.io/bitfeed-project/bitfeed-client:v2.1.2
+    container_name: anchor-explorer-bitfeed-web
+    environment:
+      TARGET: "docker"
+      BACKEND_HOST: "explorer-bitfeed-api"
+      BACKEND_PORT: "5000"
+    ports:
+      - "4020:80"
+    depends_on:
+      - explorer-bitfeed-api
+    networks:
+      - anchor-network
+    restart: unless-stopped
+    profiles:
+      - full
+      - explorer-bitfeed
+

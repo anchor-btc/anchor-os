@@ -1,0 +1,69 @@
+# =============================================
+# ANCHOR DASHBOARD
+# Dashboard Backend and Frontend
+# =============================================
+
+services:
+  anchor-dashboard-backend:
+    build:
+      context: ..
+      dockerfile: dashboard/backend/Dockerfile
+    container_name: anchor-dashboard-backend
+    ports:
+      - "8010:8010"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ..:/anchor-project
+    working_dir: /anchor-project
+    environment:
+      HOST: 0.0.0.0
+      PORT: 8010
+      WALLET_URL: http://core-wallet:8001
+      BITCOIN_RPC_URL: http://core-bitcoin:18443
+      BITCOIN_RPC_USER: anchor
+      BITCOIN_RPC_PASSWORD: anchor
+      DATABASE_URL: postgres://anchor:anchor@core-postgres:5432/anchor
+      RUST_LOG: dashboard_backend=info
+      COMPOSE_PROJECT_NAME: anchor
+    depends_on:
+      core-postgres:
+        condition: service_healthy
+      core-bitcoin:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8010/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    profiles:
+      - minimum
+      - default
+      - full
+      - anchor-dashboard
+
+  anchor-dashboard-frontend:
+    build:
+      context: ../dashboard/frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8010
+        NEXT_PUBLIC_TESTNET_URL: http://localhost:8002
+        NEXT_PUBLIC_BACKUP_URL: http://localhost:8003
+    container_name: anchor-dashboard-frontend
+    ports:
+      - "8000:8000"
+    depends_on:
+      anchor-dashboard-backend:
+        condition: service_healthy
+    networks:
+      - anchor-network
+    restart: unless-stopped
+    profiles:
+      - minimum
+      - default
+      - full
+      - anchor-dashboard
+
