@@ -3,6 +3,11 @@
 import * as React from "react";
 import { cn } from "../utils/cn";
 
+// ============================================================================
+// APPLE-INSPIRED HOW IT WORKS COMPONENT
+// Static cards with subtle hover effects - no entrance animations
+// ============================================================================
+
 export interface HowItWorksStep {
   /** Step number or label (e.g., "1", "2", "3") */
   step: string | number;
@@ -12,43 +17,43 @@ export interface HowItWorksStep {
   description: string;
 }
 
-// Accent color variants for step indicator
-const accentColors = {
-  emerald: {
-    text: "text-emerald-500",
-    bg: "bg-emerald-500/20",
-  },
-  orange: {
-    text: "text-orange-500",
-    bg: "bg-orange-500/20",
-  },
-  amber: {
-    text: "text-amber-500",
-    bg: "bg-amber-500/20",
-  },
-  purple: {
-    text: "text-purple-500",
-    bg: "bg-purple-500/20",
-  },
-  blue: {
-    text: "text-blue-500",
-    bg: "bg-blue-500/20",
-  },
-  red: {
-    text: "text-red-500",
-    bg: "bg-red-500/20",
-  },
-  green: {
-    text: "text-green-500",
-    bg: "bg-green-500/20",
-  },
-  cyan: {
-    text: "text-cyan-500",
-    bg: "bg-cyan-500/20",
-  },
+// Gradient definitions for step numbers
+const accentGradients = {
+  emerald: "bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-300",
+  orange: "bg-gradient-to-r from-orange-400 via-amber-400 to-yellow-400",
+  amber: "bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-300",
+  purple: "bg-gradient-to-r from-purple-400 via-violet-400 to-fuchsia-400",
+  blue: "bg-gradient-to-r from-blue-400 via-cyan-400 to-sky-400",
+  red: "bg-gradient-to-r from-red-400 via-rose-400 to-pink-400",
+  green: "bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400",
+  cyan: "bg-gradient-to-r from-cyan-400 via-sky-400 to-blue-400",
 } as const;
 
-export type HowItWorksAccentColor = keyof typeof accentColors;
+// Background tints for step indicator
+const accentBgTints = {
+  emerald: "from-emerald-500/20 to-emerald-600/10",
+  orange: "from-orange-500/20 to-orange-600/10",
+  amber: "from-amber-500/20 to-amber-600/10",
+  purple: "from-purple-500/20 to-purple-600/10",
+  blue: "from-blue-500/20 to-blue-600/10",
+  red: "from-red-500/20 to-red-600/10",
+  green: "from-green-500/20 to-green-600/10",
+  cyan: "from-cyan-500/20 to-cyan-600/10",
+} as const;
+
+// Ring colors for step indicator
+const accentRings = {
+  emerald: "ring-emerald-500/20",
+  orange: "ring-orange-500/20",
+  amber: "ring-amber-500/20",
+  purple: "ring-purple-500/20",
+  blue: "ring-blue-500/20",
+  red: "ring-red-500/20",
+  green: "ring-green-500/20",
+  cyan: "ring-cyan-500/20",
+} as const;
+
+export type HowItWorksAccentColor = keyof typeof accentGradients;
 
 export interface HowItWorksProps {
   /** Title for the section (e.g., "How It Works") */
@@ -68,8 +73,12 @@ export interface HowItWorksProps {
 }
 
 /**
- * HowItWorks - A section component displaying numbered steps.
- * Based on Anchor Proofs design pattern.
+ * HowItWorks - Clean section component displaying numbered steps.
+ * 
+ * Design philosophy:
+ * - No entrance animations (content is already settled)
+ * - Subtle hover effects only (200ms transitions)
+ * - Glass card effect without excessive glow
  *
  * @example
  * ```tsx
@@ -77,9 +86,9 @@ export interface HowItWorksProps {
  *   title="How It Works"
  *   accentColor="emerald"
  *   steps={[
- *     { step: "1", title: "Upload File", description: "Select any file from your device." },
- *     { step: "2", title: "Generate Hash", description: "A unique fingerprint is computed locally." },
- *     { step: "3", title: "Record on Bitcoin", description: "The hash is recorded on the blockchain." },
+ *     { step: "1", title: "Upload File", description: "Select any file." },
+ *     { step: "2", title: "Generate Hash", description: "A fingerprint is computed." },
+ *     { step: "3", title: "Record on Bitcoin", description: "Hash is recorded." },
  *   ]}
  * />
  * ```
@@ -91,7 +100,9 @@ export function HowItWorks({
   columns = { default: 1, md: 3 },
   className,
 }: HowItWorksProps) {
-  const colors = accentColors[accentColor];
+  const gradient = accentGradients[accentColor];
+  const bgTint = accentBgTints[accentColor];
+  const ring = accentRings[accentColor];
 
   const gridCols = cn(
     columns.default === 1 && "grid-cols-1",
@@ -108,26 +119,55 @@ export function HowItWorks({
   return (
     <div className={className}>
       {title && (
-        <h2 className="text-xl font-bold text-white mb-6 text-center">{title}</h2>
+        <h2 className="text-2xl font-bold text-white mb-8 text-center tracking-tight">
+          {title}
+        </h2>
       )}
       <div className={cn("grid gap-6", gridCols)}>
         {steps.map((item, index) => (
           <div
             key={index}
-            className="bg-slate-800/50 rounded-xl border border-slate-700 p-6 text-center"
+            className={cn(
+              // Glass card base
+              "bg-white/[0.03] backdrop-blur-sm rounded-2xl",
+              "border border-white/[0.05]",
+              "p-7 text-center",
+              // Subtle hover - just tint change, no translate
+              "transition-colors duration-200",
+              "hover:bg-white/[0.04]",
+              "hover:border-white/[0.08]"
+            )}
           >
+            {/* Step indicator with gradient number */}
             <div
               className={cn(
-                "w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4",
-                colors.bg
+                "w-14 h-14 rounded-2xl",
+                "bg-gradient-to-br",
+                bgTint,
+                "flex items-center justify-center mx-auto mb-5",
+                "ring-1",
+                ring
               )}
             >
-              <span className={cn("text-2xl font-bold", colors.text)}>
+              <span 
+                className={cn(
+                  "text-2xl font-bold bg-clip-text text-transparent",
+                  gradient
+                )}
+              >
                 {item.step}
               </span>
             </div>
-            <h3 className="text-lg font-medium text-white mb-2">{item.title}</h3>
-            <p className="text-slate-400 text-sm">{item.description}</p>
+            
+            {/* Title */}
+            <h3 className="text-lg font-semibold text-white mb-3 tracking-tight">
+              {item.title}
+            </h3>
+            
+            {/* Description */}
+            <p className="text-slate-400 text-sm leading-relaxed">
+              {item.description}
+            </p>
           </div>
         ))}
       </div>
@@ -149,17 +189,7 @@ export interface HowItWorksStepCardProps {
 }
 
 /**
- * HowItWorksStepCard - A single step card for the How It Works section.
- *
- * @example
- * ```tsx
- * <HowItWorksStepCard
- *   step="1"
- *   title="Upload File"
- *   description="Select any file from your device."
- *   accentColor="emerald"
- * />
- * ```
+ * HowItWorksStepCard - A single step card with subtle hover effects.
  */
 export function HowItWorksStepCard({
   step,
@@ -168,28 +198,54 @@ export function HowItWorksStepCard({
   accentColor = "emerald",
   className,
 }: HowItWorksStepCardProps) {
-  const colors = accentColors[accentColor];
+  const gradient = accentGradients[accentColor];
+  const bgTint = accentBgTints[accentColor];
+  const ring = accentRings[accentColor];
 
   return (
     <div
       className={cn(
-        "bg-slate-800/50 rounded-xl border border-slate-700 p-6 text-center",
+        // Glass card base
+        "bg-white/[0.03] backdrop-blur-sm rounded-2xl",
+        "border border-white/[0.05]",
+        "p-7 text-center",
+        // Subtle hover - just tint change
+        "transition-colors duration-200",
+        "hover:bg-white/[0.04]",
+        "hover:border-white/[0.08]",
         className
       )}
     >
+      {/* Step indicator */}
       <div
         className={cn(
-          "w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4",
-          colors.bg
+          "w-14 h-14 rounded-2xl",
+          "bg-gradient-to-br",
+          bgTint,
+          "flex items-center justify-center mx-auto mb-5",
+          "ring-1",
+          ring
         )}
       >
-        <span className={cn("text-2xl font-bold", colors.text)}>{step}</span>
+        <span 
+          className={cn(
+            "text-2xl font-bold bg-clip-text text-transparent",
+            gradient
+          )}
+        >
+          {step}
+        </span>
       </div>
-      <h3 className="text-lg font-medium text-white mb-2">{title}</h3>
-      <p className="text-slate-400 text-sm">{description}</p>
+      
+      <h3 className="text-lg font-semibold text-white mb-3 tracking-tight">
+        {title}
+      </h3>
+      
+      <p className="text-slate-400 text-sm leading-relaxed">
+        {description}
+      </p>
     </div>
   );
 }
 
 export default HowItWorks;
-

@@ -143,5 +143,191 @@
   .gradient-text {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-app-accent to-primary;
   }
+
+  /* ============================================================================
+   * HERO SECTION ANIMATIONS
+   * Only the hero section gets entrance animations - everything else is static
+   * Uses Apple's signature cubic-bezier(0.16, 1, 0.3, 1) easing
+   * ============================================================================ */
+  
+  /* Hero-specific fade-in-up animation - refined timing */
+  @keyframes hero-fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(16px); /* Reduced from 24px */
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Hero animation class - 0.6s with Apple easing */
+  .animate-hero-fade-in {
+    animation: hero-fade-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0;
+  }
+
+  /* Legacy fade-in-up - kept for backwards compatibility but rarely used */
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in-up {
+    animation: fade-in-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0;
+  }
+
+  /* Simple fade - for subtle reveals */
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.4s ease-out forwards;
+    opacity: 0;
+  }
+
+  /* ============================================================================
+   * APPLE-INSPIRED GLASS COMPONENTS
+   * Glassmorphism utilities for premium UI effects
+   * ============================================================================ */
+
+  /* Glass card base - reusable transparent card with blur */
+  .glass-card {
+    @apply bg-white/[0.03] backdrop-blur-sm rounded-2xl border border-white/[0.05]
+           transition-colors duration-200;
+  }
+
+  .glass-card:hover {
+    @apply bg-white/[0.04] border-white/[0.08];
+  }
+
+  /* Glass card with subtle elevation on hover - use sparingly */
+  .glass-card-elevated {
+    @apply glass-card;
+  }
+
+  .glass-card-elevated:hover {
+    @apply bg-white/[0.05] border-white/[0.08];
+  }
+
+  /* Glass surface - lighter glass effect for nested elements */
+  .glass-surface {
+    @apply bg-white/[0.02] backdrop-blur-md rounded-xl border border-white/[0.03];
+  }
+
+  /* ============================================================================
+   * SHIMMER LOADING ANIMATION
+   * Premium loading effect for skeleton states
+   * ============================================================================ */
+
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  .animate-shimmer {
+    animation: shimmer 1.5s infinite;
+    background: linear-gradient(
+      90deg, 
+      transparent, 
+      rgba(255, 255, 255, 0.04), 
+      transparent
+    );
+  }
+
+  /* Shimmer skeleton - combines glass effect with shimmer */
+  .skeleton-shimmer {
+    @apply bg-white/[0.03] rounded-lg relative overflow-hidden;
+  }
+
+  .skeleton-shimmer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    animation: shimmer 1.5s infinite;
+    background: linear-gradient(
+      90deg, 
+      transparent, 
+      rgba(255, 255, 255, 0.05), 
+      transparent
+    );
+  }
+
+  /* ============================================================================
+   * GRADIENT TEXT UTILITIES
+   * Apple-style gradient text effects
+   * ============================================================================ */
+
+  .text-gradient-emerald {
+    @apply bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-300
+           bg-clip-text text-transparent;
+  }
+
+  .text-gradient-orange {
+    @apply bg-gradient-to-r from-orange-400 via-amber-400 to-yellow-400
+           bg-clip-text text-transparent;
+  }
+
+  .text-gradient-purple {
+    @apply bg-gradient-to-r from-purple-400 via-violet-400 to-fuchsia-400
+           bg-clip-text text-transparent;
+  }
+
+  .text-gradient-blue {
+    @apply bg-gradient-to-r from-blue-400 via-cyan-400 to-sky-400
+           bg-clip-text text-transparent;
+  }
+
+  .text-gradient-amber {
+    @apply bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-300
+           bg-clip-text text-transparent;
+  }
+
+  /* ============================================================================
+   * HOVER EFFECTS
+   * Subtle, fast transitions - 200ms max, no vertical movement
+   * ============================================================================ */
+
+  /* Subtle tint change on hover - preferred for most cards */
+  .hover-tint {
+    @apply transition-colors duration-200;
+  }
+
+  .hover-tint:hover {
+    @apply bg-white/[0.04];
+  }
+
+  /* Subtle scale on hover - use sparingly */
+  .hover-scale {
+    @apply transition-transform duration-200 ease-out;
+  }
+
+  .hover-scale:hover {
+    @apply scale-[1.01];
+  }
+
+  /* ============================================================================
+   * FOCUS STATES
+   * Accessible focus indicators with Apple styling
+   * ============================================================================ */
+
+  .focus-ring {
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-white/20
+           focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900;
+  }
 }
 

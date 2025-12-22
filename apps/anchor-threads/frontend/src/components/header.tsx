@@ -9,7 +9,7 @@ import {
   Container,
   Button,
 } from "@AnchorProtocol/ui";
-import { Anchor, Home, MessageSquare, User, PenLine, BookOpen } from "lucide-react";
+import { Home, MessageSquare, User, PenLine, BookOpen } from "lucide-react";
 
 const DOCS_URL = "http://localhost:3900/apps/threads";
 
@@ -20,18 +20,19 @@ export function Header() {
         <nav className="flex items-center justify-between h-16">
           <AppLogo
             appName="Threads"
-            appIcon={Anchor}
-            accentColor="orange"
+            appIcon={MessageSquare}
+            accentColor="cyan"
+            subtitle="Threaded Messages on Bitcoin"
           />
 
           <NavGroup gap="md">
-            <NavLink href="/" icon={Home} accentColor="orange">
+            <NavLink href="/" icon={Home} accentColor="cyan">
               Home
             </NavLink>
-            <NavLink href="/threads" icon={MessageSquare} accentColor="orange">
+            <NavLink href="/threads" icon={MessageSquare} accentColor="cyan">
               Threads
             </NavLink>
-            <NavLink href="/my-threads" icon={User} accentColor="orange">
+            <NavLink href="/my-threads" icon={User} accentColor="cyan">
               My Threads
             </NavLink>
             <NavLink href={DOCS_URL} icon={BookOpen} external>

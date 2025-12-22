@@ -115,7 +115,7 @@ export function AppLogo({
       </div>
       <div className="flex flex-col">
         <span className={cn("font-bold", sizeStyles.text)}>
-          Anchor<span className={textColor}>{appName}</span>
+          Anchor<span className={textColor}> {appName}</span>
         </span>
         {subtitle && (
           <span className="text-xs text-muted-foreground">{subtitle}</span>

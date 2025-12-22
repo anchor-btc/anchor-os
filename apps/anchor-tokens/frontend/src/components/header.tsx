@@ -22,6 +22,7 @@ export function Header() {
             appName="Tokens"
             appIcon={Coins}
             accentColor="amber"
+            subtitle="UTXO-based Tokens on Bitcoin"
           />
 
           <div className="flex-1" />

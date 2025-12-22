@@ -22,6 +22,7 @@ export function Header() {
             appName="Domains"
             appIcon={Globe}
             accentColor="orange"
+            subtitle="Decentralized DNS on Bitcoin"
           />
 
           <div className="flex-1" />

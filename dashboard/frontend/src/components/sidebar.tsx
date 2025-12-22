@@ -63,6 +63,9 @@ import {
   Pencil,
   Check,
   RotateCw,
+  Coins,
+  Eye,
+  Ticket,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apps } from "@/lib/apps";
@@ -147,6 +150,9 @@ const iconMap: Record<string, React.ElementType> = {
   Layers,
   BookOpen,
   Activity,
+  Coins,
+  Eye,
+  Ticket,
 };
 
 // Default expanded state - all expanded by default

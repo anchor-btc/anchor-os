@@ -4,22 +4,35 @@ import * as React from "react";
 import { useState, useEffect } from "react";
 import { cn } from "../../utils/cn";
 
+// ============================================================================
+// APPLE-INSPIRED GLASS HEADER VARIANTS
+// ============================================================================
+
 const headerVariants = {
+  // Premium glass effect - the default Apple-style
+  glass: {
+    base: "bg-white/[0.02] backdrop-blur-2xl border-white/[0.05] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]",
+    scrolled: "bg-slate-900/80 backdrop-blur-2xl border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.05)]",
+  },
+  // Transparent until scroll
   transparent: {
     base: "bg-transparent border-transparent",
-    scrolled: "bg-background/95 backdrop-blur-md border-border shadow-sm",
+    scrolled: "bg-slate-900/90 backdrop-blur-2xl border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.3)]",
   },
+  // Always visible solid background
   solid: {
-    base: "bg-background border-border",
-    scrolled: "bg-background border-border shadow-sm",
+    base: "bg-slate-900 border-slate-800",
+    scrolled: "bg-slate-900 border-slate-700 shadow-[0_4px_16px_rgba(0,0,0,0.2)]",
   },
+  // Semi-transparent blur (legacy)
   blur: {
-    base: "bg-background/50 backdrop-blur-sm border-border/50",
-    scrolled: "bg-background/95 backdrop-blur-md border-border shadow-sm",
+    base: "bg-slate-900/50 backdrop-blur-xl border-white/[0.05]",
+    scrolled: "bg-slate-900/90 backdrop-blur-2xl border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.3)]",
   },
+  // Dark theme variant (legacy)
   dark: {
-    base: "bg-slate-900/50 backdrop-blur-sm border-slate-700/50",
-    scrolled: "bg-slate-900/95 backdrop-blur-md border-slate-700 shadow-sm",
+    base: "bg-slate-900/50 backdrop-blur-xl border-slate-700/50",
+    scrolled: "bg-slate-900/95 backdrop-blur-2xl border-slate-700 shadow-[0_4px_16px_rgba(0,0,0,0.2)]",
   },
 } as const;
 
@@ -32,10 +45,11 @@ export interface AppHeaderProps {
   children: React.ReactNode;
   /**
    * Visual variant of the header
+   * - glass: Premium Apple-style glass effect (default)
    * - transparent: Invisible until scroll
-   * - solid: Always visible with background
-   * - blur: Semi-transparent with blur effect
-   * - dark: Dark theme variant
+   * - solid: Always visible with solid background
+   * - blur: Semi-transparent with blur (legacy)
+   * - dark: Dark theme variant (legacy)
    */
   variant?: HeaderVariant;
   /**
@@ -53,12 +67,17 @@ export interface AppHeaderProps {
 }
 
 /**
- * AppHeader - Standardized header wrapper with scroll detection.
- * Handles sticky positioning, background transitions, and consistent styling.
+ * AppHeader - Apple-inspired floating glass navigation header.
+ * 
+ * Features:
+ * - Premium glassmorphism with backdrop blur
+ * - Smooth scroll-triggered transitions
+ * - Subtle inner glow and shadow effects
+ * - Multiple visual variants
  *
  * @example
  * ```tsx
- * <AppHeader variant="blur">
+ * <AppHeader variant="glass">
  *   <Container>
  *     <nav className="flex items-center justify-between h-16">
  *       <AppLogo appName="Threads" appIcon={Anchor} accentColor="orange" />
@@ -70,7 +89,7 @@ export interface AppHeaderProps {
  */
 export function AppHeader({
   children,
-  variant = "blur",
+  variant = "glass",
   sticky = true,
   disableScrollEffect = false,
   className,
@@ -97,8 +116,13 @@ export function AppHeader({
   return (
     <header
       className={cn(
-        "transition-all duration-300 border-b",
+        // Base styles
+        "border-b",
+        // Smooth Apple-style transition
+        "transition-all duration-500 ease-out",
+        // Sticky positioning
         sticky && "sticky top-0 z-50",
+        // Current variant styles
         currentStyles,
         className
       )}

@@ -94,8 +94,8 @@ export default function Home() {
       icon: MessageSquare,
       value: stats?.total_messages ?? 0,
       label: "Messages",
-      color: "text-orange-500",
-      bgColor: "bg-orange-500/20",
+      color: "text-cyan-500",
+      bgColor: "bg-cyan-500/20",
     },
     {
       icon: MessagesSquare,
@@ -145,7 +145,7 @@ export default function Home() {
         title="Explore Threads on Bitcoin"
         accentWord="Bitcoin"
         subtitle="Discover and create immutable, threaded messages anchored to the Bitcoin blockchain."
-        accentColor="orange"
+        accentColor="cyan"
         actions={[
           { href: "/compose", label: "Create Thread", icon: PenLine, variant: "primary" },
           { href: "/threads", label: "Browse Threads", icon: Search, variant: "secondary" },
@@ -156,7 +156,7 @@ export default function Home() {
       <HowItWorks
         title="How It Works"
         steps={howItWorksSteps}
-        accentColor="orange"
+        accentColor="cyan"
         columns={{ default: 1, md: 3 }}
       />
 

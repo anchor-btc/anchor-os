@@ -22,6 +22,7 @@ export function Header() {
             appName="Proofs"
             appIcon={FileCheck}
             accentColor="emerald"
+            subtitle="Proof of Existence on Bitcoin"
           />
 
           <div className="flex-1" />
