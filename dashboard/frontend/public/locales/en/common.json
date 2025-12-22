@@ -43,6 +43,7 @@
     "confirmRestart": "Are you sure you want to restart all services? This may take a few minutes.",
     "editOrder": "Edit Order",
     "done": "Done",
+    "cancel": "Cancel",
     "resetOrder": "Reset Order"
   },
   "greetings": {

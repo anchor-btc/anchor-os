@@ -206,7 +206,9 @@ export function Sidebar() {
     getSortedItems,
     setItemOrder,
     isEditMode,
-    toggleEditMode,
+    startEdit,
+    confirmEdit,
+    cancelEdit,
     resetOrder,
     isLoaded: isOrderLoaded,
   } = useSidebarOrder();
@@ -816,17 +818,25 @@ export function Sidebar() {
         <div className="border-t border-border px-4 py-3 shrink-0 bg-muted/30">
           <div className="flex items-center justify-between text-xs">
             {isEditMode ? (
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={toggleEditMode}
-                  className="flex items-center gap-1.5 px-2 py-1 bg-primary text-primary-foreground rounded text-[10px] font-medium hover:bg-primary/90 transition-colors"
-                >
-                  <Check className="w-3 h-3" />
-                  {t("sidebar.done", "Done")}
-                </button>
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={confirmEdit}
+                    className="flex items-center gap-1.5 px-2 py-1 bg-primary text-primary-foreground rounded text-[10px] font-medium hover:bg-primary/90 transition-colors"
+                  >
+                    <Check className="w-3 h-3" />
+                    {t("sidebar.done", "Done")}
+                  </button>
+                  <button
+                    onClick={cancelEdit}
+                    className="flex items-center gap-1.5 px-2 py-1 bg-muted text-muted-foreground rounded text-[10px] font-medium hover:bg-muted/80 transition-colors"
+                  >
+                    {t("sidebar.cancel", "Cancel")}
+                  </button>
+                </div>
                 <button
                   onClick={resetOrder}
-                  className="flex items-center gap-1.5 px-2 py-1 bg-muted text-muted-foreground rounded text-[10px] font-medium hover:bg-muted/80 transition-colors"
+                  className="flex items-center gap-1.5 px-2 py-1 text-muted-foreground rounded text-[10px] font-medium hover:text-foreground transition-colors"
                   title={t("sidebar.resetOrder", "Reset Order")}
                 >
                   <RotateCw className="w-3 h-3" />
@@ -837,7 +847,7 @@ export function Sidebar() {
                 <SidebarClock />
                 <div className="flex items-center gap-3">
                   <button
-                    onClick={toggleEditMode}
+                    onClick={startEdit}
                     className="p-1 text-muted-foreground hover:text-foreground transition-colors rounded hover:bg-muted"
                     title={t("sidebar.editOrder", "Edit Order")}
                   >

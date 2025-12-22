@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 // Category keys in default order
 export const DEFAULT_CATEGORY_ORDER = [
@@ -39,6 +39,9 @@ export function useSidebarOrder() {
   const [state, setState] = useState<SidebarOrderState>(getDefaultState);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  
+  // Snapshot of state before entering edit mode (for cancel functionality)
+  const snapshotRef = useRef<SidebarOrderState | null>(null);
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -63,53 +66,14 @@ export function useSidebarOrder() {
     setIsLoaded(true);
   }, []);
 
-  // Save to localStorage whenever state changes
-  const saveState = useCallback((newState: SidebarOrderState) => {
-    setState(newState);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newState));
-  }, []);
-
-  // Reorder categories
-  const reorderCategories = useCallback(
-    (fromIndex: number, toIndex: number) => {
-      setState((prev) => {
-        const newOrder = [...prev.categoryOrder];
-        const [removed] = newOrder.splice(fromIndex, 1);
-        newOrder.splice(toIndex, 0, removed);
-        const newState = { ...prev, categoryOrder: newOrder };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(newState));
-        return newState;
-      });
-    },
-    []
-  );
-
   // Set category order directly (for dnd-kit)
   const setCategoryOrder = useCallback((newOrder: CategoryKey[]) => {
     setState((prev) => {
       const newState = { ...prev, categoryOrder: newOrder };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newState));
+      // Don't save to localStorage during edit - only on confirm
       return newState;
     });
   }, []);
-
-  // Reorder items within a category
-  const reorderItems = useCallback(
-    (category: CategoryKey, fromIndex: number, toIndex: number) => {
-      setState((prev) => {
-        const items = [...(prev.itemOrder[category] || [])];
-        const [removed] = items.splice(fromIndex, 1);
-        items.splice(toIndex, 0, removed);
-        const newState = {
-          ...prev,
-          itemOrder: { ...prev.itemOrder, [category]: items },
-        };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(newState));
-        return newState;
-      });
-    },
-    []
-  );
 
   // Set item order for a category directly (for dnd-kit)
   const setItemOrder = useCallback(
@@ -119,7 +83,7 @@ export function useSidebarOrder() {
           ...prev,
           itemOrder: { ...prev.itemOrder, [category]: newOrder },
         };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(newState));
+        // Don't save to localStorage during edit - only on confirm
         return newState;
       });
     },
@@ -154,26 +118,55 @@ export function useSidebarOrder() {
   const resetOrder = useCallback(() => {
     const defaultState = getDefaultState();
     setState(defaultState);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultState));
+    // If in edit mode, don't save yet - will save on confirm
+    if (!isEditMode) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultState));
+    }
+  }, [isEditMode]);
+
+  // Enter edit mode - save current state as snapshot
+  const startEdit = useCallback(() => {
+    snapshotRef.current = JSON.parse(JSON.stringify(state));
+    setIsEditMode(true);
+  }, [state]);
+
+  // Confirm changes - save to localStorage and exit edit mode
+  const confirmEdit = useCallback(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    snapshotRef.current = null;
+    setIsEditMode(false);
+  }, [state]);
+
+  // Cancel changes - restore snapshot and exit edit mode
+  const cancelEdit = useCallback(() => {
+    if (snapshotRef.current) {
+      setState(snapshotRef.current);
+    }
+    snapshotRef.current = null;
+    setIsEditMode(false);
   }, []);
 
-  // Toggle edit mode
+  // Toggle edit mode (legacy - prefer startEdit/confirmEdit/cancelEdit)
   const toggleEditMode = useCallback(() => {
-    setIsEditMode((prev) => !prev);
-  }, []);
+    if (isEditMode) {
+      confirmEdit();
+    } else {
+      startEdit();
+    }
+  }, [isEditMode, confirmEdit, startEdit]);
 
   return {
     categoryOrder: state.categoryOrder,
     itemOrder: state.itemOrder,
     isEditMode,
     isLoaded,
-    reorderCategories,
     setCategoryOrder,
-    reorderItems,
     setItemOrder,
     getSortedItems,
     resetOrder,
     toggleEditMode,
+    startEdit,
+    confirmEdit,
+    cancelEdit,
   };
 }
-

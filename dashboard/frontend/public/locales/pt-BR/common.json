@@ -43,6 +43,7 @@
     "confirmRestart": "Tem certeza que deseja reiniciar todos os serviços? Isso pode levar alguns minutos.",
     "editOrder": "Editar Ordem",
     "done": "Concluído",
+    "cancel": "Cancelar",
     "resetOrder": "Resetar Ordem"
   },
   "greetings": {
