@@ -5,12 +5,19 @@
 //! - REST API for querying markers and map data
 //! - Blockchain indexer for processing geo marker transactions
 //! - Full-text search and geospatial queries
+//!
+//! ## Ownership Rule
+//!
+//! The first marker at any exact coordinate "owns" that location.
+//! Subsequent markers at the same coordinates become replies.
 
 mod config;
 mod db;
+mod error;
 mod handlers;
 mod indexer;
 mod models;
+mod services;
 
 use std::sync::Arc;
 
@@ -41,17 +48,17 @@ async fn main() -> anyhow::Result<()> {
 
     // Load configuration
     let config = Config::from_env();
-    info!("Starting Anchor Places Backend on {}:{}", config.host, config.port);
+    info!(
+        "Starting Anchor Places Backend on {}:{}",
+        config.host, config.port
+    );
 
     // Connect to database
     let db = Database::connect(&config.database_url).await?;
     info!("Connected to database");
 
-    // Create shared state
-    let state = Arc::new(AppState {
-        db: db.clone(),
-        wallet_url: config.wallet_url.clone(),
-    });
+    // Create shared state with wallet client
+    let state = AppState::new(db.clone(), config.wallet_url.clone());
 
     // Start indexer in background
     let indexer = Arc::new(MarkerIndexer::new(db.clone(), config.clone())?);
@@ -74,6 +81,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/markers", post(handlers::create_marker))
         .route("/markers/bounds", get(handlers::get_markers_bounds))
         .route("/markers/search", get(handlers::search_markers))
+        .route("/markers/my", get(handlers::get_my_markers))
         .route("/markers/:txid/:vout", get(handlers::get_marker))
         .route("/markers/:txid/:vout/reply", post(handlers::create_reply))
         .layer(
@@ -97,4 +105,3 @@ async fn main() -> anyhow::Result<()> {
 
     Ok(())
 }
-

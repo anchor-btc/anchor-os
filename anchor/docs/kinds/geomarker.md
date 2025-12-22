@@ -1,6 +1,6 @@
 # Kind 5: GeoMarker
 
-The **GeoMarker** kind is used for embedding geographic coordinates and location-based messages on Bitcoin. It powers applications like Anchor Map.
+The **GeoMarker** kind is used for embedding geographic coordinates and location-based messages on Bitcoin. It powers applications like [Anchor Places](/apps/places).
 
 ## Overview
 
@@ -42,11 +42,11 @@ interface GeoMarkerMessage extends AnchorMessage {
 | ID | Category | Description |
 |----|----------|-------------|
 | 0 | General | Generic location marker |
-| 1 | Bitcoin Accepted | Merchant accepting Bitcoin |
-| 2 | ATM | Bitcoin ATM location |
-| 3 | Meetup | Community gathering point |
-| 4 | Landmark | Point of interest |
-| 5 | Warning | Hazard or caution |
+| 1 | Tourism | Tourist attractions and points of interest |
+| 2 | Commerce | Businesses and merchants |
+| 3 | Event | Events and gatherings |
+| 4 | Warning | Hazard or caution areas |
+| 5 | Historic | Historical landmarks |
 | 6-255 | Custom | Application-defined |
 
 ## Encoding Example
@@ -318,7 +318,7 @@ for (const loc of locations) {
 ## See Also
 
 - [Text (Kind 1)](/kinds/text) - Add detailed descriptions
-- [Anchor Map](https://map.anchor.dev) - Live map application
+- [Anchor Places](/apps/places) - Location markers application
 - [Carrier Types](/protocol/carriers) - Embedding options
 
 

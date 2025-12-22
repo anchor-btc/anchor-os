@@ -102,4 +102,4 @@ The Anchor Protocol powers several applications. See [all applications](/apps/) 
 - **[Anchor Tokens](https://tokens.anchor.dev)** - Fungible tokens on Bitcoin
 - **[Anchor Domains](https://domains.anchor.dev)** - .btc, .sat, .anchor, .anc, .bit domain registration
 - **[Anchor Proofs](https://proofs.anchor.dev)** - Document timestamping
-- **[Anchor Map](https://map.anchor.dev)** - Geographic markers
+- **[Anchor Places](/apps/places)** - Geographic markers

@@ -4,7 +4,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "AnchorMap - Pin Messages on Bitcoin",
+  title: "Anchor Places - Pin Messages on Bitcoin",
   description: "Pin messages on a world map, stored forever on the Bitcoin blockchain using the Anchor Protocol.",
   icons: {
     icon: "/favicon.ico",

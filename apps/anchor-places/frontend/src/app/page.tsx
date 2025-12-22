@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import {
   Header,
@@ -9,7 +10,7 @@ import {
   CategoryFilter,
   SearchBox,
 } from "@/components";
-import type { Marker } from "@/lib/api";
+import { fetchMarkerDetail, type Marker } from "@/lib/api";
 import type { PendingMarker } from "@/components/map";
 
 // Dynamically import map to avoid SSR issues with Leaflet
@@ -25,7 +26,10 @@ const MapComponent = dynamic(
   }
 );
 
-export default function Home() {
+function HomeContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
   // State
   const [categoryFilter, setCategoryFilter] = useState<number | null>(null);
   const [selectedMarker, setSelectedMarker] = useState<Marker | null>(null);
@@ -35,6 +39,27 @@ export default function Home() {
     lat: number;
     lng: number;
   } | null>(null);
+
+  // Check for marker parameter on load
+  useEffect(() => {
+    const markerTxid = searchParams.get("marker");
+    const markerVout = searchParams.get("vout");
+
+    if (markerTxid) {
+      const vout = markerVout ? parseInt(markerVout, 10) : 0;
+      // Fetch marker details and open popup
+      fetchMarkerDetail(markerTxid, vout)
+        .then((detail) => {
+          setSelectedMarker(detail.marker);
+          setFlyToMarker(detail.marker);
+          // Clear the URL parameters
+          router.replace("/", { scroll: false });
+        })
+        .catch((err) => {
+          console.error("Failed to load marker:", err);
+        });
+    }
+  }, [searchParams, router]);
 
   // Handlers
   const handleMarkerClick = useCallback((marker: Marker) => {
@@ -117,7 +142,7 @@ export default function Home() {
 
       {/* Footer */}
       <div className="h-8 bg-secondary/80 border-t border-map-border flex items-center px-4 text-xs text-secondary-foreground z-50">
-        <span>AnchorMap v0.1.0</span>
+        <span>Anchor Places v0.1.0</span>
         <span className="mx-2">•</span>
         <span>Powered by Bitcoin & Anchor Protocol</span>
         <span className="ml-auto">
@@ -132,6 +157,20 @@ export default function Home() {
         </span>
       </div>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex flex-col h-screen bg-background items-center justify-center">
+          <div className="text-secondary-foreground">Loading...</div>
+        </div>
+      }
+    >
+      <HomeContent />
+    </Suspense>
   );
 }
 

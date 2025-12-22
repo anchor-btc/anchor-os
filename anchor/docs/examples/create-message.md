@@ -215,7 +215,7 @@ async function createProof(file: File) {
 
 ## Geographic Marker
 
-Add a location to Anchor Map:
+Add a location to Anchor Places:
 
 ```typescript
 import { encodeGeoMarker } from '@AnchorProtocol/anchor-sdk/geo'
@@ -598,7 +598,7 @@ async function createProof(file: File) {
 
 ## Geographic Marker
 
-Add a location to Anchor Map:
+Add a location to Anchor Places:
 
 ```typescript
 import { encodeGeoMarker } from '@AnchorProtocol/anchor-sdk/geo'
@@ -981,7 +981,7 @@ async function createProof(file: File) {
 
 ## Geographic Marker
 
-Add a location to Anchor Map:
+Add a location to Anchor Places:
 
 ```typescript
 import { encodeGeoMarker } from '@AnchorProtocol/anchor-sdk/geo'
@@ -1364,7 +1364,7 @@ async function createProof(file: File) {
 
 ## Geographic Marker
 
-Add a location to Anchor Map:
+Add a location to Anchor Places:
 
 ```typescript
 import { encodeGeoMarker } from '@AnchorProtocol/anchor-sdk/geo'

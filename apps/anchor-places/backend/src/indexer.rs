@@ -3,9 +3,16 @@
 //! Scans the Bitcoin blockchain for Anchor protocol transactions
 //! that contain geo marker data (kind = Custom(5)) and text replies.
 //! Supports both OP_RETURN and WitnessData carriers.
+//!
+//! ## Ownership Rule
+//!
+//! The first marker at any exact coordinate "owns" that location.
+//! Subsequent markers at the same coordinates are automatically
+//! converted to replies to the first marker.
 
 use anyhow::{anyhow, Result};
 use bitcoin::hashes::Hash;
+use bitcoin::{Address, Network};
 use bitcoincore_rpc::{Auth, Client, RpcApi};
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -14,10 +21,16 @@ use tracing::{debug, error, info, warn};
 
 use anchor_core::carrier::CarrierSelector;
 use anchor_core::AnchorKind;
+use anchor_specs::geomarker::GeoMarkerSpec;
+use anchor_specs::KindSpec;
 
 use crate::config::Config;
 use crate::db::Database;
-use crate::models::GeoMarkerPayload;
+
+/// Sanitize a string for PostgreSQL by removing null bytes
+fn sanitize_for_postgres(s: &str) -> String {
+    s.replace('\0', "")
+}
 
 /// Anchor Places indexer that scans the blockchain for marker transactions
 pub struct MarkerIndexer {
@@ -138,6 +151,44 @@ impl MarkerIndexer {
         Ok(())
     }
 
+    /// Extract creator address from transaction
+    /// First tries to get from a change output, then from the input witness
+    fn extract_creator_address(&self, tx: &bitcoin::Transaction) -> Option<String> {
+        // First, look for a change output (non-OP_RETURN output)
+        for output in tx.output.iter().rev() {
+            // Skip OP_RETURN outputs
+            if output.script_pubkey.is_op_return() {
+                continue;
+            }
+            // Try to extract address from the script
+            if let Ok(address) = Address::from_script(&output.script_pubkey, Network::Regtest) {
+                let addr_str = address.to_string();
+                // Prefer SegWit (bcrt1q) or Taproot (bcrt1p) addresses
+                if addr_str.starts_with("bcrt1") || addr_str.starts_with("bc1") {
+                    return Some(addr_str);
+                }
+            }
+        }
+        
+        // Fallback: try to derive address from the first input's witness (P2WPKH)
+        // For P2WPKH, the witness has [signature, pubkey]
+        if let Some(input) = tx.input.first() {
+            if input.witness.len() >= 2 {
+                // The second element is the public key
+                let pubkey_bytes = &input.witness[1];
+                if pubkey_bytes.len() == 33 {
+                    // Compressed public key - derive P2WPKH address
+                    if let Ok(pubkey) = bitcoin::CompressedPublicKey::from_slice(pubkey_bytes) {
+                        let address = Address::p2wpkh(&pubkey, Network::Regtest);
+                        return Some(address.to_string());
+                    }
+                }
+            }
+        }
+        
+        None
+    }
+
     /// Process a single transaction for Anchor messages
     async fn process_transaction(
         &self,
@@ -151,6 +202,9 @@ impl MarkerIndexer {
         let mut markers = 0;
         let mut replies = 0;
 
+        // Extract creator address once for this transaction
+        let creator_address = self.extract_creator_address(tx);
+
         for detection in detected {
             let txid = tx.compute_txid();
             let txid_bytes = txid.to_byte_array();
@@ -158,28 +212,65 @@ impl MarkerIndexer {
             match detection.message.kind {
                 // Custom(5) = Geo Marker
                 AnchorKind::Custom(5) => {
-                    if let Some(payload) = GeoMarkerPayload::from_bytes(&detection.message.body) {
-                        debug!(
-                            "Found geo marker at ({}, {}): {}",
-                            payload.latitude, payload.longitude, payload.message
-                        );
+                    // Parse using anchor-specs GeoMarkerSpec
+                    match GeoMarkerSpec::from_bytes(&detection.message.body) {
+                        Ok(spec) => {
+                            debug!(
+                                "Found geo marker at ({}, {}): {} (creator: {:?})",
+                                spec.latitude, spec.longitude, spec.message, creator_address
+                            );
 
-                        self.db
-                            .insert_marker(
-                                &txid_bytes,
-                                detection.vout as i32,
-                                payload.category as i16,
-                                payload.latitude,
-                                payload.longitude,
-                                &payload.message,
-                                block_hash,
-                                block_height,
-                            )
-                            .await?;
+                            // Sanitize message for PostgreSQL (remove null bytes)
+                            let clean_message = sanitize_for_postgres(&spec.message);
 
-                        markers += 1;
-                    } else {
-                        warn!("Failed to parse geo marker payload");
+                            // Check if a marker already exists at this exact coordinate
+                            // If so, this becomes a reply (first-pin-owns rule)
+                            if let Some((parent_txid, parent_vout)) = self
+                                .db
+                                .find_marker_at_coordinates(spec.latitude, spec.longitude)
+                                .await?
+                            {
+                                // Location already has a pin - create as reply
+                                info!(
+                                    "Coordinate ({}, {}) already has a pin, creating as reply",
+                                    spec.latitude, spec.longitude
+                                );
+
+                                self.db
+                                    .insert_reply(
+                                        &txid_bytes,
+                                        detection.vout as i32,
+                                        &parent_txid,
+                                        parent_vout,
+                                        &clean_message,
+                                        block_hash,
+                                        block_height,
+                                    )
+                                    .await?;
+
+                                replies += 1;
+                            } else {
+                                // New location - create marker with creator address
+                                self.db
+                                    .insert_marker(
+                                        &txid_bytes,
+                                        detection.vout as i32,
+                                        spec.category as i16,
+                                        spec.latitude,
+                                        spec.longitude,
+                                        &clean_message,
+                                        creator_address.as_deref(),
+                                        block_hash,
+                                        block_height,
+                                    )
+                                    .await?;
+
+                                markers += 1;
+                            }
+                        }
+                        Err(e) => {
+                            warn!("Failed to parse geo marker payload: {}", e);
+                        }
                     }
                 }
 
@@ -188,20 +279,25 @@ impl MarkerIndexer {
                     if !detection.message.anchors.is_empty() {
                         // This is a reply - check if parent is a marker
                         let parent_anchor = &detection.message.anchors[0];
-                        
-                        info!(
+
+                        debug!(
                             "Found text message with anchor: prefix={}, vout={}",
                             hex::encode(&parent_anchor.txid_prefix),
                             parent_anchor.vout
                         );
-                        
+
                         // Try to find the parent marker
-                        // Note: We use the txid_prefix to search, which may have multiple matches
-                        // For simplicity, we'll try to match against known markers
-                        match self.db.resolve_anchor_to_marker(&parent_anchor.txid_prefix, parent_anchor.vout as i32).await? {
+                        match self
+                            .db
+                            .resolve_anchor_to_marker(&parent_anchor.txid_prefix, parent_anchor.vout as i32)
+                            .await?
+                        {
                             Some(parent_txid) => {
-                                let message = String::from_utf8_lossy(&detection.message.body).to_string();
-                                
+                                let raw_message =
+                                    String::from_utf8_lossy(&detection.message.body).to_string();
+                                // Sanitize for PostgreSQL (remove null bytes and replacement chars)
+                                let message = sanitize_for_postgres(&raw_message);
+
                                 info!("Found reply to marker: {}", message);
 
                                 self.db
@@ -219,7 +315,7 @@ impl MarkerIndexer {
                                 replies += 1;
                             }
                             None => {
-                                info!(
+                                debug!(
                                     "Could not resolve anchor to marker: prefix={}, vout={}",
                                     hex::encode(&parent_anchor.txid_prefix),
                                     parent_anchor.vout
@@ -242,17 +338,11 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_geo_marker_parsing() {
-        // Create a test payload
-        let payload = GeoMarkerPayload {
-            category: 1,
-            latitude: 48.8566,
-            longitude: 2.3522,
-            message: "Eiffel Tower".to_string(),
-        };
-
-        let bytes = payload.to_bytes();
-        let parsed = GeoMarkerPayload::from_bytes(&bytes).unwrap();
+    fn test_geo_marker_parsing_with_spec() {
+        // Create a test payload using GeoMarkerSpec
+        let spec = GeoMarkerSpec::new(1, 48.8566, 2.3522, "Eiffel Tower");
+        let bytes = spec.to_bytes();
+        let parsed = GeoMarkerSpec::from_bytes(&bytes).unwrap();
 
         assert_eq!(parsed.category, 1);
         assert!((parsed.latitude - 48.8566).abs() < 0.001);
@@ -260,4 +350,3 @@ mod tests {
         assert_eq!(parsed.message, "Eiffel Tower");
     }
 }
-

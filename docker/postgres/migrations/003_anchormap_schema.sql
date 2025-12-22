@@ -43,11 +43,21 @@ CREATE TABLE IF NOT EXISTS markers (
     latitude REAL NOT NULL CHECK (latitude >= -90 AND latitude <= 90),
     longitude REAL NOT NULL CHECK (longitude >= -180 AND longitude <= 180),
     message TEXT NOT NULL,
+    creator_address TEXT,  -- Bitcoin address that created this marker
     block_hash BYTEA,
     block_height INTEGER,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE(txid, vout)
 );
+
+-- Add creator_address column if it doesn't exist (for existing tables)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'markers' AND column_name = 'creator_address') THEN
+        ALTER TABLE markers ADD COLUMN creator_address TEXT;
+    END IF;
+END $$;
 
 -- Marker replies (using Anchor threading)
 CREATE TABLE IF NOT EXISTS marker_replies (
@@ -87,6 +97,9 @@ CREATE INDEX IF NOT EXISTS idx_markers_message_search ON markers
 CREATE INDEX IF NOT EXISTS idx_replies_parent ON marker_replies(parent_txid, parent_vout);
 CREATE INDEX IF NOT EXISTS idx_replies_created ON marker_replies(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_replies_txid ON marker_replies(txid);
+
+-- Creator address index (for My Places feature)
+CREATE INDEX IF NOT EXISTS idx_markers_creator ON markers(creator_address);
 
 -- Stats view for quick statistics
 CREATE OR REPLACE VIEW anchormap_stats AS
@@ -314,6 +327,52 @@ BEGIN
         m.created_at
     FROM markers m
     JOIN marker_categories c ON m.category_id = c.id
+    ORDER BY m.created_at DESC
+    LIMIT limit_count;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to get markers by creator address (for My Places)
+CREATE OR REPLACE FUNCTION get_markers_by_creator(
+    creator TEXT,
+    category_filter SMALLINT DEFAULT NULL,
+    limit_count INTEGER DEFAULT 100
+)
+RETURNS TABLE (
+    id INTEGER,
+    txid BYTEA,
+    vout INTEGER,
+    category_id SMALLINT,
+    category_name VARCHAR(50),
+    category_icon VARCHAR(50),
+    category_color VARCHAR(7),
+    latitude REAL,
+    longitude REAL,
+    message TEXT,
+    block_height INTEGER,
+    reply_count BIGINT,
+    created_at TIMESTAMP WITH TIME ZONE
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        m.id,
+        m.txid,
+        m.vout,
+        m.category_id,
+        c.name as category_name,
+        c.icon as category_icon,
+        c.color as category_color,
+        m.latitude,
+        m.longitude,
+        m.message,
+        m.block_height,
+        (SELECT COUNT(*) FROM marker_replies r WHERE r.parent_txid = m.txid AND r.parent_vout = m.vout) as reply_count,
+        m.created_at
+    FROM markers m
+    JOIN marker_categories c ON m.category_id = c.id
+    WHERE m.creator_address = creator
+      AND (category_filter IS NULL OR m.category_id = category_filter)
     ORDER BY m.created_at DESC
     LIMIT limit_count;
 END;

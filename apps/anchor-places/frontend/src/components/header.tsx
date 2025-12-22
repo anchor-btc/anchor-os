@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { MapPin, Bitcoin, Activity, BookOpen } from "lucide-react";
+import { MapPin, Bitcoin, Activity, BookOpen, User } from "lucide-react";
 import { fetchStats, fetchWalletBalance, formatNumber } from "@/lib/api";
 
 export function Header() {
@@ -27,7 +27,7 @@ export function Header() {
         </div>
         <div>
           <h1 className="font-heading text-xl text-foreground tracking-wide">
-            AnchorMap
+            Anchor Places
           </h1>
           <p className="text-xs text-secondary-foreground">
             Pin on Bitcoin
@@ -63,6 +63,15 @@ export function Header() {
             )}
           </>
         )}
+
+        {/* My Places Link */}
+        <Link
+          href="/my-places"
+          className="flex items-center gap-2 px-3 py-1.5 text-secondary-foreground hover:text-primary transition-colors"
+        >
+          <User className="w-4 h-4" />
+          <span className="text-sm hidden md:inline">My Places</span>
+        </Link>
 
         {/* Docs Link */}
         <Link

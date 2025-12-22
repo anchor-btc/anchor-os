@@ -1,12 +1,14 @@
-# AnchorMap
+# Anchor Places
 
 A Bitcoin-powered map markers application using the Anchor Protocol. Pin messages on a world map, stored forever on the Bitcoin blockchain.
 
 ## Features
 
 - **Pin Messages on Bitcoin**: Create geo-located markers that are permanently stored on the blockchain
+- **Coordinate Ownership**: First marker at any coordinate "owns" that location
 - **Categories**: Organize markers by type (General, Tourism, Commerce, Event, Warning, Historic)
 - **Replies**: Comment on markers using Anchor Protocol threading
+- **My Places**: View all markers you've created
 - **Search**: Full-text search across all marker messages
 - **Real-time**: Markers appear on the map as soon as they're confirmed
 
@@ -18,17 +20,17 @@ A Bitcoin-powered map markers application using the Anchor Protocol. Pin message
 │   (Next.js +    │     │  (Rust/Axum)    │     │                 │
 │    Leaflet)     │     │                 │     └─────────────────┘
 └─────────────────┘     └────────┬────────┘
-                                 │
-                                 ▼
-                        ┌─────────────────┐     ┌─────────────────┐
-                        │    Indexer      │────▶│  Bitcoin Node   │
-                        │                 │     │                 │
-                        └─────────────────┘     └─────────────────┘
+                                │
+                                ▼
+                       ┌─────────────────┐     ┌─────────────────┐
+                       │    Indexer      │────▶│  Bitcoin Node   │
+                       │                 │     │                 │
+                       └─────────────────┘     └─────────────────┘
 ```
 
 ## Anchor Protocol Schema
 
-Markers use `AnchorKind::Custom(5)` with the following binary payload:
+Markers use `AnchorKind::Custom(5)` (GeoMarker) with the following binary payload:
 
 | Field | Type | Size | Description |
 |-------|------|------|-------------|
@@ -39,6 +41,14 @@ Markers use `AnchorKind::Custom(5)` with the following binary payload:
 | message | utf8 | variable | Message content |
 
 **Total overhead**: 10 bytes + message (fits in OP_RETURN for messages up to 64 chars)
+
+## Ownership Rule
+
+The first marker at any exact coordinate "owns" that location:
+
+1. **First Pin Wins**: When you create the first marker at a specific lat/long, you own that spot
+2. **Automatic Replies**: If someone creates a new marker at coordinates where one already exists, it becomes a reply to the original marker
+3. **Exact Matching**: Coordinates must match exactly (same float32 values)
 
 ## Categories
 
@@ -63,26 +73,26 @@ Markers use `AnchorKind::Custom(5)` with the following binary payload:
 
 ```bash
 # From the root anchor directory
-docker-compose -f apps/anchormap/docker-compose.yml up
+docker compose up app-places-backend app-places-frontend
 ```
 
 This will start:
-- AnchorMap Backend on port 3004
-- AnchorMap Frontend on port 3005
+- Anchor Places Backend on port 3301
+- Anchor Places Frontend on port 3300
 
 ### Development
 
 #### Backend
 
 ```bash
-cd apps/anchormap/backend
+cd apps/anchor-places/backend
 cargo run
 ```
 
 #### Frontend
 
 ```bash
-cd apps/anchormap/frontend
+cd apps/anchor-places/frontend
 npm install
 npm run dev
 ```
@@ -97,6 +107,7 @@ npm run dev
 | GET | `/markers` | List recent markers |
 | GET | `/markers/bounds` | Get markers in viewport |
 | GET | `/markers/search` | Search markers by message |
+| GET | `/markers/my` | Get markers by creator address |
 | GET | `/markers/:txid/:vout` | Get marker with replies |
 | POST | `/markers` | Create new marker |
 | POST | `/markers/:txid/:vout/reply` | Reply to marker |
@@ -113,17 +124,17 @@ npm run dev
 | BITCOIN_RPC_PASSWORD | pass | RPC password |
 | WALLET_URL | http://localhost:3001 | Anchor Wallet API |
 | HOST | 0.0.0.0 | Server bind address |
-| PORT | 3004 | Server port |
+| PORT | 3301 | Server port |
 | POLL_INTERVAL_SECS | 5 | Indexer poll interval |
 
 ### Frontend
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| NEXT_PUBLIC_API_URL | http://localhost:3004 | Backend API URL |
+| NEXT_PUBLIC_API_URL | http://localhost:3301 | Backend API URL |
 | NEXT_PUBLIC_WALLET_URL | http://localhost:3001 | Wallet API URL |
+| NEXT_PUBLIC_BLOCK_EXPLORER_URL | http://localhost:4000 | Block explorer URL |
 
 ## License
 
 MIT License - See LICENSE file for details.
-

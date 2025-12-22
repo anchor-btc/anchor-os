@@ -1,9 +1,10 @@
 /**
- * AnchorMap API Client
+ * Anchor Places API Client
  */
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3004";
-const WALLET_URL = process.env.NEXT_PUBLIC_WALLET_URL || "http://localhost:3001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3301";
+const WALLET_URL = process.env.NEXT_PUBLIC_WALLET_URL || "http://localhost:8001";
+const BLOCK_EXPLORER_URL = process.env.NEXT_PUBLIC_BLOCK_EXPLORER_URL || "http://localhost:4000";
 
 // Types
 export interface Category {
@@ -168,6 +169,67 @@ export async function fetchMarkerDetail(
   return res.json();
 }
 
+export async function fetchMyMarkers(
+  address: string,
+  category?: number,
+  limit = 100
+): Promise<Marker[]> {
+  const query = new URLSearchParams({ address });
+  if (category !== undefined) {
+    query.set("category", category.toString());
+  }
+  query.set("limit", limit.toString());
+
+  const res = await fetch(`${API_URL}/markers/my?${query}`);
+  if (!res.ok) throw new Error("Failed to fetch my markers");
+  return res.json();
+}
+
+export async function fetchMyMarkersForAddresses(
+  addresses: string[],
+  category?: number,
+  limit = 500
+): Promise<Marker[]> {
+  if (addresses.length === 0) return [];
+
+  // Fetch markers for all addresses in parallel
+  const promises = addresses.map(async (address) => {
+    const query = new URLSearchParams({ address });
+    if (category !== undefined) {
+      query.set("category", category.toString());
+    }
+    query.set("limit", limit.toString());
+
+    try {
+      const res = await fetch(`${API_URL}/markers/my?${query}`);
+      if (!res.ok) return [];
+      return res.json() as Promise<Marker[]>;
+    } catch {
+      return [];
+    }
+  });
+
+  const results = await Promise.all(promises);
+  
+  // Flatten and deduplicate by txid+vout
+  const allMarkers = results.flat();
+  const seen = new Set<string>();
+  const unique: Marker[] = [];
+  
+  for (const marker of allMarkers) {
+    const key = `${marker.txid}-${marker.vout}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      unique.push(marker);
+    }
+  }
+
+  // Sort by created_at descending
+  unique.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+  return unique.slice(0, limit);
+}
+
 export async function createMarker(
   request: CreateMarkerRequest
 ): Promise<CreateMarkerResponse> {
@@ -211,6 +273,20 @@ export async function fetchWalletBalance(): Promise<WalletBalance> {
   return res.json();
 }
 
+export async function fetchWalletAddress(): Promise<string> {
+  const res = await fetch(`${WALLET_URL}/wallet/address`);
+  if (!res.ok) throw new Error("Failed to fetch wallet address");
+  const data = await res.json();
+  return data.address;
+}
+
+export async function fetchWalletAddresses(): Promise<string[]> {
+  const res = await fetch(`${WALLET_URL}/wallet/addresses`);
+  if (!res.ok) throw new Error("Failed to fetch wallet addresses");
+  const data = await res.json();
+  return data.addresses || [];
+}
+
 export async function mineBlocks(count = 1): Promise<{ blocks: string[] }> {
   const res = await fetch(`${WALLET_URL}/wallet/mine`, {
     method: "POST",
@@ -225,6 +301,10 @@ export async function mineBlocks(count = 1): Promise<{ blocks: string[] }> {
 export function truncateTxid(txid: string, chars = 8): string {
   if (txid.length <= chars * 2) return txid;
   return `${txid.slice(0, chars)}...${txid.slice(-chars)}`;
+}
+
+export function getExplorerTxUrl(txid: string): string {
+  return `${BLOCK_EXPLORER_URL}/tx/${txid}`;
 }
 
 export function getCategoryById(id: number): Category {

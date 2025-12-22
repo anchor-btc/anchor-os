@@ -75,6 +75,7 @@ pub use kinds::state;
 pub use kinds::dns;
 pub use kinds::proof;
 pub use kinds::token;
+pub use kinds::geomarker;
 
 /// Protocol version
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

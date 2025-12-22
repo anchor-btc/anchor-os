@@ -696,7 +696,7 @@ services:
       BITCOIN_RPC_PASSWORD: anchor
       WALLET_URL: http://core-wallet:8001
       POLL_INTERVAL_SECS: 5
-      RUST_LOG: anchormap_backend=info
+      RUST_LOG: anchor_places_backend=info
     depends_on:
       core-postgres:
         condition: service_healthy
@@ -723,6 +723,7 @@ services:
       args:
         NEXT_PUBLIC_API_URL: http://localhost:3301
         NEXT_PUBLIC_WALLET_URL: http://localhost:8001
+        NEXT_PUBLIC_BLOCK_EXPLORER_URL: http://localhost:4000
     container_name: anchor-app-places-frontend
     ports:
       - "3300:3300"

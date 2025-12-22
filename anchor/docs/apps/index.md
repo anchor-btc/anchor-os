@@ -49,12 +49,13 @@ Document timestamping and proof of existence. Hash any file and anchor it to Bit
 
 ---
 
-### Anchor Map
+### Anchor Places
 
-Geographic markers anchored to Bitcoin. Pin locations with permanent, verifiable data.
+Geographic markers anchored to Bitcoin. Pin locations with permanent, verifiable data. The first marker at any coordinate "owns" that location.
 
 - **Kind**: [GeoMarker (Kind 5)](/kinds/geomarker)
-- **Features**: Coordinates, metadata, permanent markers
+- **Documentation**: [Anchor Places](/apps/places)
+- **Features**: Coordinate ownership, categories, replies, search
 
 ---
 
@@ -83,9 +84,10 @@ All applications can be run using Docker Compose profiles:
 docker compose --profile app-canvas up -d
 docker compose --profile app-threads up -d
 docker compose --profile app-domains up -d
+docker compose --profile app-places up -d
 
 # Run multiple apps
-docker compose --profile app-canvas --profile app-threads up -d
+docker compose --profile app-canvas --profile app-places up -d
 
 # View logs
 docker compose logs -f <service-name>

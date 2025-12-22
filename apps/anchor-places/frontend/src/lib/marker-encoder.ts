@@ -1,5 +1,5 @@
 /**
- * AnchorMap Marker Encoder
+ * Anchor Places Marker Encoder
  * 
  * Encodes/decodes geo marker payloads for the Anchor Protocol.
  * 

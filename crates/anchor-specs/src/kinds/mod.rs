@@ -17,6 +17,7 @@ pub mod state;
 pub mod dns;
 pub mod proof;
 pub mod token;
+pub mod geomarker;
 
 // Re-export main types for convenience
 pub use text::TextSpec;
@@ -24,4 +25,5 @@ pub use state::{StateSpec, PixelData, DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGH
 pub use dns::{DnsSpec, DnsOperation, DnsRecord, RecordType};
 pub use proof::{ProofSpec, ProofOperation, ProofEntry, HashAlgorithm};
 pub use token::{TokenSpec, TokenOperation, TokenAllocation};
+pub use geomarker::{GeoMarkerSpec, MarkerCategory, MAX_MESSAGE_LENGTH, HEADER_SIZE};
 

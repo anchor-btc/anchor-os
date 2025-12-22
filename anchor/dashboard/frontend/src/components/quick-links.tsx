@@ -40,9 +40,9 @@ const links = [
     color: "purple",
   },
   {
-    name: "AnchorMap",
+    name: "Anchor Places",
     description: "Bitcoin-powered map markers",
-    href: "http://localhost:3007",
+    href: "http://localhost:3300",
     icon: Map,
     color: "blue",
   },

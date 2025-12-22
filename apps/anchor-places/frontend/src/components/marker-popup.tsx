@@ -17,6 +17,7 @@ import {
   truncateTxid,
   formatDate,
   mineBlocks,
+  getExplorerTxUrl,
   type Marker,
 } from "@/lib/api";
 import { CategoryBadge } from "./category-filter";
@@ -89,7 +90,7 @@ export function MarkerPopup({ marker, onClose }: MarkerPopupProps) {
             <div className="flex items-center gap-1">
               <Bitcoin className="w-3.5 h-3.5 text-bitcoin" />
               <a
-                href={`https://mempool.space/tx/${marker.txid}`}
+                href={getExplorerTxUrl(marker.txid)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-mono hover:text-primary transition-colors"

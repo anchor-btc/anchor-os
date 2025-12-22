@@ -20,7 +20,7 @@ import {
   Gem,
   Stamp,
 } from "lucide-react";
-import { CATEGORIES, CARRIERS, createMarker, mineBlocks, truncateTxid, type CreateMarkerResponse } from "@/lib/api";
+import { CATEGORIES, CARRIERS, createMarker, mineBlocks, truncateTxid, getExplorerTxUrl, type CreateMarkerResponse } from "@/lib/api";
 import { fitsInOpReturn, maxOpReturnMessageLength } from "@/lib/marker-encoder";
 import { clsx } from "clsx";
 
@@ -158,7 +158,7 @@ export function CreateMarkerPanel({
                 <Bitcoin className="w-4 h-4 text-bitcoin" />
                 <span className="text-secondary-foreground">Transaction:</span>
                 <a
-                  href={`https://mempool.space/tx/${pendingTx.txid}`}
+                  href={getExplorerTxUrl(pendingTx.txid)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-mono text-primary hover:underline flex items-center gap-1"
