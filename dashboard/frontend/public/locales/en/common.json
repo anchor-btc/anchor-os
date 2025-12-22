@@ -411,7 +411,13 @@
     "latestLogs": "Latest indexer logs",
     "noLogs": "No recent logs available",
     "notRunningMsg": "Indexer Not Running",
-    "startWith": "Start the indexer with"
+    "startWith": "Start the indexer with",
+    "protocolMessages": "Protocol Messages",
+    "unavailable": "Unavailable",
+    "messages": "Messages",
+    "blocks": "Blocks",
+    "lastBlock": "Last Block",
+    "port": "Port"
   },
   "electrs": {
     "title": "Electrs",
@@ -636,17 +642,6 @@
     "loadError": "Failed to load transactions",
     "pending": "Pending",
     "confs": "confs"
-  },
-  "indexer": {
-    "title": "Anchor Indexer",
-    "protocolMessages": "Protocol Messages",
-    "unavailable": "Unavailable",
-    "live": "Live",
-    "messages": "Messages",
-    "blocks": "Blocks",
-    "lastBlock": "Last Block",
-    "messageTypes": "Message Types",
-    "carrierTypes": "Carrier Types"
   },
   "settings": {
     "title": "Settings",

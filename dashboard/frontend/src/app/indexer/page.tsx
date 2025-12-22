@@ -163,7 +163,7 @@ export default function IndexerPage() {
           {isRunning && (
             <span className="flex items-center gap-2 px-3 py-1.5 bg-success/10 text-success rounded-lg text-sm">
               <Activity className="w-4 h-4 animate-pulse" />
-              Live
+              {t("indexer.live")}
             </span>
           )}
           <button

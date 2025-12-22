@@ -411,7 +411,13 @@
     "latestLogs": "Últimos logs do indexador",
     "noLogs": "Nenhum log recente disponível",
     "notRunningMsg": "Indexador Não Está Executando",
-    "startWith": "Inicie o indexador com"
+    "startWith": "Inicie o indexador com",
+    "protocolMessages": "Mensagens do Protocolo",
+    "unavailable": "Indisponível",
+    "messages": "Mensagens",
+    "blocks": "Blocos",
+    "lastBlock": "Último Bloco",
+    "port": "Porta"
   },
   "electrs": {
     "title": "Electrs",
@@ -636,17 +642,6 @@
     "loadError": "Falha ao carregar transações",
     "pending": "Pendente",
     "confs": "confs"
-  },
-  "indexer": {
-    "title": "Anchor Indexer",
-    "protocolMessages": "Mensagens do Protocolo",
-    "unavailable": "Indisponível",
-    "live": "Ao Vivo",
-    "messages": "Mensagens",
-    "blocks": "Blocos",
-    "lastBlock": "Último Bloco",
-    "messageTypes": "Tipos de Mensagem",
-    "carrierTypes": "Tipos de Portador"
   },
   "settings": {
     "title": "Configurações",
