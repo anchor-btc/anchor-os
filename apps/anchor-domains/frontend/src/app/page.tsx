@@ -59,6 +59,7 @@ export default function HomePage() {
   const [searchResult, setSearchResult] = useState<ResolveResponse | null>(null);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [lastSearchQuery, setLastSearchQuery] = useState("");
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["stats"],
@@ -75,6 +76,7 @@ export default function HomePage() {
     setIsSearching(true);
     setSearchError(null);
     setSearchResult(null);
+    setLastSearchQuery(query);
 
     try {
       // Search with full domain name (must include TLD like .btc, .sat, etc.)
@@ -178,21 +180,37 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* Search Error */}
-      {searchError && (
-        <div>
-          <div className="flex items-center gap-2 p-4 bg-red-500/20 border border-red-500/50 rounded-xl">
-            <AlertCircle className="h-5 w-5 text-red-400" />
-            <p className="text-red-400">{searchError}</p>
-            {searchError === "Domain not found" && (
-              <a
-                href="/register"
-                className="ml-auto text-bitcoin-orange hover:underline"
-              >
-                Register this domain →
-              </a>
-            )}
+      {/* Domain Available - Positive UX! */}
+      {searchError === "Domain not found" && lastSearchQuery && (
+        <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-6">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+            <div className="flex items-center gap-3 flex-1">
+              <div className="p-2 bg-emerald-500/20 rounded-full">
+                <CheckCircle className="h-6 w-6 text-emerald-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-white">
+                  <span className="text-emerald-400 font-mono">{lastSearchQuery}</span> is available!
+                </h3>
+                <p className="text-slate-400 text-sm">Claim it now before someone else does.</p>
+              </div>
+            </div>
+            <a
+              href={`/register?domain=${encodeURIComponent(lastSearchQuery)}`}
+              className="w-full md:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+            >
+              <PlusCircle className="h-5 w-5" />
+              Register Now
+            </a>
           </div>
+        </div>
+      )}
+
+      {/* Other Search Errors */}
+      {searchError && searchError !== "Domain not found" && (
+        <div className="flex items-center gap-2 p-4 bg-red-500/20 border border-red-500/50 rounded-xl">
+          <AlertCircle className="h-5 w-5 text-red-400" />
+          <p className="text-red-400">{searchError}</p>
         </div>
       )}
 

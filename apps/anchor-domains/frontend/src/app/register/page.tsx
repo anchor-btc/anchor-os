@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   checkAvailability,
@@ -39,8 +40,22 @@ interface RecordFormData {
   port?: number;
 }
 
+// Wrapper component for Suspense boundary
 export default function RegisterPage() {
+  return (
+    <Suspense fallback={
+      <div className="max-w-3xl mx-auto flex items-center justify-center py-24">
+        <Loader2 className="h-8 w-8 animate-spin text-bitcoin-orange" />
+      </div>
+    }>
+      <RegisterPageContent />
+    </Suspense>
+  );
+}
+
+function RegisterPageContent() {
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
   const [domainName, setDomainName] = useState("");
   const [selectedTld, setSelectedTld] = useState<SupportedTLD>(".btc");
   const [selectedCarrier, setSelectedCarrier] = useState(1); // Default to Inscription
@@ -54,6 +69,34 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
 
   const getFullDomainName = () => `${domainName}${selectedTld}`;
+
+  // Auto-fill from URL query params (e.g., /register?domain=miguel.sat)
+  useEffect(() => {
+    const domainParam = searchParams.get("domain");
+    if (domainParam) {
+      // Parse the domain to extract name and TLD
+      const tld = SUPPORTED_TLDS.find((t) => domainParam.endsWith(t));
+      if (tld) {
+        const name = domainParam.slice(0, -tld.length);
+        setDomainName(name);
+        setSelectedTld(tld);
+        
+        // Auto-check availability
+        const checkDomain = async () => {
+          setIsCheckingAvailability(true);
+          try {
+            const result = await checkAvailability(domainParam);
+            setAvailability(result.available);
+          } catch {
+            setAvailability(null);
+          } finally {
+            setIsCheckingAvailability(false);
+          }
+        };
+        checkDomain();
+      }
+    }
+  }, [searchParams]);
 
   const registerMutation = useMutation({
     mutationFn: async () => {

@@ -224,6 +224,11 @@ impl Indexer {
                         )
                         .await?;
 
+                    // Remove pending transaction now that it's confirmed
+                    if let Err(e) = self.db.delete_pending_by_domain(&payload.name).await {
+                        debug!("Failed to delete pending transaction for {}: {}", payload.name, e);
+                    }
+
                     info!("Registered domain: {}", payload.name);
                     dns_count += 1;
                 }
@@ -252,6 +257,11 @@ impl Indexer {
                                         block_height,
                                     )
                                     .await?;
+
+                                // Remove pending transaction now that it's confirmed
+                                if let Err(e) = self.db.delete_pending_by_domain(&payload.name).await {
+                                    debug!("Failed to delete pending transaction for {}: {}", payload.name, e);
+                                }
 
                                 info!("Updated domain: {}", payload.name);
                                 dns_count += 1;
