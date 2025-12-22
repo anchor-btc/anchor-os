@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import "./globals.css";
 import { Providers } from "./providers";
-import { AppShell, AppMain } from "@AnchorProtocol/ui";
+import { AppShell, AppMain, APP_BACKGROUND_CLASS } from "@AnchorProtocol/ui";
 import { Header } from "@/components/header";
 import { ProofsFooter } from "@/components/footer";
 
@@ -18,8 +18,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
-      <body className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <html lang="en">
+      <body className={`dark antialiased ${APP_BACKGROUND_CLASS}`}>
         <Providers>
           <AppShell
             header={<Header />}

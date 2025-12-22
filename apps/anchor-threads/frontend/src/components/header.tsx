@@ -9,7 +9,9 @@ import {
   Container,
   Button,
 } from "@AnchorProtocol/ui";
-import { Anchor, MessageSquare, User, PenLine, FileText } from "lucide-react";
+import { Anchor, Home, MessageSquare, User, PenLine, BookOpen } from "lucide-react";
+
+const DOCS_URL = "http://localhost:3900/apps/threads";
 
 export function Header() {
   return (
@@ -23,13 +25,16 @@ export function Header() {
           />
 
           <NavGroup gap="md">
+            <NavLink href="/" icon={Home} accentColor="orange">
+              Home
+            </NavLink>
             <NavLink href="/threads" icon={MessageSquare} accentColor="orange">
               Threads
             </NavLink>
             <NavLink href="/my-threads" icon={User} accentColor="orange">
               My Threads
             </NavLink>
-            <NavLink href="http://localhost:3900/apps/threads" icon={FileText} external>
+            <NavLink href={DOCS_URL} icon={BookOpen} external>
               Docs
             </NavLink>
             <Button asChild variant="accent">

@@ -1,13 +1,15 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Ticket, Trophy, Coins, TrendingUp, Users, Clock } from "lucide-react";
+import Link from "next/link";
+import { Ticket, Trophy, Coins, TrendingUp, Users, Clock, PlusCircle, Eye } from "lucide-react";
+import { Container, HeroSection, HowItWorks, StatsGrid } from "@AnchorProtocol/ui";
 import { fetchStats, fetchLotteries } from "@/lib/api";
-import { StatsCard, LotteryCard } from "@/components";
+import { LotteryCard } from "@/components";
 import { formatSats } from "@/lib/utils";
 
 export default function HomePage() {
-  const { data: stats } = useQuery({
+  const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["stats"],
     queryFn: fetchStats,
   });
@@ -17,64 +19,113 @@ export default function HomePage() {
     queryFn: () => fetchLotteries("open", 9),
   });
 
+  const statsItems = [
+    {
+      icon: Ticket,
+      value: stats?.active_lotteries ?? 0,
+      label: "Active Markets",
+      color: "text-amber-400",
+      bgColor: "bg-amber-400/20",
+    },
+    {
+      icon: Users,
+      value: stats?.total_tickets_sold ?? 0,
+      label: "Tickets Sold",
+      color: "text-blue-400",
+      bgColor: "bg-blue-400/20",
+    },
+    {
+      icon: TrendingUp,
+      value: formatSats(stats?.total_volume_sats ?? 0),
+      label: "Total Volume",
+      color: "text-green-400",
+      bgColor: "bg-green-400/20",
+    },
+    {
+      icon: Coins,
+      value: formatSats(stats?.total_payouts_sats ?? 0),
+      label: "Total Payouts",
+      color: "text-purple-400",
+      bgColor: "bg-purple-400/20",
+    },
+    {
+      icon: Trophy,
+      value: formatSats(stats?.biggest_jackpot_sats ?? 0),
+      label: "Biggest Jackpot",
+      color: "text-yellow-400",
+      bgColor: "bg-yellow-400/20",
+    },
+    {
+      icon: Clock,
+      value: stats?.completed_lotteries ?? 0,
+      label: "Completed",
+      color: "text-slate-400",
+      bgColor: "bg-slate-400/20",
+    },
+  ];
+
+  const howItWorksSteps = [
+    {
+      step: "1",
+      title: "Pick Numbers",
+      description: "Choose your lucky numbers from the available range",
+    },
+    {
+      step: "2",
+      title: "Buy Ticket",
+      description: "Pay with BTC and receive a DLC-backed ticket",
+    },
+    {
+      step: "3",
+      title: "Wait for Draw",
+      description: "Oracle attests to winning numbers at draw block",
+    },
+    {
+      step: "4",
+      title: "Claim Prize",
+      description: "DLC automatically settles — no trust required",
+    },
+  ];
+
   return (
-    <div className="space-y-8">
-      {/* Hero */}
-      <div className="text-center py-8">
-        <h1 className="text-4xl font-bold text-white mb-4">Anchor Lottery</h1>
-        <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-          Trustless lottery powered by Bitcoin and Discreet Log Contracts.
-          Pick your numbers, buy tickets, and win — all on-chain.
-        </p>
-      </div>
+    <Container className="space-y-12">
+      {/* Hero Section */}
+      <HeroSection
+        title="Trustless Predictions on Bitcoin"
+        accentWord="Bitcoin"
+        subtitle="Prediction markets powered by Discreet Log Contracts. Pick your numbers, buy tickets, and win — all on-chain."
+        accentColor="amber"
+        actions={[
+          { href: "/create", label: "Create Market", icon: PlusCircle, variant: "primary" },
+          { href: "/markets", label: "Browse Markets", icon: Eye, variant: "secondary" },
+        ]}
+      />
+
+      {/* How it works */}
+      <HowItWorks
+        title="How It Works"
+        steps={howItWorksSteps}
+        accentColor="amber"
+        columns={{ default: 1, md: 4 }}
+      />
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <StatsCard
-          title="Active Lotteries"
-          value={stats?.active_lotteries ?? 0}
-          icon={Ticket}
-          iconColor="text-amber-400"
-        />
-        <StatsCard
-          title="Tickets Sold"
-          value={stats?.total_tickets_sold ?? 0}
-          icon={Users}
-          iconColor="text-blue-400"
-        />
-        <StatsCard
-          title="Total Volume"
-          value={formatSats(stats?.total_volume_sats ?? 0)}
-          icon={TrendingUp}
-          iconColor="text-green-400"
-        />
-        <StatsCard
-          title="Total Payouts"
-          value={formatSats(stats?.total_payouts_sats ?? 0)}
-          icon={Coins}
-          iconColor="text-purple-400"
-        />
-        <StatsCard
-          title="Biggest Jackpot"
-          value={formatSats(stats?.biggest_jackpot_sats ?? 0)}
-          icon={Trophy}
-          iconColor="text-yellow-400"
-        />
-        <StatsCard
-          title="Completed"
-          value={stats?.completed_lotteries ?? 0}
-          icon={Clock}
-          iconColor="text-gray-400"
+      <div>
+        <h2 className="text-xl font-bold text-white mb-4">Protocol Statistics</h2>
+        <StatsGrid
+          items={statsItems}
+          columns={{ default: 2, md: 3, lg: 6 }}
+          isLoading={statsLoading}
         />
       </div>
 
-      {/* Active Lotteries */}
+      {/* Active Markets */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold text-white">Active Lotteries</h2>
-          <a href="/lotteries" className="text-sm text-amber-400 hover:text-amber-300">
+          <h2 className="text-xl font-bold text-white">Active Markets</h2>
+          <Link href="/markets" className="text-sm text-amber-400 hover:text-amber-300">
             View all →
-          </a>
+          </Link>
         </div>
         
         {activeLotteries && activeLotteries.length > 0 ? (
@@ -84,40 +135,18 @@ export default function HomePage() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-12 rounded-xl border border-white/10 bg-white/5">
-            <Ticket className="w-12 h-12 mx-auto text-gray-600 mb-4" />
-            <p className="text-gray-400 mb-4">No active lotteries</p>
-            <a
+          <div className="text-center py-12 rounded-xl border border-slate-700 bg-slate-800/50">
+            <Ticket className="w-12 h-12 mx-auto text-slate-600 mb-4" />
+            <p className="text-slate-400 mb-4">No active markets</p>
+            <Link
               href="/create"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium transition-colors"
             >
-              Create the first lottery
-            </a>
+              Create the first market
+            </Link>
           </div>
         )}
       </div>
-
-      {/* How it works */}
-      <div className="rounded-xl border border-white/10 bg-white/5 p-6">
-        <h2 className="text-xl font-bold text-white mb-4">How It Works</h2>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {[
-            { step: "1", title: "Pick Numbers", desc: "Choose your lucky numbers from the available range" },
-            { step: "2", title: "Buy Ticket", desc: "Pay with BTC and receive a DLC-backed ticket" },
-            { step: "3", title: "Wait for Draw", desc: "Oracle attests to winning numbers at draw block" },
-            { step: "4", title: "Claim Prize", desc: "DLC automatically settles — no trust required" },
-          ].map((item) => (
-            <div key={item.step} className="text-center">
-              <div className="w-12 h-12 rounded-full bg-amber-500/20 border border-amber-500/50 flex items-center justify-center mx-auto mb-3">
-                <span className="text-amber-400 font-bold text-lg">{item.step}</span>
-              </div>
-              <h3 className="font-medium text-white mb-1">{item.title}</h3>
-              <p className="text-sm text-gray-400">{item.desc}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
+    </Container>
   );
 }
-

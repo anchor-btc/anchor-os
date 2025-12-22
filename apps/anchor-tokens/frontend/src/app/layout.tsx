@@ -3,7 +3,7 @@ import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
-import { AppShell, AppMain } from "@AnchorProtocol/ui";
+import { AppShell, AppMain, APP_BACKGROUND_CLASS } from "@AnchorProtocol/ui";
 import { Header } from "@/components/header";
 import { TokensFooter } from "@/components/footer";
 
@@ -30,7 +30,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} dark antialiased min-h-screen bg-gradient-to-b from-gray-950 to-black`}
+        className={`${geistSans.variable} ${geistMono.variable} dark antialiased ${APP_BACKGROUND_CLASS}`}
       >
         <Providers>
           <AppShell

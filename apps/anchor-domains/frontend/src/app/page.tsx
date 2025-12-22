@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { SearchBox, DomainCard, StatsCard } from "@/components";
-import { Container } from "@AnchorProtocol/ui";
-import { resolveDomain, listDomains, type ResolveResponse } from "@/lib/api";
+import { SearchBox, DomainCard } from "@/components";
+import { Container, HeroSection, HowItWorks, StatsGrid } from "@AnchorProtocol/ui";
+import { resolveDomain, listDomains, getStats, type ResolveResponse } from "@/lib/api";
 import { SUPPORTED_TLDS } from "@/lib/dns-encoder";
-import { AlertCircle, CheckCircle } from "lucide-react";
+import { AlertCircle, CheckCircle, Globe, Database, Blocks, Clock, Search, PlusCircle } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 
 // Animated TLD component with typewriter effect
 function AnimatedTLD() {
@@ -59,6 +60,12 @@ export default function HomePage() {
   const [searchError, setSearchError] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
 
+  const { data: stats, isLoading: statsLoading } = useQuery({
+    queryKey: ["stats"],
+    queryFn: getStats,
+    refetchInterval: 10000,
+  });
+
   const { data: recentDomains } = useQuery({
     queryKey: ["recent-domains"],
     queryFn: () => listDomains(1, 6),
@@ -82,88 +89,150 @@ export default function HomePage() {
     }
   };
 
+  const statsItems = [
+    {
+      icon: Globe,
+      value: stats?.total_domains || 0,
+      label: "Domains",
+      color: "text-bitcoin-orange",
+      bgColor: "bg-bitcoin-orange/20",
+    },
+    {
+      icon: Database,
+      value: stats?.total_records || 0,
+      label: "DNS Records",
+      color: "text-blue-400",
+      bgColor: "bg-blue-400/20",
+    },
+    {
+      icon: Blocks,
+      value: stats?.last_block_height || 0,
+      label: "Block Height",
+      color: "text-green-400",
+      bgColor: "bg-green-400/20",
+    },
+    {
+      icon: Clock,
+      value: stats?.last_update
+        ? formatDistanceToNow(new Date(stats.last_update), { addSuffix: true })
+        : "N/A",
+      label: "Last Update",
+      color: "text-purple-400",
+      bgColor: "bg-purple-400/20",
+    },
+  ];
+
+  const howItWorksSteps = [
+    {
+      step: "1",
+      title: "Search Domain",
+      description: "Check if your desired .btc, .sat, .anchor, .anc, or .bit domain is available.",
+    },
+    {
+      step: "2",
+      title: "Register",
+      description: "Pay with BTC and your domain is recorded permanently on the Bitcoin blockchain.",
+    },
+    {
+      step: "3",
+      title: "Manage Records",
+      description: "Add DNS records like A, AAAA, CNAME, TXT, and more to your domain.",
+    },
+  ];
+
   return (
     <Container className="space-y-12">
-        {/* Hero Section */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            Decentralized DNS on{" "}
-            <span className="text-bitcoin-orange">Bitcoin</span>
-          </h1>
-          
-          {/* Animated Domain Display */}
-          <div className="my-8 py-6 px-8 bg-slate-800/60 backdrop-blur-sm border border-slate-700 rounded-2xl inline-block">
-            <div className="text-3xl md:text-4xl font-mono font-bold">
-              <span className="text-white">yourdomain</span>
-              <AnimatedTLD />
-            </div>
+      {/* Hero Section */}
+      <HeroSection
+        title="Decentralized DNS on Bitcoin"
+        accentWord="Bitcoin"
+        subtitle="Register your .btc, .sat, .anchor, .anc, or .bit domain on the Bitcoin blockchain using the Anchor protocol. Permanent, censorship-resistant, and truly yours."
+        accentColor="orange"
+        actions={[
+          { href: "/register", label: "Register Domain", icon: PlusCircle, variant: "primary" },
+          { href: "/domains", label: "Browse Domains", icon: Search, variant: "secondary" },
+        ]}
+      >
+        {/* Animated Domain Display */}
+        <div className="mt-8 py-6 px-8 bg-slate-800/60 backdrop-blur-sm border border-slate-700 rounded-2xl inline-block">
+          <div className="text-3xl md:text-4xl font-mono font-bold">
+            <span className="text-white">yourdomain</span>
+            <AnimatedTLD />
           </div>
-          
-          <p className="text-lg text-slate-400 max-w-2xl mx-auto">
-            Register your .btc, .sat, .anchor, .anc, or .bit domain on the Bitcoin blockchain
-            using the Anchor protocol. Permanent, censorship-resistant, and truly yours.
-          </p>
         </div>
+      </HeroSection>
 
-        {/* Search Box */}
-        <div className="mb-12">
-          <SearchBox onSearch={handleSearch} isLoading={isSearching} />
-        </div>
+      {/* Search Box */}
+      <div>
+        <SearchBox onSearch={handleSearch} isLoading={isSearching} />
+      </div>
 
-        {/* Search Result */}
-        {searchResult && (
-          <div className="mb-12">
-            <div className="flex items-center gap-2 mb-4">
-              <CheckCircle className="h-5 w-5 text-green-400" />
-              <h2 className="text-xl font-bold text-white">Domain Found</h2>
-            </div>
-            <DomainCard domain={searchResult} showRecords />
+      {/* Search Result */}
+      {searchResult && (
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <CheckCircle className="h-5 w-5 text-green-400" />
+            <h2 className="text-xl font-bold text-white">Domain Found</h2>
           </div>
-        )}
-
-        {/* Search Error */}
-        {searchError && (
-          <div className="mb-12">
-            <div className="flex items-center gap-2 p-4 bg-red-500/20 border border-red-500/50 rounded-xl">
-              <AlertCircle className="h-5 w-5 text-red-400" />
-              <p className="text-red-400">{searchError}</p>
-              {searchError === "Domain not found" && (
-                <a
-                  href="/register"
-                  className="ml-auto text-bitcoin-orange hover:underline"
-                >
-                  Register this domain →
-                </a>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Stats */}
-        <div className="mb-12">
-          <h2 className="text-xl font-bold text-white mb-4">Protocol Stats</h2>
-          <StatsCard />
+          <DomainCard domain={searchResult} showRecords />
         </div>
+      )}
 
-        {/* Recent Domains */}
-        {recentDomains && recentDomains.data.length > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-white">Recent Domains</h2>
+      {/* Search Error */}
+      {searchError && (
+        <div>
+          <div className="flex items-center gap-2 p-4 bg-red-500/20 border border-red-500/50 rounded-xl">
+            <AlertCircle className="h-5 w-5 text-red-400" />
+            <p className="text-red-400">{searchError}</p>
+            {searchError === "Domain not found" && (
               <a
-                href="/domains"
-                className="text-bitcoin-orange hover:underline text-sm"
+                href="/register"
+                className="ml-auto text-bitcoin-orange hover:underline"
               >
-                View all →
+                Register this domain →
               </a>
-            </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {recentDomains.data.map((domain) => (
-                <DomainCard key={domain.id} domain={domain} />
-              ))}
-            </div>
+            )}
           </div>
-        )}
+        </div>
+      )}
+
+      {/* How It Works */}
+      <HowItWorks
+        title="How It Works"
+        steps={howItWorksSteps}
+        accentColor="orange"
+        columns={{ default: 1, md: 3 }}
+      />
+
+      {/* Stats */}
+      <div>
+        <h2 className="text-xl font-bold text-white mb-4">Protocol Statistics</h2>
+        <StatsGrid
+          items={statsItems}
+          columns={{ default: 2, md: 4 }}
+          isLoading={statsLoading}
+        />
+      </div>
+
+      {/* Recent Domains */}
+      {recentDomains && recentDomains.data.length > 0 && (
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-white">Recent Domains</h2>
+            <a
+              href="/domains"
+              className="text-bitcoin-orange hover:underline text-sm"
+            >
+              View all →
+            </a>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {recentDomains.data.map((domain) => (
+              <DomainCard key={domain.id} domain={domain} />
+            ))}
+          </div>
+        </div>
+      )}
     </Container>
   );
 }

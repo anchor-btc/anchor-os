@@ -36,6 +36,36 @@ export {
   type FooterProps,
 } from "./components/footer";
 
+export {
+  HeroSection,
+  type HeroSectionProps,
+  type HeroAction,
+  type HeroAccentColor,
+} from "./components/hero-section";
+
+export {
+  StatsGrid,
+  StatCard,
+  type StatsGridProps,
+  type StatCardProps,
+  type StatItem,
+} from "./components/stats-card";
+
+export {
+  HowItWorks,
+  HowItWorksStepCard,
+  type HowItWorksProps,
+  type HowItWorksStepCardProps,
+  type HowItWorksStep,
+  type HowItWorksAccentColor,
+} from "./components/how-it-works";
+
+export {
+  AppBackground,
+  APP_BACKGROUND_CLASS,
+  type AppBackgroundProps,
+} from "./components/app-background";
+
 // Layout Components
 export {
   AppShell,

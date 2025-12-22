@@ -9,7 +9,9 @@ import {
   Container,
   Button,
 } from "@AnchorProtocol/ui";
-import { Ticket, Trophy, Clock, HelpCircle, Plus } from "lucide-react";
+import { Ticket, Home, Trophy, Clock, BookOpen, Plus } from "lucide-react";
+
+const DOCS_URL = "http://localhost:3900/apps/predictions";
 
 export function Header() {
   return (
@@ -27,7 +29,10 @@ export function Header() {
 
           <div className="flex items-center gap-4">
             <NavGroup gap="sm">
-              <NavLink href="/" icon={Ticket} accentColor="amber">
+              <NavLink href="/" icon={Home} accentColor="amber">
+                Home
+              </NavLink>
+              <NavLink href="/markets" icon={Ticket} accentColor="amber">
                 Markets
               </NavLink>
               <NavLink href="/my-tickets" icon={Trophy} accentColor="amber">
@@ -36,8 +41,8 @@ export function Header() {
               <NavLink href="/history" icon={Clock} accentColor="amber">
                 History
               </NavLink>
-              <NavLink href="/how-it-works" icon={HelpCircle} accentColor="amber">
-                How It Works
+              <NavLink href={DOCS_URL} icon={BookOpen} external>
+                Docs
               </NavLink>
             </NavGroup>
 

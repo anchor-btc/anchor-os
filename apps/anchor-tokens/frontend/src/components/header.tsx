@@ -1,39 +1,54 @@
 "use client";
 
+import Link from "next/link";
 import {
   AppHeader,
   AppLogo,
   NavLink,
   NavGroup,
   Container,
+  Button,
 } from "@AnchorProtocol/ui";
-import { Coins, Wallet, Book, Plus } from "lucide-react";
+import { Coins, Home, Wallet, BookOpen, Plus } from "lucide-react";
+
+const DOCS_URL = "http://localhost:3900/apps/tokens";
 
 export function Header() {
   return (
     <AppHeader variant="dark">
       <Container>
-        <nav className="flex items-center justify-between h-16">
+        <nav className="flex items-center h-16">
           <AppLogo
             appName="Tokens"
             appIcon={Coins}
             accentColor="amber"
           />
 
-          <NavGroup gap="sm">
-            <NavLink href="/tokens" icon={Coins} accentColor="amber">
-              Tokens
-            </NavLink>
-            <NavLink href="/deploy" icon={Plus} accentColor="amber">
-              Deploy
-            </NavLink>
-            <NavLink href="/wallet" icon={Wallet} accentColor="amber">
-              Wallet
-            </NavLink>
-            <NavLink href="http://localhost:3900/apps/tokens" icon={Book} external>
-              Docs
-            </NavLink>
-          </NavGroup>
+          <div className="flex-1" />
+
+          <div className="flex items-center gap-4">
+            <NavGroup gap="sm">
+              <NavLink href="/" icon={Home} accentColor="amber">
+                Home
+              </NavLink>
+              <NavLink href="/tokens" icon={Coins} accentColor="amber">
+                Tokens
+              </NavLink>
+              <NavLink href="/wallet" icon={Wallet} accentColor="amber">
+                Wallet
+              </NavLink>
+              <NavLink href={DOCS_URL} icon={BookOpen} external>
+                Docs
+              </NavLink>
+            </NavGroup>
+
+            <Button asChild variant="default" className="bg-amber-600 hover:bg-amber-700">
+              <Link href="/deploy" className="flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                Deploy Token
+              </Link>
+            </Button>
+          </div>
         </nav>
       </Container>
     </AppHeader>

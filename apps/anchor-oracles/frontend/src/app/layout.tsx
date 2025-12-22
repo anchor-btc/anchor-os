@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import { Providers } from "./providers";
-import { AppShell, AppMain } from "@AnchorProtocol/ui";
+import { AppShell, AppMain, APP_BACKGROUND_CLASS } from "@AnchorProtocol/ui";
 import { Header } from "@/components/header";
 import { OraclesFooter } from "@/components/footer";
 import "./globals.css";
@@ -18,7 +18,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="dark antialiased min-h-screen bg-gradient-to-b from-gray-950 to-black">
+      <body className={`dark antialiased ${APP_BACKGROUND_CLASS}`}>
         <Providers>
           <AppShell
             header={<Header />}

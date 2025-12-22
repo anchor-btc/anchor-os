@@ -2,10 +2,10 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import Link from "next/link";
 import { fetchRoots, fetchStats, type Message } from "@/lib/api";
 import { MessageCard } from "@/components/message-card";
-import { Button, Card, Container } from "@AnchorProtocol/ui";
-import Link from "next/link";
+import { Button, Card, Container, HeroSection, HowItWorks, StatsGrid } from "@AnchorProtocol/ui";
 import {
   Loader2,
   Anchor,
@@ -13,12 +13,16 @@ import {
   RefreshCw,
   ArrowRight,
   PenLine,
+  Search,
+  MessagesSquare,
+  Reply,
+  Blocks,
 } from "lucide-react";
 
 export default function Home() {
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  const { data: stats } = useQuery({
+  const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["stats"],
     queryFn: fetchStats,
     refetchInterval: 5000,
@@ -85,33 +89,86 @@ export default function Home() {
     return () => observer.disconnect();
   }, [handleObserver]);
 
-  return (
-    <Container className="space-y-8">
-      {/* Hero Section - Simple */}
-      <section className="text-center py-8">
-        <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-3">
-          Explore Threads on <span className="text-primary">Bitcoin</span>
-        </h1>
-        <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-6">
-          Discover and create immutable, threaded messages anchored to the Bitcoin blockchain.
-        </p>
-        <Button asChild variant="accent" size="lg">
-          <Link href="/compose" className="flex items-center gap-2">
-          <PenLine className="h-4 w-4" />
-          Create Thread
-        </Link>
-        </Button>
-      </section>
+  const statsItems = [
+    {
+      icon: MessageSquare,
+      value: stats?.total_messages ?? 0,
+      label: "Messages",
+      color: "text-orange-500",
+      bgColor: "bg-orange-500/20",
+    },
+    {
+      icon: MessagesSquare,
+      value: stats?.total_roots ?? 0,
+      label: "Threads",
+      color: "text-blue-400",
+      bgColor: "bg-blue-400/20",
+    },
+    {
+      icon: Reply,
+      value: stats?.total_replies ?? 0,
+      label: "Replies",
+      color: "text-green-400",
+      bgColor: "bg-green-400/20",
+    },
+    {
+      icon: Blocks,
+      value: stats?.last_block_height ?? 0,
+      label: "Last Block",
+      color: "text-purple-400",
+      bgColor: "bg-purple-400/20",
+    },
+  ];
 
-      {/* Stats Row */}
-      {stats && (
-        <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard label="Messages" value={stats.total_messages} />
-          <StatCard label="Threads" value={stats.total_roots} />
-          <StatCard label="Replies" value={stats.total_replies} />
-          <StatCard label="Last Block" value={stats.last_block_height} />
-        </section>
-      )}
+  const howItWorksSteps = [
+    {
+      step: "1",
+      title: "Create Thread",
+      description: "Write your message and anchor it permanently to the Bitcoin blockchain.",
+    },
+    {
+      step: "2",
+      title: "Share & Discuss",
+      description: "Others can reply to your thread, creating a chain of immutable messages.",
+    },
+    {
+      step: "3",
+      title: "Verified Forever",
+      description: "Every message is timestamped and cryptographically verified on Bitcoin.",
+    },
+  ];
+
+  return (
+    <Container className="space-y-12">
+      {/* Hero Section */}
+      <HeroSection
+        title="Explore Threads on Bitcoin"
+        accentWord="Bitcoin"
+        subtitle="Discover and create immutable, threaded messages anchored to the Bitcoin blockchain."
+        accentColor="orange"
+        actions={[
+          { href: "/compose", label: "Create Thread", icon: PenLine, variant: "primary" },
+          { href: "/threads", label: "Browse Threads", icon: Search, variant: "secondary" },
+        ]}
+      />
+
+      {/* How It Works */}
+      <HowItWorks
+        title="How It Works"
+        steps={howItWorksSteps}
+        accentColor="orange"
+        columns={{ default: 1, md: 3 }}
+      />
+
+      {/* Stats */}
+      <div>
+        <h2 className="text-xl font-bold text-white mb-4">Protocol Statistics</h2>
+        <StatsGrid
+          items={statsItems}
+          columns={{ default: 2, md: 4 }}
+          isLoading={statsLoading}
+        />
+      </div>
 
       {/* Recent Threads */}
       <section>
@@ -161,15 +218,6 @@ export default function Home() {
         )}
       </section>
     </Container>
-  );
-}
-
-function StatCard({ label, value }: { label: string; value: number }) {
-  return (
-    <Card className="p-4 text-center">
-      <p className="text-2xl font-bold text-foreground">{value.toLocaleString()}</p>
-      <p className="text-sm text-muted-foreground">{label}</p>
-    </Card>
   );
 }
 

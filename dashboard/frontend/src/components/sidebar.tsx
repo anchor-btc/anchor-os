@@ -698,7 +698,18 @@ export function Sidebar() {
                       className="fixed inset-0 z-40" 
                       onClick={() => setMoreMenuOpen(false)}
                     />
-                    <div className="absolute right-0 top-full mt-1 w-44 bg-card border border-border rounded-lg shadow-xl z-50 py-1">
+                    <div className="absolute right-0 top-full mt-1 w-48 bg-card border border-border rounded-lg shadow-xl z-50 py-1">
+                      <button
+                        onClick={() => {
+                          setMoreMenuOpen(false);
+                          startEdit();
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      >
+                        <Pencil className="w-4 h-4" />
+                        {t("sidebar.editOrder", "Edit Sidebar")}
+                      </button>
+                      <div className="h-px bg-border my-1" />
                       {isAuthEnabled && (
                       <button
                         onClick={() => {
@@ -845,16 +856,7 @@ export function Sidebar() {
             ) : (
               <>
                 <SidebarClock />
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={startEdit}
-                    className="p-1 text-muted-foreground hover:text-foreground transition-colors rounded hover:bg-muted"
-                    title={t("sidebar.editOrder", "Edit Order")}
-                  >
-                    <Pencil className="w-3 h-3" />
-                  </button>
-                  <SidebarBlockHeight />
-                </div>
+                <SidebarBlockHeight />
               </>
             )}
           </div>

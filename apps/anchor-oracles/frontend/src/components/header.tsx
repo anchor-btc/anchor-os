@@ -9,7 +9,9 @@ import {
   Container,
   Button,
 } from "@AnchorProtocol/ui";
-import { Eye, Users, Calendar, AlertTriangle, BookOpen } from "lucide-react";
+import { Eye, Home, Users, Calendar, AlertTriangle, BookOpen, UserPlus } from "lucide-react";
+
+const DOCS_URL = "http://localhost:3900/apps/oracles";
 
 export function Header() {
   return (
@@ -27,8 +29,8 @@ export function Header() {
 
           <div className="flex items-center gap-4">
             <NavGroup gap="sm">
-              <NavLink href="/" icon={Eye} accentColor="purple">
-                Dashboard
+              <NavLink href="/" icon={Home} accentColor="purple">
+                Home
               </NavLink>
               <NavLink href="/oracles" icon={Users} accentColor="purple">
                 Oracles
@@ -39,13 +41,14 @@ export function Header() {
               <NavLink href="/disputes" icon={AlertTriangle} accentColor="purple">
                 Disputes
               </NavLink>
-              <NavLink href="http://localhost:3900/apps/oracles" icon={BookOpen} external>
+              <NavLink href={DOCS_URL} icon={BookOpen} external>
                 Docs
               </NavLink>
             </NavGroup>
 
             <Button asChild variant="default" className="bg-purple-600 hover:bg-purple-700">
-              <Link href="/register">
+              <Link href="/register" className="flex items-center gap-2">
+                <UserPlus className="w-4 h-4" />
                 Become an Oracle
               </Link>
             </Button>
