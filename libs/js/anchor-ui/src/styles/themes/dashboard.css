@@ -1,0 +1,13 @@
+/**
+ * Anchor Dashboard Theme
+ * Color: Bitcoin Orange (#f7931a)
+ */
+
+:root {
+  --app-accent: 33.1 93.9% 53.3%;
+}
+
+.dark {
+  --app-accent: 33.1 93.9% 53.3%;
+}
+

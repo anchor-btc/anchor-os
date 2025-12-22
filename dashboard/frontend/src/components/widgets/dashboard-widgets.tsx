@@ -15,7 +15,7 @@ import { BackupStatusWidget } from "./backup-status-widget";
 import { MempoolSummaryWidget } from "./mempool-summary-widget";
 import { BitcoinPriceWidget } from "./bitcoin-price-widget";
 import { AppsWidget, ExplorersWidget, NetworkingWidget, KernelWidget } from "./services-widget";
-import { Pencil, Check, RotateCcw, Plus, Loader2 } from "lucide-react";
+import { Pencil, Check, RotateCcw, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function DashboardWidgets() {

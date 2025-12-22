@@ -1,0 +1,13 @@
+/**
+ * Anchor Oracles Theme
+ * Color: Purple (violet-ish) (#8b5cf6)
+ */
+
+:root {
+  --app-accent: 250.5 89.4% 66.3%;
+}
+
+.dark {
+  --app-accent: 250.5 89.4% 66.3%;
+}
+

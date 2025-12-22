@@ -1,0 +1,13 @@
+/**
+ * Anchor Proofs Theme
+ * Color: Emerald (#10b981)
+ */
+
+:root {
+  --app-accent: 160.1 84.1% 39.4%;
+}
+
+.dark {
+  --app-accent: 160.1 84.1% 39.4%;
+}
+

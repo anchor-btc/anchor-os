@@ -1,0 +1,13 @@
+/**
+ * Anchor Tokens Theme
+ * Color: Amber (#f59e0b)
+ */
+
+:root {
+  --app-accent: 38 92.1% 50.2%;
+}
+
+.dark {
+  --app-accent: 38 92.1% 50.2%;
+}
+

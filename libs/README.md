@@ -15,7 +15,8 @@ libs/
 │   ├── anchor-specs/       # Protocol specifications for all kinds
 │   └── anchor-wallet-lib/  # Wallet library (Bitcoin Core RPC)
 └── js/
-    └── anchor-sdk/         # TypeScript SDK for Node.js and browsers
+    ├── anchor-sdk/         # TypeScript SDK for Node.js and browsers
+    └── anchor-ui/          # React Design System (shadcn/ui + Tailwind)
 ```
 
 ## Rust Libraries (crates.io)
@@ -87,11 +88,12 @@ let txid = wallet.create_message_with_spec(&spec)?;
 println!("Domain registered: {}", txid);
 ```
 
-## TypeScript Library (npm)
+## JavaScript/TypeScript Libraries (npm)
 
 | Package | Description | README |
 |---------|-------------|--------|
 | [@AnchorProtocol/sdk](./js/anchor-sdk) | TypeScript SDK for Node.js and browsers | [📖](./js/anchor-sdk/README.md) |
+| [@AnchorProtocol/ui](./js/anchor-ui) | React Design System with Tailwind CSS | [📖](./js/anchor-ui/README.md) |
 
 ### Features
 

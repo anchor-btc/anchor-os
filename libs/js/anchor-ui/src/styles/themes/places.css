@@ -1,0 +1,13 @@
+/**
+ * Anchor Places Theme
+ * Color: Blue (#3b82f6)
+ */
+
+:root {
+  --app-accent: 217.2 91.2% 59.8%;
+}
+
+.dark {
+  --app-accent: 217.2 91.2% 59.8%;
+}
+

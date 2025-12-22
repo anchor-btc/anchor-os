@@ -1,34 +1,17 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Import Anchor Design System base styles */
+@import "@AnchorProtocol/ui/styles/globals.css";
+/* Import Threads theme (Orange accent) */
+@import "@AnchorProtocol/ui/styles/themes/threads.css";
 
+/* App-specific overrides */
 :root {
-  /* Clean light theme with Bitcoin orange accent */
-  --background: #fafafa;
-  --foreground: #171717;
+  /* Override primary to Bitcoin orange for Threads */
+  --primary: 33.1 93.9% 53.3%;
+  --primary-foreground: 0 0% 100%;
   
-  --primary: #f7931a;
-  --primary-foreground: #ffffff;
-  
-  --secondary: #f5f5f5;
-  --secondary-foreground: #171717;
-  
-  --muted: #e5e5e5;
-  --muted-foreground: #737373;
-  
-  --accent: #f7931a;
-  --accent-foreground: #ffffff;
-  
-  --border: #e5e5e5;
-  
-  --card: #ffffff;
-  --card-foreground: #171717;
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  /* Font overrides */
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
 }
 
 /* Custom scrollbar */
@@ -38,16 +21,16 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--secondary);
+  background: hsl(var(--secondary));
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--muted);
+  background: hsl(var(--muted));
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--muted-foreground);
+  background: hsl(var(--muted-foreground));
 }
 
 /* Anchor icon animation */
@@ -71,7 +54,7 @@ body {
 
 /* Subtle gradient background */
 .bg-gradient-radial {
-  background: radial-gradient(ellipse at top, rgba(247, 147, 26, 0.08) 0%, transparent 60%);
+  background: radial-gradient(ellipse at top, hsl(var(--app-accent) / 0.08) 0%, transparent 60%);
 }
 
 /* Thread connection lines */
@@ -86,7 +69,7 @@ body {
   top: 0;
   bottom: 0;
   width: 2px;
-  background: linear-gradient(to bottom, var(--primary), transparent);
+  background: linear-gradient(to bottom, hsl(var(--primary)), transparent);
 }
 
 /* Hero animations */
@@ -121,10 +104,10 @@ body {
 
 @keyframes pulse-glow {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(247, 147, 26, 0.2);
+    box-shadow: 0 0 20px hsl(var(--app-accent) / 0.2);
   }
   50% {
-    box-shadow: 0 0 40px rgba(247, 147, 26, 0.4);
+    box-shadow: 0 0 40px hsl(var(--app-accent) / 0.4);
   }
 }
 
@@ -170,7 +153,7 @@ body {
 
 /* Gradient text */
 .text-gradient {
-  background: linear-gradient(135deg, #f7931a 0%, #ffc107 50%, #f7931a 100%);
+  background: linear-gradient(135deg, hsl(var(--app-accent)) 0%, hsl(38 92% 60%) 50%, hsl(var(--app-accent)) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -178,7 +161,7 @@ body {
 
 /* Glass effect */
 .glass {
-  background: rgba(255, 255, 255, 0.8);
+  background: hsl(var(--background) / 0.8);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
@@ -206,4 +189,3 @@ body {
 .animate-blink {
   animation: blink 1s step-end infinite;
 }
-

@@ -1,0 +1,13 @@
+/**
+ * Anchor Domains Theme
+ * Color: Cyan (#06b6d4)
+ */
+
+:root {
+  --app-accent: 187.9 85.7% 42.7%;
+}
+
+.dark {
+  --app-accent: 187.9 85.7% 42.7%;
+}
+

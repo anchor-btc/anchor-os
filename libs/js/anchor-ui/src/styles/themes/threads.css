@@ -1,0 +1,13 @@
+/**
+ * Anchor Threads Theme
+ * Color: Orange (#f97316)
+ */
+
+:root {
+  --app-accent: 24.6 95% 53.1%;
+}
+
+.dark {
+  --app-accent: 24.6 95% 53.1%;
+}
+
