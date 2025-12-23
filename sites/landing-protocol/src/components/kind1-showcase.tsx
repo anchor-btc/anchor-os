@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
-const CODE_EXAMPLE = `import { createMessage, AnchorKind } from '@AnchorProtocol/anchor-sdk'
+const TS_CODE_EXAMPLE = `import { createMessage, AnchorKind } from '@AnchorProtocol/anchor-sdk'
 
 // Create a text message
 const message = createMessage({
@@ -14,6 +16,18 @@ const message = createMessage({
 const result = await wallet.broadcast(message)
 console.log('txid:', result.txid)`;
 
+const RUST_CODE_EXAMPLE = `use anchor_core::{Message, Kind, Carrier};
+
+// Create a text message
+let message = Message::builder()
+    .kind(Kind::Text)
+    .body("Hello, Bitcoin! ⚡")
+    .build()?;
+
+// Broadcast to the network
+let result = wallet.broadcast(&message).await?;
+println!("txid: {}", result.txid);`;
+
 const HEX_RESULT = "A11C0001 01 00 48656C6C6F2C20426974636F696E2120E29AA1";
 
 const DECODED_PARTS = [
@@ -23,7 +37,14 @@ const DECODED_PARTS = [
   { label: "Body", value: "48656C6C6F...", color: "text-accent" },
 ];
 
+type Language = "typescript" | "rust";
+
 export function Kind1Showcase() {
+  const [activeLanguage, setActiveLanguage] = useState<Language>("typescript");
+
+  const codeExample = activeLanguage === "typescript" ? TS_CODE_EXAMPLE : RUST_CODE_EXAMPLE;
+  const fileName = activeLanguage === "typescript" ? "example.ts" : "example.rs";
+
   return (
     <section className="py-24 px-6">
       <div className="max-w-5xl mx-auto">
@@ -57,26 +78,56 @@ export function Kind1Showcase() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="md:col-span-2 bg-muted/30 border border-muted rounded-2xl overflow-hidden"
           >
-            <div className="flex items-center gap-2 px-4 py-3 bg-muted/50 border-b border-muted">
-              <div className="flex gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-red-500/50" />
-                <div className="w-3 h-3 rounded-full bg-yellow-500/50" />
-                <div className="w-3 h-3 rounded-full bg-green-500/50" />
+            <div className="flex items-center justify-between px-4 py-3 bg-muted/50 border-b border-muted">
+              <div className="flex items-center gap-2">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-red-500/50" />
+                  <div className="w-3 h-3 rounded-full bg-yellow-500/50" />
+                  <div className="w-3 h-3 rounded-full bg-green-500/50" />
+                </div>
+                <span className="text-xs text-muted-foreground font-mono ml-2">
+                  {fileName}
+                </span>
               </div>
-              <span className="text-xs text-muted-foreground font-mono ml-2">
-                example.ts
-              </span>
+              
+              {/* Language Toggle */}
+              <div className="flex items-center gap-1 p-1 bg-background/50 rounded-lg border border-muted">
+                <button
+                  onClick={() => setActiveLanguage("typescript")}
+                  className={cn(
+                    "px-3 py-1 text-xs font-medium rounded-md transition-all duration-200",
+                    activeLanguage === "typescript"
+                      ? "bg-accent text-background"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  TypeScript
+                </button>
+                <button
+                  onClick={() => setActiveLanguage("rust")}
+                  className={cn(
+                    "px-3 py-1 text-xs font-medium rounded-md transition-all duration-200",
+                    activeLanguage === "rust"
+                      ? "bg-orange-500 text-background"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  Rust
+                </button>
+              </div>
             </div>
             <pre className="p-4 overflow-x-auto code-scroll">
               <code className="text-sm font-mono">
-                {CODE_EXAMPLE.split("\n").map((line, i) => (
+                {codeExample.split("\n").map((line, i) => (
                   <div key={i} className="leading-relaxed">
                     <span className="text-muted-foreground/50 select-none mr-4">
                       {String(i + 1).padStart(2, " ")}
                     </span>
                     <span
                       dangerouslySetInnerHTML={{
-                        __html: highlightSyntax(line),
+                        __html: activeLanguage === "typescript" 
+                          ? highlightTsSyntax(line)
+                          : highlightRustSyntax(line),
                       }}
                     />
                   </div>
@@ -195,7 +246,7 @@ export function Kind1Showcase() {
   );
 }
 
-function highlightSyntax(line: string): string {
+function highlightTsSyntax(line: string): string {
   return line
     .replace(
       /(import|from|const|await|async)/g,
@@ -223,3 +274,48 @@ function highlightSyntax(line: string): string {
     );
 }
 
+function highlightRustSyntax(line: string): string {
+  // First, protect strings by replacing them with placeholders
+  const strings: string[] = [];
+  let processedLine = line.replace(/(".*?")/g, (match) => {
+    strings.push(match);
+    return `__STRING_${strings.length - 1}__`;
+  });
+
+  // Now apply other highlights safely
+  processedLine = processedLine
+    .replace(
+      /\b(use|let|fn|async|await|pub|struct|impl)\b/g,
+      '<span class="text-purple-400">$1</span>'
+    )
+    .replace(
+      /\b(Message|Kind|Carrier|Text)\b/g,
+      '<span class="text-blue-400">$1</span>'
+    )
+    .replace(
+      /(\/\/.*)/g,
+      '<span class="text-muted-foreground">$1</span>'
+    )
+    .replace(
+      /\b(builder|kind|body|build|broadcast|txid|result|message|wallet|println)\b/g,
+      '<span class="text-cyan-400">$1</span>'
+    )
+    .replace(
+      /(::\w+)/g,
+      '<span class="text-accent">$1</span>'
+    )
+    .replace(
+      /(\?|&)/g,
+      '<span class="text-orange-400">$1</span>'
+    );
+
+  // Restore strings with highlighting
+  strings.forEach((str, i) => {
+    processedLine = processedLine.replace(
+      `__STRING_${i}__`,
+      `<span class="text-green-400">${str}</span>`
+    );
+  });
+
+  return processedLine;
+}

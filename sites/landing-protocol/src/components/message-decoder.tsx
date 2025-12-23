@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { parseAnchorMessage, EXAMPLE_HEX, createTextMessage } from "@/lib/anchor-parser";
+import { parseAnchorMessage, EXAMPLE_HEX, createTextMessage, bytesToHex } from "@/lib/anchor-parser";
 import { cn } from "@/lib/utils";
 
 interface ByteSegment {
@@ -13,6 +13,92 @@ interface ByteSegment {
   startIndex: number;
   endIndex: number;
 }
+
+interface ExampleMessage {
+  id: string;
+  name: string;
+  kind: string;
+  kindColor: string;
+  hex: string;
+  description: string;
+}
+
+const ANCHOR_MAGIC = [0xa1, 0x1c, 0x00, 0x01];
+
+// Pre-built example messages for different kinds
+const EXAMPLE_MESSAGES: ExampleMessage[] = [
+  {
+    id: "text",
+    name: "Text Message",
+    kind: "Kind 1",
+    kindColor: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+    hex: EXAMPLE_HEX,
+    description: "Simple text message: \"Hello, Bitcoin! ⚡\"",
+  },
+  {
+    id: "state",
+    name: "State Update",
+    kind: "Kind 2",
+    kindColor: "bg-purple-500/20 text-purple-400 border-purple-500/30",
+    hex: bytesToHex([...ANCHOR_MAGIC, 2, 0, ...Array.from(new TextEncoder().encode('{"status":"online","version":"1.0.0"}'))]),
+    description: "JSON state object for app configuration",
+  },
+  {
+    id: "dns",
+    name: "DNS Record",
+    kind: "Kind 4",
+    kindColor: "bg-green-500/20 text-green-400 border-green-500/30",
+    hex: bytesToHex([...ANCHOR_MAGIC, 4, 0, ...Array.from(new TextEncoder().encode('anchor.btc'))]),
+    description: "Bitcoin-native domain name registration",
+  },
+  {
+    id: "geomarker",
+    name: "Geomarker",
+    kind: "Kind 5",
+    kindColor: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
+    hex: bytesToHex([...ANCHOR_MAGIC, 5, 0, ...Array.from(new TextEncoder().encode('-23.5505,-46.6333'))]),
+    description: "Geographic location marker (São Paulo)",
+  },
+  {
+    id: "token",
+    name: "Token",
+    kind: "Kind 6",
+    kindColor: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+    hex: bytesToHex([...ANCHOR_MAGIC, 6, 0, ...Array.from(new TextEncoder().encode('ANCH:1000000'))]),
+    description: "Token issuance or transfer metadata",
+  },
+  {
+    id: "vote",
+    name: "Vote",
+    kind: "Kind 7",
+    kindColor: "bg-pink-500/20 text-pink-400 border-pink-500/30",
+    hex: bytesToHex([...ANCHOR_MAGIC, 7, 0, ...Array.from(new TextEncoder().encode('proposal:123:yes'))]),
+    description: "On-chain voting action",
+  },
+  {
+    id: "proof",
+    name: "Proof",
+    kind: "Kind 8",
+    kindColor: "bg-orange-500/20 text-orange-400 border-orange-500/30",
+    hex: bytesToHex([...ANCHOR_MAGIC, 8, 0, ...Array.from(new TextEncoder().encode('sha256:abc123'))]),
+    description: "Cryptographic proof of existence",
+  },
+  {
+    id: "threaded",
+    name: "Reply (Threaded)",
+    kind: "Kind 1",
+    kindColor: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+    hex: bytesToHex([
+      ...ANCHOR_MAGIC, 
+      1, // Kind: Text
+      1, // 1 anchor
+      0xde, 0xad, 0xbe, 0xef, 0x12, 0x34, 0x56, 0x78, // txid prefix (8 bytes)
+      0, // vout
+      ...Array.from(new TextEncoder().encode('This is a reply!'))
+    ]),
+    description: "Message with anchor (reply to another tx)",
+  },
+];
 
 export function MessageDecoder() {
   const [hexInput, setHexInput] = useState(EXAMPLE_HEX);
@@ -94,6 +180,11 @@ export function MessageDecoder() {
     }
   };
 
+  const handleExampleClick = (example: ExampleMessage) => {
+    setHexInput(example.hex);
+    setCustomText("");
+  };
+
   const formatHexWithHighlight = () => {
     const cleanHex = hexInput.replace(/\s/g, "").toUpperCase();
     const chars: React.ReactNode[] = [];
@@ -154,9 +245,48 @@ export function MessageDecoder() {
             <span className="text-gradient">Message Decoder</span>
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Paste any Anchor Protocol message in hex format to see its structure.
+            Explore different message kinds! Click an example below or paste your own hex.
             Hover over segments to understand each part.
           </p>
+        </motion.div>
+
+        {/* Example Messages Grid */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="mb-8"
+        >
+          <label className="block text-sm font-medium text-muted-foreground mb-3">
+            Quick Examples
+          </label>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {EXAMPLE_MESSAGES.map((example) => (
+              <button
+                key={example.id}
+                onClick={() => handleExampleClick(example)}
+                className={cn(
+                  "p-3 rounded-xl border text-left transition-all duration-200 hover:scale-[1.02]",
+                  hexInput === example.hex
+                    ? "border-accent bg-accent/10 shadow-lg shadow-accent/10"
+                    : "border-muted bg-muted/20 hover:border-accent/40 hover:bg-muted/40"
+                )}
+              >
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className={cn("text-[10px] px-1.5 py-0.5 rounded-full font-mono border", example.kindColor)}>
+                    {example.kind}
+                  </span>
+                </div>
+                <div className="font-medium text-sm text-foreground mb-1">
+                  {example.name}
+                </div>
+                <div className="text-xs text-muted-foreground line-clamp-2">
+                  {example.description}
+                </div>
+              </button>
+            ))}
+          </div>
         </motion.div>
 
         {/* Decoder Card */}
@@ -264,10 +394,25 @@ export function MessageDecoder() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 <span className="font-semibold text-accent">Decoded Message</span>
+                {parsed.kind && (
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-accent/20 text-accent font-mono ml-auto">
+                    {parsed.kind.name}
+                  </span>
+                )}
               </div>
-              <div className="font-mono text-lg text-foreground">
+              <div className="font-mono text-lg text-foreground break-all">
                 &quot;{parsed.body.text}&quot;
               </div>
+              {parsed.anchors.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-accent/20">
+                  <div className="text-xs text-accent mb-2 font-medium">ANCHORED TO:</div>
+                  {parsed.anchors.map((anchor, i) => (
+                    <div key={i} className="font-mono text-sm text-muted-foreground">
+                      {anchor.txidPrefix}... (vout: {anchor.vout})
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -287,4 +432,3 @@ export function MessageDecoder() {
     </section>
   );
 }
-
