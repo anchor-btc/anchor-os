@@ -150,7 +150,7 @@ function handleMessage(bytes: Uint8Array) {
 
 - [Text (Kind 1)](/kinds/text) - For human-readable text
 - [Custom Kinds](/kinds/#custom-kinds) - Define your own kind
-- [Message Format](/protocol/message-format) - Protocol structure
+- [Message Format](/concepts/message-format) - Protocol structure
 
 
 

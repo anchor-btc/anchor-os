@@ -214,3 +214,299 @@ pub async fn get_node_versions() -> impl IntoResponse {
 
     Json(versions)
 }
+
+// =============================================
+// Node Settings Configuration
+// =============================================
+
+/// Node settings configuration
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+pub struct NodeSettings {
+    // Network settings
+    pub network: String,
+    pub listen: bool,
+    pub maxconnections: i32,
+    pub bantime: i32,
+    // Mempool settings
+    pub maxmempool: i32,
+    pub mempoolexpiry: i32,
+    pub minrelaytxfee: f64,
+    pub datacarriersize: i32,
+    // RPC settings
+    pub rpcuser: String,
+    pub rpcpassword: String,
+    pub rpcport: i32,
+    pub rpcthreads: i32,
+    // Tor settings
+    pub proxy: String,
+    pub listenonion: bool,
+    pub onlynet: String,
+    // Performance settings
+    pub dbcache: i32,
+    pub prune: i32,
+    pub txindex: bool,
+    pub blockfilterindex: bool,
+    pub coinstatsindex: bool,
+    pub logtimestamps: bool,
+}
+
+impl Default for NodeSettings {
+    fn default() -> Self {
+        Self {
+            network: "regtest".to_string(),
+            listen: true,
+            maxconnections: 125,
+            bantime: 86400,
+            maxmempool: 300,
+            mempoolexpiry: 336,
+            minrelaytxfee: 0.00001,
+            datacarriersize: 100000,
+            rpcuser: "anchor".to_string(),
+            rpcpassword: "anchor".to_string(),
+            rpcport: 18443,
+            rpcthreads: 4,
+            proxy: String::new(),
+            listenonion: false,
+            onlynet: String::new(),
+            dbcache: 450,
+            prune: 0,
+            txindex: true,
+            blockfilterindex: false,
+            coinstatsindex: false,
+            logtimestamps: true,
+        }
+    }
+}
+
+/// Node settings response
+#[derive(Debug, Serialize, ToSchema)]
+pub struct NodeSettingsResponse {
+    pub settings: NodeSettings,
+    pub config_path: String,
+}
+
+/// Update settings request
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct UpdateNodeSettingsRequest {
+    pub settings: NodeSettings,
+}
+
+/// Update settings response
+#[derive(Debug, Serialize, ToSchema)]
+pub struct UpdateNodeSettingsResponse {
+    pub success: bool,
+    pub message: String,
+    pub requires_restart: bool,
+}
+
+/// Get node settings
+#[utoipa::path(
+    get,
+    path = "/node/settings",
+    tag = "Node",
+    responses(
+        (status = 200, description = "Current node settings", body = NodeSettingsResponse),
+        (status = 500, description = "Internal server error")
+    )
+)]
+pub async fn get_node_settings(
+    State(state): State<Arc<AppState>>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    // Try to read settings from database
+    let settings = if let Some(pool) = &state.db_pool {
+        let result = sqlx::query_scalar::<_, serde_json::Value>(
+            "SELECT value FROM system_settings WHERE key = 'node_settings'"
+        )
+        .fetch_optional(pool)
+        .await;
+
+        match result {
+            Ok(Some(json_value)) => {
+                serde_json::from_value(json_value).unwrap_or_default()
+            }
+            _ => NodeSettings::default(),
+        }
+    } else {
+        NodeSettings::default()
+    };
+
+    Ok(Json(NodeSettingsResponse {
+        settings,
+        config_path: "/data/bitcoin/bitcoin.conf".to_string(),
+    }))
+}
+
+/// Update node settings
+#[utoipa::path(
+    put,
+    path = "/node/settings",
+    tag = "Node",
+    request_body = UpdateNodeSettingsRequest,
+    responses(
+        (status = 200, description = "Settings updated", body = UpdateNodeSettingsResponse),
+        (status = 500, description = "Internal server error")
+    )
+)]
+pub async fn update_node_settings(
+    State(state): State<Arc<AppState>>,
+    Json(req): Json<UpdateNodeSettingsRequest>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    info!("Updating node settings");
+
+    // Save to database
+    if let Some(pool) = &state.db_pool {
+        let settings_json = serde_json::to_value(&req.settings)
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+        sqlx::query(
+            "INSERT INTO system_settings (key, value, updated_at) VALUES ('node_settings', $1, NOW())
+             ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()"
+        )
+        .bind(&settings_json)
+        .execute(pool)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    }
+
+    // Generate bitcoin.conf content
+    let config_content = generate_bitcoin_conf(&req.settings);
+    info!("Generated bitcoin.conf:\n{}", config_content);
+
+    // Note: Actually writing the config file would require mounting the config volume
+    // For now, we just save the settings and the user can manually apply them
+
+    Ok(Json(UpdateNodeSettingsResponse {
+        success: true,
+        message: "Settings saved. Restart the node to apply changes.".to_string(),
+        requires_restart: true,
+    }))
+}
+
+/// Generate bitcoin.conf content from settings
+fn generate_bitcoin_conf(settings: &NodeSettings) -> String {
+    let mut lines = Vec::new();
+
+    lines.push("# Bitcoin Core configuration generated by ANCHOR Dashboard".to_string());
+    lines.push(format!("# Generated at: {}", chrono::Utc::now()));
+    lines.push(String::new());
+
+    // Common settings
+    lines.push("# Common Settings".to_string());
+    lines.push(format!("rpcuser={}", settings.rpcuser));
+    lines.push(format!("rpcpassword={}", settings.rpcpassword));
+    lines.push("server=1".to_string());
+    lines.push("daemon=0".to_string());
+    lines.push(format!("listen={}", if settings.listen { 1 } else { 0 }));
+    lines.push(format!("txindex={}", if settings.txindex { 1 } else { 0 }));
+    lines.push(format!("datacarriersize={}", settings.datacarriersize));
+    lines.push(format!("maxconnections={}", settings.maxconnections));
+    lines.push(format!("bantime={}", settings.bantime));
+    lines.push(format!("maxmempool={}", settings.maxmempool));
+    lines.push(format!("mempoolexpiry={}", settings.mempoolexpiry));
+    lines.push(format!("minrelaytxfee={:.8}", settings.minrelaytxfee));
+    lines.push(format!("dbcache={}", settings.dbcache));
+    lines.push(format!("rpcthreads={}", settings.rpcthreads));
+    
+    if settings.prune > 0 {
+        lines.push(format!("prune={}", settings.prune));
+    }
+    
+    if settings.blockfilterindex {
+        lines.push("blockfilterindex=1".to_string());
+    }
+    
+    if settings.coinstatsindex {
+        lines.push("coinstatsindex=1".to_string());
+    }
+
+    if settings.logtimestamps {
+        lines.push("logtimestamps=1".to_string());
+    }
+
+    lines.push("printtoconsole=1".to_string());
+    lines.push(String::new());
+
+    // Network-specific settings
+    let network_section = match settings.network.as_str() {
+        "regtest" => "[regtest]",
+        "testnet" => "[test]",
+        "signet" => "[signet]",
+        "mainnet" => "[main]",
+        _ => "[regtest]",
+    };
+
+    lines.push(format!("# {} Settings", settings.network.to_uppercase()));
+    lines.push(network_section.to_string());
+    lines.push(format!("rpcport={}", settings.rpcport));
+    lines.push("rpcbind=0.0.0.0".to_string());
+    lines.push("rpcallowip=0.0.0.0/0".to_string());
+
+    if settings.network == "regtest" {
+        lines.push("acceptnonstdtxn=1".to_string());
+        lines.push("fallbackfee=0.00001".to_string());
+        lines.push("wallet=anchor_wallet".to_string());
+        // ZMQ for regtest
+        lines.push("zmqpubrawblock=tcp://0.0.0.0:29000".to_string());
+        lines.push("zmqpubrawtx=tcp://0.0.0.0:29001".to_string());
+        lines.push("zmqpubsequence=tcp://0.0.0.0:29002".to_string());
+    }
+
+    lines.push(String::new());
+
+    // Tor settings
+    if !settings.proxy.is_empty() || settings.listenonion || !settings.onlynet.is_empty() {
+        lines.push("# Tor Settings".to_string());
+        
+        if !settings.proxy.is_empty() {
+            lines.push(format!("proxy={}", settings.proxy));
+        }
+        
+        if settings.listenonion {
+            lines.push("listenonion=1".to_string());
+        }
+        
+        if !settings.onlynet.is_empty() {
+            lines.push(format!("onlynet={}", settings.onlynet));
+        }
+    }
+
+    lines.join("\n")
+}
+
+/// Reset node settings to defaults
+#[utoipa::path(
+    post,
+    path = "/node/settings/reset",
+    tag = "Node",
+    responses(
+        (status = 200, description = "Settings reset to defaults", body = NodeSettingsResponse),
+        (status = 500, description = "Internal server error")
+    )
+)]
+pub async fn reset_node_settings(
+    State(state): State<Arc<AppState>>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    info!("Resetting node settings to defaults");
+
+    let default_settings = NodeSettings::default();
+
+    // Save defaults to database
+    if let Some(pool) = &state.db_pool {
+        let settings_json = serde_json::to_value(&default_settings)
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+        sqlx::query(
+            "INSERT INTO system_settings (key, value, updated_at) VALUES ('node_settings', $1, NOW())
+             ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()"
+        )
+        .bind(&settings_json)
+        .execute(pool)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    }
+
+    Ok(Json(NodeSettingsResponse {
+        settings: default_settings,
+        config_path: "/data/bitcoin/bitcoin.conf".to_string(),
+    }))
+}

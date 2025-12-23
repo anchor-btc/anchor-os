@@ -21,88 +21,47 @@ export default defineConfig({
     logo: '/logo.svg',
     
     nav: [
-      { text: 'Protocol', link: '/protocol/overview' },
+      { text: 'Quickstart', link: '/quickstart' },
+      { text: 'Concepts', link: '/concepts/' },
+      { text: 'SDK', link: '/sdk/' },
       { text: 'Kinds', link: '/kinds/' },
-      { text: 'SDK', link: '/sdk/getting-started' },
-      { text: 'Examples', link: '/examples/create-message' },
-      { text: 'Development', link: '/development/' },
-      {
-        text: 'Apps',
-        items: [
-          { text: 'Anchor Threads', link: 'https://threads.anchor.dev' },
-          { text: 'Anchor Tokens', link: 'https://tokens.anchor.dev' },
-          { text: 'Anchor DNS', link: 'https://dns.anchor.dev' },
-          { text: 'Anchor Proof', link: 'https://proof.anchor.dev' },
-          { text: 'Anchor Map', link: 'https://map.anchor.dev' },
-          { text: 'Anchor Pixel', link: 'https://pixel.anchor.dev' },
-        ]
-      }
+      { text: 'Tutorials', link: '/tutorials/' },
     ],
 
     sidebar: {
-      '/protocol/': [
-        {
-          text: 'Protocol Specification',
-          items: [
-            { text: 'Overview', link: '/protocol/overview' },
-            { text: 'Message Format', link: '/protocol/message-format' },
-            { text: 'Carrier Types', link: '/protocol/carriers' },
-            { text: 'Anchoring System', link: '/protocol/anchoring' },
-          ]
-        }
+      '/concepts/': [
+        { text: 'Overview', link: '/concepts/' },
+        { text: 'Message Format', link: '/concepts/message-format' },
+        { text: 'Carriers', link: '/concepts/carriers' },
+        { text: 'Threading', link: '/concepts/threading' },
       ],
       '/kinds/': [
-        {
-          text: 'Kinds Reference',
-          items: [
-            { text: 'Overview', link: '/kinds/' },
-            { text: 'Generic (0)', link: '/kinds/generic' },
-            { text: 'Text (1)', link: '/kinds/text' },
-            { text: 'State (2)', link: '/kinds/state' },
-            { text: 'Vote (3)', link: '/kinds/vote' },
-            { text: 'Image (4)', link: '/kinds/image' },
-            { text: 'GeoMarker (5)', link: '/kinds/geomarker' },
-            { text: 'DNS (10)', link: '/kinds/dns' },
-            { text: 'Proof (11)', link: '/kinds/proof' },
-            { text: 'Token (20)', link: '/kinds/token' },
-          ]
-        }
+        { text: 'Overview', link: '/kinds/' },
+        { text: 'Generic (0)', link: '/kinds/generic' },
+        { text: 'Text (1)', link: '/kinds/text' },
+        { text: 'State (2)', link: '/kinds/state' },
+        { text: 'Vote (3)', link: '/kinds/vote' },
+        { text: 'Image (4)', link: '/kinds/image' },
+        { text: 'GeoMarker (5)', link: '/kinds/geomarker' },
+        { text: 'DNS (10)', link: '/kinds/dns' },
+        { text: 'Proof (11)', link: '/kinds/proof' },
+        { text: 'Token (20)', link: '/kinds/token' },
       ],
       '/sdk/': [
-        {
-          text: 'SDK Documentation',
-          items: [
-            { text: 'Getting Started', link: '/sdk/getting-started' },
-            { text: 'Installation', link: '/sdk/installation' },
-            { text: 'Encoding Messages', link: '/sdk/encoding' },
-            { text: 'Parsing Messages', link: '/sdk/parsing' },
-            { text: 'Wallet Integration', link: '/sdk/wallet' },
-            { text: 'API Reference', link: '/sdk/api-reference' },
-          ]
-        }
+        { text: 'Getting Started', link: '/sdk/' },
+        { text: 'Wallet', link: '/sdk/wallet' },
+        { text: 'Encoding', link: '/sdk/encoding' },
+        { text: 'Parsing', link: '/sdk/parsing' },
+        { text: 'API Reference', link: '/sdk/api-reference' },
       ],
-      '/examples/': [
-        {
-          text: 'Examples',
-          items: [
-            { text: 'Create a Message', link: '/examples/create-message' },
-            { text: 'Reply to a Message', link: '/examples/reply-to-message' },
-            { text: 'Parse a Transaction', link: '/examples/parse-transaction' },
-          ]
-        }
+      '/tutorials/': [
+        { text: 'Hello World', link: '/tutorials/hello-world' },
+        { text: 'Threaded Messages', link: '/tutorials/threaded-messages' },
+        { text: 'Reading Messages', link: '/tutorials/reading-messages' },
       ],
-      '/development/': [
-        {
-          text: 'Development Guide',
-          items: [
-            { text: 'Overview', link: '/development/' },
-            { text: 'Project Structure', link: '/development/project-structure' },
-            { text: 'Docker Setup', link: '/development/docker' },
-            { text: 'Scripts', link: '/development/scripts' },
-            { text: 'Makefile', link: '/development/makefile' },
-          ]
-        }
-      ]
+      '/contributing/': [
+        { text: 'Getting Started', link: '/contributing/' },
+      ],
     },
 
     socialLinks: [
@@ -123,9 +82,8 @@ export default defineConfig({
     },
 
     editLink: {
-      pattern: 'https://github.com/AnchorProtocol/anchor/edit/main/anchor/docs/:path',
+      pattern: 'https://github.com/AnchorProtocol/anchor/edit/main/sites/docs/:path',
       text: 'Edit this page on GitHub'
     }
   }
 })
-

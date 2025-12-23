@@ -1,10 +1,8 @@
-# Development Guide
+# Contributing
 
-Welcome to the Anchor Protocol development guide. This section covers everything you need to contribute to the project.
+Set up a local development environment for the Anchor Protocol.
 
 ## Prerequisites
-
-Before you begin, ensure you have:
 
 - **Docker** 24+ with Docker Compose V2
 - **Node.js** 18+
@@ -28,20 +26,7 @@ make up
 open http://localhost:8000
 ```
 
-## Development Sections
-
-<div class="tip custom-block" style="padding-top: 8px">
-
-**Explore the development docs:**
-
-- [Project Structure](/development/project-structure) - Understand the codebase organization
-- [Docker Setup](/development/docker) - Docker Compose configuration and profiles
-- [Scripts](/development/scripts) - Automation scripts for common tasks
-- [Makefile](/development/makefile) - Quick commands for development
-
-</div>
-
-## Architecture Overview
+## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -49,16 +34,12 @@ open http://localhost:8000
 │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐           │
 │  │ Threads │ │ Canvas  │ │ Domains │ │ Tokens  │  ...      │
 │  └────┬────┘ └────┬────┘ └────┬────┘ └────┬────┘           │
-│       │           │           │           │                 │
 │       └───────────┴─────┬─────┴───────────┘                 │
-│                         │                                   │
 │                    ┌────┴────┐                              │
 │                    │ Wallet  │                              │
 │                    │  API    │                              │
 │                    └────┬────┘                              │
-│                         │                                   │
 │       ┌─────────────────┼─────────────────┐                 │
-│       │                 │                 │                 │
 │  ┌────┴────┐      ┌────┴────┐      ┌────┴────┐             │
 │  │ Bitcoin │      │ Indexer │      │Postgres │             │
 │  │  Core   │      │         │      │         │             │
@@ -76,9 +57,61 @@ open http://localhost:8000
 | Blockchain | Bitcoin Core (regtest/mainnet) |
 | Infrastructure | Docker Compose |
 
+## Project Structure
+
+```
+anchor/
+├── apps/              # User-facing applications
+├── dashboard/         # Admin dashboard
+├── docker/            # Docker Compose files
+├── infra/             # Infrastructure configs
+├── internal/          # Core internal services
+├── libs/              # Shared libraries
+├── sites/             # Documentation and landing pages
+└── Makefile           # Development commands
+```
+
+## Docker Profiles
+
+```bash
+# Minimum - core infrastructure only
+make up-min
+
+# Default - standard development
+make up
+
+# Full - all services including explorers
+make up-full
+```
+
+## Key Services
+
+| Service | Port | Description |
+|---------|------|-------------|
+| Dashboard | 8000 | Admin UI |
+| Bitcoin RPC | 18443 | Bitcoin Core (regtest) |
+| Wallet API | 8001 | REST API |
+| PostgreSQL | 5432 | Database |
+| Mempool | 4000 | Block explorer |
+
+## Common Commands
+
+```bash
+# View logs
+docker compose logs -f core-bitcoin
+
+# Rebuild a service
+make rebuild s=dashboard-backend
+
+# Stop all services
+docker compose down
+
+# Reset all data
+docker compose down -v
+```
+
 ## Getting Help
 
-- **Issues**: [GitHub Issues](https://github.com/AnchorProtocol/anchor/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/AnchorProtocol/anchor/discussions)
-
+- [GitHub Issues](https://github.com/AnchorProtocol/anchor/issues)
+- [GitHub Discussions](https://github.com/AnchorProtocol/anchor/discussions)
 

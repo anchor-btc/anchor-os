@@ -100,8 +100,8 @@ export function Modal({
 }
 
 export interface ModalHeaderProps {
-  /** Title text */
-  title: string;
+  /** Title text (optional if using children) */
+  title?: string;
   /** Subtitle/description */
   subtitle?: string;
   /** Optional icon */
@@ -114,6 +114,8 @@ export interface ModalHeaderProps {
   onClose?: () => void;
   /** Additional class names */
   className?: string;
+  /** Custom children (alternative to title/subtitle) */
+  children?: React.ReactNode;
 }
 
 /**
@@ -127,16 +129,21 @@ export function ModalHeader({
   showClose = false,
   onClose,
   className,
+  children,
 }: ModalHeaderProps) {
   return (
     <div className={cn("flex items-start gap-3 p-6 pb-4", className)}>
-      {icon && <IconBox icon={icon} color={iconColor} size="md" />}
-      <div className="flex-1 min-w-0">
-        <h3 className="font-semibold text-foreground">{title}</h3>
-        {subtitle && (
-          <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
-        )}
-      </div>
+      {icon && !children && <IconBox icon={icon} color={iconColor} size="md" />}
+      {children ? (
+        <div className="flex-1 min-w-0">{children}</div>
+      ) : (
+        <div className="flex-1 min-w-0">
+          <h3 className="font-semibold text-foreground">{title}</h3>
+          {subtitle && (
+            <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
+          )}
+        </div>
+      )}
       {showClose && onClose && (
         <button
           onClick={onClose}

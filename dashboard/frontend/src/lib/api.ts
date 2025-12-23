@@ -165,6 +165,26 @@ export async function execContainer(
   return res.json();
 }
 
+export interface RebuildContainerResponse {
+  success: boolean;
+  message: string;
+  service: string;
+  output: string;
+}
+
+export async function rebuildContainer(
+  service: string,
+  buildArgs: Record<string, string> = {}
+): Promise<RebuildContainerResponse> {
+  const res = await fetch(`${API_URL}/docker/rebuild`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ service, build_args: buildArgs }),
+  });
+  if (!res.ok) throw new Error("Failed to rebuild container");
+  return res.json();
+}
+
 export async function fetchNodeStatus(): Promise<NodeStatus> {
   const res = await fetch(`${API_URL}/bitcoin/status`);
   if (!res.ok) throw new Error("Failed to fetch node status");
@@ -268,6 +288,69 @@ export async function switchNodeVersion(version: string, network: string): Promi
 export async function fetchNodeVersions(): Promise<VersionInfo[]> {
   const res = await fetch(`${API_URL}/node/versions`);
   if (!res.ok) throw new Error("Failed to fetch node versions");
+  return res.json();
+}
+
+// Node Settings Types
+
+export interface NodeSettings {
+  network: string;
+  listen: boolean;
+  maxconnections: number;
+  bantime: number;
+  maxmempool: number;
+  mempoolexpiry: number;
+  minrelaytxfee: number;
+  datacarriersize: number;
+  rpcuser: string;
+  rpcpassword: string;
+  rpcport: number;
+  rpcthreads: number;
+  proxy: string;
+  listenonion: boolean;
+  onlynet: string;
+  dbcache: number;
+  prune: number;
+  txindex: boolean;
+  blockfilterindex: boolean;
+  coinstatsindex: boolean;
+  logtimestamps: boolean;
+}
+
+export interface NodeSettingsResponse {
+  settings: NodeSettings;
+  config_path: string;
+}
+
+export interface UpdateNodeSettingsResponse {
+  success: boolean;
+  message: string;
+  requires_restart: boolean;
+}
+
+// Node Settings API Functions
+
+export async function fetchNodeSettings(): Promise<NodeSettingsResponse> {
+  const res = await fetch(`${API_URL}/node/settings`);
+  if (!res.ok) throw new Error("Failed to fetch node settings");
+  return res.json();
+}
+
+export async function updateNodeSettings(settings: NodeSettings): Promise<UpdateNodeSettingsResponse> {
+  const res = await fetch(`${API_URL}/node/settings`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ settings }),
+  });
+  if (!res.ok) throw new Error("Failed to update node settings");
+  return res.json();
+}
+
+export async function resetNodeSettings(): Promise<NodeSettingsResponse> {
+  const res = await fetch(`${API_URL}/node/settings/reset`, {
+    method: "POST",
+  });
+  if (!res.ok) throw new Error("Failed to reset node settings");
   return res.json();
 }
 

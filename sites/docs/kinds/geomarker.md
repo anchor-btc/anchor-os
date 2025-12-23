@@ -319,7 +319,7 @@ for (const loc of locations) {
 
 - [Text (Kind 1)](/kinds/text) - Add detailed descriptions
 - [Anchor Places](/apps/places) - Location markers application
-- [Carrier Types](/protocol/carriers) - Embedding options
+- [Carriers](/concepts/carriers) - Embedding options
 
 
 

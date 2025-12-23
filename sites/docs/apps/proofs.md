@@ -364,5 +364,5 @@ open http://localhost:3500
 - [Proof Kind (Kind 11)](/kinds/proof) - Payload specification
 - [Anchor Canvas](/apps/canvas) - Collaborative pixel canvas
 - [Anchor Places](/apps/places) - Location markers
-- [Anchoring System](/protocol/anchoring) - Revocation chains
+- [Threading](/concepts/threading) - Revocation chains
 

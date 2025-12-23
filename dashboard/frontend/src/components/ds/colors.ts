@@ -60,6 +60,12 @@ export const dsColors = {
     border: "border-amber-500",
     hoverBg: "hover:bg-amber-500/30",
   },
+  green: {
+    bg: "bg-green-500/20",
+    text: "text-green-500",
+    border: "border-green-500",
+    hoverBg: "hover:bg-green-500/30",
+  },
   // Semantic colors using CSS variables
   primary: {
     bg: "bg-primary/20",

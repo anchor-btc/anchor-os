@@ -4,37 +4,39 @@ layout: home
 hero:
   name: "Anchor Protocol"
   text: "Bitcoin-Native Messaging"
-  tagline: Embed structured, immutable data on the Bitcoin blockchain with threading, multiple carriers, and extensible message types.
+  tagline: Structured, immutable data on Bitcoin. One format, multiple carriers, infinite possibilities.
   actions:
     - theme: brand
-      text: Get Started
-      link: /protocol/overview
+      text: Quickstart →
+      link: /quickstart
     - theme: alt
-      text: View on GitHub
+      text: GitHub
       link: https://github.com/AnchorProtocol/anchor
   image:
     src: /anchor-logo.svg
     alt: Anchor Protocol
 
 features:
-  - icon: ⚓
-    title: Anchored Messages
-    details: Reference parent messages using txid prefixes, creating verifiable threads and conversation chains on-chain.
-  - icon: 📦
-    title: Multiple Carriers
-    details: Choose from OP_RETURN, Inscriptions, Stamps, or Witness Data based on size, cost, and permanence requirements.
-  - icon: 🔧
-    title: Extensible Kinds
-    details: Built-in support for text, tokens, DNS, proofs, and more. Define custom kinds for your application.
   - icon: ⚡
-    title: Efficient Encoding
-    details: Compact binary format with varint encoding, designed to minimize on-chain footprint and transaction fees.
-  - icon: 🔐
-    title: Bitcoin Security
-    details: Inherit Bitcoin's immutability and timestamping. No separate consensus or token required.
-  - icon: 🛠️
-    title: Developer Friendly
-    details: TypeScript SDK, modular Docker setup, automation scripts, and comprehensive documentation.
+    title: 5 min to first message
+    details: Install SDK, create message, broadcast. Done.
+    link: /quickstart
+    linkText: Start now
+  - icon: 📖
+    title: Understand the protocol
+    details: Message format, carriers, threading model.
+    link: /concepts/
+    linkText: Read concepts
+  - icon: 🔧
+    title: Build with the SDK
+    details: TypeScript and Rust. Encode, parse, broadcast.
+    link: /sdk/
+    linkText: View SDK docs
+  - icon: 📦
+    title: Explore message kinds
+    details: Text, DNS, Tokens, Proofs, GeoMarkers, and more.
+    link: /kinds/
+    linkText: See all kinds
 
 ---
 
@@ -43,72 +45,102 @@ features:
   --vp-home-hero-name-color: transparent;
   --vp-home-hero-name-background: -webkit-linear-gradient(135deg, #f7931a 30%, #ffc107);
 }
+.vp-doc h2 {
+  border-top: none;
+  margin-top: 24px;
+}
 </style>
 
-## Quick Start
+## How It Works
 
-Install the Anchor SDK to start building:
+<div class="how-it-works">
 
-```bash
-npm install @AnchorProtocol/anchor-sdk
+**1. Create** → Encode your data with a message kind  
+**2. Embed** → Choose a carrier (OP_RETURN, Inscription, Witness)  
+**3. Broadcast** → Send to Bitcoin network  
+**4. Read** → Anyone can parse and verify on-chain  
+
+</div>
+
+## Choose Your Path
+
+| I want to... | Go to |
+|--------------|-------|
+| Get started immediately | [Quickstart](/quickstart) |
+| Understand how Anchor works | [Concepts](/concepts/) |
+| Integrate the SDK | [SDK Reference](/sdk/) |
+| See what I can build | [Message Kinds](/kinds/) |
+| Follow step-by-step examples | [Tutorials](/tutorials/) |
+| Explore existing apps | [Apps](/apps/) |
+
+## Install
+
+::: code-group
+
+```bash [npm]
+npm install @AnchorProtocol/sdk
 ```
 
-Create and broadcast a text message:
-
-```typescript
-import { createMessage, AnchorKind } from '@AnchorProtocol/anchor-sdk'
-
-const message = createMessage({
-  kind: AnchorKind.Text,
-  body: 'Hello, Bitcoin!',
-})
-
-// Embed in a transaction via OP_RETURN
-const txHex = await wallet.createTransaction(message)
+```bash [Cargo.toml]
+[dependencies]
+anchor-core = "0.1"
+anchor-wallet-lib = "0.1"
 ```
 
-## Protocol Overview
+:::
 
-Anchor messages follow a simple binary format:
+## Hello World
 
-| Field | Size | Description |
-|-------|------|-------------|
-| Magic | 4 bytes | `0xA11C0001` - Protocol identifier |
-| Kind | 1 byte | Message type (0-255) |
-| Anchor Count | 1 byte | Number of parent references |
-| Anchors | 9 bytes each | `txid_prefix[8] + vout[1]` |
-| Body | variable | Kind-specific payload |
+::: code-group
 
-## Message Kinds
+```typescript [TypeScript]
+import { AnchorWallet, AnchorKind } from '@AnchorProtocol/sdk'
 
-| Kind | Name | Description |
-|------|------|-------------|
-| 0 | Generic | Raw binary data |
-| 1 | Text | UTF-8 text messages |
-| 2 | State | State updates (pixels, counters) |
-| 3 | Vote | Governance voting |
-| 4 | Image | Embedded images |
-| 5 | GeoMarker | Geographic coordinates |
-| 10 | DNS | Decentralized naming |
-| 11 | Proof | Proof of existence |
-| 20 | Token | Fungible tokens |
+const wallet = new AnchorWallet({ network: 'regtest', ... })
+const txid = await wallet.createRootMessage('Hello, Bitcoin!')
+```
 
-## Applications
+```rust [Rust]
+use anchor_wallet_lib::{AnchorWallet, WalletConfig};
 
-The Anchor Protocol powers several applications. See [all applications](/apps/) for details.
+let wallet = AnchorWallet::new(WalletConfig::regtest(...))?;
+let txid = wallet.create_root_message("Hello, Bitcoin!")?;
+```
 
-- **[Anchor Canvas](/apps/canvas)** - Collaborative pixel canvas on Bitcoin
-- **[Anchor Threads](https://threads.anchor.dev)** - Decentralized forum with Bitcoin-backed posts
-- **[Anchor Tokens](https://tokens.anchor.dev)** - Fungible tokens on Bitcoin
-- **[Anchor Domains](https://domains.anchor.dev)** - .btc, .sat, .anchor, .anc, .bit domain registration
-- **[Anchor Proofs](https://proofs.anchor.dev)** - Document timestamping
-- **[Anchor Places](/apps/places)** - Geographic markers
+:::
 
-## Development
+<div class="cta-box">
 
-Want to contribute? Check out our [Development Guide](/development/) for:
+[Full Quickstart Guide →](/quickstart)
 
-- [Project Structure](/development/project-structure) - Understand the monorepo architecture
-- [Docker Setup](/development/docker) - Run the full stack locally
-- [Scripts](/development/scripts) - Automation for common tasks
-- [Makefile](/development/makefile) - Quick commands for development
+</div>
+
+<style>
+.how-it-works {
+  background: var(--vp-c-bg-soft);
+  padding: 20px 24px;
+  border-radius: 12px;
+  margin: 16px 0 24px;
+}
+.how-it-works p {
+  margin: 0;
+  line-height: 2;
+}
+.cta-box {
+  text-align: center;
+  margin: 32px 0;
+}
+.cta-box a {
+  display: inline-block;
+  padding: 12px 32px;
+  background: var(--vp-c-brand-1);
+  color: var(--vp-c-white);
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+.cta-box a:hover {
+  opacity: 0.9;
+}
+</style>

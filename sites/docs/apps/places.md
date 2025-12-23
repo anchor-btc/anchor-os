@@ -249,4 +249,4 @@ open http://localhost:3300
 
 - [GeoMarker Kind (Kind 5)](/kinds/geomarker) - Payload specification
 - [Anchor Canvas](/apps/canvas) - Collaborative pixel canvas
-- [Carrier Types](/protocol/carriers) - Data embedding options
+- [Carriers](/concepts/carriers) - Data embedding options

@@ -1051,7 +1051,7 @@ Response:
 
 ## See Also
 
-- [Anchoring System](/protocol/anchoring) - How update chains work
-- [Message Format](/protocol/message-format) - Full protocol specification
-- [Carriers](/protocol/carriers) - OP_RETURN, Witness, Inscription options
+- [Threading](/concepts/threading) - How update chains work
+- [Message Format](/concepts/message-format) - Full protocol specification
+- [Carriers](/concepts/carriers) - OP_RETURN, Witness, Inscription options
 - [Text Kind](/kinds/text) - Store additional metadata

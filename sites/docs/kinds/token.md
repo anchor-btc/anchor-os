@@ -510,7 +510,7 @@ function calculateFeeSavings(
 
 - [Anchor Tokens](https://tokens.anchor.dev) - Live application
 - [Vote (Kind 3)](/kinds/vote) - Token-weighted voting
-- [Carrier Types](/protocol/carriers) - Witness discount
+- [Carriers](/concepts/carriers) - Witness discount
 
 
 

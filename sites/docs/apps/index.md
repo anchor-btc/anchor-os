@@ -97,8 +97,8 @@ docker compose logs -f <service-name>
 
 Want to build an application on Anchor? Start with:
 
-1. [Protocol Overview](/protocol/overview) - Understand the message format
+1. [Concepts](/concepts/) - Understand the message format
 2. [Message Kinds](/kinds/) - Choose or define a kind for your data
-3. [SDK Getting Started](/sdk/getting-started) - Use the SDK to encode/decode messages
+3. [SDK](/sdk/) - Use the SDK to encode/decode messages
 4. [Wallet API](/sdk/wallet) - Broadcast transactions
 

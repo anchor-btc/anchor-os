@@ -558,9 +558,9 @@ pub async fn get_installation_status(
         }
     };
 
-    // Get installation config from database
+    // Get installation config from database (always use id = 1)
     let row = sqlx::query(
-        "SELECT preset, services, setup_completed FROM installation_config LIMIT 1"
+        "SELECT preset, services, setup_completed FROM installation_config WHERE id = 1"
     )
     .fetch_optional(pool)
     .await

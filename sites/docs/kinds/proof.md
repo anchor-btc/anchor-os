@@ -384,6 +384,6 @@ const verified = await verifier.verify(claimedPhoto, photoProof)
 ## See Also
 
 - [Anchor Proofs App](/apps/proofs) - Live application
-- [Carriers](/protocol/carriers) - All carrier types explained
+- [Carriers](/concepts/carriers) - All carrier types explained
 - [Generic (Kind 0)](/kinds/generic) - Store raw hashes
-- [Anchoring System](/protocol/anchoring) - Revocation chains
+- [Threading](/concepts/threading) - Revocation chains

@@ -284,7 +284,7 @@ const post = createMessage({
 
 ## See Also
 
-- [Carrier Types](/protocol/carriers) - Inscription details
+- [Carriers](/concepts/carriers) - Inscription details
 - [Proof (Kind 11)](/kinds/proof) - Hash images instead of embedding
 - [Ordinals Compatibility](/sdk/encoding#ordinals) - Cross-protocol support
 

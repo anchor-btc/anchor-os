@@ -215,8 +215,8 @@ const annotation = createMessage({
 ## See Also
 
 - [Generic (Kind 0)](/kinds/generic) - For binary data
-- [Creating a Message](/examples/create-message) - Full example
-- [Reply to Message](/examples/reply-to-message) - Threading example
+- [Creating a Message](/tutorials/hello-world) - Full example
+- [Reply to Message](/tutorials/threaded-messages) - Threading example
 
 
 

@@ -258,7 +258,7 @@ async function countVotes(
 
 - [State (Kind 2)](/kinds/state) - For state updates
 - [Token (Kind 20)](/kinds/token) - For token-weighted voting
-- [Anchoring System](/protocol/anchoring) - Reference proposals
+- [Threading](/concepts/threading) - Reference proposals
 
 
 

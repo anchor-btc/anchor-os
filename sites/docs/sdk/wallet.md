@@ -1,51 +1,49 @@
-# Wallet Integration
+# Wallet
 
-The SDK provides wallet integration for creating, signing, and broadcasting Anchor messages to Bitcoin.
+Create, sign, and broadcast Anchor messages to Bitcoin.
 
-## AnchorWallet
+## Configuration
 
-### Configuration
+::: code-group
 
-```typescript
-import { AnchorWallet, Network } from '@AnchorProtocol/anchor-sdk'
+```typescript [TypeScript]
+import { AnchorWallet } from '@AnchorProtocol/sdk'
 
 const wallet = new AnchorWallet({
-  // Bitcoin Core RPC
-  rpcUrl: 'http://localhost:8332',
+  rpcUrl: 'http://localhost:18443',
   rpcUser: 'bitcoin',
   rpcPassword: 'password',
-  
-  // Network type
-  network: 'mainnet' as Network,
-  
-  // Optional: wallet name for multi-wallet
-  walletName: 'anchor-wallet',
-  
-  // Optional: default fee rate (sat/vB)
-  feeRate: 10
+  network: 'regtest',
+  walletName: 'anchor-wallet', // optional
+  feeRate: 10 // optional, sat/vB
 })
 ```
 
-### Network Types
+```rust [Rust]
+use anchor_wallet_lib::{AnchorWallet, WalletConfig};
 
-```typescript
-type Network = 'mainnet' | 'testnet' | 'signet' | 'regtest'
+// Regtest
+let config = WalletConfig::regtest("http://127.0.0.1:18443", "user", "pass");
 
-// Network-specific ports
-const RPC_PORTS = {
-  mainnet: 8332,
-  testnet: 18332,
-  signet: 38332,
-  regtest: 18443
-}
+// Mainnet
+let config = WalletConfig::mainnet("http://127.0.0.1:8332", "user", "pass");
+
+// Testnet
+let config = WalletConfig::testnet("http://127.0.0.1:18332", "user", "pass");
+
+let wallet = AnchorWallet::new(config)?;
 ```
+
+:::
 
 ## Broadcasting Messages
 
 ### Simple Broadcast
 
-```typescript
-import { createMessage, AnchorKind } from '@AnchorProtocol/anchor-sdk'
+::: code-group
+
+```typescript [TypeScript]
+import { createMessage, AnchorKind } from '@AnchorProtocol/sdk'
 
 const message = createMessage({
   kind: AnchorKind.Text,
@@ -54,49 +52,62 @@ const message = createMessage({
 
 const result = await wallet.broadcast(message)
 
-console.log('Transaction ID:', result.txid)
-console.log('Output index:', result.vout)
-console.log('Carrier used:', result.carrier)
+console.log('TXID:', result.txid)
+console.log('Output:', result.vout)
 ```
+
+```rust [Rust]
+// Root message (new thread)
+let txid = wallet.create_root_message("Hello, Bitcoin!")?;
+println!("TXID: {}", txid);
+
+// Reply to a message
+let reply_txid = wallet.create_reply(
+    "This is a reply!",
+    &parent_txid,
+    0, // vout
+)?;
+```
+
+:::
 
 ### With Options
 
-```typescript
+::: code-group
+
+```typescript [TypeScript]
 const result = await wallet.broadcast(message, {
-  // Override fee rate
   feeRate: 20,
-  
-  // Add change address
   changeAddress: 'bc1q...',
-  
-  // Add additional outputs
-  outputs: [
-    { address: 'bc1q...', value: 10000 }
-  ],
-  
-  // Don't broadcast, just return signed tx
-  dryRun: false
+  enableRbf: true,
+  dryRun: false // set true to skip broadcast
 })
 ```
 
-### Result Type
+```rust [Rust]
+use anchor_wallet_lib::{TransactionBuilder, AnchorKind};
 
-```typescript
-interface TransactionResult {
-  txid: string           // Transaction ID
-  hex: string            // Raw transaction hex
-  vout: number           // Output index of Anchor message
-  carrier: CarrierType   // Carrier type used
-  fee?: number           // Fee paid in satoshis
-  size?: number          // Transaction size in vbytes
-}
+let builder = TransactionBuilder::new()
+    .kind(AnchorKind::Text)
+    .body_text("Custom message")
+    .anchor(parent_txid, 0)
+    .input(utxo_txid, 0, 50000)
+    .change_script(change_script)
+    .fee_rate(2.0);
+
+let anchor_tx = builder.build()?;
+let hex = anchor_tx.to_hex();
 ```
 
-## UTXO Management
+:::
+
+## Balance and UTXOs
 
 ### Get Balance
 
-```typescript
+::: code-group
+
+```typescript [TypeScript]
 const balance = await wallet.getBalance()
 
 console.log('Confirmed:', balance.confirmed)
@@ -104,9 +115,20 @@ console.log('Unconfirmed:', balance.unconfirmed)
 console.log('Total:', balance.total)
 ```
 
+```rust [Rust]
+let balance = wallet.get_balance()?;
+
+println!("Confirmed: {} sats", balance.confirmed);
+println!("Unconfirmed: {} sats", balance.unconfirmed);
+```
+
+:::
+
 ### List UTXOs
 
-```typescript
+::: code-group
+
+```typescript [TypeScript]
 const utxos = await wallet.getUtxos()
 
 for (const utxo of utxos) {
@@ -114,133 +136,90 @@ for (const utxo of utxos) {
 }
 ```
 
-### Select UTXOs
+```rust [Rust]
+let utxos = wallet.list_utxos()?;
 
-```typescript
-const utxos = await wallet.selectUtxos({
-  amount: 10000,        // Required amount in sats
-  feeRate: 10,          // Fee rate for calculation
-  excludeUnconfirmed: true
-})
+for utxo in utxos {
+    println!("{} - {} sats", utxo.txid, utxo.amount);
+}
 ```
+
+:::
 
 ## Fee Estimation
 
-### Get Fee Rate
+::: code-group
 
-```typescript
+```typescript [TypeScript]
 // Target confirmation in N blocks
-const feeRate = await wallet.estimateFee(6)  // 6-block target
+const feeRate = await wallet.estimateFee(6)
 console.log(`Recommended: ${feeRate} sat/vB`)
-```
 
-### Calculate Transaction Fee
-
-```typescript
-import { calculateFee } from '@AnchorProtocol/anchor-sdk'
-
-const message = createMessage({
-  kind: AnchorKind.Text,
-  body: 'Hello!'
-})
+// Calculate fee for a message
+import { calculateFee } from '@AnchorProtocol/sdk'
 
 const fee = calculateFee(message, {
   feeRate: 10,
   numInputs: 1,
   carrier: CarrierType.OpReturn
 })
-
-console.log(`Estimated fee: ${fee} sats`)
 ```
 
-### Witness Discount
+```rust [Rust]
+// Fee estimation is automatic in TransactionBuilder
+let builder = TransactionBuilder::new()
+    .kind(AnchorKind::Text)
+    .body_text("Message")
+    .fee_rate(2.0); // sat/vB
 
-```typescript
-import { calculateFeeSavings } from '@AnchorProtocol/anchor-sdk'
-
-const payloadSize = 1000  // bytes
-
-const savings = calculateFeeSavings(payloadSize, 10)  // 10 sat/vB
-
-console.log('OP_RETURN fee:', savings.opReturnFee)
-console.log('Witness fee:', savings.witnessFee)
-console.log('Savings:', savings.savings, `(${savings.savingsPercent.toFixed(1)}%)`)
+let anchor_tx = builder.build()?;
 ```
 
-## Transaction Building
-
-### Create Without Broadcasting
-
-```typescript
-const tx = await wallet.createTransaction(message, {
-  dryRun: true  // Don't broadcast
-})
-
-console.log('Raw transaction:', tx.hex)
-console.log('Estimated fee:', tx.fee)
-```
-
-### Sign External Transaction
-
-```typescript
-const signedHex = await wallet.signTransaction(unsignedHex)
-```
-
-### Broadcast Raw Transaction
-
-```typescript
-const txid = await wallet.broadcastRaw(signedHex)
-```
+:::
 
 ## Address Management
 
-### Get New Address
+::: code-group
 
-```typescript
-const address = await wallet.getNewAddress()
-console.log('Receive address:', address)
-```
-
-### Get Address Type
-
-```typescript
+```typescript [TypeScript]
 const address = await wallet.getNewAddress('bech32')
 // 'legacy' | 'p2sh-segwit' | 'bech32' | 'bech32m'
 ```
 
+```rust [Rust]
+let address = wallet.get_new_address()?;
+println!("Address: {}", address);
+```
+
+:::
+
 ## Transaction History
 
-### Get Transaction
+::: code-group
 
-```typescript
+```typescript [TypeScript]
+// Get single transaction
 const tx = await wallet.getTransaction(txid)
-
 console.log('Confirmations:', tx.confirmations)
-console.log('Block height:', tx.blockHeight)
-console.log('Outputs:', tx.vout.length)
+
+// List all transactions
+const history = await wallet.listTransactions({ count: 100 })
 ```
 
-### List Transactions
-
-```typescript
-const history = await wallet.listTransactions({
-  count: 100,
-  skip: 0
-})
-
-for (const tx of history) {
-  console.log(`${tx.txid}: ${tx.amount} sats`)
-}
+```rust [Rust]
+// Get transaction info
+let tx = wallet.get_transaction(&txid)?;
+println!("Confirmations: {}", tx.confirmations);
 ```
+
+:::
 
 ## Error Handling
 
-```typescript
-import { 
-  AnchorWallet, 
-  AnchorError, 
-  AnchorErrorCode 
-} from '@AnchorProtocol/anchor-sdk'
+::: code-group
+
+```typescript [TypeScript]
+import { AnchorError, AnchorErrorCode } from '@AnchorProtocol/sdk'
 
 try {
   const result = await wallet.broadcast(message)
@@ -256,108 +235,78 @@ try {
       case AnchorErrorCode.RpcError:
         console.log('Bitcoin RPC error:', error.message)
         break
-      case AnchorErrorCode.SigningError:
-        console.log('Failed to sign transaction')
-        break
-      default:
-        console.log('Error:', error.message)
     }
   }
 }
 ```
 
-## External Wallet Support
+```rust [Rust]
+use anchor_wallet_lib::{Result, WalletError};
 
-### With Private Key
-
-```typescript
-import { AnchorWallet } from '@AnchorProtocol/anchor-sdk'
-
-const wallet = AnchorWallet.fromPrivateKey(
-  'your-wif-private-key',
-  'mainnet'
-)
+match wallet.create_root_message("test") {
+    Ok(txid) => println!("Success: {}", txid),
+    Err(WalletError::InsufficientFunds { needed, available }) => {
+        println!("Need {} sats, have {}", needed, available);
+    }
+    Err(WalletError::NoUtxos) => {
+        println!("No UTXOs available");
+    }
+    Err(e) => println!("Error: {}", e),
+}
 ```
 
-### With Seed Phrase
-
-```typescript
-const wallet = AnchorWallet.fromMnemonic(
-  'abandon abandon abandon ... about',
-  'mainnet',
-  "m/84'/0'/0'/0/0"  // derivation path
-)
-```
-
-### Read-Only (Electrum)
-
-```typescript
-const readOnlyWallet = new AnchorWallet({
-  electrumUrl: 'wss://electrum.example.com:50004',
-  network: 'mainnet',
-  address: 'bc1q...'  // Watch-only address
-})
-
-// Can read but not sign
-const balance = await readOnlyWallet.getBalance()
-```
+:::
 
 ## RBF (Replace-By-Fee)
 
-### Create RBF-enabled Transaction
+::: code-group
 
-```typescript
+```typescript [TypeScript]
+// Enable RBF
 const result = await wallet.broadcast(message, {
   enableRbf: true
 })
-```
 
-### Bump Fee
-
-```typescript
+// Bump fee later
 const newResult = await wallet.bumpFee(txid, {
-  feeRate: 20  // New higher fee rate
+  feeRate: 20 // new higher fee rate
 })
-
-console.log('Replacement txid:', newResult.txid)
 ```
 
-## Batch Transactions
+```rust [Rust]
+// RBF is enabled by default in anchor-wallet-lib
+let txid = wallet.create_root_message("test")?;
 
-### Multiple Messages in One TX
-
-```typescript
-const messages = [
-  createMessage({ kind: AnchorKind.Text, body: 'Message 1' }),
-  createMessage({ kind: AnchorKind.Text, body: 'Message 2' })
-]
-
-const result = await wallet.broadcastBatch(messages)
-
-console.log('TXID:', result.txid)
-console.log('Message outputs:', result.vouts)  // [0, 1]
+// Bump fee (if needed)
+let new_txid = wallet.bump_fee(&txid, 20.0)?;
 ```
 
-## Best Practices
+:::
 
-1. **Use regtest** for development
-2. **Monitor mempool** for fee estimation
-3. **Handle errors** gracefully
-4. **Enable RBF** for important transactions
-5. **Verify transactions** after broadcast
+## Mining (Regtest)
 
-## Example: Complete Flow
+::: code-group
 
-```typescript
-import { 
-  AnchorWallet, 
-  createMessage, 
-  AnchorKind,
-  CarrierType 
-} from '@AnchorProtocol/anchor-sdk'
+```typescript [TypeScript]
+// Generate blocks (regtest only)
+await wallet.generateBlocks(10)
+```
+
+```rust [Rust]
+// Generate blocks (regtest only)
+let block_hashes = wallet.mine_blocks(10)?;
+```
+
+:::
+
+## Complete Example
+
+::: code-group
+
+```typescript [TypeScript]
+import { AnchorWallet, createMessage, AnchorKind } from '@AnchorProtocol/sdk'
 
 async function sendMessage(text: string) {
-  // 1. Configure wallet
   const wallet = new AnchorWallet({
     rpcUrl: process.env.BITCOIN_RPC_URL!,
     rpcUser: process.env.BITCOIN_RPC_USER!,
@@ -365,38 +314,61 @@ async function sendMessage(text: string) {
     network: 'mainnet'
   })
   
-  // 2. Check balance
+  // Check balance
   const balance = await wallet.getBalance()
   if (balance.confirmed < 10000) {
     throw new Error('Insufficient balance')
   }
   
-  // 3. Get fee estimate
+  // Estimate fee
   const feeRate = await wallet.estimateFee(6)
   
-  // 4. Create message
+  // Create and broadcast
   const message = createMessage({
     kind: AnchorKind.Text,
-    body: text,
-    carrier: CarrierType.OpReturn
+    body: text
   })
   
-  // 5. Broadcast
   const result = await wallet.broadcast(message, { feeRate })
-  
-  console.log('Success!')
   console.log('TXID:', result.txid)
-  console.log('Fee:', result.fee, 'sats')
   
   return result.txid
 }
 ```
 
+```rust [Rust]
+use anchor_wallet_lib::{AnchorWallet, WalletConfig, WalletError};
+
+fn send_message(text: &str) -> Result<String, WalletError> {
+    let config = WalletConfig::mainnet(
+        "http://127.0.0.1:8332",
+        &std::env::var("BITCOIN_RPC_USER").unwrap(),
+        &std::env::var("BITCOIN_RPC_PASSWORD").unwrap(),
+    );
+    
+    let wallet = AnchorWallet::new(config)?;
+    
+    // Check balance
+    let balance = wallet.get_balance()?;
+    if balance.confirmed < 10000 {
+        return Err(WalletError::InsufficientFunds {
+            needed: 10000,
+            available: balance.confirmed,
+        });
+    }
+    
+    // Create and broadcast
+    let txid = wallet.create_root_message(text)?;
+    println!("TXID: {}", txid);
+    
+    Ok(txid)
+}
+```
+
+:::
+
 ## See Also
 
-- [Encoding Messages](/sdk/encoding) - Create messages
-- [Parsing Messages](/sdk/parsing) - Read messages
+- [Encoding](/sdk/encoding) - Create message payloads
+- [Parsing](/sdk/parsing) - Read on-chain messages
 - [API Reference](/sdk/api-reference) - Complete API
-
-
-

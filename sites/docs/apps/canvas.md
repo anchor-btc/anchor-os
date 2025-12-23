@@ -127,6 +127,6 @@ npm run dev
 ## See Also
 
 - [State Kind (Kind 2)](/kinds/state) - Protocol specification
-- [Carrier Types](/protocol/carriers) - OP_RETURN, Witness Data, Inscription
+- [Carriers](/concepts/carriers) - OP_RETURN, Witness Data, Inscription
 - [SDK API Reference](/sdk/api-reference) - SDK implementation details
 

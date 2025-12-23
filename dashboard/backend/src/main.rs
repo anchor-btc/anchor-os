@@ -56,6 +56,7 @@ pub struct AppState {
         handlers::docker::get_docker_stats,
         handlers::docker::shutdown_all,
         handlers::docker::restart_all,
+        handlers::docker::rebuild_container,
         handlers::bitcoin::get_blockchain_info,
         handlers::bitcoin::get_mempool_info,
         handlers::bitcoin::get_network_info,
@@ -78,6 +79,9 @@ pub struct AppState {
         handlers::node::get_node_config,
         handlers::node::switch_node,
         handlers::node::get_node_versions,
+        handlers::node::get_node_settings,
+        handlers::node::update_node_settings,
+        handlers::node::reset_node_settings,
         handlers::tailscale::get_tailscale_status,
         handlers::tailscale::connect_tailscale,
         handlers::tailscale::disconnect_tailscale,
@@ -133,6 +137,8 @@ pub struct AppState {
         handlers::docker::ContainerLogsResponse,
         handlers::docker::ExecRequest,
         handlers::docker::ExecResponse,
+        handlers::docker::RebuildContainerRequest,
+        handlers::docker::RebuildContainerResponse,
         handlers::bitcoin::BlockchainInfo,
         handlers::bitcoin::MempoolInfo,
         handlers::bitcoin::NetworkInfo,
@@ -161,6 +167,10 @@ pub struct AppState {
         handlers::node::VersionInfo,
         handlers::node::SwitchVersionRequest,
         handlers::node::SwitchVersionResponse,
+        handlers::node::NodeSettings,
+        handlers::node::NodeSettingsResponse,
+        handlers::node::UpdateNodeSettingsRequest,
+        handlers::node::UpdateNodeSettingsResponse,
         handlers::tailscale::TailscaleStatus,
         handlers::tailscale::TailscaleAuthRequest,
         handlers::tailscale::TailscaleActionResponse,
@@ -337,6 +347,7 @@ async fn main() -> Result<()> {
         .route("/docker/stats", get(handlers::docker::get_docker_stats))
         .route("/docker/shutdown", post(handlers::docker::shutdown_all))
         .route("/docker/restart-all", post(handlers::docker::restart_all))
+        .route("/docker/rebuild", post(handlers::docker::rebuild_container))
         // Bitcoin
         .route("/bitcoin/info", get(handlers::bitcoin::get_blockchain_info))
         .route(
@@ -371,6 +382,9 @@ async fn main() -> Result<()> {
         .route("/node/config", get(handlers::node::get_node_config))
         .route("/node/switch", post(handlers::node::switch_node))
         .route("/node/versions", get(handlers::node::get_node_versions))
+        .route("/node/settings", get(handlers::node::get_node_settings))
+        .route("/node/settings", put(handlers::node::update_node_settings))
+        .route("/node/settings/reset", post(handlers::node::reset_node_settings))
         // Tailscale
         .route("/tailscale/status", get(handlers::tailscale::get_tailscale_status))
         .route("/tailscale/connect", post(handlers::tailscale::connect_tailscale))

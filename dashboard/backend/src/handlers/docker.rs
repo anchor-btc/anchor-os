@@ -882,3 +882,105 @@ pub async fn get_docker_stats(
     }))
 }
 
+/// Rebuild container request
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct RebuildContainerRequest {
+    /// Service name (e.g., "core-bitcoin")
+    pub service: String,
+    /// Build arguments (e.g., {"BITCOIN_VERSION": "29.0"})
+    #[serde(default)]
+    pub build_args: HashMap<String, String>,
+}
+
+/// Rebuild container response
+#[derive(Debug, Serialize, ToSchema)]
+pub struct RebuildContainerResponse {
+    pub success: bool,
+    pub message: String,
+    pub service: String,
+    pub output: String,
+}
+
+/// Rebuild a container with optional build arguments
+#[utoipa::path(
+    post,
+    path = "/docker/rebuild",
+    tag = "Docker",
+    request_body = RebuildContainerRequest,
+    responses(
+        (status = 200, description = "Container rebuilt", body = RebuildContainerResponse),
+        (status = 500, description = "Internal server error")
+    )
+)]
+pub async fn rebuild_container(
+    Json(req): Json<RebuildContainerRequest>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    use std::process::Command;
+
+    info!("Rebuilding container: {} with args: {:?}", req.service, req.build_args);
+
+    // Build the docker compose command
+    let mut build_cmd = Command::new("docker");
+    build_cmd.arg("compose").arg("build");
+
+    // Add build args
+    for (key, value) in &req.build_args {
+        build_cmd.arg("--build-arg").arg(format!("{}={}", key, value));
+    }
+
+    build_cmd.arg(&req.service);
+
+    // Execute build
+    let build_output = build_cmd.output().map_err(|e| {
+        error!("Failed to execute docker compose build: {}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to build: {}", e))
+    })?;
+
+    let build_stdout = String::from_utf8_lossy(&build_output.stdout);
+    let build_stderr = String::from_utf8_lossy(&build_output.stderr);
+
+    if !build_output.status.success() {
+        error!("Docker build failed: {}", build_stderr);
+        return Ok(Json(RebuildContainerResponse {
+            success: false,
+            message: "Build failed".to_string(),
+            service: req.service,
+            output: format!("{}\n{}", build_stdout, build_stderr),
+        }));
+    }
+
+    info!("Build successful, restarting container...");
+
+    // Restart the container
+    let restart_output = Command::new("docker")
+        .arg("compose")
+        .arg("up")
+        .arg("-d")
+        .arg(&req.service)
+        .output()
+        .map_err(|e| {
+            error!("Failed to restart container: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to restart: {}", e))
+        })?;
+
+    let restart_stdout = String::from_utf8_lossy(&restart_output.stdout);
+    let restart_stderr = String::from_utf8_lossy(&restart_output.stderr);
+
+    if !restart_output.status.success() {
+        error!("Docker restart failed: {}", restart_stderr);
+        return Ok(Json(RebuildContainerResponse {
+            success: false,
+            message: "Restart failed".to_string(),
+            service: req.service,
+            output: format!("Build OK\n{}\n{}", restart_stdout, restart_stderr),
+        }));
+    }
+
+    Ok(Json(RebuildContainerResponse {
+        success: true,
+        message: format!("Container {} rebuilt and restarted successfully", req.service),
+        service: req.service,
+        output: format!("{}\n{}\n{}\n{}", build_stdout, build_stderr, restart_stdout, restart_stderr),
+    }))
+}
+
