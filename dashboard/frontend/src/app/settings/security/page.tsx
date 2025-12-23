@@ -2,10 +2,53 @@
 
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Shield, Lock, Clock, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Shield, Lock, Clock, Eye, EyeOff, Loader2, Image, Check } from "lucide-react";
 
 const DASHBOARD_BACKEND_URL =
   process.env.NEXT_PUBLIC_DASHBOARD_BACKEND_URL || "http://localhost:8010";
+
+// Lock screen background video options
+const BACKGROUND_VIDEOS = [
+  {
+    id: "ocean-waves",
+    src: "/1918465-hd_1920_1080_24fps.mp4",
+    thumbnail: "/1918465-hd_1920_1080_24fps.mp4",
+    label: "Ocean Waves",
+  },
+  {
+    id: "underwater",
+    src: "/10109224-hd_1920_1080_24fps.mp4",
+    thumbnail: "/10109224-hd_1920_1080_24fps.mp4",
+    label: "Underwater",
+  },
+  {
+    id: "jellyfish",
+    src: "/12008759_1920_1080_30fps.mp4",
+    thumbnail: "/12008759_1920_1080_30fps.mp4",
+    label: "Jellyfish",
+  },
+  {
+    id: "coral-reef",
+    src: "/5358852-hd_1920_1080_25fps.mp4",
+    thumbnail: "/5358852-hd_1920_1080_25fps.mp4",
+    label: "Coral Reef",
+  },
+  {
+    id: "deep-blue",
+    src: "/19924824-hd_1920_1080_30fps.mp4",
+    thumbnail: "/19924824-hd_1920_1080_30fps.mp4",
+    label: "Deep Blue",
+  },
+  {
+    id: "sea-turtle",
+    src: "/17799961-hd_1920_1080_25fps.mp4",
+    thumbnail: "/17799961-hd_1920_1080_25fps.mp4",
+    label: "Sea Turtle",
+  },
+];
+
+const LOCK_SCREEN_BG_KEY = "anchor-lock-screen-bg";
+const DEFAULT_BG = "ocean-waves";
 
 interface AuthStatus {
   enabled: boolean;
@@ -39,9 +82,15 @@ export default function SecurityPage() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [selectedTimeout, setSelectedTimeout] = useState(300);
+  const [selectedBackground, setSelectedBackground] = useState<string>(DEFAULT_BG);
 
   useEffect(() => {
     fetchAuthStatus();
+    // Load saved background preference
+    const savedBg = localStorage.getItem(LOCK_SCREEN_BG_KEY);
+    if (savedBg && BACKGROUND_VIDEOS.some(v => v.id === savedBg)) {
+      setSelectedBackground(savedBg);
+    }
   }, []);
 
   const fetchAuthStatus = async () => {
@@ -515,6 +564,73 @@ export default function SecurityPage() {
           </div>
         </div>
       )}
+
+      {/* Lock Screen Background */}
+      <div className="bg-card border border-border rounded-xl p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2 rounded-lg bg-cyan-500/10">
+            <Image className="w-5 h-5 text-cyan-500" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">
+              {t("security.lockScreenBackground", "Lock Screen Background")}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {t("security.lockScreenBackgroundDesc", "Choose the video background for your lock screen")}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {BACKGROUND_VIDEOS.map((video) => (
+            <button
+              key={video.id}
+              onClick={() => {
+                setSelectedBackground(video.id);
+                localStorage.setItem(LOCK_SCREEN_BG_KEY, video.id);
+              }}
+              className={`
+                relative group rounded-xl overflow-hidden aspect-video border-2 transition-all duration-300
+                ${selectedBackground === video.id 
+                  ? "border-primary ring-2 ring-primary/30 scale-[1.02]" 
+                  : "border-border hover:border-primary/50 hover:scale-[1.01]"
+                }
+              `}
+            >
+              {/* Video Preview */}
+              <video
+                src={video.src}
+                muted
+                loop
+                playsInline
+                autoPlay
+                className="w-full h-full object-cover"
+              />
+              
+              {/* Overlay */}
+              <div className={`
+                absolute inset-0 transition-all duration-300
+                ${selectedBackground === video.id 
+                  ? "bg-primary/20" 
+                  : "bg-black/30 group-hover:bg-black/20"
+                }
+              `} />
+              
+              {/* Check Mark */}
+              {selectedBackground === video.id && (
+                <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-primary flex items-center justify-center shadow-lg">
+                  <Check className="w-4 h-4 text-primary-foreground" />
+                </div>
+              )}
+              
+              {/* Label */}
+              <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent">
+                <p className="text-sm font-medium text-white">{video.label}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
