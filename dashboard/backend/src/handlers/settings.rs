@@ -115,7 +115,7 @@ pub async fn get_setting(
     }
 }
 
-/// Update a setting
+/// Update or create a setting (upsert)
 #[utoipa::path(
     put,
     path = "/settings/{key}",
@@ -124,8 +124,7 @@ pub async fn get_setting(
     ),
     request_body = UpdateSettingRequest,
     responses(
-        (status = 200, description = "Setting updated", body = SettingResponse),
-        (status = 404, description = "Setting not found")
+        (status = 200, description = "Setting updated", body = SettingResponse)
     ),
     tag = "Settings"
 )]
@@ -138,27 +137,27 @@ pub async fn update_setting(
         (StatusCode::SERVICE_UNAVAILABLE, "Database not available".to_string())
     })?;
 
-    let result = sqlx::query(
-        "UPDATE system_settings SET value = $1, updated_at = NOW() WHERE key = $2 RETURNING key, value, updated_at"
+    // Use UPSERT to create or update the setting
+    let row = sqlx::query(
+        "INSERT INTO system_settings (key, value, updated_at) VALUES ($1, $2, NOW())
+         ON CONFLICT (key) DO UPDATE SET value = $2, updated_at = NOW()
+         RETURNING key, value, updated_at"
     )
-    .bind(&req.value)
     .bind(&key)
-    .fetch_optional(pool)
+    .bind(&req.value)
+    .fetch_one(pool)
     .await
     .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-    match result {
-        Some(row) => Ok(Json(SettingResponse {
-            success: true,
-            setting: Some(SystemSetting {
-                key: row.get("key"),
-                value: row.get("value"),
-                updated_at: row.get("updated_at"),
-            }),
-            message: Some("Setting updated successfully".to_string()),
-        })),
-        None => Err((StatusCode::NOT_FOUND, format!("Setting '{}' not found", key))),
-    }
+    Ok(Json(SettingResponse {
+        success: true,
+        setting: Some(SystemSetting {
+            key: row.get("key"),
+            value: row.get("value"),
+            updated_at: row.get("updated_at"),
+        }),
+        message: Some("Setting saved successfully".to_string()),
+    }))
 }
 
 /// Export all settings
