@@ -9,7 +9,6 @@ use tracing::{info, error, warn};
 
 use crate::backup::engine::{BackupEngine, BackupTarget};
 use crate::backup::database::{DatabaseConfig, get_anchor_databases};
-use crate::backup::volumes::get_anchor_volumes;
 use crate::backup_config::BackupConfig;
 
 /// Result of a full restore operation

@@ -100,6 +100,7 @@ pub struct TargetsResponse {
 pub struct RestoreRequest {
     pub snapshot_id: String,
     pub target: Option<String>,
+    #[allow(dead_code)]
     pub restore_path: Option<String>,
 }
 
@@ -219,6 +220,7 @@ pub struct LocalFilesResponse {
 // Handlers
 
 /// Health check
+#[allow(dead_code)]
 pub async fn health() -> impl IntoResponse {
     Json(serde_json::json!({
         "status": "ok",
@@ -525,6 +527,7 @@ pub async fn restore(
 }
 
 /// List Docker volumes
+#[allow(dead_code)]
 pub async fn list_volumes() -> impl IntoResponse {
     match volumes::list_volumes().await {
         Ok(vols) => Json(VolumesResponse { volumes: vols }),

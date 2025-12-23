@@ -147,6 +147,7 @@ pub const SAMPLE_ORACLE_CATEGORIES: &[i32] = &[
 ];
 
 /// Sample prediction market titles
+#[allow(dead_code)]
 pub const SAMPLE_PREDICTION_TITLES: &[&str] = &[
     "BTC above $100k by EOY?",
     "Next halving before April 2028?",
@@ -161,6 +162,7 @@ pub const SAMPLE_PREDICTION_TITLES: &[&str] = &[
 ];
 
 /// Sample prediction outcomes
+#[allow(dead_code)]
 pub const SAMPLE_PREDICTION_OUTCOMES: &[(&str, &str)] = &[
     ("Yes", "No"),
     ("Above", "Below"),

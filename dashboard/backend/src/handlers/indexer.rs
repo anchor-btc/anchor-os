@@ -10,7 +10,7 @@ use axum::{
     Json,
 };
 use bollard::exec::{CreateExecOptions, StartExecResults};
-use futures::{SinkExt, StreamExt};
+use futures::StreamExt;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::time::{interval, Duration};

@@ -4,7 +4,9 @@ use std::env;
 
 #[derive(Debug, Clone)]
 pub struct BackupConfig {
+    #[allow(dead_code)]
     pub host: String,
+    #[allow(dead_code)]
     pub port: u16,
     
     // Local backup settings

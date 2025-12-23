@@ -14,6 +14,7 @@ pub struct DockerVolume {
 }
 
 /// List all Docker volumes
+#[allow(dead_code)]
 pub async fn list_volumes() -> Result<Vec<DockerVolume>> {
     let output = Command::new("docker")
         .args(["volume", "ls", "--format", "{{json .}}"])
