@@ -135,7 +135,7 @@ function ServiceCard({ app, status, containerCount }: ServiceCardProps) {
 }
 
 interface ServicesWidgetProps {
-  category?: "app" | "explorer" | "networking" | "core" | "all";
+  category?: "app" | "explorer" | "network" | "kernel" | "core" | "all";
   title?: string;
 }
 
@@ -236,10 +236,10 @@ export function ExplorersWidget() {
   return <ServicesWidget category="explorer" />;
 }
 
-export function NetworkingWidget() {
-  return <ServicesWidget category="networking" />;
+export function NetworkWidget() {
+  return <ServicesWidget category="network" />;
 }
 
 export function KernelWidget() {
-  return <ServicesWidget category="core" />;
+  return <ServicesWidget category="kernel" />;
 }

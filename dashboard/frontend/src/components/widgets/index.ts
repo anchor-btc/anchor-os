@@ -15,4 +15,4 @@ export { IndexerStatsWidget } from "../indexer-stats";
 export { BackupStatusWidget } from "./backup-status-widget";
 export { MempoolSummaryWidget } from "./mempool-summary-widget";
 export { BitcoinPriceWidget } from "./bitcoin-price-widget";
-export { ServicesWidget, AppsWidget, ExplorersWidget, NetworkingWidget, KernelWidget } from "./services-widget";
+export { ServicesWidget, AppsWidget, ExplorersWidget, NetworkWidget, KernelWidget } from "./services-widget";

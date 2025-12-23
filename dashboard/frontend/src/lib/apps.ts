@@ -19,7 +19,7 @@ export interface App {
   backendPort?: number; // Backend API port (if separate)
   containers: string[]; // container names that make up this app
   containerConfigs?: ContainerConfig[]; // Detailed container configuration with labels
-  category: "app" | "explorer" | "networking" | "core" | "electrum" | "anchor" | "storage" | "monitoring";
+  category: "app" | "explorer" | "network" | "core" | "kernel" | "anchor";
   featured?: boolean;
   supportsIframe?: boolean; // Whether the app can be loaded in an iframe (default: true)
 }
@@ -242,7 +242,7 @@ export const apps: App[] = [
   },
 
   // =============================================
-  // NETWORKING (alphabetical)
+  // NETWORK (alphabetical)
   // =============================================
   {
     id: "networking-cloudflare",
@@ -253,7 +253,7 @@ export const apps: App[] = [
     color: "orange",
     internalUrl: "/cloudflare",
     containers: ["anchor-networking-cloudflare"],
-    category: "networking",
+    category: "network",
     featured: false,
   },
   {
@@ -265,7 +265,7 @@ export const apps: App[] = [
     color: "blue",
     internalUrl: "/tailscale",
     containers: ["anchor-networking-tailscale"],
-    category: "networking",
+    category: "network",
     featured: false,
   },
   {
@@ -277,13 +277,25 @@ export const apps: App[] = [
     color: "purple",
     internalUrl: "/tor",
     containers: ["anchor-networking-tor"],
-    category: "networking",
+    category: "network",
     featured: false,
   },
 
   // =============================================
-  // ELECTRUM SERVERS (alphabetical)
+  // KERNEL (Core Infrastructure)
   // =============================================
+  {
+    id: "core-bitcoin",
+    name: "Bitcoin Node",
+    description: "Bitcoin Core - full-featured node with mining support",
+    descriptionKey: "appDescriptions.core-bitcoin",
+    icon: "Bitcoin",
+    color: "orange",
+    internalUrl: "/node",
+    port: 18443,
+    containers: ["anchor-core-bitcoin"],
+    category: "kernel",
+  },
   {
     id: "core-electrs",
     name: "Electrs",
@@ -294,7 +306,7 @@ export const apps: App[] = [
     internalUrl: "/electrum",
     port: 50001,
     containers: ["anchor-core-electrs"],
-    category: "electrum",
+    category: "kernel",
   },
   {
     id: "core-fulcrum",
@@ -306,7 +318,19 @@ export const apps: App[] = [
     internalUrl: "/electrum",
     port: 50001,
     containers: ["anchor-core-fulcrum"],
-    category: "electrum",
+    category: "kernel",
+  },
+  {
+    id: "core-postgres",
+    name: "Database",
+    description: "PostgreSQL database for storing indexed data",
+    descriptionKey: "appDescriptions.core-postgres",
+    icon: "Database",
+    color: "blue",
+    internalUrl: "/database",
+    port: 5432,
+    containers: ["anchor-core-postgres"],
+    category: "kernel",
   },
 
   // =============================================
@@ -366,37 +390,6 @@ export const apps: App[] = [
     category: "anchor",
   },
 
-  // =============================================
-  // STORAGE / INFRASTRUCTURE (alphabetical)
-  // =============================================
-  {
-    id: "core-bitcoin",
-    name: "Bitcoin Node",
-    description: "Bitcoin Core - full-featured node with mining support",
-    descriptionKey: "appDescriptions.core-bitcoin",
-    icon: "Bitcoin",
-    color: "orange",
-    internalUrl: "/node",
-    port: 18443,
-    containers: ["anchor-core-bitcoin"],
-    category: "storage",
-  },
-  {
-    id: "core-postgres",
-    name: "Database",
-    description: "PostgreSQL database for storing indexed data",
-    descriptionKey: "appDescriptions.core-postgres",
-    icon: "Database",
-    color: "blue",
-    internalUrl: "/database",
-    port: 5432,
-    containers: ["anchor-core-postgres"],
-    category: "storage",
-  },
-
-  // =============================================
-  // MONITORING
-  // =============================================
   {
     id: "monitoring-netdata",
     name: "Netdata",
@@ -408,7 +401,7 @@ export const apps: App[] = [
     internalUrl: "/monitoring",
     port: 19999,
     containers: ["anchor-monitoring-netdata"],
-    category: "monitoring",
+    category: "network",
     featured: true,
   },
 ];

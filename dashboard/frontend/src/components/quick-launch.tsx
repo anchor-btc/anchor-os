@@ -57,19 +57,19 @@ export function QuickLaunch() {
 
   const containers = containersData?.containers || [];
 
-  // Get apps, explorers, and networking tools
+  // Get apps, explorers, and network tools
   const launchableApps = apps.filter(
     (app) =>
       app.category === "app" ||
       app.category === "explorer" ||
-      app.category === "networking"
+      app.category === "network"
   );
 
   // Group by category
   const appsByCategory = {
     app: launchableApps.filter((a) => a.category === "app"),
     explorer: launchableApps.filter((a) => a.category === "explorer"),
-    networking: launchableApps.filter((a) => a.category === "networking"),
+    network: launchableApps.filter((a) => a.category === "network"),
   };
 
   if (isLoading) {
@@ -134,7 +134,7 @@ export function QuickLaunch() {
   };
 
   // All apps in a single list for fluid grid
-  const allApps = [...appsByCategory.app, ...appsByCategory.explorer, ...appsByCategory.networking];
+  const allApps = [...appsByCategory.app, ...appsByCategory.explorer, ...appsByCategory.network];
 
   return (
     <div className="bg-card border border-border rounded-xl p-4 sm:p-5">

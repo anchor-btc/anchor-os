@@ -48,9 +48,13 @@ pub enum BackupTarget {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResticSnapshot {
     pub id: String,
+    #[serde(default)]
+    pub short_id: String,
     pub time: DateTime<Utc>,
     pub hostname: String,
+    #[serde(default)]
     pub tags: Vec<String>,
+    #[serde(default)]
     pub paths: Vec<String>,
 }
 

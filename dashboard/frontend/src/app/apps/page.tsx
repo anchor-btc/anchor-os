@@ -19,7 +19,7 @@ import { AppListItem } from "@/components/app-list-item";
 import { MultiLogsModal } from "@/components/multi-logs-modal";
 import { MultiTerminalModal } from "@/components/multi-terminal-modal";
 import { isRequiredService } from "@/lib/service-rules";
-import { Loader2, AppWindow, Search, Network, Play, Square, Zap, Anchor, Database, Activity, LayoutGrid, List } from "lucide-react";
+import { Loader2, AppWindow, Search, Network, Play, Square, Cpu, Anchor, LayoutGrid, List } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type ViewMode = "grid" | "list";
@@ -166,11 +166,9 @@ export default function AppsPage() {
 
   const appsList = apps.filter((app) => app.category === "app");
   const explorerApps = apps.filter((app) => app.category === "explorer");
-  const networkingApps = apps.filter((app) => app.category === "networking");
-  const electrumApps = apps.filter((app) => app.category === "electrum");
   const anchorApps = apps.filter((app) => app.category === "anchor");
-  const storageApps = apps.filter((app) => app.category === "storage");
-  const monitoringApps = apps.filter((app) => app.category === "monitoring");
+  const kernelApps = apps.filter((app) => app.category === "kernel");
+  const networkApps = apps.filter((app) => app.category === "network");
 
   if (isLoading) {
     return (
@@ -343,67 +341,19 @@ export default function AppsPage() {
           </section>
         )}
 
-        {/* Networking */}
-        {networkingApps.length > 0 && (
+        {/* Kernel */}
+        {kernelApps.length > 0 && (
           <section>
             <div className="flex items-center gap-2 mb-4">
-              <Network className="w-5 h-5 text-muted-foreground" />
-              <h2 className="text-xl font-semibold text-foreground">{t("sidebar.networking")}</h2>
+              <Cpu className="w-5 h-5 text-muted-foreground" />
+              <h2 className="text-xl font-semibold text-foreground">{t("sidebar.kernel")}</h2>
               <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
-                {t("apps.tunnelsVpn")}
+                {t("apps.coreInfrastructure")}
               </span>
             </div>
             {viewMode === "grid" ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {networkingApps.map((app) => (
-                  <AppCard
-                    key={app.id}
-                    app={app}
-                    containers={containers}
-                    onToggle={() => refetch()}
-                    onShowLogs={(names) => setLogsContainers(names)}
-                    onShowTerminal={(names) => setTerminalContainers(names)}
-                    installStatus={getInstallStatus(app.id)}
-                    onInstall={() => handleInstall(app.id)}
-                    onUninstall={() => handleUninstall(app.id)}
-                    isRequired={isRequiredService(app.id, installedServices)}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="bg-card border border-border rounded-xl overflow-hidden">
-                {networkingApps.map((app) => (
-                  <AppListItem
-                    key={app.id}
-                    app={app}
-                    containers={containers}
-                    onToggle={() => refetch()}
-                    onShowLogs={(names) => setLogsContainers(names)}
-                    onShowTerminal={(names) => setTerminalContainers(names)}
-                    installStatus={getInstallStatus(app.id)}
-                    onInstall={() => handleInstall(app.id)}
-                    onUninstall={() => handleUninstall(app.id)}
-                    isRequired={isRequiredService(app.id, installedServices)}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-        )}
-
-        {/* Electrum Servers */}
-        {electrumApps.length > 0 && (
-          <section>
-            <div className="flex items-center gap-2 mb-4">
-              <Zap className="w-5 h-5 text-muted-foreground" />
-              <h2 className="text-xl font-semibold text-foreground">{t("sidebar.electrum")}</h2>
-              <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
-                {t("apps.electrumServers")}
-              </span>
-            </div>
-            {viewMode === "grid" ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {electrumApps.map((app) => (
+                {kernelApps.map((app) => (
                   <AppCard
                     key={app.id}
                     app={app}
@@ -420,7 +370,55 @@ export default function AppsPage() {
               </div>
             ) : (
               <div className="bg-card border border-border rounded-xl overflow-hidden">
-                {electrumApps.map((app) => (
+                {kernelApps.map((app) => (
+                  <AppListItem
+                    key={app.id}
+                    app={app}
+                    containers={containers}
+                    onToggle={() => refetch()}
+                    onShowLogs={(names) => setLogsContainers(names)}
+                    onShowTerminal={(names) => setTerminalContainers(names)}
+                    installStatus={getInstallStatus(app.id)}
+                    onInstall={() => handleInstall(app.id)}
+                    onUninstall={(removeContainers) => handleUninstall(app.id, removeContainers)}
+                    isRequired={isRequiredService(app.id, installedServices)}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* Network */}
+        {networkApps.length > 0 && (
+          <section>
+            <div className="flex items-center gap-2 mb-4">
+              <Network className="w-5 h-5 text-muted-foreground" />
+              <h2 className="text-xl font-semibold text-foreground">{t("sidebar.network")}</h2>
+              <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                {t("apps.tunnelsVpn")}
+              </span>
+            </div>
+            {viewMode === "grid" ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {networkApps.map((app) => (
+                  <AppCard
+                    key={app.id}
+                    app={app}
+                    containers={containers}
+                    onToggle={() => refetch()}
+                    onShowLogs={(names) => setLogsContainers(names)}
+                    onShowTerminal={(names) => setTerminalContainers(names)}
+                    installStatus={getInstallStatus(app.id)}
+                    onInstall={() => handleInstall(app.id)}
+                    onUninstall={(removeContainers) => handleUninstall(app.id, removeContainers)}
+                    isRequired={isRequiredService(app.id, installedServices)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="bg-card border border-border rounded-xl overflow-hidden">
+                {networkApps.map((app) => (
                   <AppListItem
                     key={app.id}
                     app={app}
@@ -469,102 +467,6 @@ export default function AppsPage() {
             ) : (
               <div className="bg-card border border-border rounded-xl overflow-hidden">
                 {anchorApps.map((app) => (
-                  <AppListItem
-                    key={app.id}
-                    app={app}
-                    containers={containers}
-                    onToggle={() => refetch()}
-                    onShowLogs={(names) => setLogsContainers(names)}
-                    onShowTerminal={(names) => setTerminalContainers(names)}
-                    installStatus={getInstallStatus(app.id)}
-                    onInstall={() => handleInstall(app.id)}
-                    onUninstall={(removeContainers) => handleUninstall(app.id, removeContainers)}
-                    isRequired={isRequiredService(app.id, installedServices)}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-        )}
-
-        {/* Storage */}
-        {storageApps.length > 0 && (
-          <section>
-            <div className="flex items-center gap-2 mb-4">
-              <Database className="w-5 h-5 text-muted-foreground" />
-              <h2 className="text-xl font-semibold text-foreground">{t("sidebar.storage")}</h2>
-              <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
-                {t("apps.storageServices")}
-              </span>
-            </div>
-            {viewMode === "grid" ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {storageApps.map((app) => (
-                  <AppCard
-                    key={app.id}
-                    app={app}
-                    containers={containers}
-                    onToggle={() => refetch()}
-                    onShowLogs={(names) => setLogsContainers(names)}
-                    onShowTerminal={(names) => setTerminalContainers(names)}
-                    installStatus={getInstallStatus(app.id)}
-                    onInstall={() => handleInstall(app.id)}
-                    onUninstall={(removeContainers) => handleUninstall(app.id, removeContainers)}
-                    isRequired={isRequiredService(app.id, installedServices)}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="bg-card border border-border rounded-xl overflow-hidden">
-                {storageApps.map((app) => (
-                  <AppListItem
-                    key={app.id}
-                    app={app}
-                    containers={containers}
-                    onToggle={() => refetch()}
-                    onShowLogs={(names) => setLogsContainers(names)}
-                    onShowTerminal={(names) => setTerminalContainers(names)}
-                    installStatus={getInstallStatus(app.id)}
-                    onInstall={() => handleInstall(app.id)}
-                    onUninstall={(removeContainers) => handleUninstall(app.id, removeContainers)}
-                    isRequired={isRequiredService(app.id, installedServices)}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-        )}
-
-        {/* Monitoring */}
-        {monitoringApps.length > 0 && (
-          <section>
-            <div className="flex items-center gap-2 mb-4">
-              <Activity className="w-5 h-5 text-muted-foreground" />
-              <h2 className="text-xl font-semibold text-foreground">{t("sidebar.monitoring")}</h2>
-              <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
-                {t("apps.monitoringServices")}
-              </span>
-            </div>
-            {viewMode === "grid" ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {monitoringApps.map((app) => (
-                  <AppCard
-                    key={app.id}
-                    app={app}
-                    containers={containers}
-                    onToggle={() => refetch()}
-                    onShowLogs={(names) => setLogsContainers(names)}
-                    onShowTerminal={(names) => setTerminalContainers(names)}
-                    installStatus={getInstallStatus(app.id)}
-                    onInstall={() => handleInstall(app.id)}
-                    onUninstall={(removeContainers) => handleUninstall(app.id, removeContainers)}
-                    isRequired={isRequiredService(app.id, installedServices)}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="bg-card border border-border rounded-xl overflow-hidden">
-                {monitoringApps.map((app) => (
                   <AppListItem
                     key={app.id}
                     app={app}

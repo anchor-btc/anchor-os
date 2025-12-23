@@ -3,3 +3,4 @@
 pub mod engine;
 pub mod volumes;
 pub mod database;
+pub mod restore;

@@ -12,7 +12,7 @@ use tokio::sync::RwLock;
 use tracing::{info, error};
 
 use crate::backup::engine::{BackupEngine, BackupJob, BackupStatus, BackupTarget, BackupType};
-use crate::backup::{database, volumes};
+use crate::backup::{database, volumes, restore};
 use crate::backup_config::BackupConfig;
 use crate::storage::{self, StorageInfo};
 
@@ -107,6 +107,20 @@ pub struct RestoreRequest {
 pub struct RestoreResponse {
     pub success: bool,
     pub message: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub job_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub databases_restored: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub databases_failed: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub volumes_restored: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub volumes_failed: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub errors: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub duration_ms: Option<u64>,
 }
 
 #[derive(Debug, Serialize)]
@@ -459,17 +473,54 @@ pub async fn restore(
         _ => BackupTarget::Local,
     };
     
-    let restore_path = req.restore_path.unwrap_or_else(|| "/tmp/restore".to_string());
+    info!("Starting full restore from snapshot {}", req.snapshot_id);
     
-    match state.engine.restore(&target, &req.snapshot_id, &restore_path).await {
-        Ok(_) => Json(RestoreResponse {
-            success: true,
-            message: format!("Restored to {}", restore_path),
-        }),
-        Err(e) => Json(RestoreResponse {
-            success: false,
-            message: e.to_string(),
-        }),
+    // Perform full restore (databases + volumes)
+    match restore::full_restore(&req.snapshot_id, &state.config, &target).await {
+        Ok(result) => {
+            let message = if result.success {
+                format!(
+                    "Restore completed: {} databases, {} volumes restored in {}ms",
+                    result.databases_restored.len(),
+                    result.volumes_restored.len(),
+                    result.duration_ms
+                )
+            } else {
+                format!(
+                    "Restore partially failed: {} DBs ok, {} DBs failed, {} volumes ok, {} volumes failed",
+                    result.databases_restored.len(),
+                    result.databases_failed.len(),
+                    result.volumes_restored.len(),
+                    result.volumes_failed.len()
+                )
+            };
+            
+            Json(RestoreResponse {
+                success: result.success,
+                message,
+                job_id: Some(req.snapshot_id.clone()),
+                databases_restored: Some(result.databases_restored),
+                databases_failed: Some(result.databases_failed),
+                volumes_restored: Some(result.volumes_restored),
+                volumes_failed: Some(result.volumes_failed),
+                errors: if result.errors.is_empty() { None } else { Some(result.errors) },
+                duration_ms: Some(result.duration_ms),
+            })
+        }
+        Err(e) => {
+            error!("Restore failed: {}", e);
+            Json(RestoreResponse {
+                success: false,
+                message: format!("Restore failed: {}", e),
+                job_id: None,
+                databases_restored: None,
+                databases_failed: None,
+                volumes_restored: None,
+                volumes_failed: None,
+                errors: Some(vec![e.to_string()]),
+                duration_ms: None,
+            })
+        }
     }
 }
 

@@ -7,10 +7,8 @@ export const DEFAULT_CATEGORY_ORDER = [
   "protocol",
   "apps",
   "explorers",
-  "networking",
-  "electrum",
-  "storage",
-  "monitoring",
+  "kernel",
+  "network",
 ] as const;
 
 export type CategoryKey = (typeof DEFAULT_CATEGORY_ORDER)[number];
@@ -28,10 +26,8 @@ const getDefaultState = (): SidebarOrderState => ({
     protocol: [],
     apps: [],
     explorers: [],
-    networking: [],
-    electrum: [],
-    storage: [],
-    monitoring: [],
+    kernel: [],
+    network: [],
   },
 });
 

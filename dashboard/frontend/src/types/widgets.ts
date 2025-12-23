@@ -14,7 +14,7 @@ export type WidgetType =
   | 'bitcoin-price'
   | 'apps'
   | 'explorers'
-  | 'networking'
+  | 'network'
   | 'kernel';
 
 export interface WidgetConfig {
@@ -149,11 +149,11 @@ export const WIDGET_DEFINITIONS: WidgetDefinition[] = [
     icon: 'Search',
   },
   {
-    type: 'networking',
-    name: 'Networking',
-    nameKey: 'widgetNames.networking',
-    description: 'VPN and tunnel services',
-    descriptionKey: 'widgetDescriptions.networking',
+    type: 'network',
+    name: 'Network',
+    nameKey: 'widgetNames.network',
+    description: 'VPN, tunnel, and monitoring services',
+    descriptionKey: 'widgetDescriptions.network',
     defaultSize: 'small',
     allowedSizes: ['small', 'medium'],
     icon: 'Network',

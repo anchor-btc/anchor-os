@@ -14,7 +14,7 @@ import { IndexerStatsWidget } from "../indexer-stats";
 import { BackupStatusWidget } from "./backup-status-widget";
 import { MempoolSummaryWidget } from "./mempool-summary-widget";
 import { BitcoinPriceWidget } from "./bitcoin-price-widget";
-import { AppsWidget, ExplorersWidget, NetworkingWidget, KernelWidget } from "./services-widget";
+import { AppsWidget, ExplorersWidget, NetworkWidget, KernelWidget } from "./services-widget";
 import { Pencil, Check, RotateCcw, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -57,8 +57,8 @@ export function DashboardWidgets() {
         return <AppsWidget />;
       case "explorers":
         return <ExplorersWidget />;
-      case "networking":
-        return <NetworkingWidget />;
+      case "network":
+        return <NetworkWidget />;
       case "kernel":
         return <KernelWidget />;
       default:

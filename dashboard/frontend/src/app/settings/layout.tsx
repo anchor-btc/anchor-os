@@ -12,7 +12,6 @@ import {
   LayoutGrid,
   Database,
   Settings,
-  HardDrive,
 } from "lucide-react";
 
 interface SettingsNavItem {
@@ -61,11 +60,6 @@ const settingsNav: SettingsNavItem[] = [
     href: "/settings/data",
     labelKey: "settings.sections.data.title",
     icon: <Database className="w-4 h-4" />,
-  },
-  {
-    href: "/backup",
-    labelKey: "settings.sections.backup.title",
-    icon: <HardDrive className="w-4 h-4" />,
   },
 ];
 

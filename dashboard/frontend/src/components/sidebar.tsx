@@ -66,6 +66,7 @@ import {
   Coins,
   Eye,
   Ticket,
+  Cpu,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apps } from "@/lib/apps";
@@ -128,6 +129,7 @@ const navigationSections = [
       { nameKey: "nav.dashboard", href: "/", icon: LayoutDashboard },
       { nameKey: "nav.services", href: "/apps", icon: AppWindow },
       { nameKey: "nav.settings", href: "/settings", icon: Settings },
+      { nameKey: "nav.backups", href: "/backup", icon: HardDrive },
     ],
   },
 ];
@@ -161,10 +163,8 @@ const DEFAULT_EXPANDED: Record<CategoryKey, boolean> = {
   protocol: true,
   apps: true,
   explorers: true,
-  networking: true,
-  electrum: true,
-  storage: true,
-  monitoring: true,
+  kernel: true,
+  network: true,
 };
 
 // Category config with icons and translation keys
@@ -172,10 +172,8 @@ const categoryConfig: Record<CategoryKey, { icon: React.ElementType; labelKey: s
   protocol: { icon: Anchor, labelKey: "sidebar.protocol" },
   apps: { icon: AppWindow, labelKey: "sidebar.apps" },
   explorers: { icon: Search, labelKey: "sidebar.explorers" },
-  networking: { icon: Network, labelKey: "sidebar.networking" },
-  electrum: { icon: Zap, labelKey: "sidebar.electrum" },
-  storage: { icon: Database, labelKey: "sidebar.storage" },
-  monitoring: { icon: Activity, labelKey: "sidebar.monitoring" },
+  kernel: { icon: Cpu, labelKey: "sidebar.kernel" },
+  network: { icon: Network, labelKey: "sidebar.network" },
 };
 
 // Map category keys to app categories
@@ -183,10 +181,8 @@ const categoryToAppCategory: Record<CategoryKey, string> = {
   protocol: "anchor",
   apps: "app",
   explorers: "explorer",
-  networking: "networking",
-  electrum: "electrum",
-  storage: "storage",
-  monitoring: "monitoring",
+  kernel: "kernel",
+  network: "network",
 };
 
 export function Sidebar() {
