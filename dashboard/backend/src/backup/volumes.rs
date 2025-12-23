@@ -55,14 +55,10 @@ pub fn get_anchor_volumes() -> Vec<&'static str> {
 }
 
 /// Create a tar archive of a Docker volume for backup
-/// This approach works on both Linux and macOS with Docker Desktop
+/// Uses the shared backup-data volume to store tar files
 pub async fn prepare_volume_for_backup(volume_name: &str, temp_dir: &str) -> Result<String> {
     let safe_name = volume_name.replace("/", "_").replace(":", "_");
     let tar_file = format!("{}/{}.tar", temp_dir, safe_name);
-    
-    // Get host backup path for the bind mount
-    let host_backup_path = std::env::var("HOST_BACKUP_PATH")
-        .unwrap_or_else(|_| "/backups".to_string());
     
     info!("Backing up volume {} to tar archive", volume_name);
     
@@ -77,69 +73,51 @@ pub async fn prepare_volume_for_backup(volume_name: &str, temp_dir: &str) -> Res
         return Err(anyhow::anyhow!("Volume does not exist"));
     }
     
-    // Create the volumes directory on the host using docker
-    // This ensures the directory exists in the shared filesystem
-    let relative_vol_dir = temp_dir.replace("/backups/", "");
-    let mkdir_output = Command::new("docker")
-        .args([
-            "run", "--rm",
-            "-v", &format!("{}:/host_backup", host_backup_path),
-            "alpine",
-            "mkdir", "-p", &format!("/host_backup/{}", relative_vol_dir)
-        ])
-        .output()
-        .await?;
+    // Create the temp directory in the shared backup volume
+    tokio::fs::create_dir_all(temp_dir).await?;
     
-    if !mkdir_output.status.success() {
-        let stderr = String::from_utf8_lossy(&mkdir_output.stderr);
-        error!("Failed to create directory: {}", stderr);
-        return Err(anyhow::anyhow!("Failed to create directory"));
-    }
-    
-    // Create tar archive by mounting both the volume and the backup directory
-    let relative_tar = format!("{}/{}.tar", relative_vol_dir, safe_name);
+    // Create tar archive by mounting both the source volume AND the backup-data volume
+    // The backup-data volume is shared between dashboard-backend and this alpine container
     let tar_output = Command::new("docker")
         .args([
             "run", "--rm",
             "-v", &format!("{}:/source:ro", volume_name),
-            "-v", &format!("{}:/backup", host_backup_path),
+            "-v", "anchor_backup-data:/backup",
             "alpine",
             "sh", "-c", &format!(
-                "tar -cf /backup/{} -C /source . 2>/dev/null || true",
-                relative_tar
+                "mkdir -p /backup/{} && tar -cf /backup/{}/{}.tar -C /source . 2>/dev/null",
+                temp_dir.trim_start_matches("/backups/"),
+                temp_dir.trim_start_matches("/backups/"),
+                safe_name
             )
         ])
         .output()
         .await?;
     
-    // Allow time for file to be written
-    tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
-    
-    // Check size using docker
-    let size_output = Command::new("docker")
-        .args([
-            "run", "--rm",
-            "-v", &format!("{}:/backup:ro", host_backup_path),
-            "alpine",
-            "sh", "-c", &format!(
-                "ls -la /backup/{} 2>/dev/null | awk '{{print $5}}' || echo 0",
-                relative_tar
-            )
-        ])
-        .output()
-        .await?;
-    
-    let size_str = String::from_utf8_lossy(&size_output.stdout);
-    let size: u64 = size_str.trim().parse().unwrap_or(0);
-    
-    if size > 0 {
-        info!("Prepared volume {} as tar archive ({} bytes)", volume_name, size);
-        // Also ensure the container can see the file
-        tokio::fs::create_dir_all(temp_dir).await.ok();
-        Ok(tar_file)
-    } else {
+    if !tar_output.status.success() {
         let stderr = String::from_utf8_lossy(&tar_output.stderr);
-        error!("Failed to backup volume {} (size=0): {}", volume_name, stderr);
-        Err(anyhow::anyhow!("Tar archive is empty"))
+        error!("Failed to create tar for volume {}: {}", volume_name, stderr);
+        return Err(anyhow::anyhow!("Failed to create tar archive: {}", stderr));
+    }
+    
+    // Allow time for file to be written and sync
+    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+    
+    // Check if file exists and get size
+    match tokio::fs::metadata(&tar_file).await {
+        Ok(metadata) => {
+            let size = metadata.len();
+            if size > 0 {
+                info!("Prepared volume {} as tar archive ({} bytes)", volume_name, size);
+                Ok(tar_file)
+            } else {
+                error!("Tar file for volume {} is empty", volume_name);
+                Err(anyhow::anyhow!("Tar archive is empty"))
+            }
+        }
+        Err(e) => {
+            error!("Tar file not found for volume {}: {}", volume_name, e);
+            Err(anyhow::anyhow!("Tar file not found: {}", e))
+        }
     }
 }

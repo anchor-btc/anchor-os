@@ -704,6 +704,10 @@
       "data": {
         "title": "Data",
         "description": "Export, import, and reset settings"
+      },
+      "backup": {
+        "title": "Backup",
+        "description": "Automated backups and restore"
       }
     }
   },

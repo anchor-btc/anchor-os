@@ -20,8 +20,7 @@ RUN mkdir -p internal/anchor-indexer/src && echo "fn main() {}" > internal/ancho
 RUN mkdir -p internal/anchor-wallet/src && echo "fn main() {}" > internal/anchor-wallet/src/main.rs
 RUN mkdir -p internal/anchor-testnet/src && echo "fn main() {}" > internal/anchor-testnet/src/main.rs
 RUN mkdir -p libs/rust/anchor-wallet-lib/src && echo "" > libs/rust/anchor-wallet-lib/src/lib.rs
-RUN mkdir -p anchor/dashboard/backend/src && echo "fn main() {}" > anchor/dashboard/backend/src/main.rs
-RUN mkdir -p anchor/backup/backend/src && echo "fn main() {}" > anchor/backup/backend/src/main.rs
+RUN mkdir -p dashboard/backend/src && echo "fn main() {}" > dashboard/backend/src/main.rs
 RUN mkdir -p apps/anchor-canvas/backend/src && echo "fn main() {}" > apps/anchor-canvas/backend/src/main.rs
 RUN mkdir -p apps/anchor-places/backend/src && echo "fn main() {}" > apps/anchor-places/backend/src/main.rs
 RUN mkdir -p apps/anchor-domains/backend/src && echo "fn main() {}" > apps/anchor-domains/backend/src/main.rs
@@ -33,8 +32,7 @@ COPY internal/anchor-indexer/Cargo.toml ./internal/anchor-indexer/
 COPY internal/anchor-wallet/Cargo.toml ./internal/anchor-wallet/
 COPY internal/anchor-testnet/Cargo.toml ./internal/anchor-testnet/
 COPY libs/rust/anchor-wallet-lib/Cargo.toml ./libs/rust/anchor-wallet-lib/
-COPY anchor/dashboard/backend/Cargo.toml ./anchor/dashboard/backend/
-COPY anchor/backup/backend/Cargo.toml ./anchor/backup/backend/
+COPY dashboard/backend/Cargo.toml ./dashboard/backend/
 COPY apps/anchor-canvas/backend/Cargo.toml ./apps/anchor-canvas/backend/
 COPY apps/anchor-places/backend/Cargo.toml ./apps/anchor-places/backend/
 COPY apps/anchor-domains/backend/Cargo.toml ./apps/anchor-domains/backend/

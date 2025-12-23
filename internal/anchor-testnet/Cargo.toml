@@ -18,8 +18,15 @@ anyhow.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
 dotenvy.workspace = true
-axum.workspace = true
+axum = { workspace = true, features = ["ws"] }
 tower-http.workspace = true
 reqwest = { version = "0.12", features = ["json"] }
 rand = "0.8"
 hex.workspace = true
+
+# WebSocket
+tokio-tungstenite = "0.24"
+futures-util = "0.3"
+
+# Time handling
+chrono = { version = "0.4", features = ["serde"] }

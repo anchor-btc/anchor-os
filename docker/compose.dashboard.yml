@@ -14,6 +14,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ..:/anchor-project
+      - backup-data:/backups
     working_dir: /anchor-project
     environment:
       HOST: 0.0.0.0
@@ -25,6 +26,8 @@ services:
       DATABASE_URL: postgres://anchor:anchor@core-postgres:5432/anchor
       RUST_LOG: dashboard_backend=info
       COMPOSE_PROJECT_NAME: anchor
+      BACKUP_DIR: /backups
+      HOST_BACKUP_PATH: /backups
     depends_on:
       core-postgres:
         condition: service_healthy
@@ -51,6 +54,7 @@ services:
       args:
         NEXT_PUBLIC_API_URL: http://localhost:8010
         NEXT_PUBLIC_TESTNET_URL: http://localhost:8002
+        NEXT_PUBLIC_TESTNET_WS_URL: ws://localhost:8002/ws
         NEXT_PUBLIC_BACKUP_URL: http://localhost:8003
     container_name: anchor-dashboard-frontend
     ports:

@@ -10,6 +10,7 @@ import {
   fetchNewAddress,
   mineBlocks,
   CARRIER_OPTIONS,
+  saveMyMessageRef,
 } from "@/lib/api";
 import {
   PenLine,
@@ -81,11 +82,20 @@ function ComposeForm() {
       setCarrier(0); // Reset to default
       setError(null);
       
+      // Save to localStorage for "My Threads" feature
+      saveMyMessageRef({
+        txid: data.txid,
+        vout: data.vout,
+        createdAt: new Date().toISOString(),
+        isReply: !!parentTxid,
+      });
+      
       // Invalidate caches
       queryClient.invalidateQueries({ queryKey: ["stats"] });
       queryClient.invalidateQueries({ queryKey: ["roots"] });
       queryClient.invalidateQueries({ queryKey: ["wallet-balance"] });
       queryClient.invalidateQueries({ queryKey: ["messages"] });
+      queryClient.invalidateQueries({ queryKey: ["my-messages"] }); // Also invalidate my messages
       
       // If it was a reply, invalidate the parent's replies cache
       if (parentTxid) {

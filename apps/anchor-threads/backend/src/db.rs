@@ -2,7 +2,8 @@
 
 use anyhow::Result;
 use chrono::{DateTime, Utc};
-use sqlx::postgres::PgPool;
+use sqlx::postgres::{PgPool, PgPoolOptions};
+use std::time::Duration;
 
 use crate::models::{
     carrier_name, AnchorResponse, CarrierStats, ListParams, MessageResponse, StatsResponse,
@@ -54,9 +55,17 @@ struct AnchorRow {
 }
 
 impl Database {
-    /// Create a new database connection
+    /// Create a new database connection with proper pool settings
     pub async fn connect(database_url: &str) -> Result<Self> {
-        let pool = PgPool::connect(database_url).await?;
+        let pool = PgPoolOptions::new()
+            .max_connections(10)
+            .min_connections(1)
+            .acquire_timeout(Duration::from_secs(30))
+            .idle_timeout(Duration::from_secs(600)) // Close idle connections after 10 min
+            .max_lifetime(Duration::from_secs(1800)) // Recycle connections after 30 min
+            .test_before_acquire(true) // Test connection before giving it to the app
+            .connect(database_url)
+            .await?;
         Ok(Self { pool })
     }
 

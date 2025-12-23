@@ -4,14 +4,19 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+} from "recharts";
+import {
   Search,
   Loader2,
   RefreshCw,
   Activity,
   Blocks,
   Clock,
-  Terminal,
-  ScrollText,
   MessageSquare,
   Grid3X3,
   Image,
@@ -25,11 +30,22 @@ import {
   Leaf,
   Eye,
   TrendingUp,
-  Database,
   Zap,
+  List,
+  BarChart3,
+  Radio,
+  Gauge,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { fetchContainers, fetchContainerLogs } from "@/lib/api";
+import { fetchContainers } from "@/lib/api";
+import {
+  MessageExplorer,
+  TimeSeriesCharts,
+  MessagesOverTimeChart,
+  LiveFeed,
+  PerformanceMetrics,
+  AnchorStatsChart,
+} from "@/components/indexer";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3011";
 
@@ -100,9 +116,27 @@ const carrierColors: Record<string, string> = {
   "Witness Data": "text-purple-500 bg-purple-500/10",
 };
 
+const carrierChartColors: Record<string, string> = {
+  "OP_RETURN": "#3b82f6",
+  "Inscription": "#f97316",
+  "Stamps": "#ec4899",
+  "Taproot Annex": "#22c55e",
+  "Witness Data": "#a855f7",
+};
+
+type TabId = "overview" | "explorer" | "analytics" | "performance" | "live";
+
+const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
+  { id: "overview", label: "Overview", icon: BarChart3 },
+  { id: "explorer", label: "Explorer", icon: List },
+  { id: "analytics", label: "Analytics", icon: TrendingUp },
+  { id: "performance", label: "Performance", icon: Gauge },
+  { id: "live", label: "Live Feed", icon: Radio },
+];
+
 export default function IndexerPage() {
   const { t } = useTranslation();
-  const [showFullLogs, setShowFullLogs] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabId>("overview");
 
   const {
     data: containersData,
@@ -121,20 +155,11 @@ export default function IndexerPage() {
     refetchInterval: 5000,
   });
 
-  const { data: logsData, isLoading: logsLoading } = useQuery({
-    queryKey: ["indexer-logs"],
-    queryFn: () => fetchContainerLogs("anchor-core-indexer"),
-    refetchInterval: 5000,
-  });
-
   const containers = containersData?.containers || [];
   const indexerContainer = containers.find(
     (c) => c.name === "anchor-core-indexer"
   );
   const isRunning = indexerContainer?.state === "running";
-
-  const logLines = logsData?.logs || [];
-  const recentLogs = logLines.slice(-50);
 
   if (isLoading) {
     return (
@@ -181,223 +206,40 @@ export default function IndexerPage() {
         </div>
       </div>
 
-      {/* Stats Overview */}
-      {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard
-            icon={<MessageSquare className="w-5 h-5" />}
-            label={t("indexer.totalMessages")}
-            value={stats.total_messages.toLocaleString()}
-            color="cyan"
-          />
-          <StatCard
-            icon={<Blocks className="w-5 h-5" />}
-            label={t("indexer.blocksWithMessages")}
-            value={stats.total_blocks_with_messages.toLocaleString()}
-            color="orange"
-          />
-          <StatCard
-            icon={<Clock className="w-5 h-5" />}
-            label={t("indexer.lastIndexedBlock")}
-            value={stats.last_indexed_block?.toLocaleString() || "-"}
-            color="purple"
-          />
-          <StatCard
-            icon={<Zap className="w-5 h-5" />}
-            label={t("indexer.recentBlocks")}
-            value={stats.recent_messages_24h.toLocaleString()}
-            color="green"
-          />
-        </div>
-      )}
-
-      {/* Message Types & Carrier Types */}
-      {stats && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Message Types */}
-          <div className="bg-card border border-border rounded-xl p-6">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-orange-500" />
-              </div>
-              <div>
-                <h2 className="font-semibold text-foreground">{t("indexer.messageTypes")}</h2>
-                <p className="text-sm text-muted-foreground">
-                  {t("indexer.distributionByKind")}
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              {stats.messages_by_kind.map((kind) => {
-                const Icon = kindIcons[kind.kind_name] || MessageSquare;
-                const colorClass = kindColors[kind.kind_name] || "text-gray-500 bg-gray-500/10";
-                const percentage = stats.total_messages > 0 
-                  ? ((kind.count / stats.total_messages) * 100).toFixed(1)
-                  : "0";
-                
-                return (
-                  <div key={kind.kind} className="flex items-center gap-3">
-                    <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center shrink-0", colorClass)}>
-                      <Icon className="w-4.5 h-4.5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium text-foreground">{kind.kind_name}</span>
-                        <span className="text-sm font-tabular text-foreground">{kind.count.toLocaleString()}</span>
-                      </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div 
-                          className={cn("h-full rounded-full transition-all", colorClass.split(" ")[0].replace("text-", "bg-"))}
-                          style={{ width: `${percentage}%` }}
-                        />
-                      </div>
-                    </div>
-                    <span className="text-xs text-muted-foreground w-12 text-right">{percentage}%</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Carrier Types */}
-          <div className="bg-card border border-border rounded-xl p-6">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                <Box className="w-5 h-5 text-blue-500" />
-              </div>
-              <div>
-                <h2 className="font-semibold text-foreground">{t("indexer.carrierTypes")}</h2>
-                <p className="text-sm text-muted-foreground">
-                  {t("indexer.howEmbedded")}
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              {stats.messages_by_carrier.map((carrier) => {
-                const Icon = carrierIcons[carrier.carrier_name] || Box;
-                const colorClass = carrierColors[carrier.carrier_name] || "text-gray-500 bg-gray-500/10";
-                const percentage = stats.total_messages > 0 
-                  ? ((carrier.count / stats.total_messages) * 100).toFixed(1)
-                  : "0";
-                
-                return (
-                  <div key={carrier.carrier} className="flex items-center gap-3">
-                    <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center shrink-0", colorClass)}>
-                      <Icon className="w-4.5 h-4.5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium text-foreground">{carrier.carrier_name}</span>
-                        <span className="text-sm font-tabular text-foreground">{carrier.count.toLocaleString()}</span>
-                      </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div 
-                          className={cn("h-full rounded-full transition-all", colorClass.split(" ")[0].replace("text-", "bg-"))}
-                          style={{ width: `${percentage}%` }}
-                        />
-                      </div>
-                    </div>
-                    <span className="text-xs text-muted-foreground w-12 text-right">{percentage}%</span>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Carrier explanation */}
-            <div className="mt-5 pt-4 border-t border-border">
-              <p className="text-xs text-muted-foreground">
-                {t("indexer.carriersExplained")}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Loading state for stats */}
-      {statsLoading && (
-        <div className="bg-card border border-border rounded-xl p-8">
-          <div className="flex items-center justify-center">
-            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-            <span className="ml-2 text-muted-foreground">{t("indexer.loadingStats")}</span>
-          </div>
-        </div>
-      )}
-
-      {/* Database Info */}
-      <div className="bg-card border border-border rounded-xl p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-            <Database className="w-5 h-5 text-emerald-500" />
-          </div>
-          <div>
-            <h2 className="font-semibold text-foreground">{t("indexer.storage")}</h2>
-            <p className="text-sm text-muted-foreground">
-              {t("indexer.storedInPostgres")}
-            </p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="p-3 bg-muted/50 rounded-lg">
-            <p className="text-xs text-muted-foreground mb-1">Database</p>
-            <p className="font-medium text-foreground font-mono text-sm">anchor</p>
-          </div>
-          <div className="p-3 bg-muted/50 rounded-lg">
-            <p className="text-xs text-muted-foreground mb-1">{t("indexer.container")}</p>
-            <p className="font-medium text-foreground font-mono text-sm">core-postgres</p>
-          </div>
-          <div className="p-3 bg-muted/50 rounded-lg">
-            <p className="text-xs text-muted-foreground mb-1">{t("indexer.mainTable")}</p>
-            <p className="font-medium text-foreground font-mono text-sm">messages</p>
-          </div>
-          <div className="p-3 bg-muted/50 rounded-lg">
-            <p className="text-xs text-muted-foreground mb-1">{t("database.port")}</p>
-            <p className="font-medium text-foreground font-mono text-sm">5432</p>
-          </div>
-        </div>
+      {/* Tabs */}
+      <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-lg w-fit">
+        {TABS.map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2 text-sm rounded-md transition-colors",
+                activeTab === tab.id
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Icon className="w-4 h-4" />
+              {tab.label}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Recent Logs */}
-      <div className="bg-card border border-border rounded-xl p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-slate-500/10 flex items-center justify-center">
-              <ScrollText className="w-5 h-5 text-slate-400" />
-            </div>
-            <div>
-              <h2 className="font-semibold text-foreground">{t("indexer.recentActivity")}</h2>
-              <p className="text-sm text-muted-foreground">{t("indexer.latestLogs")}</p>
-            </div>
-          </div>
-          <button
-            onClick={() => setShowFullLogs(!showFullLogs)}
-            className="px-3 py-1.5 text-xs bg-muted hover:bg-muted/80 rounded-lg transition-colors"
-          >
-            {showFullLogs ? t("common.showLess") : t("common.showMore")}
-          </button>
-        </div>
+      {/* Tab Content */}
+      {activeTab === "overview" && (
+        <OverviewTab stats={stats} statsLoading={statsLoading} t={t} />
+      )}
 
-        {logsLoading ? (
-          <div className="flex items-center justify-center h-32">
-            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-          </div>
-        ) : recentLogs.length > 0 ? (
-          <div className="bg-slate-900 rounded-lg p-4 font-mono text-xs overflow-x-auto max-h-64 overflow-y-auto">
-            {(showFullLogs ? recentLogs : recentLogs.slice(-8)).map((line, i) => (
-              <div key={i} className="text-slate-300 py-0.5 whitespace-pre-wrap">
-                {formatLogLine(line)}
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8 text-muted-foreground">
-            <Terminal className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p>{t("indexer.noLogs")}</p>
-          </div>
-        )}
-      </div>
+      {activeTab === "explorer" && <MessageExplorer />}
+
+      {activeTab === "analytics" && <TimeSeriesCharts />}
+
+      {activeTab === "performance" && <PerformanceMetrics />}
+
+      {activeTab === "live" && <LiveFeed />}
 
       {/* Not running message */}
       {!isRunning && (
@@ -414,6 +256,199 @@ export default function IndexerPage() {
           </p>
         </div>
       )}
+    </div>
+  );
+}
+
+// Overview Tab Component
+function OverviewTab({
+  stats,
+  statsLoading,
+  t,
+}: {
+  stats: IndexerStats | undefined;
+  statsLoading: boolean;
+  t: (key: string) => string;
+}) {
+  if (statsLoading) {
+    return (
+      <div className="bg-card border border-border rounded-xl p-8">
+        <div className="flex items-center justify-center">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          <span className="ml-2 text-muted-foreground">{t("indexer.loadingStats")}</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!stats) {
+    return null;
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Stats Overview */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatCard
+          icon={<MessageSquare className="w-5 h-5" />}
+          label={t("indexer.totalMessages")}
+          value={stats.total_messages.toLocaleString()}
+          color="cyan"
+        />
+        <StatCard
+          icon={<Blocks className="w-5 h-5" />}
+          label={t("indexer.blocksWithMessages")}
+          value={stats.total_blocks_with_messages.toLocaleString()}
+          color="orange"
+        />
+        <StatCard
+          icon={<Clock className="w-5 h-5" />}
+          label={t("indexer.lastIndexedBlock")}
+          value={stats.last_indexed_block?.toLocaleString() || "-"}
+          color="purple"
+        />
+        <StatCard
+          icon={<Zap className="w-5 h-5" />}
+          label={t("indexer.recentBlocks")}
+          value={stats.recent_messages_24h.toLocaleString()}
+          color="green"
+        />
+      </div>
+
+      {/* Message Types, Carrier Types & Anchor Stats */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Message Types */}
+        <div className="bg-card border border-border rounded-xl p-6">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-orange-500" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-foreground">{t("indexer.messageTypes")}</h2>
+              <p className="text-sm text-muted-foreground">
+                {t("indexer.distributionByKind")}
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            {stats.messages_by_kind.map((kind) => {
+              const Icon = kindIcons[kind.kind_name] || MessageSquare;
+              const colorClass = kindColors[kind.kind_name] || "text-gray-500 bg-gray-500/10";
+              const percentage = stats.total_messages > 0 
+                ? ((kind.count / stats.total_messages) * 100).toFixed(1)
+                : "0";
+              
+              return (
+                <div key={kind.kind} className="flex items-center gap-3">
+                  <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center shrink-0", colorClass)}>
+                    <Icon className="w-4.5 h-4.5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-medium text-foreground">{kind.kind_name}</span>
+                      <span className="text-sm font-tabular text-foreground">{kind.count.toLocaleString()}</span>
+                    </div>
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div 
+                        className={cn("h-full rounded-full transition-all", colorClass.split(" ")[0].replace("text-", "bg-"))}
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
+                  </div>
+                  <span className="text-xs text-muted-foreground w-12 text-right">{percentage}%</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Carrier Types - Pie Chart */}
+        <div className="bg-card border border-border rounded-xl p-6">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+              <Box className="w-5 h-5 text-blue-500" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-foreground">{t("indexer.carrierTypes")}</h2>
+              <p className="text-sm text-muted-foreground">
+                {t("indexer.howEmbedded")}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-6">
+            {/* Pie Chart */}
+            <div className="w-40 h-40 shrink-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={stats.messages_by_carrier.map((c) => ({
+                      name: c.carrier_name,
+                      value: c.count,
+                    }))}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={40}
+                    outerRadius={65}
+                    paddingAngle={2}
+                    dataKey="value"
+                  >
+                    {stats.messages_by_carrier.map((carrier, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={carrierChartColors[carrier.carrier_name] || "#6b7280"}
+                        stroke="transparent"
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--card))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "8px",
+                      fontSize: "12px",
+                    }}
+                    formatter={(value) => [(value as number).toLocaleString(), "Count"]}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Legend */}
+            <div className="flex-1 space-y-2">
+              {stats.messages_by_carrier.map((carrier) => {
+                const Icon = carrierIcons[carrier.carrier_name] || Box;
+                const colorClass = carrierColors[carrier.carrier_name] || "text-gray-500 bg-gray-500/10";
+                const percentage = stats.total_messages > 0 
+                  ? ((carrier.count / stats.total_messages) * 100).toFixed(1)
+                  : "0";
+                
+                return (
+                  <div key={carrier.carrier} className="flex items-center gap-2">
+                    <div 
+                      className="w-2.5 h-2.5 rounded-full shrink-0"
+                      style={{ backgroundColor: carrierChartColors[carrier.carrier_name] || "#6b7280" }}
+                    />
+                    <div className={cn("w-6 h-6 rounded flex items-center justify-center shrink-0", colorClass)}>
+                      <Icon className="w-3 h-3" />
+                    </div>
+                    <span className="text-xs text-foreground flex-1">{carrier.carrier_name}</span>
+                    <span className="text-xs font-tabular text-foreground">{carrier.count.toLocaleString()}</span>
+                    <span className="text-[10px] text-muted-foreground w-10 text-right">{percentage}%</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Messages Over Time & Anchor Resolution - Side by Side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <MessagesOverTimeChart />
+        <AnchorStatsChart />
+      </div>
     </div>
   );
 }
@@ -453,10 +488,3 @@ function StatCard({
     </div>
   );
 }
-
-function formatLogLine(line: string): string {
-  return line.replace(/\x1b\[[0-9;]*m/g, "").trim();
-}
-
-
-

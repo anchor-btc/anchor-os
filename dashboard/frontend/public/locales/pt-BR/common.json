@@ -704,6 +704,10 @@
       "data": {
         "title": "Dados",
         "description": "Exportar, importar e redefinir configurações"
+      },
+      "backup": {
+        "title": "Backup",
+        "description": "Backups automáticos e restauração"
       }
     }
   },

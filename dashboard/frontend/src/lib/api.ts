@@ -283,6 +283,9 @@ export interface TestnetConfig {
   enable_map: boolean;
   enable_dns: boolean;
   enable_proof: boolean;
+  enable_token: boolean;
+  enable_oracle: boolean;
+  enable_prediction: boolean;
   weight_op_return: number;
   weight_stamps: number;
   weight_inscription: number;
@@ -300,11 +303,103 @@ export interface TestnetStats {
   map_count: number;
   dns_count: number;
   proof_count: number;
+  token_count: number;
+  oracle_count: number;
+  prediction_count: number;
   carrier_op_return: number;
   carrier_stamps: number;
   carrier_inscription: number;
   carrier_taproot_annex: number;
   carrier_witness_data: number;
+  errors_count: number;
+  success_count: number;
+}
+
+// Testnet Scenario Types
+
+export interface ScenarioStep {
+  order: number;
+  message_type: string;
+  carrier: string;
+  count: number;
+  delay_secs: number;
+  blocks_to_mine: number;
+  description?: string;
+}
+
+export interface ExpectedOutcome {
+  min_messages?: number;
+  min_blocks?: number;
+  message_counts: Record<string, number>;
+  max_errors: number;
+}
+
+export interface Scenario {
+  id: number;
+  name: string;
+  description?: string;
+  steps: ScenarioStep[];
+  expected_outcome: ExpectedOutcome;
+  is_builtin: boolean;
+  created_at?: number;
+  updated_at?: number;
+}
+
+export interface StepResult {
+  step_order: number;
+  messages_created: number;
+  blocks_mined: number;
+  errors: number;
+  error_messages: string[];
+  duration_ms: number;
+}
+
+export interface ScenarioRun {
+  run_id: number;
+  scenario_id: number;
+  status: "pending" | "running" | "completed" | "failed" | "cancelled";
+  step_results: StepResult[];
+  total_messages: number;
+  total_blocks: number;
+  total_errors: number;
+  outcomes_met: boolean;
+  outcome_failure_reason?: string;
+  started_at: number;
+  ended_at?: number;
+  duration_ms?: number;
+}
+
+export interface StatsHistoryEntry {
+  timestamp: number;
+  total_messages: number;
+  total_blocks: number;
+  messages_per_minute: number;
+  blocks_per_minute: number;
+  text_count: number;
+  pixel_count: number;
+  image_count: number;
+  map_count: number;
+  dns_count: number;
+  proof_count: number;
+  token_count: number;
+  oracle_count: number;
+  prediction_count: number;
+  carrier_op_return: number;
+  carrier_stamps: number;
+  carrier_inscription: number;
+  carrier_taproot_annex: number;
+  carrier_witness_data: number;
+}
+
+export interface TestnetLogEntry {
+  id: number;
+  timestamp: number;
+  level: string;
+  message: string;
+  message_type?: string;
+  carrier?: string;
+  txid?: string;
+  cycle?: number;
 }
 
 // Testnet API Functions
@@ -344,6 +439,76 @@ export async function resumeTestnet(): Promise<{ paused: boolean }> {
     method: "POST",
   });
   if (!res.ok) throw new Error("Failed to resume testnet");
+  return res.json();
+}
+
+// Testnet Scenario API Functions
+
+export async function fetchScenarios(): Promise<{ success: boolean; scenarios: Scenario[] }> {
+  const res = await fetch(`${TESTNET_URL}/scenarios`);
+  if (!res.ok) throw new Error("Failed to fetch scenarios");
+  return res.json();
+}
+
+export async function fetchScenario(id: number): Promise<{ success: boolean; scenario: Scenario }> {
+  const res = await fetch(`${TESTNET_URL}/scenarios/${id}`);
+  if (!res.ok) throw new Error("Failed to fetch scenario");
+  return res.json();
+}
+
+export async function createScenario(scenario: Omit<Scenario, "id" | "is_builtin" | "created_at" | "updated_at">): Promise<{ success: boolean; id: number }> {
+  const res = await fetch(`${TESTNET_URL}/scenarios`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(scenario),
+  });
+  if (!res.ok) throw new Error("Failed to create scenario");
+  return res.json();
+}
+
+export async function updateScenario(id: number, updates: Partial<Scenario>): Promise<{ success: boolean }> {
+  const res = await fetch(`${TESTNET_URL}/scenarios/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(updates),
+  });
+  if (!res.ok) throw new Error("Failed to update scenario");
+  return res.json();
+}
+
+export async function deleteScenario(id: number): Promise<{ success: boolean }> {
+  const res = await fetch(`${TESTNET_URL}/scenarios/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error("Failed to delete scenario");
+  return res.json();
+}
+
+export async function runScenario(id: number): Promise<{ success: boolean; run_id: number }> {
+  const res = await fetch(`${TESTNET_URL}/scenarios/${id}/run`, {
+    method: "POST",
+  });
+  if (!res.ok) throw new Error("Failed to run scenario");
+  return res.json();
+}
+
+export async function fetchScenarioRuns(): Promise<{ success: boolean; runs: ScenarioRun[] }> {
+  const res = await fetch(`${TESTNET_URL}/runs`);
+  if (!res.ok) throw new Error("Failed to fetch runs");
+  return res.json();
+}
+
+export async function fetchStatsHistory(minutes: number = 60): Promise<{ success: boolean; history: StatsHistoryEntry[] }> {
+  const res = await fetch(`${TESTNET_URL}/stats/history?minutes=${minutes}`);
+  if (!res.ok) throw new Error("Failed to fetch stats history");
+  return res.json();
+}
+
+export async function fetchTestnetLogs(limit: number = 100, level?: string): Promise<{ success: boolean; logs: TestnetLogEntry[] }> {
+  let url = `${TESTNET_URL}/logs?limit=${limit}`;
+  if (level) url += `&level=${level}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Failed to fetch logs");
   return res.json();
 }
 
@@ -980,5 +1145,218 @@ export async function fetchAssetsTokens(): Promise<TokenAsset[]> {
   const res = await fetch(`${API_URL}/wallet/assets/tokens`);
   if (!res.ok) throw new Error("Failed to fetch token assets");
   return res.json();
+}
+
+// ============================================================================
+// Indexer Explorer Types & API Functions
+// ============================================================================
+
+export interface MessageQuery {
+  kind?: number;
+  carrier?: number;
+  block?: number;
+  block_from?: number;
+  block_to?: number;
+  search?: string;
+  limit?: number;
+  offset?: number;
+  order?: "asc" | "desc";
+}
+
+export interface MessageListItem {
+  id: number;
+  txid: string;
+  vout: number;
+  block_height: number | null;
+  kind: number;
+  kind_name: string;
+  carrier: number;
+  carrier_name: string;
+  body_preview: string;
+  body_size: number;
+  anchor_count: number;
+  created_at: string;
+}
+
+export interface PaginatedMessages {
+  messages: MessageListItem[];
+  total: number;
+  limit: number;
+  offset: number;
+  has_more: boolean;
+}
+
+export interface AnchorInfo {
+  anchor_index: number;
+  txid_prefix: string;
+  vout: number;
+  resolved_txid: string | null;
+  resolved_message_id: number | null;
+  is_ambiguous: boolean;
+  is_orphan: boolean;
+}
+
+export interface MessageDetail {
+  id: number;
+  txid: string;
+  vout: number;
+  block_height: number | null;
+  block_hash: string | null;
+  kind: number;
+  kind_name: string;
+  carrier: number;
+  carrier_name: string;
+  body_hex: string;
+  body_text: string | null;
+  body_size: number;
+  anchors: AnchorInfo[];
+  replies_count: number;
+  created_at: string;
+}
+
+export async function fetchIndexerMessages(query: MessageQuery = {}): Promise<PaginatedMessages> {
+  const params = new URLSearchParams();
+  if (query.kind !== undefined) params.set("kind", String(query.kind));
+  if (query.carrier !== undefined) params.set("carrier", String(query.carrier));
+  if (query.block !== undefined) params.set("block", String(query.block));
+  if (query.block_from !== undefined) params.set("block_from", String(query.block_from));
+  if (query.block_to !== undefined) params.set("block_to", String(query.block_to));
+  if (query.search) params.set("search", query.search);
+  if (query.limit !== undefined) params.set("limit", String(query.limit));
+  if (query.offset !== undefined) params.set("offset", String(query.offset));
+  if (query.order) params.set("order", query.order);
+
+  const res = await fetch(`${API_URL}/indexer/messages?${params.toString()}`);
+  if (!res.ok) throw new Error("Failed to fetch messages");
+  return res.json();
+}
+
+export async function fetchMessageDetail(txid: string, vout: number): Promise<MessageDetail> {
+  const res = await fetch(`${API_URL}/indexer/messages/${txid}/${vout}`);
+  if (!res.ok) throw new Error("Failed to fetch message detail");
+  return res.json();
+}
+
+// ============================================================================
+// Indexer Time-Series Types & API Functions
+// ============================================================================
+
+export interface KindDataPoint {
+  kind: number;
+  kind_name: string;
+  count: number;
+}
+
+export interface CarrierDataPoint {
+  carrier: number;
+  carrier_name: string;
+  count: number;
+}
+
+export interface TimeseriesPoint {
+  timestamp: string;
+  total: number;
+  by_kind: KindDataPoint[];
+  by_carrier: CarrierDataPoint[];
+}
+
+export interface TimeseriesData {
+  period: string;
+  points: TimeseriesPoint[];
+}
+
+export async function fetchIndexerTimeseries(period: "hour" | "day" | "week" = "day", count: number = 30): Promise<TimeseriesData> {
+  const res = await fetch(`${API_URL}/indexer/stats/timeseries?period=${period}&count=${count}`);
+  if (!res.ok) throw new Error("Failed to fetch timeseries data");
+  return res.json();
+}
+
+// ============================================================================
+// Indexer Anchor Stats Types & API Functions
+// ============================================================================
+
+export interface IndexerAnchorStats {
+  total: number;
+  resolved: number;
+  orphaned: number;
+  ambiguous: number;
+  pending: number;
+  resolution_rate: number;
+}
+
+export interface OrphanAnchor {
+  id: number;
+  message_id: number;
+  message_txid: string;
+  anchor_index: number;
+  txid_prefix: string;
+  vout: number;
+}
+
+export async function fetchAnchorStats(): Promise<IndexerAnchorStats> {
+  const res = await fetch(`${API_URL}/indexer/anchors/stats`);
+  if (!res.ok) throw new Error("Failed to fetch anchor stats");
+  return res.json();
+}
+
+export async function fetchOrphanAnchors(limit: number = 20): Promise<OrphanAnchor[]> {
+  const res = await fetch(`${API_URL}/indexer/anchors/orphans?limit=${limit}`);
+  if (!res.ok) throw new Error("Failed to fetch orphan anchors");
+  return res.json();
+}
+
+// ============================================================================
+// Indexer Performance Types & API Functions
+// ============================================================================
+
+export interface PerformanceStats {
+  is_synced: boolean;
+  last_indexed_block: number;
+  current_chain_height: number | null;
+  blocks_behind: number;
+  messages_per_block: number;
+  total_messages: number;
+  indexer_status: string;
+  last_update: string;
+}
+
+export async function fetchPerformanceStats(): Promise<PerformanceStats> {
+  const res = await fetch(`${API_URL}/indexer/stats/performance`);
+  if (!res.ok) throw new Error("Failed to fetch performance stats");
+  return res.json();
+}
+
+// ============================================================================
+// Indexer WebSocket Live Feed Types
+// ============================================================================
+
+export interface LiveMessage {
+  id: number;
+  txid: string;
+  vout: number;
+  block_height: number | null;
+  kind: number;
+  kind_name: string;
+  carrier: number;
+  carrier_name: string;
+  body_preview: string;
+}
+
+export interface LiveStats {
+  total_messages: number;
+  last_indexed_block: number;
+}
+
+export interface LiveMessageEvent {
+  event_type: "new_message" | "stats" | "error";
+  message: LiveMessage | null;
+  stats: LiveStats | null;
+  timestamp: string;
+}
+
+export function getIndexerWebSocketUrl(): string {
+  const wsProtocol = typeof window !== "undefined" && window.location.protocol === "https:" ? "wss:" : "ws:";
+  const apiHost = API_URL.replace(/^https?:\/\//, "").replace(/\/$/, "");
+  return `${wsProtocol}//${apiHost}/indexer/ws/live`;
 }
 

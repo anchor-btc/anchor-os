@@ -38,6 +38,12 @@ pub struct UpdateConfigRequest {
     #[serde(default)]
     pub enable_proof: Option<bool>,
     #[serde(default)]
+    pub enable_token: Option<bool>,
+    #[serde(default)]
+    pub enable_oracle: Option<bool>,
+    #[serde(default)]
+    pub enable_prediction: Option<bool>,
+    #[serde(default)]
     pub weight_op_return: Option<u8>,
     #[serde(default)]
     pub weight_stamps: Option<u8>,
@@ -94,6 +100,15 @@ pub async fn update_config_handler(
     }
     if let Some(v) = req.enable_proof {
         config.enable_proof = v;
+    }
+    if let Some(v) = req.enable_token {
+        config.enable_token = v;
+    }
+    if let Some(v) = req.enable_oracle {
+        config.enable_oracle = v;
+    }
+    if let Some(v) = req.enable_prediction {
+        config.enable_prediction = v;
     }
     if let Some(v) = req.weight_op_return {
         config.weight_op_return = v.min(100);

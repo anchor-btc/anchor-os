@@ -372,6 +372,83 @@ export async function mineBlocks(count = 1): Promise<{ blocks: string[] }> {
   return res.json();
 }
 
+// =====================
+// My Messages Storage (localStorage)
+// =====================
+
+const MY_MESSAGES_KEY = "anchor-threads-my-messages";
+
+export interface MyMessageRef {
+  txid: string;
+  vout: number;
+  createdAt: string;
+  isReply: boolean;
+}
+
+/**
+ * Get all user's message references from localStorage
+ */
+export function getMyMessageRefs(): MyMessageRef[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const data = localStorage.getItem(MY_MESSAGES_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Save a new message reference to localStorage
+ */
+export function saveMyMessageRef(ref: MyMessageRef): void {
+  if (typeof window === "undefined") return;
+  try {
+    const existing = getMyMessageRefs();
+    // Check if already exists
+    if (existing.some((m) => m.txid === ref.txid && m.vout === ref.vout)) {
+      return;
+    }
+    // Add to beginning (newest first)
+    const updated = [ref, ...existing];
+    localStorage.setItem(MY_MESSAGES_KEY, JSON.stringify(updated));
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+/**
+ * Clear all saved message references
+ */
+export function clearMyMessageRefs(): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(MY_MESSAGES_KEY);
+}
+
+/**
+ * Fetch multiple messages by their txid/vout references
+ */
+export async function fetchMyMessages(refs: MyMessageRef[]): Promise<Message[]> {
+  const messages: Message[] = [];
+  
+  // Fetch in parallel but limit concurrency
+  const batchSize = 10;
+  for (let i = 0; i < refs.length; i += batchSize) {
+    const batch = refs.slice(i, i + batchSize);
+    const results = await Promise.allSettled(
+      batch.map((ref) => fetchMessage(ref.txid, ref.vout))
+    );
+    
+    for (const result of results) {
+      if (result.status === "fulfilled") {
+        messages.push(result.value);
+      }
+    }
+  }
+  
+  return messages;
+}
+
 // Utilities
 export function truncateTxid(txid: string, chars = 8): string {
   if (txid.length <= chars * 2) return txid;

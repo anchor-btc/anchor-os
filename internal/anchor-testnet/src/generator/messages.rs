@@ -6,6 +6,8 @@ use rand::Rng;
 
 use super::sample_data::{
     REPLY_PREFIXES, SAMPLE_CITIES, SAMPLE_DOMAINS, SAMPLE_IMAGES, SAMPLE_MESSAGES,
+    SAMPLE_ORACLE_SOURCES, SAMPLE_PREDICTION_OUTCOMES, SAMPLE_PREDICTION_TITLES,
+    SAMPLE_TOKEN_TICKERS,
 };
 use super::types::{CarrierType, CreateMessageRequest, MessageResult};
 use super::wallet_client::WalletClient;
@@ -92,6 +94,9 @@ impl MessageGenerator {
             MessageType::Map => self.create_map_marker(carrier).await?,
             MessageType::Dns => self.create_dns_record(carrier).await?,
             MessageType::Proof => self.create_proof(carrier).await?,
+            MessageType::Token => self.create_token(carrier).await?,
+            MessageType::Oracle => self.create_oracle(carrier).await?,
+            MessageType::Prediction => self.create_prediction(carrier).await?,
         };
 
         // Update stats
@@ -405,6 +410,212 @@ impl MessageGenerator {
         })
     }
 
+    /// Create a token deploy message (Kind 20)
+    async fn create_token(&mut self, carrier: CarrierType) -> Result<MessageResult> {
+        let ticker = SAMPLE_TOKEN_TICKERS
+            .choose(&mut self.rng)
+            .unwrap_or(&"TEST");
+        let suffix = self.rng.gen_range(1..10000);
+        let full_ticker = format!("{}{}", ticker, suffix);
+
+        let decimals: u8 = self.rng.gen_range(0..=8);
+        let max_supply: u128 = self.rng.gen_range(1_000_000..21_000_000_000_000);
+        let mint_limit: u128 = max_supply / 100; // 1% mint limit
+
+        // Token Deploy payload format (matching anchor-specs)
+        let mut data = Vec::new();
+        data.push(0x01); // Operation: Deploy
+
+        // Ticker length + ticker
+        let ticker_bytes = full_ticker.as_bytes();
+        data.push(ticker_bytes.len() as u8);
+        data.extend_from_slice(ticker_bytes);
+
+        // Decimals
+        data.push(decimals);
+
+        // Max supply (varint encoding)
+        data.extend_from_slice(&encode_varint(max_supply));
+
+        // Mint limit (varint encoding)
+        data.extend_from_slice(&encode_varint(mint_limit));
+
+        // Flags: OPEN_MINT | BURNABLE
+        data.push(0x05);
+
+        let body = hex::encode(&data);
+
+        tracing::info!(
+            "Creating token: {} (decimals: {}, max_supply: {})",
+            full_ticker,
+            decimals,
+            max_supply
+        );
+
+        let request = CreateMessageRequest {
+            kind: 20, // Token
+            body,
+            body_is_hex: true,
+            parent_txid: None,
+            parent_vout: None,
+            carrier: Some(carrier as u8),
+        };
+
+        let response = self.wallet.send_create_message(&request).await?;
+
+        Ok(MessageResult {
+            txid: response.txid,
+            vout: response.vout,
+            message_type: MessageType::Token,
+            is_reply: false,
+            parent_txid: None,
+            parent_vout: None,
+            carrier: CarrierType::from_u8(response.carrier),
+        })
+    }
+
+    /// Create an oracle attestation message (Kind 30)
+    async fn create_oracle(&mut self, carrier: CarrierType) -> Result<MessageResult> {
+        let source = SAMPLE_ORACLE_SOURCES
+            .choose(&mut self.rng)
+            .unwrap_or(&"BTC/USD");
+
+        // Generate random price/value
+        let value: f64 = match *source {
+            "BTC/USD" => self.rng.gen_range(50_000.0..150_000.0),
+            "ETH/BTC" => self.rng.gen_range(0.03..0.08),
+            "GOLD/USD" => self.rng.gen_range(1_800.0..2_500.0),
+            _ => self.rng.gen_range(1.0..1000.0),
+        };
+
+        // Oracle attestation format
+        let mut data = Vec::new();
+        data.push(0x01); // Operation: Attest
+
+        // Source identifier
+        let source_bytes = source.as_bytes();
+        data.push(source_bytes.len() as u8);
+        data.extend_from_slice(source_bytes);
+
+        // Value as f64 bytes
+        data.extend_from_slice(&value.to_be_bytes());
+
+        // Timestamp (current unix time)
+        let timestamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs();
+        data.extend_from_slice(&timestamp.to_be_bytes());
+
+        // Confidence score (0-100)
+        let confidence: u8 = self.rng.gen_range(80..100);
+        data.push(confidence);
+
+        let body = hex::encode(&data);
+
+        tracing::info!(
+            "Creating oracle attestation: {} = {:.2} (confidence: {}%)",
+            source,
+            value,
+            confidence
+        );
+
+        let request = CreateMessageRequest {
+            kind: 30, // Oracle
+            body,
+            body_is_hex: true,
+            parent_txid: None,
+            parent_vout: None,
+            carrier: Some(carrier as u8),
+        };
+
+        let response = self.wallet.send_create_message(&request).await?;
+
+        Ok(MessageResult {
+            txid: response.txid,
+            vout: response.vout,
+            message_type: MessageType::Oracle,
+            is_reply: false,
+            parent_txid: None,
+            parent_vout: None,
+            carrier: CarrierType::from_u8(response.carrier),
+        })
+    }
+
+    /// Create a prediction market message (Kind 40)
+    async fn create_prediction(&mut self, carrier: CarrierType) -> Result<MessageResult> {
+        let title = SAMPLE_PREDICTION_TITLES
+            .choose(&mut self.rng)
+            .unwrap_or(&"Will X happen?");
+
+        let (outcome_yes, outcome_no) = SAMPLE_PREDICTION_OUTCOMES
+            .choose(&mut self.rng)
+            .copied()
+            .unwrap_or(("Yes", "No"));
+
+        // End time: 1-30 days from now
+        let end_time = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs()
+            + self.rng.gen_range(86400..2592000);
+
+        // Prediction market creation format
+        let mut data = Vec::new();
+        data.push(0x01); // Operation: Create
+
+        // Title
+        let title_bytes = title.as_bytes();
+        data.push(title_bytes.len() as u8);
+        data.extend_from_slice(title_bytes);
+
+        // Outcome 1
+        let outcome1_bytes = outcome_yes.as_bytes();
+        data.push(outcome1_bytes.len() as u8);
+        data.extend_from_slice(outcome1_bytes);
+
+        // Outcome 2
+        let outcome2_bytes = outcome_no.as_bytes();
+        data.push(outcome2_bytes.len() as u8);
+        data.extend_from_slice(outcome2_bytes);
+
+        // End timestamp
+        data.extend_from_slice(&end_time.to_be_bytes());
+
+        // Resolution source (empty = creator)
+        data.push(0);
+
+        let body = hex::encode(&data);
+
+        tracing::info!(
+            "Creating prediction market: {} [{}/{}]",
+            title,
+            outcome_yes,
+            outcome_no
+        );
+
+        let request = CreateMessageRequest {
+            kind: 40, // Prediction
+            body,
+            body_is_hex: true,
+            parent_txid: None,
+            parent_vout: None,
+            carrier: Some(carrier as u8),
+        };
+
+        let response = self.wallet.send_create_message(&request).await?;
+
+        Ok(MessageResult {
+            txid: response.txid,
+            vout: response.vout,
+            message_type: MessageType::Prediction,
+            is_reply: false,
+            parent_txid: None,
+            parent_vout: None,
+            carrier: CarrierType::from_u8(response.carrier),
+        })
+    }
+
     /// Add message to history
     fn add_to_history(&mut self, txid: &str, vout: u32) {
         self.message_history.push((txid.to_string(), vout));
@@ -438,5 +649,22 @@ impl MessageGenerator {
     pub fn random_delay(&mut self, min_secs: u64, max_secs: u64) -> u64 {
         self.rng.gen_range(min_secs..=max_secs)
     }
+}
+
+/// Encode a u128 value to LEB128 varint
+fn encode_varint(mut value: u128) -> Vec<u8> {
+    let mut bytes = Vec::new();
+    loop {
+        let mut byte = (value & 0x7F) as u8;
+        value >>= 7;
+        if value != 0 {
+            byte |= 0x80;
+        }
+        bytes.push(byte);
+        if value == 0 {
+            break;
+        }
+    }
+    bytes
 }
 

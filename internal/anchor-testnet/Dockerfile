@@ -19,7 +19,7 @@ RUN mkdir -p internal/anchor-indexer/src && echo "fn main() {}" > internal/ancho
 RUN mkdir -p internal/anchor-wallet/src && echo "fn main() {}" > internal/anchor-wallet/src/main.rs
 RUN mkdir -p libs/rust/anchor-wallet-lib/src && echo "" > libs/rust/anchor-wallet-lib/src/lib.rs
 RUN mkdir -p apps/anchor-threads/backend/src && echo "fn main() {}" > apps/anchor-threads/backend/src/main.rs
-RUN mkdir -p anchor/dashboard/backend/src && echo "fn main() {}" > anchor/dashboard/backend/src/main.rs
+RUN mkdir -p dashboard/backend/src && echo "fn main() {}" > dashboard/backend/src/main.rs
 RUN mkdir -p apps/anchor-canvas/backend/src && echo "fn main() {}" > apps/anchor-canvas/backend/src/main.rs
 RUN mkdir -p apps/anchor-places/backend/src && echo "fn main() {}" > apps/anchor-places/backend/src/main.rs
 RUN mkdir -p apps/anchor-domains/backend/src && echo "fn main() {}" > apps/anchor-domains/backend/src/main.rs
@@ -27,13 +27,13 @@ RUN mkdir -p apps/anchor-proofs/backend/src && echo "fn main() {}" > apps/anchor
 RUN mkdir -p apps/anchor-tokens/backend/src && echo "fn main() {}" > apps/anchor-tokens/backend/src/main.rs
 RUN mkdir -p apps/anchor-oracles/backend/src && echo "fn main() {}" > apps/anchor-oracles/backend/src/main.rs
 RUN mkdir -p apps/anchor-predictions/backend/src && echo "fn main() {}" > apps/anchor-predictions/backend/src/main.rs
-RUN mkdir -p anchor/backup/backend/src && echo "fn main() {}" > anchor/backup/backend/src/main.rs
+
+# Copy Cargo.toml files for workspace members
 COPY internal/anchor-indexer/Cargo.toml ./internal/anchor-indexer/
 COPY internal/anchor-wallet/Cargo.toml ./internal/anchor-wallet/
 COPY libs/rust/anchor-wallet-lib/Cargo.toml ./libs/rust/anchor-wallet-lib/
 COPY apps/anchor-threads/backend/Cargo.toml ./apps/anchor-threads/backend/
-COPY anchor/dashboard/backend/Cargo.toml ./anchor/dashboard/backend/
-COPY anchor/backup/backend/Cargo.toml ./anchor/backup/backend/
+COPY dashboard/backend/Cargo.toml ./dashboard/backend/
 COPY apps/anchor-canvas/backend/Cargo.toml ./apps/anchor-canvas/backend/
 COPY apps/anchor-places/backend/Cargo.toml ./apps/anchor-places/backend/
 COPY apps/anchor-domains/backend/Cargo.toml ./apps/anchor-domains/backend/
@@ -57,13 +57,13 @@ RUN apt-get update && apt-get install -y \
 COPY --from=builder /app/target/release/anchor-testnet /usr/local/bin/
 
 ENV RUST_LOG=info
-ENV WALLET_URL=http://infra-wallet:3001
-ENV API_PORT=3014
+ENV WALLET_URL=http://core-wallet:8001
+ENV API_PORT=8002
 ENV MIN_INTERVAL_SECS=3
 ENV MAX_INTERVAL_SECS=10
 ENV BLOCKS_PER_CYCLE=1
 ENV INITIAL_BLOCKS=101
 
-EXPOSE 3014
+EXPOSE 8002
 
 CMD ["anchor-testnet"]

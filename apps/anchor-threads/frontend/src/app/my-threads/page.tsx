@@ -1,8 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
-import { fetchWalletInfo, fetchMessagesByAddress, type Message } from "@/lib/api";
+import { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { 
+  getMyMessageRefs, 
+  fetchMyMessages,
+  clearMyMessageRefs,
+  type Message 
+} from "@/lib/api";
 import { MessageCard } from "@/components/message-card";
 import { Button, Card, Container } from "@AnchorProtocol/ui";
 import Link from "next/link";
@@ -11,9 +16,9 @@ import {
   User,
   MessageSquare,
   Reply,
-  Wallet,
   RefreshCw,
   PenLine,
+  Trash2,
 } from "lucide-react";
 
 type TabType = "threads" | "replies";
@@ -21,48 +26,25 @@ type TabType = "threads" | "replies";
 export default function MyThreadsPage() {
   const [activeTab, setActiveTab] = useState<TabType>("threads");
 
-  // Fetch wallet info
-  const { 
-    data: walletInfo, 
-    isLoading: isLoadingWallet,
-    error: walletError,
-    refetch: refetchWallet 
-  } = useQuery({
-    queryKey: ["wallet-info"],
-    queryFn: fetchWalletInfo,
-    retry: 1,
-  });
+  // Get message refs from localStorage
+  const messageRefs = useMemo(() => getMyMessageRefs(), []);
 
-  // Fetch messages by address
+  // Fetch actual messages from the refs
   const {
-    data,
-    isLoading: isLoadingMessages,
-    isFetchingNextPage,
-    hasNextPage,
-    fetchNextPage,
-    refetch: refetchMessages,
+    data: messages,
+    isLoading,
+    refetch,
     isRefetching,
-  } = useInfiniteQuery({
-    queryKey: ["my-messages", walletInfo?.address],
-    queryFn: ({ pageParam = 1 }) => 
-      fetchMessagesByAddress(walletInfo!.address, pageParam, 20),
-    getNextPageParam: (lastPage) => {
-      if (lastPage.page < lastPage.total_pages) {
-        return lastPage.page + 1;
-      }
-      return undefined;
-    },
-    initialPageParam: 1,
-    enabled: !!walletInfo?.address,
+  } = useQuery({
+    queryKey: ["my-messages", messageRefs.map(r => `${r.txid}:${r.vout}`).join(",")],
+    queryFn: () => fetchMyMessages(messageRefs),
+    enabled: messageRefs.length > 0,
   });
 
-  // Flatten and filter messages
-  const allMessages = data?.pages.flatMap((page) => page.data) ?? [];
-  
   // Filter based on active tab
-  const filteredMessages = allMessages.filter((msg) => {
+  const filteredMessages = (messages ?? []).filter((msg) => {
     if (activeTab === "threads") {
-      // Root messages (no anchors or first in chain)
+      // Root messages (no anchors)
       return msg.anchors.length === 0;
     } else {
       // Replies (has anchors)
@@ -80,45 +62,17 @@ export default function MyThreadsPage() {
     return heightB - heightA;
   });
 
-  // Loading state
-  if (isLoadingWallet) {
-    return (
-      <Container className="flex flex-col items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-        <p className="text-muted-foreground">Connecting to wallet...</p>
-      </Container>
-    );
-  }
+  // Handle clear history
+  const handleClearHistory = () => {
+    if (confirm("Are you sure you want to clear your message history? This cannot be undone.")) {
+      clearMyMessageRefs();
+      window.location.reload();
+    }
+  };
 
-  // Wallet not connected
-  if (walletError || !walletInfo) {
-    return (
-      <Container className="text-center py-16">
-        <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
-          <Wallet className="h-8 w-8 text-muted-foreground" />
-        </div>
-        <h2 className="text-xl font-semibold text-foreground mb-2">Wallet Not Connected</h2>
-        <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-          Connect your wallet to view your threads and replies. Make sure the Anchor Wallet service is running.
-        </p>
-        <div className="flex justify-center gap-3">
-          <Button
-            variant="secondary"
-            onClick={() => refetchWallet()}
-          >
-            <RefreshCw className="h-4 w-4" />
-            Try Again
-          </Button>
-          <Button asChild variant="accent">
-            <Link href="/compose" className="flex items-center gap-2">
-            <PenLine className="h-4 w-4" />
-            Create Thread
-          </Link>
-          </Button>
-        </div>
-      </Container>
-    );
-  }
+  // Count threads and replies
+  const threadCount = (messages ?? []).filter(m => m.anchors.length === 0).length;
+  const replyCount = (messages ?? []).filter(m => m.anchors.length > 0).length;
 
   return (
     <Container className="space-y-6">
@@ -129,24 +83,34 @@ export default function MyThreadsPage() {
             <User className="h-6 w-6 text-primary" />
             My Threads
           </h1>
-          <p className="text-sm text-muted-foreground mt-1 font-mono">
-            {walletInfo.address.slice(0, 12)}...{walletInfo.address.slice(-8)}
+          <p className="text-sm text-muted-foreground mt-1">
+            {messageRefs.length} message{messageRefs.length !== 1 ? "s" : ""} saved locally
           </p>
         </div>
         <div className="flex items-center gap-3">
+          {messageRefs.length > 0 && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleClearHistory}
+              title="Clear history"
+            >
+              <Trash2 className="h-4 w-4 text-muted-foreground" />
+            </Button>
+          )}
           <Button
             variant="outline"
             size="icon"
-            onClick={() => refetchMessages()}
-            disabled={isRefetching}
+            onClick={() => refetch()}
+            disabled={isRefetching || messageRefs.length === 0}
           >
             <RefreshCw className={`h-4 w-4 ${isRefetching ? "animate-spin" : ""}`} />
           </Button>
           <Button asChild variant="accent">
             <Link href="/compose" className="flex items-center gap-2">
-            <PenLine className="h-4 w-4" />
-            New Thread
-          </Link>
+              <PenLine className="h-4 w-4" />
+              New Thread
+            </Link>
           </Button>
         </div>
       </div>
@@ -162,7 +126,7 @@ export default function MyThreadsPage() {
           }`}
         >
           <MessageSquare className="h-4 w-4" />
-          My Threads
+          My Threads ({threadCount})
         </button>
         <button
           onClick={() => setActiveTab("replies")}
@@ -173,12 +137,14 @@ export default function MyThreadsPage() {
           }`}
         >
           <Reply className="h-4 w-4" />
-          My Replies
+          My Replies ({replyCount})
         </button>
       </div>
 
       {/* Content */}
-      {isLoadingMessages ? (
+      {messageRefs.length === 0 ? (
+        <EmptyState type={activeTab} isNew />
+      ) : isLoading ? (
         <div className="flex justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
@@ -187,20 +153,6 @@ export default function MyThreadsPage() {
           {sortedMessages.map((message) => (
             <MessageCard key={`${message.txid}-${message.vout}`} message={message} />
           ))}
-
-          {/* Load more */}
-          {hasNextPage && (
-            <div className="py-4 flex justify-center">
-              <Button
-                variant="ghost"
-                onClick={() => fetchNextPage()}
-                disabled={isFetchingNextPage}
-                loading={isFetchingNextPage}
-              >
-                Load more
-              </Button>
-            </div>
-          )}
         </div>
       ) : (
         <EmptyState type={activeTab} />
@@ -209,35 +161,53 @@ export default function MyThreadsPage() {
   );
 }
 
-function EmptyState({ type }: { type: TabType }) {
+function EmptyState({ type, isNew = false }: { type: TabType; isNew?: boolean }) {
+  if (isNew) {
+    return (
+      <Card className="text-center py-16 bg-secondary/50">
+        <User className="h-10 w-10 text-muted-foreground/30 mx-auto mb-4" />
+        <h3 className="font-medium text-foreground mb-2">No messages yet</h3>
+        <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
+          Messages you create will appear here. Your history is stored locally in this browser.
+        </p>
+        <Button asChild variant="accent">
+          <Link href="/compose" className="flex items-center gap-2">
+            <PenLine className="h-4 w-4" />
+            Create Your First Thread
+          </Link>
+        </Button>
+      </Card>
+    );
+  }
+
   return (
     <Card className="text-center py-16 bg-secondary/50">
       {type === "threads" ? (
         <>
           <MessageSquare className="h-10 w-10 text-muted-foreground/30 mx-auto mb-4" />
-          <h3 className="font-medium text-foreground mb-2">No threads yet</h3>
+          <h3 className="font-medium text-foreground mb-2">No threads in this tab</h3>
           <p className="text-sm text-muted-foreground mb-6">
-            You haven&apos;t created any threads. Start a new conversation!
+            You haven&apos;t created any root threads yet.
           </p>
           <Button asChild variant="accent">
             <Link href="/compose" className="flex items-center gap-2">
-            <PenLine className="h-4 w-4" />
-            Create Thread
-          </Link>
+              <PenLine className="h-4 w-4" />
+              Create Thread
+            </Link>
           </Button>
         </>
       ) : (
         <>
           <Reply className="h-10 w-10 text-muted-foreground/30 mx-auto mb-4" />
-          <h3 className="font-medium text-foreground mb-2">No replies yet</h3>
+          <h3 className="font-medium text-foreground mb-2">No replies in this tab</h3>
           <p className="text-sm text-muted-foreground mb-6">
-            You haven&apos;t replied to any threads. Join a conversation!
+            You haven&apos;t replied to any threads yet.
           </p>
           <Button asChild variant="default">
             <Link href="/threads" className="flex items-center gap-2">
-            <MessageSquare className="h-4 w-4" />
-            Browse Threads
-          </Link>
+              <MessageSquare className="h-4 w-4" />
+              Browse Threads
+            </Link>
           </Button>
         </>
       )}

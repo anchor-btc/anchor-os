@@ -16,12 +16,15 @@ pub struct TestnetConfig {
     pub blocks_per_cycle: u32,
 
     // Message types (enabled/disabled)
-    pub enable_text: bool,   // Kind 1
-    pub enable_pixel: bool,  // Kind 2
-    pub enable_image: bool,  // Kind 4
-    pub enable_map: bool,    // Kind 5
-    pub enable_dns: bool,    // Kind 10
-    pub enable_proof: bool,  // Kind 11
+    pub enable_text: bool,       // Kind 1
+    pub enable_pixel: bool,      // Kind 2
+    pub enable_image: bool,      // Kind 4
+    pub enable_map: bool,        // Kind 12 (GeoMarker)
+    pub enable_dns: bool,        // Kind 10
+    pub enable_proof: bool,      // Kind 11
+    pub enable_token: bool,      // Kind 20
+    pub enable_oracle: bool,     // Kind 30-33
+    pub enable_prediction: bool, // Kind 40-43
 
     // Carrier weights (0-100, will be normalized)
     pub weight_op_return: u8,
@@ -49,6 +52,9 @@ impl Default for TestnetConfig {
             enable_map: false,
             enable_dns: false,
             enable_proof: false,
+            enable_token: false,
+            enable_oracle: false,
+            enable_prediction: false,
 
             // Default carrier weights (matching original distribution)
             weight_op_return: 30,
@@ -110,6 +116,15 @@ impl TestnetConfig {
         if self.enable_proof {
             types.push(MessageType::Proof);
         }
+        if self.enable_token {
+            types.push(MessageType::Token);
+        }
+        if self.enable_oracle {
+            types.push(MessageType::Oracle);
+        }
+        if self.enable_prediction {
+            types.push(MessageType::Prediction);
+        }
         types
     }
 
@@ -145,6 +160,10 @@ pub enum MessageType {
     Map,
     Dns,
     Proof,
+    // New types
+    Token,
+    Oracle,
+    Prediction,
 }
 
 impl MessageType {
@@ -158,6 +177,9 @@ impl MessageType {
             MessageType::Map => 5,
             MessageType::Dns => 10,
             MessageType::Proof => 11,
+            MessageType::Token => 20,
+            MessageType::Oracle => 30,
+            MessageType::Prediction => 40,
         }
     }
 
@@ -170,7 +192,26 @@ impl MessageType {
             MessageType::Map => "Map",
             MessageType::Dns => "DNS",
             MessageType::Proof => "Proof",
+            MessageType::Token => "Token",
+            MessageType::Oracle => "Oracle",
+            MessageType::Prediction => "Prediction",
         }
+    }
+
+    /// Get all available message types
+    #[allow(dead_code)]
+    pub fn all() -> Vec<MessageType> {
+        vec![
+            MessageType::Text,
+            MessageType::Pixel,
+            MessageType::Image,
+            MessageType::Map,
+            MessageType::Dns,
+            MessageType::Proof,
+            MessageType::Token,
+            MessageType::Oracle,
+            MessageType::Prediction,
+        ]
     }
 }
 
@@ -185,16 +226,32 @@ pub struct GeneratorStats {
     pub map_count: u64,
     pub dns_count: u64,
     pub proof_count: u64,
+    pub token_count: u64,
+    pub oracle_count: u64,
+    pub prediction_count: u64,
     pub carrier_op_return: u64,
     pub carrier_stamps: u64,
     pub carrier_inscription: u64,
     pub carrier_taproot_annex: u64,
     pub carrier_witness_data: u64,
+    // Errors and success tracking
+    pub errors_count: u64,
+    pub success_count: u64,
+    // Timing stats
+    pub started_at: Option<u64>,
+    pub last_message_at: Option<u64>,
 }
 
 impl GeneratorStats {
     pub fn increment_type(&mut self, msg_type: MessageType) {
         self.total_messages += 1;
+        self.success_count += 1;
+        self.last_message_at = Some(
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_secs(),
+        );
         match msg_type {
             MessageType::Text => self.text_count += 1,
             MessageType::Pixel => self.pixel_count += 1,
@@ -202,6 +259,9 @@ impl GeneratorStats {
             MessageType::Map => self.map_count += 1,
             MessageType::Dns => self.dns_count += 1,
             MessageType::Proof => self.proof_count += 1,
+            MessageType::Token => self.token_count += 1,
+            MessageType::Oracle => self.oracle_count += 1,
+            MessageType::Prediction => self.prediction_count += 1,
         }
     }
 
@@ -218,6 +278,21 @@ impl GeneratorStats {
 
     pub fn increment_blocks(&mut self, count: u64) {
         self.total_blocks += count;
+    }
+
+    #[allow(dead_code)]
+    pub fn increment_error(&mut self) {
+        self.errors_count += 1;
+    }
+
+    #[allow(dead_code)]
+    pub fn mark_started(&mut self) {
+        self.started_at = Some(
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_secs(),
+        );
     }
 }
 

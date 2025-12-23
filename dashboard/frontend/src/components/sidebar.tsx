@@ -153,6 +153,7 @@ const iconMap: Record<string, React.ElementType> = {
   Coins,
   Eye,
   Ticket,
+  HardDrive,
 };
 
 // Default expanded state - all expanded by default
@@ -653,7 +654,7 @@ export function Sidebar() {
 
   return (
     <>
-      <aside className="fixed left-0 top-0 bottom-0 w-64 bg-card border-r border-border flex flex-col overflow-hidden">
+      <aside className="fixed left-0 top-0 bottom-0 w-65 bg-card border-r border-border flex flex-col overflow-hidden">
         {/* Logo */}
         <div className="p-4 border-b border-border shrink-0">
           <div className="flex items-center justify-between">

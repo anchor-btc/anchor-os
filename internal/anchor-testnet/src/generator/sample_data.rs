@@ -83,3 +83,54 @@ pub const SAMPLE_CITIES: &[(&str, f64, f64)] = &[
     ("Toronto", 43.6532, -79.3832),
 ];
 
+/// Sample token tickers for Token operations
+pub const SAMPLE_TOKEN_TICKERS: &[&str] = &[
+    "ANCHOR",
+    "SATS",
+    "BITS",
+    "GOLD",
+    "STACK",
+    "HODL",
+    "RUNES",
+    "ORDX",
+    "BTCFI",
+    "ATOM",
+];
+
+/// Sample oracle data sources
+pub const SAMPLE_ORACLE_SOURCES: &[&str] = &[
+    "BTC/USD",
+    "ETH/BTC",
+    "GOLD/USD",
+    "SPX500",
+    "WEATHER/NYC",
+    "SPORTS/NFL",
+    "CRYPTO/MCAP",
+    "FX/EURUSD",
+    "COMMODITIES/OIL",
+    "RATES/FED",
+];
+
+/// Sample prediction market titles
+pub const SAMPLE_PREDICTION_TITLES: &[&str] = &[
+    "BTC above $100k by EOY?",
+    "Next halving before April 2028?",
+    "ETF approval this quarter?",
+    "Mining difficulty increase >5%?",
+    "Lightning capacity >10k BTC?",
+    "Hash rate new ATH this month?",
+    "Mempool clears below 1 sat/vB?",
+    "Block subsidy halves again?",
+    "First country adopts BTC standard?",
+    "Bitcoin dominance above 60%?",
+];
+
+/// Sample prediction outcomes
+pub const SAMPLE_PREDICTION_OUTCOMES: &[(&str, &str)] = &[
+    ("Yes", "No"),
+    ("Above", "Below"),
+    ("Before", "After"),
+    ("Bullish", "Bearish"),
+    ("Pass", "Fail"),
+];
+

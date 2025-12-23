@@ -26,6 +26,8 @@ use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
 use crate::config::Config;
+use crate::backup_config::BackupConfig;
+use crate::handlers::backup::BackupState;
 
 /// Application state shared across handlers
 pub struct AppState {
@@ -84,6 +86,12 @@ pub struct AppState {
         handlers::cloudflare::disconnect_cloudflare,
         handlers::cloudflare::get_exposable_services,
         handlers::indexer::get_indexer_stats,
+        handlers::indexer::get_messages,
+        handlers::indexer::get_message_detail,
+        handlers::indexer::get_timeseries,
+        handlers::indexer::get_anchor_stats,
+        handlers::indexer::get_orphan_anchors,
+        handlers::indexer::get_performance,
         handlers::tor::get_tor_status,
         handlers::tor::get_onion_addresses_handler,
         handlers::tor::new_tor_circuit,
@@ -155,6 +163,21 @@ pub struct AppState {
         handlers::cloudflare::ExposableServicesResponse,
         handlers::indexer::IndexerStats,
         handlers::indexer::MessageKindCount,
+        handlers::indexer::CarrierCount,
+        handlers::indexer::MessageListItem,
+        handlers::indexer::PaginatedMessages,
+        handlers::indexer::MessageDetail,
+        handlers::indexer::AnchorInfo,
+        handlers::indexer::TimeseriesData,
+        handlers::indexer::TimeseriesPoint,
+        handlers::indexer::KindDataPoint,
+        handlers::indexer::CarrierDataPoint,
+        handlers::indexer::AnchorStats,
+        handlers::indexer::OrphanAnchor,
+        handlers::indexer::PerformanceStats,
+        handlers::indexer::LiveMessageEvent,
+        handlers::indexer::LiveMessage,
+        handlers::indexer::LiveStats,
         handlers::tor::TorStatus,
         handlers::tor::TorActionResponse,
         handlers::tor::OnionAddresses,
@@ -255,6 +278,15 @@ async fn main() -> Result<()> {
         db_pool,
     });
 
+    // Create backup state
+    let backup_config = BackupConfig::from_env();
+    let backup_state = Arc::new(BackupState::new(backup_config).await);
+    
+    // Start backup scheduler in background
+    if let Err(e) = backup_state.start_scheduler().await {
+        info!("Backup scheduler not started: {}", e);
+    }
+
     // Build router
     let app = Router::new()
         .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()))
@@ -340,6 +372,13 @@ async fn main() -> Result<()> {
         .route("/electrum/info", get(handlers::electrum::get_electrum_info))
         // Indexer
         .route("/indexer/stats", get(handlers::indexer::get_indexer_stats))
+        .route("/indexer/messages", get(handlers::indexer::get_messages))
+        .route("/indexer/messages/:txid/:vout", get(handlers::indexer::get_message_detail))
+        .route("/indexer/stats/timeseries", get(handlers::indexer::get_timeseries))
+        .route("/indexer/stats/performance", get(handlers::indexer::get_performance))
+        .route("/indexer/anchors/stats", get(handlers::indexer::get_anchor_stats))
+        .route("/indexer/anchors/orphans", get(handlers::indexer::get_orphan_anchors))
+        .route("/indexer/ws/live", get(handlers::indexer::ws_live_feed))
         // Installation
         .route("/installation/status", get(handlers::installation::get_installation_status))
         .route("/installation/services", get(handlers::installation::get_services))
@@ -376,6 +415,17 @@ async fn main() -> Result<()> {
         .route("/notifications/{id}/read", put(handlers::notifications::mark_as_read))
         .route("/notifications/{id}", delete(handlers::notifications::delete_notification))
         .with_state(state)
+        // Backup routes (separate state)
+        .route("/backup/status", get(handlers::backup::get_status))
+        .route("/backup/start", post(handlers::backup::start_backup))
+        .route("/backup/history", get(handlers::backup::get_history))
+        .route("/backup/targets", get(handlers::backup::get_targets))
+        .route("/backup/restore", post(handlers::backup::restore))
+        .route("/backup/snapshots/:target", get(handlers::backup::list_snapshots))
+        .route("/backup/settings", get(handlers::backup::get_settings))
+        .route("/backup/settings", put(handlers::backup::save_settings))
+        .route("/backup/local/files", get(handlers::backup::list_local_files))
+        .with_state(backup_state)
         .layer(TraceLayer::new_for_http())
         .layer(
             CorsLayer::new()
