@@ -683,27 +683,28 @@ export async function newTorCircuit(): Promise<TorActionResponse> {
   return res.json();
 }
 
-// Electrum Types (Electrs/Fulcrum switching)
+// Electrum Types (Electrs/Fulcrum dual-server management)
 
 export type ElectrumServer = "electrs" | "fulcrum";
+export type ServerAction = "start" | "stop";
 
-export interface ElectrumStatus {
-  configured_server: ElectrumServer;
-  active_server: ElectrumServer | null;
-  electrs_status: string | null;
-  fulcrum_status: string | null;
-  port_available: boolean;
-  sync_status: string | null;
+export interface ServerInfo {
+  server: ElectrumServer;
+  status: string | null;
+  is_default: boolean;
+  host: string;
+  port: number;
 }
 
-export interface ElectrumSwitchRequest {
-  server: ElectrumServer;
+export interface ElectrumStatus {
+  default_server: ElectrumServer;
+  electrs: ServerInfo;
+  fulcrum: ServerInfo;
 }
 
 export interface ElectrumActionResponse {
   success: boolean;
   message: string;
-  active_server: ElectrumServer | null;
 }
 
 // Electrum API Functions
@@ -714,22 +715,102 @@ export async function fetchElectrumStatus(): Promise<ElectrumStatus> {
   return res.json();
 }
 
-export async function switchElectrumServer(
+export async function setDefaultElectrumServer(
   server: ElectrumServer
 ): Promise<ElectrumActionResponse> {
-  const res = await fetch(`${API_URL}/electrum/switch`, {
+  const res = await fetch(`${API_URL}/electrum/set-default`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ server }),
   });
-  if (!res.ok) throw new Error("Failed to switch Electrum server");
+  if (!res.ok) throw new Error("Failed to set default Electrum server");
   return res.json();
+}
+
+export async function electrumServerAction(
+  server: ElectrumServer,
+  action: ServerAction
+): Promise<ElectrumActionResponse> {
+  const res = await fetch(`${API_URL}/electrum/server-action`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ server, action }),
+  });
+  if (!res.ok) throw new Error(`Failed to ${action} ${server}`);
+  return res.json();
+}
+
+// Legacy function - redirects to setDefaultElectrumServer
+export async function switchElectrumServer(
+  server: ElectrumServer
+): Promise<ElectrumActionResponse> {
+  return setDefaultElectrumServer(server);
 }
 
 export async function fetchElectrumInfo(): Promise<ElectrumStatus> {
   const res = await fetch(`${API_URL}/electrum/info`);
   if (!res.ok) throw new Error("Failed to fetch Electrum info");
   return res.json();
+}
+
+// Block Explorer Types
+
+export type BlockExplorer = "mempool" | "btc-rpc-explorer" | "esplora" | "bitfeed";
+
+export interface ExplorerInfo {
+  explorer: BlockExplorer;
+  name: string;
+  status: string | null;
+  port: number;
+  is_default: boolean;
+  base_url: string;
+  tx_url_template: string;
+  address_url_template: string;
+}
+
+export interface ExplorerSettings {
+  default_explorer: BlockExplorer;
+  explorers: ExplorerInfo[];
+}
+
+export interface ExplorerActionResponse {
+  success: boolean;
+  message: string;
+}
+
+// Block Explorer API Functions
+
+export async function fetchExplorerSettings(): Promise<ExplorerSettings> {
+  const res = await fetch(`${API_URL}/explorer/settings`);
+  if (!res.ok) throw new Error("Failed to fetch explorer settings");
+  return res.json();
+}
+
+export async function fetchDefaultExplorer(): Promise<ExplorerInfo> {
+  const res = await fetch(`${API_URL}/explorer/default`);
+  if (!res.ok) throw new Error("Failed to fetch default explorer");
+  return res.json();
+}
+
+export async function setDefaultExplorer(
+  explorer: BlockExplorer
+): Promise<ExplorerActionResponse> {
+  const res = await fetch(`${API_URL}/explorer/set-default`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ explorer }),
+  });
+  if (!res.ok) throw new Error("Failed to set default explorer");
+  return res.json();
+}
+
+// Helper functions for building explorer URLs
+export function getExplorerTxUrl(baseUrl: string, txid: string): string {
+  return `${baseUrl}/tx/${txid}`;
+}
+
+export function getExplorerAddressUrl(baseUrl: string, address: string): string {
+  return `${baseUrl}/address/${address}`;
 }
 
 // Installation Types

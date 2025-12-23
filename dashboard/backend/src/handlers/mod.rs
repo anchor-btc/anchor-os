@@ -6,6 +6,7 @@ pub mod bitcoin;
 pub mod cloudflare;
 pub mod docker;
 pub mod electrum;
+pub mod explorer;
 pub mod indexer;
 pub mod installation;
 pub mod node;

@@ -32,8 +32,9 @@ services:
       CORE_RPC_PORT: "18443"
       CORE_RPC_USERNAME: "anchor"
       CORE_RPC_PASSWORD: "anchor"
-      ELECTRUM_HOST: "core-electrs"
-      ELECTRUM_PORT: "50001"
+      # Electrum server config - dynamically set by dashboard backend
+      ELECTRUM_HOST: "${ELECTRUM_DEFAULT_HOST:-core-electrs}"
+      ELECTRUM_PORT: "${ELECTRUM_DEFAULT_PORT:-50001}"
       ELECTRUM_TLS_ENABLED: "false"
       DATABASE_ENABLED: "true"
       DATABASE_HOST: "explorer-mempool-db"
@@ -44,7 +45,6 @@ services:
     depends_on:
       - explorer-mempool-db
       - core-bitcoin
-      - core-electrs
     networks:
       - anchor-network
     restart: unless-stopped
@@ -85,7 +85,8 @@ services:
       BTCEXP_BITCOIND_PASS: anchor
       BTCEXP_BITCOIND_RPC_TIMEOUT: 10000
       BTCEXP_ADDRESS_API: electrum
-      BTCEXP_ELECTRUM_SERVERS: tcp://core-electrs:50001
+      # Electrum server config - dynamically set by dashboard backend
+      BTCEXP_ELECTRUM_SERVERS: "tcp://${ELECTRUM_DEFAULT_HOST:-core-electrs}:${ELECTRUM_DEFAULT_PORT:-50001}"
       BTCEXP_SLOW_DEVICE_MODE: "false"
       BTCEXP_NO_INMEMORY_RPC_CACHE: "false"
       BTCEXP_PRIVACY_MODE: "false"

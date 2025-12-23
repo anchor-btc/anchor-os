@@ -474,18 +474,32 @@
     "startWith": "Inicie o Electrs com"
   },
   "electrum": {
-    "title": "Servidor Electrum",
-    "subtitle": "Escolha e gerencie seu servidor Electrum",
+    "title": "Servidores Electrum",
+    "subtitle": "Gerencie seus servidores Electrum - ambos podem rodar simultaneamente",
     "electrs": "Electrs",
     "electrsDesc": "Leve, sincronização rápida, menor uso de recursos",
     "fulcrum": "Fulcrum",
-    "fulcrumDesc": "Completo, consultas rápidas, maior uso de recursos",
-    "switching": "Trocando servidores...",
-    "switchingDesc": "Reiniciando serviços dependentes...",
-    "switchConfirm": "Isso reiniciará serviços dependentes (Mempool, BTC RPC Explorer). Continuar?",
-    "confirmSwitch": "Trocar Servidor?",
-    "switch": "Trocar",
-    "activeServer": "Servidor Ativo"
+    "fulcrumDesc": "Alto desempenho, consultas mais rápidas, mais recursos",
+    "default": "Padrão",
+    "defaultServer": "Servidor Padrão",
+    "defaultDesc": "Serviços dependentes (Mempool, BTC RPC Explorer) usam o servidor padrão.",
+    "defaultLabel": "Servidor Padrão",
+    "setDefault": "Definir como Padrão",
+    "confirmDefault": "Alterar Servidor Padrão?",
+    "confirmDefaultDesc": "Isso reiniciará serviços dependentes (Mempool, BTC RPC Explorer) para usar o novo servidor. O servidor de destino deve estar rodando.",
+    "start": "Iniciar",
+    "stop": "Parar",
+    "startFirst": "Inicie o servidor primeiro",
+    "recentLogs": "Logs Recentes",
+    "connectionInfo": "Informações de Conexão",
+    "connectionDesc": "Use esses detalhes para conectar aos servidores Electrum",
+    "electrsHost": "Electrs (Docker)",
+    "electrsExternal": "Electrs (Externo)",
+    "fulcrumHost": "Fulcrum (Docker)",
+    "fulcrumExternal": "Fulcrum (Externo)",
+    "connected": "Conectado",
+    "disconnected": "Desconectado",
+    "bitcoinNode": "Nó Bitcoin"
   },
   "tailscale": {
     "title": "Tailscale VPN",
@@ -1190,6 +1204,21 @@
       "p2pPort": "Porta P2P",
       "torProxy": "Proxy Tor",
       "configNote": "A configuração de rede está definida no docker-compose.yml. Mudar redes requer reconstruir containers."
+    },
+    "electrum": {
+      "title": "Servidor Electrum",
+      "description": "Escolha qual servidor Electrum os serviços dependentes devem usar.",
+      "electrsDesc": "Leve, sincronização rápida",
+      "fulcrumDesc": "Alto desempenho, mais recursos",
+      "switching": "Reiniciando serviços dependentes...",
+      "note": "Alterar o servidor padrão reiniciará o Mempool e o BTC RPC Explorer.",
+      "viewFull": "Gerenciar ambos os servidores e ver logs"
+    },
+    "explorer": {
+      "title": "Explorador de Blocos",
+      "description": "Escolha o explorador de blocos padrão para visualizar transações.",
+      "saving": "Salvando preferência...",
+      "note": "Os apps usarão este explorador para links de transações e endereços."
     },
     "other": {
       "title": "Outras Opções de Rede",

@@ -3,7 +3,7 @@
 import { useParams, useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { getProofByHash, revokeProof, mineBlocks } from "@/lib/api";
+import { getProofByHash, revokeProof, mineBlocks, getExplorerTxUrl } from "@/lib/api";
 import { formatFileSize } from "@/lib/hash";
 import {
   FileCheck,
@@ -192,7 +192,7 @@ export default function ProofDetailPage() {
                   <Copy className="w-4 h-4" />
                 </button>
                 <a
-                  href={`http://localhost:4000/tx/${proof.txid}`}
+                  href={getExplorerTxUrl(proof.txid)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-2 text-emerald-500 hover:text-emerald-400 transition-colors"
@@ -241,7 +241,7 @@ export default function ProofDetailPage() {
                 </code>
               </div>
               <a
-                href={`http://localhost:4000/tx/${proof.revoked_txid}`}
+                href={getExplorerTxUrl(proof.revoked_txid!)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2 text-emerald-500 hover:text-emerald-400 transition-colors flex-shrink-0"

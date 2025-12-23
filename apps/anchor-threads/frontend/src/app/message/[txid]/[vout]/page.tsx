@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
-import { fetchMessage, fetchReplies, truncateTxid, formatBlockHeight, hexToImageDataUrl, CARRIER_INFO, BTC_EXPLORER_URL } from "@/lib/api";
+import { fetchMessage, fetchReplies, truncateTxid, formatBlockHeight, hexToImageDataUrl, CARRIER_INFO, getExplorerTxUrl } from "@/lib/api";
 import { MessageCard } from "@/components/message-card";
 import { Button, Card, Container } from "@AnchorProtocol/ui";
 import {
@@ -151,15 +151,15 @@ export default function MessagePage() {
           </a>
           </Button>
           <Button asChild variant="ghost" size="sm">
-          <a
-            href={`https://mempool.space/tx/${txid}`}
-            target="_blank"
-            rel="noopener noreferrer"
+            <a
+              href={getExplorerTxUrl(txid)}
+              target="_blank"
+              rel="noopener noreferrer"
               className="flex items-center gap-2"
-          >
-            <ExternalLink className="h-4 w-4" />
-            mempool.space
-          </a>
+            >
+              <ExternalLink className="h-4 w-4" />
+              Explorer
+            </a>
           </Button>
           <Button asChild variant="link">
             <Link href={`/thread/${txid}/${vout}`} className="flex items-center gap-2">
@@ -383,7 +383,7 @@ export default function MessagePage() {
                   <div className="pt-4 border-t border-border">
                     <p className="text-sm font-medium mb-3 text-muted-foreground">View on Block Explorer</p>
                     <div className="flex flex-wrap gap-2">
-                      <ExplorerLink href={`http://localhost:3003/tx/${txid}`} label="BTC Explorer (local)" highlight />
+                      <ExplorerLink href={getExplorerTxUrl(txid)} label="Default Explorer" highlight />
                       <ExplorerLink href={`https://mempool.space/tx/${txid}`} label="mempool.space" />
                       <ExplorerLink href={`https://blockstream.info/tx/${txid}`} label="blockstream.info" />
                     </div>

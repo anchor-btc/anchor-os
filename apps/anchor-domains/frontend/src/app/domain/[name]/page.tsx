@@ -19,8 +19,7 @@ import {
 import { formatDistanceToNow, format } from "date-fns";
 import { useState } from "react";
 
-// Default block explorer URL - uses local mempool for regtest/testnet
-const BLOCK_EXPLORER_URL = process.env.NEXT_PUBLIC_BLOCK_EXPLORER_URL || "http://localhost:4000";
+import { getExplorerTxUrl } from "@/lib/api";
 
 export default function DomainDetailPage({
   params,
@@ -77,9 +76,8 @@ export default function DomainDetailPage({
     }
   };
 
-  const getExplorerUrl = (txid: string) => {
-    return `${BLOCK_EXPLORER_URL}/tx/${txid}`;
-  };
+  // Use the centralized explorer URL function from the API
+  const getExplorerUrl = getExplorerTxUrl;
 
   if (isLoading) {
     return (

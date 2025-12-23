@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { File, ExternalLink, Clock, CheckCircle, XCircle } from "lucide-react";
 import { formatFileSize, truncateHash } from "@/lib/hash";
+import { getExplorerTxUrl } from "@/lib/api";
 
 interface ProofCardProps {
   proof: {
@@ -90,7 +91,7 @@ export function ProofCard({ proof, showDetails = false }: ProofCardProps) {
             <div className="flex items-center justify-between mb-1">
               <span className="text-xs font-medium text-slate-400">Transaction</span>
               <a
-                href={`http://localhost:4000/tx/${proof.txid}`}
+                href={getExplorerTxUrl(proof.txid)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-xs text-emerald-500 hover:underline flex items-center gap-1"

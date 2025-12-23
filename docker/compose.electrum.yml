@@ -32,17 +32,19 @@ services:
       - full
       - core-electrs
 
-  # Fulcrum - High-performance Electrum Server (alternative to electrs)
+  # Fulcrum - High-performance Electrum Server (can run alongside Electrs)
   core-fulcrum:
     build:
       context: ../infra/fulcrum
       dockerfile: Dockerfile
     image: anchor-fulcrum:latest
     container_name: anchor-core-fulcrum
+    environment:
+      FULCRUM_TCP_PORT: "50002"
     volumes:
       - fulcrum-data:/data
     ports:
-      - "50001:50001"
+      - "50002:50002"
     depends_on:
       core-bitcoin:
         condition: service_healthy
@@ -50,6 +52,7 @@ services:
       - anchor-network
     restart: unless-stopped
     profiles:
-      - minimum
+      - default
+      - full
       - core-fulcrum
 

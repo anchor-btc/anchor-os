@@ -1,6 +1,39 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002";
 const WALLET_URL = process.env.NEXT_PUBLIC_WALLET_URL || "http://localhost:3001";
-export const BTC_EXPLORER_URL = process.env.NEXT_PUBLIC_BTC_EXPLORER_URL || "http://localhost:3003";
+const DASHBOARD_API_URL = process.env.NEXT_PUBLIC_DASHBOARD_API_URL || "http://localhost:8000";
+const DEFAULT_BLOCK_EXPLORER_URL = process.env.NEXT_PUBLIC_BTC_EXPLORER_URL || "http://localhost:4000";
+
+// Explorer cache
+let cachedExplorerUrl: string | null = null;
+
+// Fetch the default block explorer URL from dashboard settings
+async function fetchDefaultExplorerUrl(): Promise<string> {
+  try {
+    const res = await fetch(`${DASHBOARD_API_URL}/explorer/default`);
+    if (res.ok) {
+      const data = await res.json();
+      cachedExplorerUrl = data.base_url;
+      return data.base_url;
+    }
+  } catch (e) {
+    console.warn("Failed to fetch default explorer, using fallback:", e);
+  }
+  return DEFAULT_BLOCK_EXPLORER_URL;
+}
+
+// Initialize explorer URL on module load
+if (typeof window !== "undefined") {
+  fetchDefaultExplorerUrl();
+}
+
+// Get explorer transaction URL
+export function getExplorerTxUrl(txid: string): string {
+  const baseUrl = cachedExplorerUrl || DEFAULT_BLOCK_EXPLORER_URL;
+  return `${baseUrl}/tx/${txid}`;
+}
+
+// Legacy export for backward compatibility
+export const BTC_EXPLORER_URL = DEFAULT_BLOCK_EXPLORER_URL;
 
 // Carrier types enum
 export enum CarrierType {

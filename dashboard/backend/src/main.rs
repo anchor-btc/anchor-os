@@ -97,6 +97,14 @@ pub struct AppState {
         handlers::tor::new_tor_circuit,
         handlers::tor::enable_tor,
         handlers::tor::disable_tor,
+        handlers::electrum::get_electrum_status,
+        handlers::electrum::get_electrum_info,
+        handlers::electrum::switch_electrum_server,
+        handlers::electrum::set_default_electrum_server,
+        handlers::electrum::electrum_server_action,
+        handlers::explorer::get_explorer_settings,
+        handlers::explorer::get_default_explorer,
+        handlers::explorer::set_default_explorer,
         handlers::installation::get_installation_status,
         handlers::installation::get_services,
         handlers::installation::apply_preset,
@@ -181,6 +189,18 @@ pub struct AppState {
         handlers::tor::TorStatus,
         handlers::tor::TorActionResponse,
         handlers::tor::OnionAddresses,
+        handlers::electrum::ElectrumServer,
+        handlers::electrum::ServerInfo,
+        handlers::electrum::ElectrumStatus,
+        handlers::electrum::ElectrumSetDefaultRequest,
+        handlers::electrum::ElectrumServerActionRequest,
+        handlers::electrum::ServerAction,
+        handlers::electrum::ElectrumActionResponse,
+        handlers::explorer::BlockExplorer,
+        handlers::explorer::ExplorerInfo,
+        handlers::explorer::ExplorerSettings,
+        handlers::explorer::SetDefaultExplorerRequest,
+        handlers::explorer::ExplorerActionResponse,
         handlers::installation::InstallationPreset,
         handlers::installation::ServiceInstallStatus,
         handlers::installation::ServiceCategory,
@@ -366,10 +386,16 @@ async fn main() -> Result<()> {
         .route("/tor/new-circuit", post(handlers::tor::new_tor_circuit))
         .route("/tor/enable", post(handlers::tor::enable_tor))
         .route("/tor/disable", post(handlers::tor::disable_tor))
-        // Electrum (Electrs/Fulcrum switching)
+        // Electrum (Electrs/Fulcrum management)
         .route("/electrum/status", get(handlers::electrum::get_electrum_status))
-        .route("/electrum/switch", post(handlers::electrum::switch_electrum_server))
         .route("/electrum/info", get(handlers::electrum::get_electrum_info))
+        .route("/electrum/switch", post(handlers::electrum::switch_electrum_server))
+        .route("/electrum/set-default", post(handlers::electrum::set_default_electrum_server))
+        .route("/electrum/server-action", post(handlers::electrum::electrum_server_action))
+        // Block Explorer settings
+        .route("/explorer/settings", get(handlers::explorer::get_explorer_settings))
+        .route("/explorer/default", get(handlers::explorer::get_default_explorer))
+        .route("/explorer/set-default", post(handlers::explorer::set_default_explorer))
         // Indexer
         .route("/indexer/stats", get(handlers::indexer::get_indexer_stats))
         .route("/indexer/messages", get(handlers::indexer::get_messages))

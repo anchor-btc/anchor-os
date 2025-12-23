@@ -180,7 +180,7 @@ fn get_all_services() -> Vec<ServiceDefinition> {
             install_status: ServiceInstallStatus::NotInstalled,
             enabled: false,
             required: false,
-            incompatible_with: vec!["core-fulcrum".to_string()],
+            incompatible_with: vec![], // Both Electrs and Fulcrum can run simultaneously
             depends_on: vec!["core-bitcoin".to_string()],
         },
         ServiceDefinition {
@@ -188,12 +188,12 @@ fn get_all_services() -> Vec<ServiceDefinition> {
             name: "Fulcrum".to_string(),
             description: "High-performance Electrum server".to_string(),
             category: ServiceCategory::Core,
-            docker_profiles: vec!["minimum".to_string(), "core-fulcrum".to_string()],
+            docker_profiles: vec!["default".to_string(), "full".to_string(), "core-fulcrum".to_string()],
             containers: vec!["anchor-core-fulcrum".to_string()],
             install_status: ServiceInstallStatus::NotInstalled,
             enabled: false,
             required: false,
-            incompatible_with: vec!["core-electrs".to_string()],
+            incompatible_with: vec![], // Both Electrs and Fulcrum can run simultaneously
             depends_on: vec!["core-bitcoin".to_string()],
         },
         ServiceDefinition {
@@ -506,7 +506,6 @@ fn get_preset_services(preset: InstallationPreset) -> Vec<String> {
         InstallationPreset::Full => {
             get_all_services()
                 .iter()
-                .filter(|s| s.id != "core-fulcrum") // Exclude fulcrum in full (electrs is default)
                 .map(|s| s.id.clone())
                 .collect()
         },

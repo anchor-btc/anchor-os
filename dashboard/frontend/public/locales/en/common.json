@@ -474,18 +474,32 @@
     "startWith": "Start Electrs with"
   },
   "electrum": {
-    "title": "Electrum Server",
-    "subtitle": "Choose and manage your Electrum server",
+    "title": "Electrum Servers",
+    "subtitle": "Manage your Electrum servers - both can run simultaneously",
     "electrs": "Electrs",
     "electrsDesc": "Lightweight, fast sync, lower resource usage",
     "fulcrum": "Fulcrum",
-    "fulcrumDesc": "Full-featured, faster queries, higher resource usage",
-    "switching": "Switching servers...",
-    "switchingDesc": "Restarting dependent services...",
-    "switchConfirm": "This will restart dependent services (Mempool, BTC RPC Explorer). Continue?",
-    "confirmSwitch": "Switch Server?",
-    "switch": "Switch",
-    "activeServer": "Active Server"
+    "fulcrumDesc": "High-performance, faster queries, more features",
+    "default": "Default",
+    "defaultServer": "Default Server",
+    "defaultDesc": "Dependent services (Mempool, BTC RPC Explorer) use the default server.",
+    "defaultLabel": "Default Server",
+    "setDefault": "Set as Default",
+    "confirmDefault": "Change Default Server?",
+    "confirmDefaultDesc": "This will restart dependent services (Mempool, BTC RPC Explorer) to use the new server. The target server must be running.",
+    "start": "Start",
+    "stop": "Stop",
+    "startFirst": "Start the server first",
+    "recentLogs": "Recent Logs",
+    "connectionInfo": "Connection Information",
+    "connectionDesc": "Use these details to connect to Electrum servers",
+    "electrsHost": "Electrs (Docker)",
+    "electrsExternal": "Electrs (External)",
+    "fulcrumHost": "Fulcrum (Docker)",
+    "fulcrumExternal": "Fulcrum (External)",
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "bitcoinNode": "Bitcoin Node"
   },
   "tailscale": {
     "title": "Tailscale VPN",
@@ -1190,6 +1204,21 @@
       "p2pPort": "P2P Port",
       "torProxy": "Tor Proxy",
       "configNote": "Network configuration is set in docker-compose.yml. Changing networks requires rebuilding containers."
+    },
+    "electrum": {
+      "title": "Electrum Server",
+      "description": "Choose which Electrum server dependent services should use.",
+      "electrsDesc": "Lightweight, fast sync",
+      "fulcrumDesc": "High-performance, more features",
+      "switching": "Restarting dependent services...",
+      "note": "Changing the default server will restart Mempool and BTC RPC Explorer.",
+      "viewFull": "Manage both servers and view logs"
+    },
+    "explorer": {
+      "title": "Block Explorer",
+      "description": "Choose the default block explorer for viewing transactions.",
+      "saving": "Saving preference...",
+      "note": "Apps will use this explorer for transaction and address links."
     },
     "other": {
       "title": "Other Networking Options",

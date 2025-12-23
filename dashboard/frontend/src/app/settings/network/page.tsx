@@ -7,6 +7,12 @@ import {
   fetchContainers,
   startContainer,
   stopContainer,
+  fetchElectrumStatus,
+  setDefaultElectrumServer,
+  ElectrumServer,
+  fetchExplorerSettings,
+  setDefaultExplorer,
+  BlockExplorer,
 } from "@/lib/api";
 import {
   Loader2,
@@ -20,6 +26,11 @@ import {
   Database,
   Eye,
   Link2,
+  Zap,
+  Layers,
+  Star,
+  Compass,
+  ExternalLink,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -38,6 +49,32 @@ export default function NetworkSettingsPage() {
     queryKey: ["containers"],
     queryFn: fetchContainers,
     refetchInterval: 5000,
+  });
+
+  const { data: electrumStatus, isLoading: electrumLoading } = useQuery({
+    queryKey: ["electrum-status"],
+    queryFn: fetchElectrumStatus,
+    refetchInterval: 5000,
+  });
+
+  const { data: explorerSettings, isLoading: explorerLoading } = useQuery({
+    queryKey: ["explorer-settings"],
+    queryFn: fetchExplorerSettings,
+    refetchInterval: 5000,
+  });
+
+  const setDefaultMutation = useMutation({
+    mutationFn: (server: ElectrumServer) => setDefaultElectrumServer(server),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["electrum-status"] });
+    },
+  });
+
+  const setDefaultExplorerMutation = useMutation({
+    mutationFn: (explorer: BlockExplorer) => setDefaultExplorer(explorer),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["explorer-settings"] });
+    },
   });
 
   const TOR_CONTAINER = "anchor-networking-tor";
@@ -71,7 +108,13 @@ export default function NetworkSettingsPage() {
     }
   };
 
-  if (torLoading) {
+  const electrsInfo = electrumStatus?.electrs;
+  const fulcrumInfo = electrumStatus?.fulcrum;
+  const defaultElectrum = electrumStatus?.default_server || "electrs";
+
+  const defaultExplorer = explorerSettings?.default_explorer || "mempool";
+
+  if (torLoading || electrumLoading || explorerLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
@@ -252,6 +295,188 @@ export default function NetworkSettingsPage() {
             {t("networkPage.tor.viewFullConfig", "View full Tor configuration and hidden services")}
           </Link>
         </div>
+      </div>
+
+      {/* Electrum Server Section */}
+      <div className="bg-card border border-border rounded-xl p-6">
+        <div className="flex items-start gap-4 mb-6">
+          <div className="p-3 rounded-xl bg-yellow-500/10">
+            <Zap className="w-6 h-6 text-yellow-500" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-foreground">{t("networkPage.electrum.title", "Electrum Server")}</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              {t("networkPage.electrum.description", "Choose which Electrum server dependent services should use.")}
+            </p>
+          </div>
+        </div>
+
+        {/* Server Selection */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          {/* Electrs Option */}
+          <button
+            onClick={() => setDefaultMutation.mutate("electrs")}
+            disabled={setDefaultMutation.isPending || electrsInfo?.status !== "running"}
+            className={cn(
+              "relative p-4 rounded-lg border-2 text-left transition-all",
+              defaultElectrum === "electrs"
+                ? "bg-yellow-500/10 border-yellow-500"
+                : electrsInfo?.status === "running"
+                  ? "bg-muted/30 border-border hover:border-muted-foreground"
+                  : "bg-muted/20 border-border opacity-60 cursor-not-allowed"
+            )}
+          >
+            <div className="flex items-center gap-3">
+              <Zap className={cn(
+                "w-5 h-5",
+                defaultElectrum === "electrs" ? "text-yellow-500" : "text-muted-foreground"
+              )} />
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-foreground">Electrs</span>
+                  {defaultElectrum === "electrs" && (
+                    <Star className="w-4 h-4 text-yellow-500" />
+                  )}
+                </div>
+                <span className={cn(
+                  "text-xs",
+                  electrsInfo?.status === "running" ? "text-success" : "text-muted-foreground"
+                )}>
+                  {electrsInfo?.status || "stopped"} • Port 50001
+                </span>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              {t("networkPage.electrum.electrsDesc", "Lightweight, fast sync")}
+            </p>
+          </button>
+
+          {/* Fulcrum Option */}
+          <button
+            onClick={() => setDefaultMutation.mutate("fulcrum")}
+            disabled={setDefaultMutation.isPending || fulcrumInfo?.status !== "running"}
+            className={cn(
+              "relative p-4 rounded-lg border-2 text-left transition-all",
+              defaultElectrum === "fulcrum"
+                ? "bg-emerald-500/10 border-emerald-500"
+                : fulcrumInfo?.status === "running"
+                  ? "bg-muted/30 border-border hover:border-muted-foreground"
+                  : "bg-muted/20 border-border opacity-60 cursor-not-allowed"
+            )}
+          >
+            <div className="flex items-center gap-3">
+              <Layers className={cn(
+                "w-5 h-5",
+                defaultElectrum === "fulcrum" ? "text-emerald-500" : "text-muted-foreground"
+              )} />
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-foreground">Fulcrum</span>
+                  {defaultElectrum === "fulcrum" && (
+                    <Star className="w-4 h-4 text-emerald-500" />
+                  )}
+                </div>
+                <span className={cn(
+                  "text-xs",
+                  fulcrumInfo?.status === "running" ? "text-success" : "text-muted-foreground"
+                )}>
+                  {fulcrumInfo?.status || "stopped"} • Port 50002
+                </span>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              {t("networkPage.electrum.fulcrumDesc", "High-performance, more features")}
+            </p>
+          </button>
+        </div>
+
+        {setDefaultMutation.isPending && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            {t("networkPage.electrum.switching", "Restarting dependent services...")}
+          </div>
+        )}
+
+        <p className="text-xs text-muted-foreground mt-2">
+          {t("networkPage.electrum.note", "Changing the default server will restart Mempool and BTC RPC Explorer.")}
+        </p>
+
+        {/* Link to full Electrum page */}
+        <div className="mt-4 pt-4 border-t border-border">
+          <Link
+            href="/electrum"
+            className="flex items-center gap-2 text-sm text-yellow-400 hover:text-yellow-300 transition-colors"
+          >
+            <Link2 className="w-4 h-4" />
+            {t("networkPage.electrum.viewFull", "Manage both servers and view logs")}
+          </Link>
+        </div>
+      </div>
+
+      {/* Block Explorer Section */}
+      <div className="bg-card border border-border rounded-xl p-6">
+        <div className="flex items-start gap-4 mb-6">
+          <div className="p-3 rounded-xl bg-blue-500/10">
+            <Compass className="w-6 h-6 text-blue-500" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-foreground">{t("networkPage.explorer.title", "Block Explorer")}</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              {t("networkPage.explorer.description", "Choose the default block explorer for viewing transactions.")}
+            </p>
+          </div>
+        </div>
+
+        {/* Explorer Selection */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          {explorerSettings?.explorers.map((explorer) => (
+            <button
+              key={explorer.explorer}
+              onClick={() => setDefaultExplorerMutation.mutate(explorer.explorer)}
+              disabled={setDefaultExplorerMutation.isPending}
+              className={cn(
+                "relative p-4 rounded-lg border-2 text-left transition-all",
+                explorer.is_default
+                  ? "bg-blue-500/10 border-blue-500"
+                  : explorer.status === "running"
+                    ? "bg-muted/30 border-border hover:border-muted-foreground"
+                    : "bg-muted/20 border-border opacity-60"
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <ExternalLink className={cn(
+                  "w-5 h-5",
+                  explorer.is_default ? "text-blue-500" : "text-muted-foreground"
+                )} />
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-foreground">{explorer.name}</span>
+                    {explorer.is_default && (
+                      <Star className="w-4 h-4 text-blue-500" />
+                    )}
+                  </div>
+                  <span className={cn(
+                    "text-xs",
+                    explorer.status === "running" ? "text-success" : "text-muted-foreground"
+                  )}>
+                    {explorer.status || "stopped"} • Port {explorer.port}
+                  </span>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {setDefaultExplorerMutation.isPending && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            {t("networkPage.explorer.saving", "Saving preference...")}
+          </div>
+        )}
+
+        <p className="text-xs text-muted-foreground mt-2">
+          {t("networkPage.explorer.note", "Apps will use this explorer for transaction and address links.")}
+        </p>
       </div>
 
       {/* Bitcoin Network Section */}

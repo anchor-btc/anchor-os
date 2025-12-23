@@ -4,7 +4,43 @@
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3301";
 const WALLET_URL = process.env.NEXT_PUBLIC_WALLET_URL || "http://localhost:8001";
-const BLOCK_EXPLORER_URL = process.env.NEXT_PUBLIC_BLOCK_EXPLORER_URL || "http://localhost:4000";
+const DASHBOARD_API_URL = process.env.NEXT_PUBLIC_DASHBOARD_API_URL || "http://localhost:8000";
+const DEFAULT_BLOCK_EXPLORER_URL = process.env.NEXT_PUBLIC_BLOCK_EXPLORER_URL || "http://localhost:4000";
+
+// Explorer cache
+let cachedExplorerUrl: string | null = null;
+let explorerFetchPromise: Promise<string> | null = null;
+
+// Fetch the default block explorer URL from dashboard settings
+async function fetchDefaultExplorerUrl(): Promise<string> {
+  try {
+    const res = await fetch(`${DASHBOARD_API_URL}/explorer/default`);
+    if (res.ok) {
+      const data = await res.json();
+      cachedExplorerUrl = data.base_url;
+      return data.base_url;
+    }
+  } catch (e) {
+    console.warn("Failed to fetch default explorer, using fallback:", e);
+  }
+  return DEFAULT_BLOCK_EXPLORER_URL;
+}
+
+// Get the explorer URL (with caching)
+export async function getExplorerBaseUrl(): Promise<string> {
+  if (cachedExplorerUrl) return cachedExplorerUrl;
+  
+  if (!explorerFetchPromise) {
+    explorerFetchPromise = fetchDefaultExplorerUrl();
+  }
+  
+  return explorerFetchPromise;
+}
+
+// Initialize explorer URL on module load (for sync access)
+if (typeof window !== "undefined") {
+  fetchDefaultExplorerUrl();
+}
 
 // Types
 export interface Category {
@@ -304,7 +340,13 @@ export function truncateTxid(txid: string, chars = 8): string {
 }
 
 export function getExplorerTxUrl(txid: string): string {
-  return `${BLOCK_EXPLORER_URL}/tx/${txid}`;
+  const baseUrl = cachedExplorerUrl || DEFAULT_BLOCK_EXPLORER_URL;
+  return `${baseUrl}/tx/${txid}`;
+}
+
+export function getExplorerAddressUrl(address: string): string {
+  const baseUrl = cachedExplorerUrl || DEFAULT_BLOCK_EXPLORER_URL;
+  return `${baseUrl}/address/${address}`;
 }
 
 export function getCategoryById(id: number): Category {
