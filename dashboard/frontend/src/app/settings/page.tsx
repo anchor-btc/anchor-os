@@ -188,12 +188,6 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div className="bg-card border border-border rounded-xl p-6">
-        <h2 className="text-lg font-semibold text-foreground mb-1">
-          {t("settings.quickSettings")}
-        </h2>
-        <p className="text-sm text-muted-foreground mb-6">
-          {t("settings.overview")}
-        </p>
 
         <div className="grid gap-3">
           {settingsCards.map((card) => (

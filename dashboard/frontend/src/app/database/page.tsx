@@ -6,7 +6,6 @@ import { useQuery } from "@tanstack/react-query";
 import {
   Database,
   Loader2,
-  RefreshCw,
   Copy,
   Check,
   Server,
@@ -19,6 +18,18 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fetchContainers } from "@/lib/api";
+
+// Import DS components
+import {
+  PageHeader,
+  RefreshButton,
+  Section,
+  SectionHeader,
+  Grid,
+  ConfigValue,
+  IconBox,
+  StatusDot,
+} from "@/components/ds";
 
 // Database connection details (from docker-compose.yml)
 const DB_CONFIG = {
@@ -69,58 +80,31 @@ export default function DatabasePage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">{t("database.title")}</h1>
-          <p className="text-muted-foreground">
-            {isRunning
-              ? t("database.subtitle")
-              : t("database.notRunning")}
-          </p>
-        </div>
-        <button
-          onClick={() => refetch()}
-          disabled={isRefetching}
-          className="p-2 bg-muted hover:bg-muted/80 rounded-lg transition-colors"
-        >
-          <RefreshCw
-            className={cn(
-              "w-4 h-4 text-muted-foreground",
-              isRefetching && "animate-spin"
-            )}
-          />
-        </button>
-      </div>
+      <PageHeader
+        icon={Database}
+        iconColor="blue"
+        title={t("database.title")}
+        subtitle={isRunning ? t("database.subtitle") : t("database.notRunning")}
+        actions={
+          <RefreshButton loading={isRefetching} onClick={() => refetch()} />
+        }
+      />
 
       {/* Status Card */}
-      <div className="bg-card border border-border rounded-xl p-6">
+      <Section>
         <div className="flex items-center gap-3 mb-6">
-          <div
-            className={cn(
-              "w-12 h-12 rounded-lg flex items-center justify-center",
-              isRunning ? "bg-blue-500/10" : "bg-muted"
-            )}
-          >
-            <Database
-              className={cn(
-                "w-6 h-6",
-                isRunning ? "text-blue-500" : "text-muted-foreground"
-              )}
-            />
-          </div>
+          <IconBox
+            icon={Database}
+            color={isRunning ? "blue" : "muted"}
+            size="lg"
+          />
           <div>
             <div className="flex items-center gap-2">
               <h2 className="font-semibold text-foreground">{t("database.databaseStatus")}</h2>
-              <span
-                className={cn(
-                  "px-2 py-0.5 rounded-full text-xs font-medium",
-                  isRunning
-                    ? "bg-success/10 text-success"
-                    : "bg-muted text-muted-foreground"
-                )}
-              >
-                {isRunning ? t("node.running") : t("node.stopped")}
-              </span>
+              <StatusDot
+                status={isRunning ? "running" : "stopped"}
+                label={isRunning ? t("node.running") : t("node.stopped")}
+              />
             </div>
             <p className="text-sm text-muted-foreground">
               {t("database.storingData")}
@@ -129,7 +113,7 @@ export default function DatabasePage() {
         </div>
 
         {isRunning && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Grid cols={{ default: 1, md: 3 }} gap="md">
             <div className="bg-muted/50 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-2">
                 <Server className="w-4 h-4 text-blue-500" />
@@ -151,24 +135,19 @@ export default function DatabasePage() {
               </div>
               <p className="text-lg font-bold text-foreground">{DB_CONFIG.port}</p>
             </div>
-          </div>
+          </Grid>
         )}
-      </div>
+      </Section>
 
       {/* Connection Details */}
       {isRunning && (
-        <div className="bg-card border border-border rounded-xl p-6">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-              <Lock className="w-5 h-5 text-blue-500" />
-            </div>
-            <div>
-              <h2 className="font-semibold text-foreground">{t("database.connectionCredentials")}</h2>
-              <p className="text-sm text-muted-foreground">
-                {t("database.useToConnect")}
-              </p>
-            </div>
-          </div>
+        <Section>
+          <SectionHeader
+            icon={Lock}
+            iconColor="blue"
+            title={t("database.connectionCredentials")}
+            subtitle={t("database.useToConnect")}
+          />
 
           <div className="space-y-3">
             <CredentialRow
@@ -215,49 +194,25 @@ export default function DatabasePage() {
           </div>
 
           {/* Connection String */}
-          <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-foreground">
-                {t("database.connectionString")}
-              </span>
-              <button
-                onClick={() => copyToClipboard(connectionString, "connectionString")}
-                className="flex items-center gap-1 px-2 py-1 text-xs bg-muted hover:bg-muted/80 rounded transition-colors"
-              >
-                {copiedField === "connectionString" ? (
-                  <>
-                    <Check className="w-3 h-3 text-success" />
-                    {t("common.copied")}
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-3 h-3" />
-                    {t("database.copy")}
-                  </>
-                )}
-              </button>
-            </div>
-            <code className="text-sm font-mono text-muted-foreground break-all">
-              {connectionString}
-            </code>
+          <div className="mt-6">
+            <ConfigValue
+              label={t("database.connectionString")}
+              value={connectionString}
+              mono
+            />
           </div>
-        </div>
+        </Section>
       )}
 
       {/* Quick Commands */}
       {isRunning && (
-        <div className="bg-card border border-border rounded-xl p-6">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-lg bg-slate-500/10 flex items-center justify-center">
-              <Terminal className="w-5 h-5 text-slate-400" />
-            </div>
-            <div>
-              <h2 className="font-semibold text-foreground">{t("database.quickCommands")}</h2>
-              <p className="text-sm text-muted-foreground">
-                {t("database.commonCommands")}
-              </p>
-            </div>
-          </div>
+        <Section>
+          <SectionHeader
+            icon={Terminal}
+            iconColor="muted"
+            title={t("database.quickCommands")}
+            subtitle={t("database.commonCommands")}
+          />
 
           <div className="space-y-4">
             <CommandCard
@@ -300,25 +255,20 @@ export default function DatabasePage() {
               t={t}
             />
           </div>
-        </div>
+        </Section>
       )}
 
       {/* Compatible Clients */}
       {isRunning && (
-        <div className="bg-card border border-border rounded-xl p-6">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
-              <FileCode className="w-5 h-5 text-purple-500" />
-            </div>
-            <div>
-              <h2 className="font-semibold text-foreground">{t("database.compatibleClients")}</h2>
-              <p className="text-sm text-muted-foreground">
-                {t("database.popularTools")}
-              </p>
-            </div>
-          </div>
+        <Section>
+          <SectionHeader
+            icon={FileCode}
+            iconColor="purple"
+            title={t("database.compatibleClients")}
+            subtitle={t("database.popularTools")}
+          />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Grid cols={{ default: 1, md: 2, lg: 3 }} gap="md">
             <ClientCard
               name="TablePlus"
               description="Modern, native database client"
@@ -349,13 +299,13 @@ export default function DatabasePage() {
               description="Open source SQL editor"
               url="https://www.beekeeperstudio.io/"
             />
-          </div>
-        </div>
+          </Grid>
+        </Section>
       )}
 
       {/* Not running message */}
       {!isRunning && (
-        <div className="bg-card border border-border rounded-xl p-8 text-center">
+        <Section className="text-center py-8">
           <Database className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-foreground mb-2">
             {t("database.notRunningMsg")}
@@ -366,7 +316,7 @@ export default function DatabasePage() {
               docker compose up -d core-postgres
             </code>
           </p>
-        </div>
+        </Section>
       )}
     </div>
   );

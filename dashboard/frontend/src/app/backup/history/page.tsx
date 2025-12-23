@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
-  ArrowLeft,
   CheckCircle,
   XCircle,
   Loader2,
@@ -21,8 +20,11 @@ import {
   X,
   Database,
   FolderArchive,
+  History,
 } from "lucide-react";
-import Link from "next/link";
+
+// Import DS components
+import { PageHeader } from "@/components/ds";
 
 const BACKUP_API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8010";
 
@@ -228,22 +230,15 @@ export default function BackupHistoryPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link
-          href="/backup"
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5 text-muted-foreground" />
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">{t("backupHistory.title")}</h1>
-          <p className="text-muted-foreground">
-            {t("backupHistory.subtitle")}
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        icon={History}
+        iconColor="purple"
+        title={t("backupHistory.title")}
+        subtitle={t("backupHistory.subtitle")}
+        backHref="/backup"
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">

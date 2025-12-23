@@ -18,8 +18,6 @@ import {
   XCircle,
   AlertCircle,
   ExternalLink,
-  Play,
-  Square,
   RefreshCw,
   Copy,
   Zap,
@@ -31,13 +29,25 @@ import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
+// Import DS components
+import {
+  PageHeader,
+  RefreshButton,
+  Section,
+  SectionHeader,
+  Grid,
+  ActionButton,
+  InfoBox,
+  ConfigValue,
+} from "@/components/ds";
+
 export default function TorPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
   const [showAddresses, setShowAddresses] = useState(true);
 
-  const { data: status, isLoading, refetch } = useQuery({
+  const { data: status, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ["tor-status"],
     queryFn: fetchTorStatus,
     refetchInterval: 5000,
@@ -112,29 +122,20 @@ export default function TorPage() {
   const isConnected = status?.circuit_established;
 
   return (
-    <div className="space-y-8 max-w-4xl">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-            <Shield className="w-8 h-8 text-purple-500" />
-            {t("tor.title")}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {t("tor.subtitle")}
-          </p>
-        </div>
-        <button
-          onClick={() => refetch()}
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
-          title="Refresh status"
-        >
-          <RefreshCw className="w-5 h-5 text-muted-foreground" />
-        </button>
-      </div>
+      <PageHeader
+        icon={Shield}
+        iconColor="purple"
+        title={t("tor.title")}
+        subtitle={t("tor.subtitle")}
+        actions={
+          <RefreshButton loading={isRefetching} onClick={() => refetch()} />
+        }
+      />
 
       {/* Status Card */}
-      <div className="bg-card border border-border rounded-2xl p-6">
+      <Section>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-semibold text-foreground">{t("tor.connectionStatus")}</h2>
           <div className="flex items-center gap-2">
@@ -160,7 +161,7 @@ export default function TorPage() {
         </div>
 
         {/* Status Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <Grid cols={{ default: 2, md: 4 }} gap="md" className="mb-6">
           <div className="bg-muted/50 rounded-xl p-4">
             <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
               <Server className="w-4 h-4" />
@@ -206,209 +207,128 @@ export default function TorPage() {
               {status?.tor_version || "-"}
             </div>
           </div>
-        </div>
+        </Grid>
 
         {/* Info when connected */}
         {isConnected && (
-          <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-4 mb-6">
-            <div className="flex items-start gap-3">
-              <CheckCircle2 className="w-5 h-5 text-purple-500 mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-purple-400">{t("tor.connectedInfo")}</p>
-                <p className="text-sm text-purple-400/80 mt-1">
-                  {t("tor.trafficRouted")}{" "}
-                  <code className="bg-purple-500/20 px-1.5 py-0.5 rounded font-mono">
-                    {status?.external_ip}
-                  </code>
-                </p>
-              </div>
-            </div>
-          </div>
+          <InfoBox variant="success" icon={CheckCircle2} title={t("tor.connectedInfo")} className="mb-6">
+            {t("tor.trafficRouted")}{" "}
+            <code className="bg-success/20 px-1.5 py-0.5 rounded font-mono">
+              {status?.external_ip}
+            </code>
+          </InfoBox>
         )}
 
         {/* Container Controls */}
         <div className="flex items-center gap-3 flex-wrap">
           {isContainerRunning ? (
-            <button
+            <ActionButton
+              variant="stop"
+              loading={stopMutation.isPending}
               onClick={() => stopMutation.mutate()}
-              disabled={stopMutation.isPending}
-              className="flex items-center gap-2 px-4 py-2 bg-error/10 hover:bg-error/20 text-error rounded-xl transition-colors disabled:opacity-50"
-            >
-              {stopMutation.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Square className="w-4 h-4" />
-              )}
-              {t("tor.stopContainer")}
-            </button>
+              label={t("tor.stopContainer")}
+            />
           ) : (
-            <button
+            <ActionButton
+              variant="start"
+              loading={startMutation.isPending}
               onClick={() => startMutation.mutate()}
-              disabled={startMutation.isPending}
-              className="flex items-center gap-2 px-4 py-2 bg-success/10 hover:bg-success/20 text-success rounded-xl transition-colors disabled:opacity-50"
-            >
-              {startMutation.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Play className="w-4 h-4" />
-              )}
-              {t("tor.startContainer")}
-            </button>
+              label={t("tor.startContainer")}
+            />
           )}
 
           {isConnected && (
-            <button
+            <ActionButton
+              variant="restart"
+              loading={newCircuitMutation.isPending}
               onClick={() => newCircuitMutation.mutate()}
-              disabled={newCircuitMutation.isPending}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 rounded-xl transition-colors disabled:opacity-50"
-            >
-              {newCircuitMutation.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <RefreshCw className="w-4 h-4" />
-              )}
-              {t("tor.newCircuit")}
-            </button>
+              icon={RefreshCw}
+              label={t("tor.newCircuit")}
+            />
           )}
         </div>
 
         {newCircuitMutation.isSuccess && (
-          <div className="mt-4 bg-success/10 border border-success/20 text-success text-sm p-3 rounded-xl">
+          <InfoBox variant="success" className="mt-4">
             {newCircuitMutation.data?.message}
-          </div>
+          </InfoBox>
         )}
-      </div>
+      </Section>
 
       {/* Hidden Services */}
       {isContainerRunning && (
-        <div className="bg-card border border-border rounded-2xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-              <Globe className="w-5 h-5 text-purple-500" />
-              {t("tor.hiddenServices")}
-            </h2>
-            <button
-              onClick={() => setShowAddresses(!showAddresses)}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              {showAddresses ? (
-                <>
-                  <EyeOff className="w-4 h-4" />
-                  {t("tor.hide")}
-                </>
-              ) : (
-                <>
-                  <Eye className="w-4 h-4" />
-                  {t("tor.show")}
-                </>
-              )}
-            </button>
-          </div>
-
-          <p className="text-sm text-muted-foreground mb-6">
-            {t("tor.hiddenServicesDesc")}
-          </p>
+        <Section>
+          <SectionHeader
+            icon={Globe}
+            iconColor="purple"
+            title={t("tor.hiddenServices")}
+            subtitle={t("tor.hiddenServicesDesc")}
+            actions={
+              <button
+                onClick={() => setShowAddresses(!showAddresses)}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {showAddresses ? (
+                  <>
+                    <EyeOff className="w-4 h-4" />
+                    {t("tor.hide")}
+                  </>
+                ) : (
+                  <>
+                    <Eye className="w-4 h-4" />
+                    {t("tor.show")}
+                  </>
+                )}
+              </button>
+            }
+          />
 
           <div className="space-y-4">
             {/* Bitcoin Node */}
-            <div className="bg-muted/50 rounded-xl p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium text-foreground">{t("tor.bitcoinNode")}</div>
-                  <div className="text-sm text-muted-foreground">{t("tor.p2pConnections")}</div>
-                </div>
-                {status?.onion_addresses?.bitcoin ? (
-                  <div className="flex items-center gap-2">
-                    <code className="text-sm font-mono text-foreground bg-muted px-2 py-1 rounded max-w-[200px] truncate">
-                      {showAddresses ? status.onion_addresses.bitcoin : "••••••••••••••••.onion"}
-                    </code>
-                    <button
-                      onClick={() => copyToClipboard(status.onion_addresses.bitcoin!, "bitcoin")}
-                      className="p-2 hover:bg-muted rounded-lg transition-colors"
-                      title={t("tor.copyAddress")}
-                    >
-                      {copiedAddress === "bitcoin" ? (
-                        <CheckCircle2 className="w-4 h-4 text-success" />
-                      ) : (
-                        <Copy className="w-4 h-4 text-muted-foreground" />
-                      )}
-                    </button>
-                  </div>
-                ) : (
-                  <span className="text-sm text-muted-foreground">{t("tor.notAvailableYet")}</span>
-                )}
-              </div>
-            </div>
+            <OnionServiceRow
+              title={t("tor.bitcoinNode")}
+              subtitle={t("tor.p2pConnections")}
+              address={status?.onion_addresses?.bitcoin}
+              showAddress={showAddresses}
+              onCopy={() => copyToClipboard(status?.onion_addresses?.bitcoin!, "bitcoin")}
+              copied={copiedAddress === "bitcoin"}
+              notAvailableText={t("tor.notAvailableYet")}
+              copyTitle={t("tor.copyAddress")}
+            />
 
             {/* Electrs */}
-            <div className="bg-muted/50 rounded-xl p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium text-foreground">{t("tor.electrumServer")}</div>
-                  <div className="text-sm text-muted-foreground">{t("tor.walletConnections")}</div>
-                </div>
-                {status?.onion_addresses?.electrs ? (
-                  <div className="flex items-center gap-2">
-                    <code className="text-sm font-mono text-foreground bg-muted px-2 py-1 rounded max-w-[200px] truncate">
-                      {showAddresses ? status.onion_addresses.electrs : "••••••••••••••••.onion"}
-                    </code>
-                    <button
-                      onClick={() => copyToClipboard(status.onion_addresses.electrs!, "electrs")}
-                      className="p-2 hover:bg-muted rounded-lg transition-colors"
-                      title={t("tor.copyAddress")}
-                    >
-                      {copiedAddress === "electrs" ? (
-                        <CheckCircle2 className="w-4 h-4 text-success" />
-                      ) : (
-                        <Copy className="w-4 h-4 text-muted-foreground" />
-                      )}
-                    </button>
-                  </div>
-                ) : (
-                  <span className="text-sm text-muted-foreground">{t("tor.notAvailableYet")}</span>
-                )}
-              </div>
-            </div>
+            <OnionServiceRow
+              title={t("tor.electrumServer")}
+              subtitle={t("tor.walletConnections")}
+              address={status?.onion_addresses?.electrs}
+              showAddress={showAddresses}
+              onCopy={() => copyToClipboard(status?.onion_addresses?.electrs!, "electrs")}
+              copied={copiedAddress === "electrs"}
+              notAvailableText={t("tor.notAvailableYet")}
+              copyTitle={t("tor.copyAddress")}
+            />
 
             {/* Dashboard */}
-            <div className="bg-muted/50 rounded-xl p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium text-foreground">{t("tor.dashboard")}</div>
-                  <div className="text-sm text-muted-foreground">{t("tor.webInterface")}</div>
-                </div>
-                {status?.onion_addresses?.dashboard ? (
-                  <div className="flex items-center gap-2">
-                    <code className="text-sm font-mono text-foreground bg-muted px-2 py-1 rounded max-w-[200px] truncate">
-                      {showAddresses ? status.onion_addresses.dashboard : "••••••••••••••••.onion"}
-                    </code>
-                    <button
-                      onClick={() => copyToClipboard(status.onion_addresses.dashboard!, "dashboard")}
-                      className="p-2 hover:bg-muted rounded-lg transition-colors"
-                      title={t("tor.copyAddress")}
-                    >
-                      {copiedAddress === "dashboard" ? (
-                        <CheckCircle2 className="w-4 h-4 text-success" />
-                      ) : (
-                        <Copy className="w-4 h-4 text-muted-foreground" />
-                      )}
-                    </button>
-                  </div>
-                ) : (
-                  <span className="text-sm text-muted-foreground">{t("tor.notAvailableYet")}</span>
-                )}
-              </div>
-            </div>
+            <OnionServiceRow
+              title={t("tor.dashboard")}
+              subtitle={t("tor.webInterface")}
+              address={status?.onion_addresses?.dashboard}
+              showAddress={showAddresses}
+              onCopy={() => copyToClipboard(status?.onion_addresses?.dashboard!, "dashboard")}
+              copied={copiedAddress === "dashboard"}
+              notAvailableText={t("tor.notAvailableYet")}
+              copyTitle={t("tor.copyAddress")}
+            />
           </div>
 
           <p className="text-xs text-muted-foreground mt-4">
             {t("tor.addressesPersist")}
           </p>
-        </div>
+        </Section>
       )}
 
       {/* Help Section */}
-      <div className="bg-muted/30 border border-border rounded-2xl p-6">
+      <Section className="bg-muted/30">
         <h3 className="font-semibold text-foreground mb-3">{t("tor.aboutTor")}</h3>
         <div className="text-sm text-muted-foreground space-y-3">
           <p>
@@ -437,6 +357,57 @@ export default function TorPage() {
             <ExternalLink className="w-3 h-3" />
           </a>
         </div>
+      </Section>
+    </div>
+  );
+}
+
+function OnionServiceRow({
+  title,
+  subtitle,
+  address,
+  showAddress,
+  onCopy,
+  copied,
+  notAvailableText,
+  copyTitle,
+}: {
+  title: string;
+  subtitle: string;
+  address?: string;
+  showAddress: boolean;
+  onCopy: () => void;
+  copied: boolean;
+  notAvailableText: string;
+  copyTitle: string;
+}) {
+  return (
+    <div className="bg-muted/50 rounded-xl p-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="font-medium text-foreground">{title}</div>
+          <div className="text-sm text-muted-foreground">{subtitle}</div>
+        </div>
+        {address ? (
+          <div className="flex items-center gap-2">
+            <code className="text-sm font-mono text-foreground bg-muted px-2 py-1 rounded max-w-[200px] truncate">
+              {showAddress ? address : "••••••••••••••••.onion"}
+            </code>
+            <button
+              onClick={onCopy}
+              className="p-2 hover:bg-muted rounded-lg transition-colors"
+              title={copyTitle}
+            >
+              {copied ? (
+                <CheckCircle2 className="w-4 h-4 text-success" />
+              ) : (
+                <Copy className="w-4 h-4 text-muted-foreground" />
+              )}
+            </button>
+          </div>
+        ) : (
+          <span className="text-sm text-muted-foreground">{notAvailableText}</span>
+        )}
       </div>
     </div>
   );

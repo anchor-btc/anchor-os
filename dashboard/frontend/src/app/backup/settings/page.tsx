@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
-  ArrowLeft,
   HardDrive,
   Cloud,
   Server,
@@ -19,8 +18,11 @@ import {
   File,
   RefreshCw,
   FolderOpen,
+  Settings,
 } from "lucide-react";
-import Link from "next/link";
+
+// Import DS components
+import { PageHeader, ActionButton } from "@/components/ds";
 
 const BACKUP_API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8010";
 
@@ -191,22 +193,15 @@ export default function BackupSettingsPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link
-          href="/backup"
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5 text-muted-foreground" />
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">{t("backupSettings.title")}</h1>
-          <p className="text-muted-foreground">
-            {t("backupSettings.subtitle")}
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        icon={Settings}
+        iconColor="blue"
+        title={t("backupSettings.title")}
+        subtitle={t("backupSettings.subtitle")}
+        backHref="/backup"
+      />
 
       {/* Local Storage Files */}
       <div className="bg-card border border-border rounded-xl p-6">
@@ -618,25 +613,20 @@ export default function BackupSettingsPage() {
       </div>
 
       {/* Save button */}
-      <div className="flex justify-end gap-3">
+      <div className="flex justify-end gap-3 items-center">
         {saveSettings.isSuccess && (
           <span className="flex items-center gap-2 text-sm text-green-500">
             <Check className="w-4 h-4" />
             {t("backupSettings.settingsSaved")}
           </span>
         )}
-        <button
+        <ActionButton
+          variant="primary"
+          loading={saveSettings.isPending}
           onClick={() => saveSettings.mutate()}
-          disabled={saveSettings.isPending}
-          className="flex items-center gap-2 px-6 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors"
-        >
-          {saveSettings.isPending ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Save className="w-4 h-4" />
-          )}
-          {t("backupSettings.saveSettings")}
-        </button>
+          icon={Save}
+          label={t("backupSettings.saveSettings")}
+        />
       </div>
     </div>
   );

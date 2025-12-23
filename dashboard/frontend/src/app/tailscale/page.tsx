@@ -23,11 +23,19 @@ import {
   XCircle,
   AlertCircle,
   ExternalLink,
-  Play,
-  Square,
-  RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+// Import DS components
+import {
+  PageHeader,
+  RefreshButton,
+  Section,
+  SectionHeader,
+  Grid,
+  ActionButton,
+  InfoBox,
+} from "@/components/ds";
 
 export default function TailscalePage() {
   const { t } = useTranslation();
@@ -37,7 +45,7 @@ export default function TailscalePage() {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [advertiseRoutes, setAdvertiseRoutes] = useState("");
 
-  const { data: status, isLoading, refetch } = useQuery({
+  const { data: status, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ["tailscale-status"],
     queryFn: fetchTailscaleStatus,
     refetchInterval: 5000,
@@ -111,29 +119,20 @@ export default function TailscalePage() {
   const isConnected = status?.logged_in && status?.backend_state === "Running";
 
   return (
-    <div className="space-y-8 max-w-4xl">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-            <Network className="w-8 h-8 text-blue-500" />
-            {t("tailscale.title")}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {t("tailscale.subtitle")}
-          </p>
-        </div>
-        <button
-          onClick={() => refetch()}
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
-          title={t("common.refresh")}
-        >
-          <RefreshCw className="w-5 h-5 text-muted-foreground" />
-        </button>
-      </div>
+      <PageHeader
+        icon={Network}
+        iconColor="blue"
+        title={t("tailscale.title")}
+        subtitle={t("tailscale.subtitle")}
+        actions={
+          <RefreshButton loading={isRefetching} onClick={() => refetch()} />
+        }
+      />
 
       {/* Status Card */}
-      <div className="bg-card border border-border rounded-2xl p-6">
+      <Section>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-semibold text-foreground">{t("tailscale.connectionStatus")}</h2>
           <div className="flex items-center gap-2">
@@ -159,7 +158,7 @@ export default function TailscalePage() {
         </div>
 
         {/* Status Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <Grid cols={{ default: 2, md: 4 }} gap="md" className="mb-6">
           <div className="bg-muted/50 rounded-xl p-4">
             <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
               <Server className="w-4 h-4" />
@@ -205,82 +204,58 @@ export default function TailscalePage() {
               {status?.tailnet || "-"}
             </div>
           </div>
-        </div>
+        </Grid>
 
         {/* Info when connected */}
         {isConnected && status?.hostname && (
-          <div className="bg-success/10 border border-success/20 rounded-xl p-4 mb-6">
-            <div className="flex items-start gap-3">
-              <CheckCircle2 className="w-5 h-5 text-success mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-success">{t("tailscale.connectedToTailscale")}</p>
-                <p className="text-sm text-success/80 mt-1">
-                  {t("tailscale.accessibleAt")}{" "}
-                  <code className="bg-success/20 px-1.5 py-0.5 rounded font-mono">
-                    {status.hostname}.{status.tailnet}
-                  </code>
-                </p>
-              </div>
-            </div>
-          </div>
+          <InfoBox variant="success" icon={CheckCircle2} title={t("tailscale.connectedToTailscale")} className="mb-6">
+            {t("tailscale.accessibleAt")}{" "}
+            <code className="bg-success/20 px-1.5 py-0.5 rounded font-mono">
+              {status.hostname}.{status.tailnet}
+            </code>
+          </InfoBox>
         )}
 
         {/* Container Controls */}
         <div className="flex items-center gap-3">
           {isContainerRunning ? (
-            <button
+            <ActionButton
+              variant="stop"
+              loading={stopMutation.isPending}
               onClick={() => stopMutation.mutate()}
-              disabled={stopMutation.isPending}
-              className="flex items-center gap-2 px-4 py-2 bg-error/10 hover:bg-error/20 text-error rounded-xl transition-colors disabled:opacity-50"
-            >
-              {stopMutation.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Square className="w-4 h-4" />
-              )}
-              {t("tailscale.stopContainer")}
-            </button>
+              label={t("tailscale.stopContainer")}
+            />
           ) : (
-            <button
+            <ActionButton
+              variant="start"
+              loading={startMutation.isPending}
               onClick={() => startMutation.mutate()}
-              disabled={startMutation.isPending}
-              className="flex items-center gap-2 px-4 py-2 bg-success/10 hover:bg-success/20 text-success rounded-xl transition-colors disabled:opacity-50"
-            >
-              {startMutation.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Play className="w-4 h-4" />
-              )}
-              {t("tailscale.startContainer")}
-            </button>
+              label={t("tailscale.startContainer")}
+            />
           )}
 
           {isConnected && (
-            <button
+            <ActionButton
+              variant="secondary"
+              loading={disconnectMutation.isPending}
               onClick={handleDisconnect}
-              disabled={disconnectMutation.isPending}
-              className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted/80 text-muted-foreground rounded-xl transition-colors disabled:opacity-50"
-            >
-              {disconnectMutation.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <WifiOff className="w-4 h-4" />
-              )}
-              {t("tailscale.disconnect")}
-            </button>
+              icon={WifiOff}
+              label={t("tailscale.disconnect")}
+            />
           )}
         </div>
-      </div>
+      </Section>
 
       {/* Connect Form */}
       {isContainerRunning && !isConnected && (
-        <div className="bg-card border border-border rounded-2xl p-6">
-          <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-            <Key className="w-5 h-5 text-blue-500" />
-            {t("tailscale.connectToTailscale")}
-          </h2>
+        <Section>
+          <SectionHeader
+            icon={Key}
+            iconColor="blue"
+            title={t("tailscale.connectToTailscale")}
+          />
 
-          <div className="space-y-4">
+          <div className="space-y-4 mt-4">
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
                 {t("tailscale.authKey")}
@@ -349,40 +324,32 @@ export default function TailscalePage() {
             )}
 
             {connectMutation.isError && (
-              <div className="bg-error/10 border border-error/20 text-error text-sm p-3 rounded-xl">
+              <InfoBox variant="error">
                 {t("tailscale.connectError")}
-              </div>
+              </InfoBox>
             )}
 
             {connectMutation.data && !connectMutation.data.success && (
-              <div className="bg-error/10 border border-error/20 text-error text-sm p-3 rounded-xl">
+              <InfoBox variant="error">
                 {connectMutation.data.message}
-              </div>
+              </InfoBox>
             )}
 
-            <button
+            <ActionButton
+              variant="primary"
+              loading={connectMutation.isPending}
               onClick={handleConnect}
               disabled={!authKey.trim() || connectMutation.isPending}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {connectMutation.isPending ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  {t("tailscale.connecting")}
-                </>
-              ) : (
-                <>
-                  <Wifi className="w-4 h-4" />
-                  {t("tailscale.connectToTailscale")}
-                </>
-              )}
-            </button>
+              icon={Wifi}
+              label={connectMutation.isPending ? t("tailscale.connecting") : t("tailscale.connectToTailscale")}
+              fullWidth
+            />
           </div>
-        </div>
+        </Section>
       )}
 
       {/* Help Section */}
-      <div className="bg-muted/30 border border-border rounded-2xl p-6">
+      <Section className="bg-muted/30">
         <h3 className="font-semibold text-foreground mb-3">{t("tailscale.howToUse")}</h3>
         <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
           <li>{t("tailscale.step1")} <a href="https://tailscale.com" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">tailscale.com</a></li>
@@ -391,8 +358,7 @@ export default function TailscalePage() {
           <li>{t("tailscale.step4")}</li>
           <li>{t("tailscale.step5")}</li>
         </ol>
-      </div>
+      </Section>
     </div>
   );
 }
-

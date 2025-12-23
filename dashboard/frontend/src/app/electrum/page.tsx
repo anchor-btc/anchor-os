@@ -5,16 +5,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Zap,
   Loader2,
-  RefreshCw,
-  Activity,
-  Server,
   Link2,
   Blocks,
   AlertTriangle,
-  CheckCircle2,
   Layers,
-  Play,
-  Square,
   Star,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -28,6 +22,23 @@ import {
   ServerInfo,
 } from "@/lib/api";
 import { useState } from "react";
+
+// Import DS components
+import {
+  PageHeader,
+  RefreshButton,
+  Section,
+  SectionHeader,
+  Grid,
+  ConfigValue,
+  InfoBox,
+  FeatureCard,
+  ActionButton,
+  Modal,
+  ModalHeader,
+  ModalContent,
+  ModalFooter,
+} from "@/components/ds";
 
 export default function ElectrumPage() {
   const { t } = useTranslation();
@@ -115,6 +126,11 @@ export default function ElectrumPage() {
     });
   };
 
+  const handleCloseModal = () => {
+    setShowConfirmDefault(false);
+    setTargetServer(null);
+  };
+
   if (statusLoading || containersLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -129,45 +145,33 @@ export default function ElectrumPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-3">
-            <Zap className="w-7 h-7 text-yellow-500" />
-            {t("electrum.title", "Electrum Servers")}
-          </h1>
-          <p className="text-muted-foreground">
-            {t("electrum.subtitle", "Manage your Electrum servers - both can run simultaneously")}
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <button
+      <PageHeader
+        icon={Zap}
+        iconColor="yellow"
+        title={t("electrum.title", "Electrum Servers")}
+        subtitle={t("electrum.subtitle", "Manage your Electrum servers - both can run simultaneously")}
+        actions={
+          <RefreshButton
+            loading={statusRefetching}
             onClick={() => refetchStatus()}
-            disabled={statusRefetching}
-            className="p-2 bg-muted hover:bg-muted/80 rounded-lg transition-colors"
-          >
-            <RefreshCw
-              className={cn(
-                "w-4 h-4 text-muted-foreground",
-                statusRefetching && "animate-spin"
-              )}
-            />
-          </button>
-        </div>
-      </div>
+          />
+        }
+      />
 
       {/* Server Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <Grid cols={{ default: 1, lg: 2 }} gap="lg">
         {/* Electrs Card */}
         <ServerCard
           info={electrs}
           name="Electrs"
           description={t("electrum.electrsDesc", "Lightweight, fast sync, lower resource usage")}
-          icon={<Zap className="w-6 h-6" />}
+          icon={Zap}
           color="yellow"
           onSetDefault={() => handleSetDefaultClick("electrs")}
           onStartStop={(isRunning) => handleStartStop("electrs", isRunning)}
           isActionPending={serverActionMutation.isPending}
           isSetDefaultPending={setDefaultMutation.isPending}
+          t={t}
         />
 
         {/* Fulcrum Card */}
@@ -175,53 +179,55 @@ export default function ElectrumPage() {
           info={fulcrum}
           name="Fulcrum"
           description={t("electrum.fulcrumDesc", "High-performance, faster queries, more features")}
-          icon={<Layers className="w-6 h-6" />}
+          icon={Layers}
           color="emerald"
           onSetDefault={() => handleSetDefaultClick("fulcrum")}
           onStartStop={(isRunning) => handleStartStop("fulcrum", isRunning)}
           isActionPending={serverActionMutation.isPending}
           isSetDefaultPending={setDefaultMutation.isPending}
+          t={t}
         />
-      </div>
+      </Grid>
 
       {/* Connection Info */}
-      <div className="bg-card border border-border rounded-xl p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-lg bg-yellow-500/10 flex items-center justify-center">
-            <Link2 className="w-5 h-5 text-yellow-500" />
-          </div>
-          <div>
-            <h2 className="font-semibold text-foreground">
-              {t("electrum.connectionInfo", "Connection Information")}
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              {t("electrum.connectionDesc", "Use these details to connect to Electrum servers")}
-            </p>
-          </div>
-        </div>
+      <Section>
+        <SectionHeader
+          icon={Link2}
+          iconColor="yellow"
+          title={t("electrum.connectionInfo", "Connection Information")}
+          subtitle={t("electrum.connectionDesc", "Use these details to connect to Electrum servers")}
+        />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <ConnectionInfo
+        <Grid cols={{ default: 1, md: 2, lg: 4 }} gap="md">
+          <ConfigValue
             label={t("electrum.electrsHost", "Electrs (Docker)")}
             value="core-electrs:50001"
             isDefault={defaultServer === "electrs"}
+            mono
+            copyable
           />
-          <ConnectionInfo
+          <ConfigValue
             label={t("electrum.electrsExternal", "Electrs (External)")}
             value="localhost:50001"
             isDefault={defaultServer === "electrs"}
+            mono
+            copyable
           />
-          <ConnectionInfo
+          <ConfigValue
             label={t("electrum.fulcrumHost", "Fulcrum (Docker)")}
             value="core-fulcrum:50002"
             isDefault={defaultServer === "fulcrum"}
+            mono
+            copyable
           />
-          <ConnectionInfo
+          <ConfigValue
             label={t("electrum.fulcrumExternal", "Fulcrum (External)")}
             value="localhost:50002"
             isDefault={defaultServer === "fulcrum"}
+            mono
+            copyable
           />
-        </div>
+        </Grid>
 
         <div className="mt-4 p-4 bg-muted/50 rounded-lg">
           <div className="flex items-center gap-2">
@@ -237,26 +243,20 @@ export default function ElectrumPage() {
             </span>
           </div>
         </div>
-      </div>
+      </Section>
 
       {/* Default Server Info */}
-      <div className="bg-primary/5 border border-primary/20 rounded-xl p-4">
-        <div className="flex items-center gap-3">
-          <Star className="w-5 h-5 text-primary" />
-          <div>
-            <p className="font-medium text-foreground">
-              {t("electrum.defaultServer", "Default Server")}: <span className="text-primary">{defaultServer === "electrs" ? "Electrs" : "Fulcrum"}</span>
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {t("electrum.defaultDesc", "Dependent services (Mempool, BTC RPC Explorer) use the default server.")}
-            </p>
-          </div>
-        </div>
-      </div>
+      <InfoBox variant="info" icon={Star} title={t("electrum.defaultServer", "Default Server")}>
+        <span className="text-primary font-medium">
+          {defaultServer === "electrs" ? "Electrs" : "Fulcrum"}
+        </span>
+        {" - "}
+        {t("electrum.defaultDesc", "Dependent services (Mempool, BTC RPC Explorer) use the default server.")}
+      </InfoBox>
 
       {/* Recent Logs */}
       {recentLogs.length > 0 && (
-        <div className="bg-card border border-border rounded-xl p-6">
+        <Section>
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold text-foreground">
               {t("electrum.recentLogs", "Recent Logs")} ({defaultServer === "electrs" ? "Electrs" : "Fulcrum"})
@@ -272,60 +272,51 @@ export default function ElectrumPage() {
               </div>
             ))}
           </div>
-        </div>
+        </Section>
       )}
 
       {/* Confirm Set Default Modal */}
-      {showConfirmDefault && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-card border border-border rounded-xl p-6 max-w-md mx-4">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center">
-                <AlertTriangle className="w-5 h-5 text-warning" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-foreground">
-                  {t("electrum.confirmDefault", "Change Default Server?")}
-                </h3>
-              </div>
-            </div>
-            <p className="text-sm text-muted-foreground mb-6">
-              {t(
-                "electrum.confirmDefaultDesc",
-                "This will restart dependent services (Mempool, BTC RPC Explorer) to use the new server. The target server must be running."
-              )}
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setShowConfirmDefault(false);
-                  setTargetServer(null);
-                }}
-                className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 rounded-lg text-sm font-medium transition-colors"
-              >
-                {t("common.cancel", "Cancel")}
-              </button>
-              <button
-                onClick={confirmSetDefault}
-                disabled={setDefaultMutation.isPending}
-                className="flex-1 px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
-              >
-                {setDefaultMutation.isPending ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Star className="w-4 h-4" />
-                )}
-                {t("electrum.setDefault", "Set as Default")}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal open={showConfirmDefault} onClose={handleCloseModal}>
+        <ModalHeader
+          icon={AlertTriangle}
+          iconColor="warning"
+          title={t("electrum.confirmDefault", "Change Default Server?")}
+        />
+        <ModalContent>
+          {t(
+            "electrum.confirmDefaultDesc",
+            "This will restart dependent services (Mempool, BTC RPC Explorer) to use the new server. The target server must be running."
+          )}
+        </ModalContent>
+        <ModalFooter>
+          <button
+            onClick={handleCloseModal}
+            className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 rounded-lg text-sm font-medium transition-colors"
+          >
+            {t("common.cancel", "Cancel")}
+          </button>
+          <button
+            onClick={confirmSetDefault}
+            disabled={setDefaultMutation.isPending}
+            className="flex-1 px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+          >
+            {setDefaultMutation.isPending ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Star className="w-4 h-4" />
+            )}
+            {t("electrum.setDefault", "Set as Default")}
+          </button>
+        </ModalFooter>
+      </Modal>
     </div>
   );
 }
 
-// Server Card Component
+// Server Card Component (using FeatureCard internally)
+import { LucideIcon } from "lucide-react";
+import { TFunction } from "i18next";
+
 function ServerCard({
   info,
   name,
@@ -336,154 +327,59 @@ function ServerCard({
   onStartStop,
   isActionPending,
   isSetDefaultPending,
+  t,
 }: {
   info: ServerInfo | undefined;
   name: string;
   description: string;
-  icon: React.ReactNode;
+  icon: LucideIcon;
   color: "yellow" | "emerald";
   onSetDefault: () => void;
   onStartStop: (isRunning: boolean) => void;
   isActionPending: boolean;
   isSetDefaultPending: boolean;
+  t: TFunction;
 }) {
-  const { t } = useTranslation();
   const isRunning = info?.status === "running";
   const isDefault = info?.is_default || false;
 
-  const colorClasses = {
-    yellow: {
-      bg: "bg-yellow-500/10",
-      border: "border-yellow-500",
-      text: "text-yellow-500",
-      iconBg: "bg-yellow-500/20",
-    },
-    emerald: {
-      bg: "bg-emerald-500/10",
-      border: "border-emerald-500",
-      text: "text-emerald-500",
-      iconBg: "bg-emerald-500/20",
-    },
-  };
-
-  const colors = colorClasses[color];
-
   return (
-    <div
-      className={cn(
-        "relative rounded-xl border-2 transition-all",
-        isDefault ? `${colors.bg} ${colors.border}` : "bg-card border-border"
-      )}
-    >
-      {/* Header */}
-      <div className="p-6 pb-4">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className={cn(
-              "w-12 h-12 rounded-xl flex items-center justify-center",
-              isDefault ? colors.iconBg : "bg-muted"
-            )}>
-              <div className={cn(isDefault ? colors.text : "text-muted-foreground")}>
-                {icon}
-              </div>
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-lg text-foreground">{name}</h3>
-                {isDefault && (
-                  <span className={cn("text-xs px-2 py-0.5 rounded-full", colors.bg, colors.text)}>
-                    {t("electrum.default", "Default")}
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <span className={cn(
-                  "inline-flex items-center gap-1 text-xs",
-                  isRunning ? "text-success" : "text-muted-foreground"
-                )}>
-                  {isRunning && <Activity className="w-3 h-3 animate-pulse" />}
-                  {info?.status || "stopped"}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  • Port {info?.port || (color === "yellow" ? "50001" : "50002")}
-                </span>
-              </div>
-            </div>
-          </div>
-          {isDefault && (
-            <CheckCircle2 className={cn("w-5 h-5", colors.text)} />
+    <FeatureCard
+      icon={icon}
+      color={color}
+      title={name}
+      subtitle={info?.status || "stopped"}
+      description={description}
+      isActive={isDefault}
+      badge={t("electrum.default", "Default")}
+      isRunning={isRunning}
+      info={`Port ${info?.port || (color === "yellow" ? "50001" : "50002")}`}
+      actions={
+        <>
+          <ActionButton
+            variant={isRunning ? "stop" : "start"}
+            loading={isActionPending}
+            onClick={() => onStartStop(isRunning)}
+            fullWidth
+          />
+          {!isDefault && (
+            <button
+              onClick={onSetDefault}
+              disabled={isSetDefaultPending || !isRunning}
+              className={cn(
+                "flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2",
+                isRunning
+                  ? "bg-primary/10 hover:bg-primary/20 text-primary"
+                  : "bg-muted text-muted-foreground cursor-not-allowed"
+              )}
+              title={!isRunning ? t("electrum.startFirst", "Start the server first") : ""}
+            >
+              <Star className="w-4 h-4" />
+              {t("electrum.setDefault", "Set Default")}
+            </button>
           )}
-        </div>
-        <p className="text-sm text-muted-foreground">{description}</p>
-      </div>
-
-      {/* Actions */}
-      <div className="px-6 pb-6 flex gap-2">
-        <button
-          onClick={() => onStartStop(isRunning)}
-          disabled={isActionPending}
-          className={cn(
-            "flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2",
-            isRunning
-              ? "bg-destructive/10 hover:bg-destructive/20 text-destructive"
-              : "bg-success/10 hover:bg-success/20 text-success"
-          )}
-        >
-          {isActionPending ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : isRunning ? (
-            <>
-              <Square className="w-4 h-4" />
-              {t("electrum.stop", "Stop")}
-            </>
-          ) : (
-            <>
-              <Play className="w-4 h-4" />
-              {t("electrum.start", "Start")}
-            </>
-          )}
-        </button>
-        {!isDefault && (
-          <button
-            onClick={onSetDefault}
-            disabled={isSetDefaultPending || !isRunning}
-            className={cn(
-              "flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2",
-              isRunning
-                ? "bg-primary/10 hover:bg-primary/20 text-primary"
-                : "bg-muted text-muted-foreground cursor-not-allowed"
-            )}
-            title={!isRunning ? t("electrum.startFirst", "Start the server first") : ""}
-          >
-            <Star className="w-4 h-4" />
-            {t("electrum.setDefault", "Set Default")}
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// Connection Info Component
-function ConnectionInfo({
-  label,
-  value,
-  isDefault,
-}: {
-  label: string;
-  value: string;
-  isDefault: boolean;
-}) {
-  return (
-    <div className={cn(
-      "p-4 rounded-lg",
-      isDefault ? "bg-primary/5 border border-primary/20" : "bg-muted/50"
-    )}>
-      <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
-        {label}
-        {isDefault && <Star className="w-3 h-3 text-primary" />}
-      </p>
-      <p className="font-medium text-foreground font-mono text-sm">{value}</p>
-    </div>
+        </>
+      }
+    />
   );
 }

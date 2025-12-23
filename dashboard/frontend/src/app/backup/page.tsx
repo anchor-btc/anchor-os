@@ -23,6 +23,20 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+// Import DS components
+import {
+  PageHeader,
+  Section,
+  Grid,
+  StatCard,
+  ActionButton,
+  InfoBox,
+  Modal,
+  ModalHeader,
+  ModalContent,
+  ModalFooter,
+} from "@/components/ds";
+
 const BACKUP_API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8010";
 
 interface BackupJob {
@@ -177,7 +191,7 @@ export default function BackupPage() {
       if (!res.ok) throw new Error("Failed to fetch snapshots");
       return res.json();
     },
-    refetchInterval: 30000, // Refresh every 30 seconds
+    refetchInterval: 30000,
   });
 
   const restoreBackup = useMutation({
@@ -252,437 +266,96 @@ export default function BackupPage() {
   const isRunning = status?.running || false;
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">{t("backup.title")}</h1>
-          <p className="text-muted-foreground">{t("backup.subtitle")}</p>
-        </div>
-        <Link
-          href="/backup/settings"
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
-        >
-          <Settings className="w-4 h-4" />
-          {t("nav.settings")}
-        </Link>
-      </div>
+      <PageHeader
+        icon={FolderArchive}
+        iconColor="blue"
+        title={t("backup.title")}
+        subtitle={t("backup.subtitle")}
+        actions={
+          <Link
+            href="/backup/settings"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+          >
+            <Settings className="w-4 h-4" />
+            {t("nav.settings")}
+          </Link>
+        }
+      />
 
       {/* Status Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Last Backup */}
-        <div className="bg-card border border-border rounded-xl p-4">
-          <div className="flex items-center gap-2 text-muted-foreground mb-2">
-            <Clock className="w-4 h-4" />
-            <span className="text-sm font-medium">{t("backup.lastBackup")}</span>
-          </div>
-          {status?.last_backup ? (
-            <div>
-              <p className="text-2xl font-bold text-foreground">
-                {formatTimeAgo(
+      <Grid cols={{ default: 1, md: 3 }} gap="md">
+        <StatCard
+          icon={Clock}
+          label={t("backup.lastBackup")}
+          value={
+            status?.last_backup
+              ? formatTimeAgo(
                   status.last_backup.completed_at || status.last_backup.started_at,
                   t
-                )}
-              </p>
-              <div className="flex items-center gap-2 mt-1">
-                <StatusIcon status={status.last_backup.status} />
-                <span className="text-sm text-muted-foreground capitalize">
-                  {t(`backup.${status.last_backup.status}`)}
-                </span>
-              </div>
-            </div>
-          ) : (
-            <p className="text-lg text-muted-foreground">{t("backup.noBackupsYet")}</p>
-          )}
-        </div>
-
-        {/* Next Scheduled */}
-        <div className="bg-card border border-border rounded-xl p-4">
-          <div className="flex items-center gap-2 text-muted-foreground mb-2">
-            <Calendar className="w-4 h-4" />
-            <span className="text-sm font-medium">{t("backup.nextScheduled")}</span>
-          </div>
-          {status?.next_scheduled ? (
-            <div>
-              <p className="text-xl font-bold text-foreground">
-                {new Date(status.next_scheduled).toLocaleTimeString([], {
+                )
+              : t("backup.noBackupsYet")
+          }
+          color="blue"
+        />
+        <StatCard
+          icon={Calendar}
+          label={t("backup.nextScheduled")}
+          value={
+            status?.next_scheduled
+              ? new Date(status.next_scheduled).toLocaleTimeString([], {
                   hour: "2-digit",
                   minute: "2-digit",
-                })}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {new Date(status.next_scheduled).toLocaleDateString()}
-              </p>
-            </div>
-          ) : (
-            <p className="text-lg text-muted-foreground">{t("backup.notScheduled")}</p>
-          )}
-        </div>
-
-        {/* Storage Used */}
-        <div className="bg-card border border-border rounded-xl p-4">
-          <div className="flex items-center gap-2 text-muted-foreground mb-2">
-            <Database className="w-4 h-4" />
-            <span className="text-sm font-medium">{t("backup.storageUsed")}</span>
-          </div>
-          {targets?.targets?.[0] ? (
-            <div>
-              <p className="text-2xl font-bold text-foreground">
-                {formatBytes(targets.targets[0].used_bytes)}
-              </p>
-              {targets.targets[0].total_bytes && (
-                <p className="text-sm text-muted-foreground">
-                  {t("wallet.of")} {formatBytes(targets.targets[0].total_bytes)}
-                </p>
-              )}
-            </div>
-          ) : (
-            <p className="text-lg text-muted-foreground">--</p>
-          )}
-        </div>
-      </div>
+                })
+              : t("backup.notScheduled")
+          }
+          color="purple"
+        />
+        <StatCard
+          icon={Database}
+          label={t("backup.storageUsed")}
+          value={
+            targets?.targets?.[0]
+              ? formatBytes(targets.targets[0].used_bytes)
+              : "--"
+          }
+          color="emerald"
+        />
+      </Grid>
 
       {/* Actions */}
       <div className="flex gap-3">
-        <button
+        <ActionButton
+          variant="primary"
+          loading={isRunning || startBackup.isPending}
           onClick={() => startBackup.mutate("local")}
           disabled={isRunning || startBackup.isPending}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          {isRunning || startBackup.isPending ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Play className="w-4 h-4" />
-          )}
-          {isRunning ? t("backup.backupInProgress") : t("backup.backupNow")}
-        </button>
-        <button
+          icon={Play}
+          label={isRunning ? t("backup.backupInProgress") : t("backup.backupNow")}
+        />
+        <ActionButton
+          variant="secondary"
           onClick={openRestoreModal}
           disabled={isRunning}
-          className="flex items-center gap-2 px-4 py-2 bg-muted text-foreground rounded-lg font-medium hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          <RotateCcw className="w-4 h-4" />
-          {t("backup.restore")}
-        </button>
+          icon={RotateCcw}
+          label={t("backup.restore")}
+        />
       </div>
-
-      {/* Restore Modal */}
-      {showRestoreModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-card border border-border rounded-xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto mx-4">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-foreground">
-                {t("backup.restoreFromBackup")}
-              </h2>
-              <button
-                onClick={() => setShowRestoreModal(false)}
-                className="p-2 hover:bg-muted rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Warning */}
-            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 mb-4">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-yellow-500 mt-0.5" />
-                <div>
-                  <p className="font-medium text-yellow-500">{t("backup.restoreWarningTitle")}</p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {t("backup.restoreWarningMessage")}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Restore Result */}
-            {restoreResult && (
-              <div className={`rounded-lg p-4 mb-4 ${
-                restoreResult.success 
-                  ? "bg-green-500/10 border border-green-500/20" 
-                  : "bg-red-500/10 border border-red-500/20"
-              }`}>
-                <div className="flex items-start gap-3">
-                  {restoreResult.success ? (
-                    <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
-                  ) : (
-                    <XCircle className="w-5 h-5 text-red-500 mt-0.5" />
-                  )}
-                  <div className="flex-1">
-                    <p className={`font-medium ${restoreResult.success ? "text-green-500" : "text-red-500"}`}>
-                      {restoreResult.message}
-                    </p>
-                    
-                    {/* Duration */}
-                    {restoreResult.duration_ms && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Completed in {(restoreResult.duration_ms / 1000).toFixed(1)}s
-                      </p>
-                    )}
-                    
-                    {/* Databases Restored */}
-                    {restoreResult.databases_restored && restoreResult.databases_restored.length > 0 && (
-                      <div className="mt-3">
-                        <p className="text-sm font-medium text-foreground flex items-center gap-1">
-                          <Database className="w-4 h-4" />
-                          Databases Restored ({restoreResult.databases_restored.length})
-                        </p>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {restoreResult.databases_restored.map((db) => (
-                            <span key={db} className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded">
-                              {db}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    
-                    {/* Databases Failed */}
-                    {restoreResult.databases_failed && restoreResult.databases_failed.length > 0 && (
-                      <div className="mt-3">
-                        <p className="text-sm font-medium text-red-400 flex items-center gap-1">
-                          <Database className="w-4 h-4" />
-                          Databases Failed ({restoreResult.databases_failed.length})
-                        </p>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {restoreResult.databases_failed.map((db) => (
-                            <span key={db} className="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded">
-                              {db}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    
-                    {/* Volumes Restored */}
-                    {restoreResult.volumes_restored && restoreResult.volumes_restored.length > 0 && (
-                      <div className="mt-3">
-                        <p className="text-sm font-medium text-foreground flex items-center gap-1">
-                          <FolderArchive className="w-4 h-4" />
-                          Volumes Restored ({restoreResult.volumes_restored.length})
-                        </p>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {restoreResult.volumes_restored.map((vol) => (
-                            <span key={vol} className="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded">
-                              {vol}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    
-                    {/* Volumes Failed */}
-                    {restoreResult.volumes_failed && restoreResult.volumes_failed.length > 0 && (
-                      <div className="mt-3">
-                        <p className="text-sm font-medium text-red-400 flex items-center gap-1">
-                          <FolderArchive className="w-4 h-4" />
-                          Volumes Failed ({restoreResult.volumes_failed.length})
-                        </p>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {restoreResult.volumes_failed.map((vol) => (
-                            <span key={vol} className="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded">
-                              {vol}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    
-                    {/* Errors */}
-                    {restoreResult.errors && restoreResult.errors.length > 0 && (
-                      <div className="mt-3">
-                        <p className="text-sm font-medium text-red-400">Errors:</p>
-                        <ul className="mt-1 space-y-1">
-                          {restoreResult.errors.map((error, i) => (
-                            <li key={i} className="text-xs text-red-400 bg-red-500/10 px-2 py-1 rounded">
-                              {error}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Snapshots List */}
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground mb-2">
-                {t("backup.selectSnapshotToRestore")}
-              </p>
-              
-              {!snapshots?.snapshots?.length ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  {t("backup.noSnapshotsFound")}
-                </div>
-              ) : (
-                snapshots.snapshots.map((snapshot) => (
-                  <div
-                    key={snapshot.id}
-                    className={`border rounded-lg p-4 transition-colors ${
-                      selectedSnapshot?.id === snapshot.id
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/50"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-sm text-primary">
-                            {snapshot.short_id}
-                          </span>
-                          <span className="text-sm text-muted-foreground">
-                            {new Date(snapshot.time).toLocaleString()}
-                          </span>
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {snapshot.paths.length} {t("backup.files")} • {snapshot.hostname}
-                        </p>
-                        {snapshot.tags.length > 0 && (
-                          <div className="flex gap-1 mt-2">
-                            {snapshot.tags.map((tag) => (
-                              <span
-                                key={tag}
-                                className="text-xs bg-muted px-2 py-0.5 rounded"
-                              >
-                                {tag}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => handleRestore(snapshot)}
-                        disabled={isRestoring}
-                        className="flex items-center gap-2 px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      >
-                        {isRestoring && selectedSnapshot?.id === snapshot.id ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <RotateCcw className="w-4 h-4" />
-                        )}
-                        {t("backup.restore")}
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            <div className="flex justify-end mt-6">
-              <button
-                onClick={() => setShowRestoreModal(false)}
-                className="px-4 py-2 bg-muted text-foreground rounded-lg font-medium hover:bg-muted/80 transition-colors"
-              >
-                {t("backup.close")}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Restore In Progress Overlay */}
-      {isRestoring && !restoreResult && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[70]">
-          <div className="bg-card border border-border rounded-xl p-8 w-full max-w-md mx-4 text-center">
-            <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
-            <h3 className="text-lg font-bold text-foreground mb-2">
-              Restoring from Backup
-            </h3>
-            <p className="text-muted-foreground mb-4">
-              This may take several minutes. Please do not close this page.
-            </p>
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <p>Extracting snapshot...</p>
-              <p>Stopping affected containers...</p>
-              <p>Restoring databases and volumes...</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Confirmation Dialog */}
-      {showConfirmDialog && pendingSnapshot && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[60]">
-          <div className="bg-card border border-border rounded-xl p-6 w-full max-w-md mx-4">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 bg-red-500/10 rounded-full">
-                <AlertTriangle className="w-6 h-6 text-red-500" />
-              </div>
-              <h3 className="text-lg font-bold text-foreground">
-                Confirm Restore
-              </h3>
-            </div>
-            
-            <div className="space-y-3 mb-6">
-              <p className="text-muted-foreground">
-                You are about to restore from snapshot:
-              </p>
-              <div className="bg-muted/50 rounded-lg p-3">
-                <p className="font-mono text-sm text-primary">{pendingSnapshot.short_id}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {new Date(pendingSnapshot.time).toLocaleString()}
-                </p>
-              </div>
-              
-              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-                <p className="text-sm text-red-400 font-medium">Warning: This action will:</p>
-                <ul className="text-sm text-red-400/80 mt-2 space-y-1 list-disc list-inside">
-                  <li>Stop affected containers temporarily</li>
-                  <li>Overwrite current database data</li>
-                  <li>Replace Docker volume contents</li>
-                  <li>Restart services after restore</li>
-                </ul>
-              </div>
-              
-              <p className="text-sm text-muted-foreground">
-                This operation may take several minutes. Do not close this page.
-              </p>
-            </div>
-            
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={cancelRestore}
-                className="px-4 py-2 bg-muted text-foreground rounded-lg font-medium hover:bg-muted/80 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmRestore}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors flex items-center gap-2"
-              >
-                <RotateCcw className="w-4 h-4" />
-                Yes, Restore Now
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Current Backup Progress */}
       {status?.current_job && (
-        <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
-          <div className="flex items-center gap-3">
-            <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
-            <div>
-              <p className="font-medium text-foreground">{t("backup.backupProgress")}</p>
-              <p className="text-sm text-muted-foreground">
-                {t("backup.started")}{" "}
-                {formatTimeAgo(status.current_job.started_at, t)} • {t("backup.target")}:{" "}
-                {status.current_job.target}
-              </p>
-            </div>
-          </div>
-        </div>
+        <InfoBox variant="info" icon={Loader2} title={t("backup.backupProgress")}>
+          {t("backup.started")} {formatTimeAgo(status.current_job.started_at, t)} • {t("backup.target")}: {status.current_job.target}
+        </InfoBox>
       )}
 
       {/* Storage Targets */}
-      <div>
+      <Section>
         <h2 className="text-lg font-semibold text-foreground mb-4">
           {t("backup.backupTargets")}
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Grid cols={{ default: 1, md: 3 }} gap="md">
           {targets?.targets?.map((target) => (
             <div
               key={target.storage_type}
@@ -732,11 +405,11 @@ export default function BackupPage() {
               )}
             </div>
           ))}
-        </div>
-      </div>
+        </Grid>
+      </Section>
 
-      {/* Recent Backup Jobs (from memory) */}
-      <div>
+      {/* Recent Backup Jobs */}
+      <Section>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-foreground">
             {t("backup.recentJobs")}
@@ -748,7 +421,7 @@ export default function BackupPage() {
             {t("backup.viewAll")} <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
-        <div className="bg-card border border-border rounded-xl overflow-hidden">
+        <div className="overflow-hidden rounded-lg border border-border">
           <table className="w-full">
             <thead>
               <tr className="border-b border-border bg-muted/50">
@@ -774,7 +447,6 @@ export default function BackupPage() {
             </thead>
             <tbody>
               {history?.backups?.slice(0, 5).map((backup) => {
-                // Find matching snapshot for this backup job
                 const backupTime = new Date(backup.started_at).getTime();
                 const matchingSnapshot = snapshots?.snapshots?.find(s => {
                   const snapshotTime = new Date(s.time).getTime();
@@ -839,10 +511,10 @@ export default function BackupPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      </Section>
 
-      {/* Snapshots (from Restic - for restore) */}
-      <div>
+      {/* Available Snapshots */}
+      <Section>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-foreground">
             {t("backup.availableSnapshots")}
@@ -851,7 +523,7 @@ export default function BackupPage() {
             {snapshots?.snapshots?.length || 0} {t("backup.snapshotsAvailable")}
           </span>
         </div>
-        <div className="bg-card border border-border rounded-xl overflow-hidden">
+        <div className="overflow-hidden rounded-lg border border-border">
           <table className="w-full">
             <thead>
               <tr className="border-b border-border bg-muted/50">
@@ -941,7 +613,156 @@ export default function BackupPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      </Section>
+
+      {/* Restore Modal */}
+      <Modal open={showRestoreModal} onClose={() => setShowRestoreModal(false)} className="max-w-2xl">
+        <ModalHeader
+          icon={RotateCcw}
+          iconColor="blue"
+          title={t("backup.restoreFromBackup")}
+          onClose={() => setShowRestoreModal(false)}
+        />
+        <ModalContent className="max-h-[60vh] overflow-y-auto">
+          <InfoBox variant="warning" icon={AlertTriangle} title={t("backup.restoreWarningTitle")} className="mb-4">
+            {t("backup.restoreWarningMessage")}
+          </InfoBox>
+
+          {restoreResult && (
+            <InfoBox 
+              variant={restoreResult.success ? "success" : "error"} 
+              className="mb-4"
+              title={restoreResult.message}
+            >
+              {restoreResult.duration_ms && (
+                <p className="text-xs mt-1">Completed in {(restoreResult.duration_ms / 1000).toFixed(1)}s</p>
+              )}
+              {restoreResult.databases_restored && restoreResult.databases_restored.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-sm font-medium">Databases Restored ({restoreResult.databases_restored.length})</p>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {restoreResult.databases_restored.map((db) => (
+                      <span key={db} className="text-xs bg-success/20 text-success px-2 py-0.5 rounded">{db}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {restoreResult.errors && restoreResult.errors.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-sm font-medium">Errors:</p>
+                  <ul className="mt-1 space-y-1">
+                    {restoreResult.errors.map((error, i) => (
+                      <li key={i} className="text-xs bg-error/10 px-2 py-1 rounded">{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </InfoBox>
+          )}
+
+          <p className="text-sm text-muted-foreground mb-2">
+            {t("backup.selectSnapshotToRestore")}
+          </p>
+          
+          {!snapshots?.snapshots?.length ? (
+            <div className="text-center py-8 text-muted-foreground">
+              {t("backup.noSnapshotsFound")}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {snapshots.snapshots.map((snapshot) => (
+                <div
+                  key={snapshot.id}
+                  className={`border rounded-lg p-4 transition-colors ${
+                    selectedSnapshot?.id === snapshot.id
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/50"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-sm text-primary">{snapshot.short_id}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {new Date(snapshot.time).toLocaleString()}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {snapshot.paths.length} {t("backup.files")} • {snapshot.hostname}
+                      </p>
+                    </div>
+                    <ActionButton
+                      variant="primary"
+                      loading={isRestoring && selectedSnapshot?.id === snapshot.id}
+                      onClick={() => handleRestore(snapshot)}
+                      disabled={isRestoring}
+                      icon={RotateCcw}
+                      label={t("backup.restore")}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </ModalContent>
+        <ModalFooter>
+          <ActionButton variant="secondary" onClick={() => setShowRestoreModal(false)} label={t("backup.close")} />
+        </ModalFooter>
+      </Modal>
+
+      {/* Confirmation Dialog */}
+      <Modal open={showConfirmDialog} onClose={cancelRestore}>
+        <ModalHeader
+          icon={AlertTriangle}
+          iconColor="red"
+          title="Confirm Restore"
+          onClose={cancelRestore}
+        />
+        <ModalContent>
+          <p className="text-muted-foreground mb-4">You are about to restore from snapshot:</p>
+          <div className="bg-muted/50 rounded-lg p-3 mb-4">
+            <p className="font-mono text-sm text-primary">{pendingSnapshot?.short_id}</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {pendingSnapshot && new Date(pendingSnapshot.time).toLocaleString()}
+            </p>
+          </div>
+          
+          <InfoBox variant="error" title="Warning: This action will:" className="mb-4">
+            <ul className="text-sm mt-2 space-y-1 list-disc list-inside">
+              <li>Stop affected containers temporarily</li>
+              <li>Overwrite current database data</li>
+              <li>Replace Docker volume contents</li>
+              <li>Restart services after restore</li>
+            </ul>
+          </InfoBox>
+          
+          <p className="text-sm text-muted-foreground">
+            This operation may take several minutes. Do not close this page.
+          </p>
+        </ModalContent>
+        <ModalFooter>
+          <ActionButton variant="secondary" onClick={cancelRestore} label="Cancel" />
+          <ActionButton variant="destructive" onClick={confirmRestore} icon={RotateCcw} label="Yes, Restore Now" />
+        </ModalFooter>
+      </Modal>
+
+      {/* Restore In Progress Overlay */}
+      {isRestoring && !restoreResult && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[70]">
+          <Section className="w-full max-w-md mx-4 text-center">
+            <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-foreground mb-2">Restoring from Backup</h3>
+            <p className="text-muted-foreground mb-4">
+              This may take several minutes. Please do not close this page.
+            </p>
+            <div className="space-y-2 text-sm text-muted-foreground">
+              <p>Extracting snapshot...</p>
+              <p>Stopping affected containers...</p>
+              <p>Restoring databases and volumes...</p>
+            </div>
+          </Section>
+        </div>
+      )}
     </div>
   );
 }

@@ -79,17 +79,17 @@ export function AnchorStatsChart() {
         </div>
       </div>
 
-      <div className="flex items-center gap-6">
-        {/* Donut Chart */}
-        <div className="w-40 h-40 shrink-0">
+      {/* Donut Chart - Centered and larger */}
+      <div className="flex justify-center mb-4">
+        <div className="w-48 h-48">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
                 data={chartData}
                 cx="50%"
                 cy="50%"
-                innerRadius={40}
-                outerRadius={65}
+                innerRadius={50}
+                outerRadius={80}
                 paddingAngle={2}
                 dataKey="value"
               >
@@ -109,38 +109,38 @@ export function AnchorStatsChart() {
             </PieChart>
           </ResponsiveContainer>
         </div>
+      </div>
 
-        {/* Legend & Stats */}
-        <div className="flex-1 space-y-2">
-          <StatRow
-            icon={<CheckCircle className="w-3.5 h-3.5" />}
-            label="Resolved"
-            value={stats.resolved}
-            total={stats.total}
-            color="green"
-          />
-          <StatRow
-            icon={<AlertTriangle className="w-3.5 h-3.5" />}
-            label="Orphaned"
-            value={stats.orphaned}
-            total={stats.total}
-            color="red"
-          />
-          <StatRow
-            icon={<HelpCircle className="w-3.5 h-3.5" />}
-            label="Ambiguous"
-            value={stats.ambiguous}
-            total={stats.total}
-            color="yellow"
-          />
-          <StatRow
-            icon={<Clock className="w-3.5 h-3.5" />}
-            label="Pending"
-            value={stats.pending}
-            total={stats.total}
-            color="gray"
-          />
-        </div>
+      {/* Legend & Stats - Below chart in single column */}
+      <div className="space-y-2">
+        <StatRow
+          icon={<CheckCircle className="w-3.5 h-3.5" />}
+          label="Resolved"
+          value={stats.resolved}
+          total={stats.total}
+          color="green"
+        />
+        <StatRow
+          icon={<AlertTriangle className="w-3.5 h-3.5" />}
+          label="Orphaned"
+          value={stats.orphaned}
+          total={stats.total}
+          color="red"
+        />
+        <StatRow
+          icon={<HelpCircle className="w-3.5 h-3.5" />}
+          label="Ambiguous"
+          value={stats.ambiguous}
+          total={stats.total}
+          color="yellow"
+        />
+        <StatRow
+          icon={<Clock className="w-3.5 h-3.5" />}
+          label="Pending"
+          value={stats.pending}
+          total={stats.total}
+          color="gray"
+        />
       </div>
 
       {/* Recent Orphans */}

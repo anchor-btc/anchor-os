@@ -16,7 +16,6 @@ import {
   Blocks,
   Network,
   HardDrive,
-  RefreshCw,
   Pickaxe,
   Database,
   Zap,
@@ -24,12 +23,22 @@ import {
   Plus,
   Minus,
   Check,
-  AlertTriangle,
   Settings,
   Terminal,
   Copy,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+// Import DS components
+import {
+  PageHeader,
+  RefreshButton,
+  Section,
+  SectionHeader,
+  Grid,
+  StatCard,
+  InfoBox,
+} from "@/components/ds";
 
 export default function NodePage() {
   const { t } = useTranslation();
@@ -41,7 +50,6 @@ export default function NodePage() {
   const {
     data: status,
     isLoading,
-    error,
     refetch,
     isRefetching,
   } = useQuery({
@@ -108,45 +116,31 @@ export default function NodePage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">{t("node.title")}</h1>
-          <p className="text-muted-foreground">
-            {nodeRunning && network
-              ? `${network.subversion.replace(/\//g, "")} on ${blockchain?.chain}`
-              : t("node.nodeNotRunning")}
-          </p>
-        </div>
-        <button
-          onClick={() => refetch()}
-          disabled={isRefetching}
-          className="p-2 bg-muted hover:bg-muted/80 rounded-lg transition-colors"
-        >
-          <RefreshCw
-            className={cn(
-              "w-4 h-4 text-muted-foreground",
-              isRefetching && "animate-spin"
-            )}
-          />
-        </button>
-      </div>
+      <PageHeader
+        icon={Bitcoin}
+        iconColor="orange"
+        title={t("node.title")}
+        subtitle={
+          nodeRunning && network
+            ? `${network.subversion.replace(/\//g, "")} on ${blockchain?.chain}`
+            : t("node.nodeNotRunning")
+        }
+        actions={
+          <RefreshButton loading={isRefetching} onClick={() => refetch()} />
+        }
+      />
 
       {/* Version Selector */}
       {nodeConfig && (
-        <div className="bg-card border border-border rounded-xl p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
-              <Settings className="w-5 h-5 text-orange-500" />
-            </div>
-            <div>
-              <h2 className="font-semibold text-foreground">{t("node.version")}</h2>
-              <p className="text-sm text-muted-foreground">
-                {t("node.selectVersion")}
-              </p>
-            </div>
-          </div>
+        <Section>
+          <SectionHeader
+            icon={Settings}
+            iconColor="orange"
+            title={t("node.version")}
+            subtitle={t("node.selectVersion")}
+          />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+          <Grid cols={{ default: 1, sm: 2, lg: 4 }} gap="sm">
             {nodeConfig.available_versions.map((ver) => (
               <VersionCard
                 key={ver.version}
@@ -160,9 +154,9 @@ export default function NodePage() {
                 t={t}
               />
             ))}
-          </div>
+          </Grid>
 
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center mt-4">
             <button
               onClick={handleSwitchVersion}
               disabled={switchMutation.isPending || selectedVersion === nodeConfig.current_version}
@@ -208,53 +202,48 @@ docker compose up -d core-bitcoin`}
               </pre>
             </div>
           )}
-        </div>
+        </Section>
       )}
 
       {/* Main Stats Grid - only show when node is running */}
       {nodeRunning && blockchain && network && (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          icon={<Blocks className="w-5 h-5" />}
-          label={t("node.blockHeight")}
-          value={blockchain.blocks.toLocaleString()}
-          color="orange"
-        />
-        <StatCard
-          icon={<Network className="w-5 h-5" />}
-          label={t("node.connections")}
-          value={`${network.connections} (${network.connections_in}↓ ${network.connections_out}↑)`}
-          color="blue"
-        />
-        <StatCard
-          icon={<HardDrive className="w-5 h-5" />}
-          label={t("node.diskUsage")}
-          value={`${(blockchain.size_on_disk / 1024 / 1024).toFixed(1)} MB`}
-          color="purple"
-        />
-        <StatCard
-          icon={<Shield className="w-5 h-5" />}
-          label={t("node.difficulty")}
-          value={blockchain.difficulty.toExponential(2)}
-          color="green"
-        />
-      </div>
+        <Grid cols={{ default: 1, md: 2, lg: 4 }} gap="md">
+          <StatCard
+            icon={Blocks}
+            label={t("node.blockHeight")}
+            value={blockchain.blocks.toLocaleString()}
+            color="orange"
+          />
+          <StatCard
+            icon={Network}
+            label={t("node.connections")}
+            value={`${network.connections} (${network.connections_in}↓ ${network.connections_out}↑)`}
+            color="blue"
+          />
+          <StatCard
+            icon={HardDrive}
+            label={t("node.diskUsage")}
+            value={`${(blockchain.size_on_disk / 1024 / 1024).toFixed(1)} MB`}
+            color="purple"
+          />
+          <StatCard
+            icon={Shield}
+            label={t("node.difficulty")}
+            value={blockchain.difficulty.toExponential(2)}
+            color="emerald"
+          />
+        </Grid>
       )}
 
       {/* Mining Section (for regtest) */}
       {nodeRunning && blockchain?.chain === "regtest" && (
-        <div className="bg-card border border-border rounded-xl p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center">
-              <Pickaxe className="w-5 h-5 text-warning" />
-            </div>
-            <div>
-              <h2 className="font-semibold text-foreground">{t("node.mineBlocks")}</h2>
-              <p className="text-sm text-muted-foreground">
-                {t("node.generateBlocks")}
-              </p>
-            </div>
-          </div>
+        <Section>
+          <SectionHeader
+            icon={Pickaxe}
+            iconColor="warning"
+            title={t("node.mineBlocks")}
+            subtitle={t("node.generateBlocks")}
+          />
 
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
@@ -294,105 +283,105 @@ docker compose up -d core-bitcoin`}
               {t("node.successMined", { count: mineMutation.data?.blocks.length || 0 })}
             </p>
           )}
-        </div>
+        </Section>
       )}
 
       {/* Detailed Info - only show when node is running */}
       {nodeRunning && blockchain && mempool && network && (
         <>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Blockchain Info */}
-        <div className="bg-card border border-border rounded-xl p-6">
-          <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-            <Database className="w-5 h-5 text-muted-foreground" />
-            {t("node.blockchainInfo")}
-          </h2>
-          <div className="space-y-3">
-            <InfoRow label={t("node.chain")} value={blockchain.chain} />
-            <InfoRow label={t("node.blocks")} value={blockchain.blocks.toLocaleString()} />
-            <InfoRow label={t("node.headers")} value={blockchain.headers.toLocaleString()} />
-            <InfoRow
-              label={t("node.bestBlock")}
-              value={shortenHash(blockchain.bestblockhash, 12)}
-              mono
-            />
-            <InfoRow
-              label={t("node.verificationProgress")}
-              value={`${(blockchain.verificationprogress * 100).toFixed(2)}%`}
-            />
-            <InfoRow label={t("node.pruned")} value={blockchain.pruned ? t("common.yes") : t("common.no")} />
-          </div>
-        </div>
+          <Grid cols={{ default: 1, lg: 2 }} gap="lg">
+            {/* Blockchain Info */}
+            <Section>
+              <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                <Database className="w-5 h-5 text-muted-foreground" />
+                {t("node.blockchainInfo")}
+              </h2>
+              <div className="space-y-3">
+                <InfoRow label={t("node.chain")} value={blockchain.chain} />
+                <InfoRow label={t("node.blocks")} value={blockchain.blocks.toLocaleString()} />
+                <InfoRow label={t("node.headers")} value={blockchain.headers.toLocaleString()} />
+                <InfoRow
+                  label={t("node.bestBlock")}
+                  value={shortenHash(blockchain.bestblockhash, 12)}
+                  mono
+                />
+                <InfoRow
+                  label={t("node.verificationProgress")}
+                  value={`${(blockchain.verificationprogress * 100).toFixed(2)}%`}
+                />
+                <InfoRow label={t("node.pruned")} value={blockchain.pruned ? t("common.yes") : t("common.no")} />
+              </div>
+            </Section>
 
-        {/* Mempool Info */}
-        <div className="bg-card border border-border rounded-xl p-6">
-          <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-            <Zap className="w-5 h-5 text-muted-foreground" />
-            {t("node.mempoolInfo")}
-          </h2>
-          <div className="space-y-3">
-            <InfoRow label={t("node.loaded")} value={mempool.loaded ? t("common.yes") : t("common.no")} />
-            <InfoRow label={t("wallet.transactions")} value={mempool.size.toLocaleString()} />
-            <InfoRow
-              label={t("node.size")}
-              value={`${(mempool.bytes / 1024).toFixed(2)} KB`}
-            />
-            <InfoRow
-              label={t("node.memoryUsage")}
-              value={`${(mempool.usage / 1024 / 1024).toFixed(2)} MB`}
-            />
-            <InfoRow
-              label={t("node.totalFees")}
-              value={`${mempool.total_fee.toFixed(8)} BTC`}
-            />
-            <InfoRow
-              label={t("node.minRelayFee")}
-              value={`${(mempool.minrelaytxfee * 100000000).toFixed(0)} sat/kB`}
-            />
-          </div>
-        </div>
-      </div>
+            {/* Mempool Info */}
+            <Section>
+              <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                <Zap className="w-5 h-5 text-muted-foreground" />
+                {t("node.mempoolInfo")}
+              </h2>
+              <div className="space-y-3">
+                <InfoRow label={t("node.loaded")} value={mempool.loaded ? t("common.yes") : t("common.no")} />
+                <InfoRow label={t("wallet.transactions")} value={mempool.size.toLocaleString()} />
+                <InfoRow
+                  label={t("node.size")}
+                  value={`${(mempool.bytes / 1024).toFixed(2)} KB`}
+                />
+                <InfoRow
+                  label={t("node.memoryUsage")}
+                  value={`${(mempool.usage / 1024 / 1024).toFixed(2)} MB`}
+                />
+                <InfoRow
+                  label={t("node.totalFees")}
+                  value={`${mempool.total_fee.toFixed(8)} BTC`}
+                />
+                <InfoRow
+                  label={t("node.minRelayFee")}
+                  value={`${(mempool.minrelaytxfee * 100000000).toFixed(0)} sat/kB`}
+                />
+              </div>
+            </Section>
+          </Grid>
 
-      {/* Network Info */}
-      <div className="bg-card border border-border rounded-xl p-6">
-        <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-          <Network className="w-5 h-5 text-muted-foreground" />
-          {t("node.networkInfo")}
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <InfoRow label={t("node.version")} value={network.version.toString()} />
-          <InfoRow
-            label={t("node.subversion")}
-            value={network.subversion.replace(/\//g, "")}
-          />
-          <InfoRow
-            label={t("node.protocolVersion")}
-            value={network.protocolversion.toString()}
-          />
-          <InfoRow
-            label={t("node.connections")}
-            value={network.connections.toString()}
-          />
-          <InfoRow
-            label={t("node.inbound")}
-            value={network.connections_in.toString()}
-          />
-          <InfoRow
-            label={t("node.outbound")}
-            value={network.connections_out.toString()}
-          />
-          <InfoRow
-            label={t("node.networkActive")}
-            value={network.networkactive ? t("common.yes") : t("common.no")}
-          />
-        </div>
-      </div>
+          {/* Network Info */}
+          <Section>
+            <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+              <Network className="w-5 h-5 text-muted-foreground" />
+              {t("node.networkInfo")}
+            </h2>
+            <Grid cols={{ default: 1, md: 2, lg: 3 }} gap="md">
+              <InfoRow label={t("node.version")} value={network.version.toString()} />
+              <InfoRow
+                label={t("node.subversion")}
+                value={network.subversion.replace(/\//g, "")}
+              />
+              <InfoRow
+                label={t("node.protocolVersion")}
+                value={network.protocolversion.toString()}
+              />
+              <InfoRow
+                label={t("node.connections")}
+                value={network.connections.toString()}
+              />
+              <InfoRow
+                label={t("node.inbound")}
+                value={network.connections_in.toString()}
+              />
+              <InfoRow
+                label={t("node.outbound")}
+                value={network.connections_out.toString()}
+              />
+              <InfoRow
+                label={t("node.networkActive")}
+                value={network.networkactive ? t("common.yes") : t("common.no")}
+              />
+            </Grid>
+          </Section>
         </>
       )}
 
       {/* Node not running message */}
       {!nodeRunning && (
-        <div className="bg-card border border-border rounded-xl p-8 text-center">
+        <Section className="text-center py-8">
           <Bitcoin className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-foreground mb-2">
             {t("node.notRunning")}
@@ -400,44 +389,8 @@ docker compose up -d core-bitcoin`}
           <p className="text-muted-foreground mb-4">
             {t("node.startNodeCmd")}: <code className="bg-muted px-2 py-1 rounded">docker compose up -d core-bitcoin</code>
           </p>
-        </div>
+        </Section>
       )}
-    </div>
-  );
-}
-
-function StatCard({
-  icon,
-  label,
-  value,
-  color,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  color: "orange" | "blue" | "purple" | "green";
-}) {
-  const colorClasses = {
-    orange: "bg-orange-500/10 text-orange-500",
-    blue: "bg-blue-500/10 text-blue-500",
-    purple: "bg-purple-500/10 text-purple-500",
-    green: "bg-green-500/10 text-green-500",
-  };
-
-  return (
-    <div className="bg-card border border-border rounded-xl p-4 card-hover">
-      <div className="flex items-center gap-3 mb-3">
-        <div
-          className={cn(
-            "w-10 h-10 rounded-lg flex items-center justify-center",
-            colorClasses[color]
-          )}
-        >
-          {icon}
-        </div>
-      </div>
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="text-xl font-bold font-tabular text-foreground">{value}</p>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { TFunction } from "i18next";
 import { useQuery } from "@tanstack/react-query";
 import {
   PieChart,
@@ -13,7 +13,6 @@ import {
 import {
   Search,
   Loader2,
-  RefreshCw,
   Activity,
   Blocks,
   Clock,
@@ -31,21 +30,30 @@ import {
   Eye,
   TrendingUp,
   Zap,
-  List,
-  BarChart3,
-  Radio,
-  Gauge,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fetchContainers } from "@/lib/api";
 import {
   MessageExplorer,
-  TimeSeriesCharts,
-  MessagesOverTimeChart,
+  TotalMessagesChart,
+  MessagesByKindChart,
+  MessagesByCarrierChart,
   LiveFeed,
   PerformanceMetrics,
   AnchorStatsChart,
+  IndexerGridLayout,
+  useIndexerLayout,
+  type IndexerCardDefinition,
 } from "@/components/indexer";
+
+// Import DS components
+import {
+  PageHeader,
+  RefreshButton,
+  Section,
+  SectionHeader,
+  StatCard,
+} from "@/components/ds";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3011";
 
@@ -124,19 +132,17 @@ const carrierChartColors: Record<string, string> = {
   "Witness Data": "#a855f7",
 };
 
-type TabId = "overview" | "explorer" | "analytics" | "performance" | "live";
-
-const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
-  { id: "overview", label: "Overview", icon: BarChart3 },
-  { id: "explorer", label: "Explorer", icon: List },
-  { id: "analytics", label: "Analytics", icon: TrendingUp },
-  { id: "performance", label: "Performance", icon: Gauge },
-  { id: "live", label: "Live Feed", icon: Radio },
-];
-
 export default function IndexerPage() {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<TabId>("overview");
+
+  const {
+    layout,
+    isEditMode,
+    reorderCards,
+    changeCardSize,
+    resetToDefaults,
+    toggleEditMode,
+  } = useIndexerLayout();
 
   const {
     data: containersData,
@@ -161,6 +167,90 @@ export default function IndexerPage() {
   );
   const isRunning = indexerContainer?.state === "running";
 
+  // Define all card components
+  const cardDefinitions: IndexerCardDefinition[] = [
+    {
+      id: "stats",
+      name: t("indexer.overview", "Overview Stats"),
+      defaultSize: 4,
+      minSize: 2,
+      maxSize: 4,
+      render: () => <StatsCards stats={stats} statsLoading={statsLoading} t={t} />,
+    },
+    {
+      id: "message-types",
+      name: t("indexer.messageTypes", "Message Types"),
+      defaultSize: 2,
+      minSize: 1,
+      maxSize: 4,
+      render: () => <MessageTypesCard stats={stats} t={t} />,
+    },
+    {
+      id: "carrier-types",
+      name: t("indexer.carrierTypes", "Carrier Types"),
+      defaultSize: 2,
+      minSize: 1,
+      maxSize: 4,
+      render: () => <CarrierTypesCard stats={stats} t={t} />,
+    },
+    {
+      id: "anchor-resolution",
+      name: t("indexer.anchorResolution", "Anchor Resolution"),
+      defaultSize: 2,
+      minSize: 1,
+      maxSize: 4,
+      render: () => <AnchorStatsChart />,
+    },
+    {
+      id: "live-feed",
+      name: t("indexer.liveFeed", "Live Feed"),
+      defaultSize: 2,
+      minSize: 1,
+      maxSize: 4,
+      render: () => <LiveFeed />,
+    },
+    {
+      id: "total-messages",
+      name: t("indexer.totalMessagesChart", "Total Messages"),
+      defaultSize: 2,
+      minSize: 1,
+      maxSize: 4,
+      render: () => <TotalMessagesChart />,
+    },
+    {
+      id: "messages-by-kind",
+      name: t("indexer.messagesByKind", "By Kind"),
+      defaultSize: 2,
+      minSize: 1,
+      maxSize: 4,
+      render: () => <MessagesByKindChart />,
+    },
+    {
+      id: "messages-by-carrier",
+      name: t("indexer.messagesByCarrier", "By Carrier"),
+      defaultSize: 2,
+      minSize: 1,
+      maxSize: 4,
+      render: () => <MessagesByCarrierChart />,
+    },
+    {
+      id: "performance",
+      name: t("indexer.performance", "Performance"),
+      defaultSize: 2,
+      minSize: 1,
+      maxSize: 4,
+      render: () => <PerformanceMetrics />,
+    },
+    {
+      id: "message-explorer",
+      name: t("indexer.messageExplorer", "Message Explorer"),
+      defaultSize: 4,
+      minSize: 2,
+      maxSize: 4,
+      render: () => <MessageExplorer />,
+    },
+  ];
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -172,78 +262,38 @@ export default function IndexerPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-3">
-            <Search className="w-7 h-7 text-cyan-500" />
-            {t("indexer.title")}
-          </h1>
-          <p className="text-muted-foreground">
-            {isRunning
-              ? t("indexer.subtitle")
-              : t("indexer.notRunning")}
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          {isRunning && (
-            <span className="flex items-center gap-2 px-3 py-1.5 bg-success/10 text-success rounded-lg text-sm">
-              <Activity className="w-4 h-4 animate-pulse" />
-              {t("indexer.live")}
-            </span>
-          )}
-          <button
-            onClick={() => refetch()}
-            disabled={isRefetching}
-            className="p-2 bg-muted hover:bg-muted/80 rounded-lg transition-colors"
-          >
-            <RefreshCw
-              className={cn(
-                "w-4 h-4 text-muted-foreground",
-                isRefetching && "animate-spin"
-              )}
-            />
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        icon={Search}
+        iconColor="cyan"
+        title={t("indexer.title")}
+        subtitle={isRunning ? t("indexer.subtitle") : t("indexer.notRunning")}
+        actions={
+          <div className="flex items-center gap-3">
+            {isRunning && (
+              <span className="flex items-center gap-2 px-3 py-1.5 bg-success/10 text-success rounded-lg text-sm">
+                <Activity className="w-4 h-4 animate-pulse" />
+                {t("indexer.live")}
+              </span>
+            )}
+            <RefreshButton loading={isRefetching} onClick={() => refetch()} />
+          </div>
+        }
+      />
 
-      {/* Tabs */}
-      <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-lg w-fit">
-        {TABS.map((tab) => {
-          const Icon = tab.icon;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2 text-sm rounded-md transition-colors",
-                activeTab === tab.id
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <Icon className="w-4 h-4" />
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Tab Content */}
-      {activeTab === "overview" && (
-        <OverviewTab stats={stats} statsLoading={statsLoading} t={t} />
-      )}
-
-      {activeTab === "explorer" && <MessageExplorer />}
-
-      {activeTab === "analytics" && <TimeSeriesCharts />}
-
-      {activeTab === "performance" && <PerformanceMetrics />}
-
-      {activeTab === "live" && <LiveFeed />}
+      {/* Draggable Grid Layout */}
+      <IndexerGridLayout
+        cardDefinitions={cardDefinitions}
+        layout={layout}
+        isEditMode={isEditMode}
+        onReorder={reorderCards}
+        onChangeSize={changeCardSize}
+        onResetToDefaults={resetToDefaults}
+        onToggleEditMode={toggleEditMode}
+      />
 
       {/* Not running message */}
       {!isRunning && (
-        <div className="bg-card border border-border rounded-xl p-8 text-center">
+        <Section className="text-center py-8">
           <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-foreground mb-2">
             {t("indexer.notRunningMsg")}
@@ -254,237 +304,224 @@ export default function IndexerPage() {
               docker compose up -d anchor-core-indexer
             </code>
           </p>
-        </div>
+        </Section>
       )}
     </div>
   );
 }
 
-// Overview Tab Component
-function OverviewTab({
+// ============================
+// Stats Cards Component
+// ============================
+function StatsCards({
   stats,
   statsLoading,
   t,
 }: {
   stats: IndexerStats | undefined;
   statsLoading: boolean;
-  t: (key: string) => string;
+  t: TFunction;
 }) {
   if (statsLoading) {
     return (
-      <div className="bg-card border border-border rounded-xl p-8">
-        <div className="flex items-center justify-center">
-          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-          <span className="ml-2 text-muted-foreground">{t("indexer.loadingStats")}</span>
-        </div>
+      <div className="grid grid-cols-4 gap-4">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="bg-card border border-border rounded-xl p-4 animate-pulse">
+            <div className="h-16" />
+          </div>
+        ))}
       </div>
     );
   }
 
-  if (!stats) {
-    return null;
-  }
+  if (!stats) return null;
 
   return (
-    <div className="space-y-6">
-      {/* Stats Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard
-          icon={<MessageSquare className="w-5 h-5" />}
-          label={t("indexer.totalMessages")}
-          value={stats.total_messages.toLocaleString()}
-          color="cyan"
-        />
-        <StatCard
-          icon={<Blocks className="w-5 h-5" />}
-          label={t("indexer.blocksWithMessages")}
-          value={stats.total_blocks_with_messages.toLocaleString()}
-          color="orange"
-        />
-        <StatCard
-          icon={<Clock className="w-5 h-5" />}
-          label={t("indexer.lastIndexedBlock")}
-          value={stats.last_indexed_block?.toLocaleString() || "-"}
-          color="purple"
-        />
-        <StatCard
-          icon={<Zap className="w-5 h-5" />}
-          label={t("indexer.recentBlocks")}
-          value={stats.recent_messages_24h.toLocaleString()}
-          color="green"
-        />
-      </div>
-
-      {/* Message Types, Carrier Types & Anchor Stats */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Message Types */}
-        <div className="bg-card border border-border rounded-xl p-6">
-          <div className="flex items-center gap-3 mb-5">
-            <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-orange-500" />
-            </div>
-            <div>
-              <h2 className="font-semibold text-foreground">{t("indexer.messageTypes")}</h2>
-              <p className="text-sm text-muted-foreground">
-                {t("indexer.distributionByKind")}
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            {stats.messages_by_kind.map((kind) => {
-              const Icon = kindIcons[kind.kind_name] || MessageSquare;
-              const colorClass = kindColors[kind.kind_name] || "text-gray-500 bg-gray-500/10";
-              const percentage = stats.total_messages > 0 
-                ? ((kind.count / stats.total_messages) * 100).toFixed(1)
-                : "0";
-              
-              return (
-                <div key={kind.kind} className="flex items-center gap-3">
-                  <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center shrink-0", colorClass)}>
-                    <Icon className="w-4.5 h-4.5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium text-foreground">{kind.kind_name}</span>
-                      <span className="text-sm font-tabular text-foreground">{kind.count.toLocaleString()}</span>
-                    </div>
-                    <div className="h-2 bg-muted rounded-full overflow-hidden">
-                      <div 
-                        className={cn("h-full rounded-full transition-all", colorClass.split(" ")[0].replace("text-", "bg-"))}
-                        style={{ width: `${percentage}%` }}
-                      />
-                    </div>
-                  </div>
-                  <span className="text-xs text-muted-foreground w-12 text-right">{percentage}%</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Carrier Types - Pie Chart */}
-        <div className="bg-card border border-border rounded-xl p-6">
-          <div className="flex items-center gap-3 mb-5">
-            <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-              <Box className="w-5 h-5 text-blue-500" />
-            </div>
-            <div>
-              <h2 className="font-semibold text-foreground">{t("indexer.carrierTypes")}</h2>
-              <p className="text-sm text-muted-foreground">
-                {t("indexer.howEmbedded")}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-6">
-            {/* Pie Chart */}
-            <div className="w-40 h-40 shrink-0">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={stats.messages_by_carrier.map((c) => ({
-                      name: c.carrier_name,
-                      value: c.count,
-                    }))}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={40}
-                    outerRadius={65}
-                    paddingAngle={2}
-                    dataKey="value"
-                  >
-                    {stats.messages_by_carrier.map((carrier, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={carrierChartColors[carrier.carrier_name] || "#6b7280"}
-                        stroke="transparent"
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px",
-                      fontSize: "12px",
-                    }}
-                    formatter={(value) => [(value as number).toLocaleString(), "Count"]}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Legend */}
-            <div className="flex-1 space-y-2">
-              {stats.messages_by_carrier.map((carrier) => {
-                const Icon = carrierIcons[carrier.carrier_name] || Box;
-                const colorClass = carrierColors[carrier.carrier_name] || "text-gray-500 bg-gray-500/10";
-                const percentage = stats.total_messages > 0 
-                  ? ((carrier.count / stats.total_messages) * 100).toFixed(1)
-                  : "0";
-                
-                return (
-                  <div key={carrier.carrier} className="flex items-center gap-2">
-                    <div 
-                      className="w-2.5 h-2.5 rounded-full shrink-0"
-                      style={{ backgroundColor: carrierChartColors[carrier.carrier_name] || "#6b7280" }}
-                    />
-                    <div className={cn("w-6 h-6 rounded flex items-center justify-center shrink-0", colorClass)}>
-                      <Icon className="w-3 h-3" />
-                    </div>
-                    <span className="text-xs text-foreground flex-1">{carrier.carrier_name}</span>
-                    <span className="text-xs font-tabular text-foreground">{carrier.count.toLocaleString()}</span>
-                    <span className="text-[10px] text-muted-foreground w-10 text-right">{percentage}%</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Messages Over Time & Anchor Resolution - Side by Side */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <MessagesOverTimeChart />
-        <AnchorStatsChart />
-      </div>
+    <div className="grid grid-cols-4 gap-4">
+      <StatCard
+        icon={MessageSquare}
+        label={t("indexer.totalMessages")}
+        value={stats.total_messages.toLocaleString()}
+        color="cyan"
+      />
+      <StatCard
+        icon={Blocks}
+        label={t("indexer.blocksWithMessages")}
+        value={stats.total_blocks_with_messages.toLocaleString()}
+        color="orange"
+      />
+      <StatCard
+        icon={Clock}
+        label={t("indexer.lastIndexedBlock")}
+        value={stats.last_indexed_block?.toLocaleString() || "-"}
+        color="purple"
+      />
+      <StatCard
+        icon={Zap}
+        label={t("indexer.recentBlocks")}
+        value={stats.recent_messages_24h.toLocaleString()}
+        color="emerald"
+      />
     </div>
   );
 }
 
-function StatCard({
-  icon,
-  label,
-  value,
-  color,
+// ============================
+// Message Types Card Component
+// ============================
+function MessageTypesCard({
+  stats,
+  t,
 }: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  color: "cyan" | "orange" | "purple" | "green";
+  stats: IndexerStats | undefined;
+  t: TFunction;
 }) {
-  const colorClasses = {
-    cyan: "bg-cyan-500/10 text-cyan-500",
-    orange: "bg-orange-500/10 text-orange-500",
-    purple: "bg-purple-500/10 text-purple-500",
-    green: "bg-green-500/10 text-green-500",
-  };
+  if (!stats) {
+    return (
+      <Section>
+        <div className="h-64 flex items-center justify-center">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        </div>
+      </Section>
+    );
+  }
 
   return (
-    <div className="bg-card border border-border rounded-xl p-4">
-      <div className="flex items-center gap-2 mb-2">
-        <div
-          className={cn(
-            "w-8 h-8 rounded-lg flex items-center justify-center",
-            colorClasses[color]
-          )}
-        >
-          {icon}
+    <Section>
+      <SectionHeader
+        icon={TrendingUp}
+        iconColor="orange"
+        title={t("indexer.messageTypes")}
+        subtitle={t("indexer.distributionByKind")}
+      />
+
+      <div className="space-y-3">
+        {stats.messages_by_kind.map((kind) => {
+          const Icon = kindIcons[kind.kind_name] || MessageSquare;
+          const colorClass = kindColors[kind.kind_name] || "text-gray-500 bg-gray-500/10";
+          const percentage = stats.total_messages > 0 
+            ? ((kind.count / stats.total_messages) * 100).toFixed(1)
+            : "0";
+          
+          return (
+            <div key={kind.kind} className="flex items-center gap-3">
+              <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center shrink-0", colorClass)}>
+                <Icon className="w-4 h-4" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-medium text-foreground">{kind.kind_name}</span>
+                  <span className="text-sm font-tabular text-foreground">{kind.count.toLocaleString()}</span>
+                </div>
+                <div className="h-2 bg-muted rounded-full overflow-hidden">
+                  <div 
+                    className={cn("h-full rounded-full transition-all", colorClass.split(" ")[0].replace("text-", "bg-"))}
+                    style={{ width: `${percentage}%` }}
+                  />
+                </div>
+              </div>
+              <span className="text-xs text-muted-foreground w-12 text-right">{percentage}%</span>
+            </div>
+          );
+        })}
+      </div>
+    </Section>
+  );
+}
+
+// ============================
+// Carrier Types Card Component
+// ============================
+function CarrierTypesCard({
+  stats,
+  t,
+}: {
+  stats: IndexerStats | undefined;
+  t: TFunction;
+}) {
+  if (!stats) {
+    return (
+      <Section>
+        <div className="h-64 flex items-center justify-center">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        </div>
+      </Section>
+    );
+  }
+
+  return (
+    <Section>
+      <SectionHeader
+        icon={Box}
+        iconColor="blue"
+        title={t("indexer.carrierTypes")}
+        subtitle={t("indexer.howEmbedded")}
+      />
+
+      {/* Pie Chart - Centered and larger */}
+      <div className="flex justify-center mb-4">
+        <div className="w-48 h-48">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={stats.messages_by_carrier.map((c) => ({
+                  name: c.carrier_name,
+                  value: c.count,
+                }))}
+                cx="50%"
+                cy="50%"
+                innerRadius={50}
+                outerRadius={80}
+                paddingAngle={2}
+                dataKey="value"
+              >
+                {stats.messages_by_carrier.map((carrier, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={carrierChartColors[carrier.carrier_name] || "#6b7280"}
+                    stroke="transparent"
+                  />
+                ))}
+              </Pie>
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "hsl(var(--card))",
+                  border: "1px solid hsl(var(--border))",
+                  borderRadius: "8px",
+                  fontSize: "12px",
+                }}
+                formatter={(value) => [(value as number).toLocaleString(), "Count"]}
+              />
+            </PieChart>
+          </ResponsiveContainer>
         </div>
       </div>
-      <p className="text-xs text-muted-foreground mb-1">{label}</p>
-      <p className="text-xl font-bold font-tabular text-foreground">{value}</p>
-    </div>
+
+      {/* Legend - Below chart in single column */}
+      <div className="space-y-2">
+        {stats.messages_by_carrier.map((carrier) => {
+          const Icon = carrierIcons[carrier.carrier_name] || Box;
+          const colorClass = carrierColors[carrier.carrier_name] || "text-gray-500 bg-gray-500/10";
+          const percentage = stats.total_messages > 0 
+            ? ((carrier.count / stats.total_messages) * 100).toFixed(1)
+            : "0";
+          
+          return (
+            <div key={carrier.carrier} className="flex items-center gap-2">
+              <div 
+                className="w-2.5 h-2.5 rounded-full shrink-0"
+                style={{ backgroundColor: carrierChartColors[carrier.carrier_name] || "#6b7280" }}
+              />
+              <div className={cn("w-6 h-6 rounded flex items-center justify-center shrink-0", colorClass)}>
+                <Icon className="w-3 h-3" />
+              </div>
+              <span className="text-sm text-foreground flex-1">{carrier.carrier_name}</span>
+              <span className="text-sm font-tabular text-foreground">{carrier.count.toLocaleString()}</span>
+              <span className="text-xs text-muted-foreground w-14 text-right">{percentage}%</span>
+            </div>
+          );
+        })}
+      </div>
+    </Section>
   );
 }

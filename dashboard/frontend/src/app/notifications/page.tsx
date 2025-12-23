@@ -21,6 +21,9 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+// Import DS components
+import { PageHeader, ActionButton } from "@/components/ds";
 import {
   Notification,
   markNotificationAsRead,
@@ -226,66 +229,47 @@ export default function NotificationsPage() {
     filters.type !== "all" || filters.severity !== "all" || filters.read !== "all";
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-primary/10">
-            <Bell className="w-6 h-6 text-primary" />
+      <PageHeader
+        icon={Bell}
+        iconColor="yellow"
+        title={t("notifications.history", "Notification History")}
+        subtitle={t("notifications.historyDesc", "View and manage all your notifications")}
+        actions={
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={cn(
+                "px-3 py-2 text-sm font-medium rounded-lg flex items-center gap-2 transition-colors",
+                showFilters || hasActiveFilters
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted hover:bg-muted/80 text-foreground"
+              )}
+            >
+              <Filter className="w-4 h-4" />
+              {t("common.filters", "Filters")}
+              {hasActiveFilters && (
+                <span className="w-2 h-2 rounded-full bg-white" />
+              )}
+            </button>
+            <ActionButton
+              variant="secondary"
+              loading={markAllReadMutation.isPending}
+              onClick={() => markAllReadMutation.mutate()}
+              icon={CheckCheck}
+              label={t("notifications.markAllRead", "Mark all read")}
+            />
+            <ActionButton
+              variant="destructive"
+              loading={clearReadMutation.isPending}
+              onClick={() => clearReadMutation.mutate()}
+              icon={Trash2}
+              label={t("notifications.clearRead", "Clear read")}
+            />
           </div>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">
-              {t("notifications.history", "Notification History")}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {t("notifications.historyDesc", "View and manage all your notifications")}
-            </p>
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className={cn(
-              "px-3 py-2 text-sm font-medium rounded-lg flex items-center gap-2 transition-colors",
-              showFilters || hasActiveFilters
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted hover:bg-muted/80 text-foreground"
-            )}
-          >
-            <Filter className="w-4 h-4" />
-            {t("common.filters", "Filters")}
-            {hasActiveFilters && (
-              <span className="w-2 h-2 rounded-full bg-white" />
-            )}
-          </button>
-          <button
-            onClick={() => markAllReadMutation.mutate()}
-            disabled={markAllReadMutation.isPending}
-            className="px-3 py-2 text-sm font-medium bg-muted hover:bg-muted/80 rounded-lg flex items-center gap-2 transition-colors"
-          >
-            {markAllReadMutation.isPending ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <CheckCheck className="w-4 h-4" />
-            )}
-            {t("notifications.markAllRead", "Mark all read")}
-          </button>
-          <button
-            onClick={() => clearReadMutation.mutate()}
-            disabled={clearReadMutation.isPending}
-            className="px-3 py-2 text-sm font-medium bg-muted hover:bg-muted/80 rounded-lg flex items-center gap-2 transition-colors text-destructive"
-          >
-            {clearReadMutation.isPending ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Trash2 className="w-4 h-4" />
-            )}
-            {t("notifications.clearRead", "Clear read")}
-          </button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Filters Panel */}
       {showFilters && (

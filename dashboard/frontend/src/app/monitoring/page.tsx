@@ -6,6 +6,9 @@ import { Activity, Loader2 } from "lucide-react";
 import { fetchContainers } from "@/lib/api";
 import { IframeView } from "@/components/iframe-view";
 
+// Import DS components
+import { PageHeader, Section } from "@/components/ds";
+
 export default function MonitoringPage() {
   const { t } = useTranslation();
 
@@ -33,16 +36,15 @@ export default function MonitoringPage() {
     return (
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-3">
-            <Activity className="w-7 h-7 text-green-500" />
-            {t("monitoring.title")}
-          </h1>
-          <p className="text-muted-foreground">{t("monitoring.notRunning")}</p>
-        </div>
+        <PageHeader
+          icon={Activity}
+          iconColor="emerald"
+          title={t("monitoring.title")}
+          subtitle={t("monitoring.notRunning")}
+        />
 
         {/* Not running message */}
-        <div className="bg-card border border-border rounded-xl p-8 text-center">
+        <Section className="p-8 text-center">
           <Activity className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-foreground mb-2">
             {t("monitoring.notRunningMsg")}
@@ -53,7 +55,7 @@ export default function MonitoringPage() {
               docker compose up -d monitoring-netdata
             </code>
           </p>
-        </div>
+        </Section>
       </div>
     );
   }
@@ -61,9 +63,3 @@ export default function MonitoringPage() {
   // Use the IframeView component with browser-like layout
   return <IframeView appId="monitoring-netdata" />;
 }
-
-
-
-
-
-

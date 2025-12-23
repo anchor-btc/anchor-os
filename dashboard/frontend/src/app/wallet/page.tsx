@@ -49,12 +49,23 @@ import {
 import { cn } from "@/lib/utils";
 import { QRCodeSVG } from "qrcode.react";
 
-type Tab = "transactions" | "utxos" | "assets" | "locks" | "receive";
+// Import DS components
+import {
+  PageHeader,
+  Section,
+  SectionHeader,
+  Grid,
+  Tabs,
+  Tab,
+  ActionButton,
+} from "@/components/ds";
+
+type TabId = "transactions" | "utxos" | "assets" | "locks" | "receive";
 const UTXOS_PER_PAGE = 50;
 
 export default function WalletPage() {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<Tab>("transactions");
+  const [activeTab, setActiveTab] = useState<TabId>("transactions");
   const [copied, setCopied] = useState(false);
   const [utxoPage, setUtxoPage] = useState(0);
   const queryClient = useQueryClient();
@@ -141,10 +152,9 @@ export default function WalletPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Balance is already in BTC
   const totalBtc = balance ? balance.total : 0;
 
-  const tabLabels: Record<Tab, string> = {
+  const tabLabels: Record<TabId, string> = {
     transactions: t("wallet.transactions"),
     utxos: t("wallet.utxos"),
     assets: t("wallet.assets") || "Assets",
@@ -155,10 +165,12 @@ export default function WalletPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">{t("wallet.title")}</h1>
-        <p className="text-muted-foreground">{t("wallet.subtitle")}</p>
-      </div>
+      <PageHeader
+        icon={Wallet}
+        iconColor="purple"
+        title={t("wallet.title")}
+        subtitle={t("wallet.subtitle")}
+      />
 
       {/* Balance Card */}
       <div className="bg-gradient-to-br from-primary/10 via-card to-card border border-primary/20 rounded-xl p-8">
@@ -206,33 +218,24 @@ export default function WalletPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-1 p-1 bg-muted rounded-lg w-fit">
-        {(["transactions", "utxos", "assets", "locks", "receive"] as Tab[]).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={cn(
-              "px-4 py-2 text-sm font-medium rounded-md transition-colors flex items-center gap-2",
-              activeTab === tab
-                ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            {tab === "assets" && <Gem className="w-4 h-4" />}
-            {tab === "locks" && <Lock className="w-4 h-4" />}
-            {tabLabels[tab]}
-            {tab === "locks" && lockSettings && lockSettings.total_locked > 0 && (
-              <span className="ml-1 px-1.5 py-0.5 text-xs bg-primary/20 text-primary rounded-full">
-                {lockSettings.total_locked}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
+      <Tabs value={activeTab} onChange={(v) => setActiveTab(v as TabId)}>
+        <Tab value="transactions">{tabLabels.transactions}</Tab>
+        <Tab value="utxos">{tabLabels.utxos}</Tab>
+        <Tab value="assets" icon={Gem}>{tabLabels.assets}</Tab>
+        <Tab value="locks" icon={Lock}>
+          {tabLabels.locks}
+          {lockSettings && lockSettings.total_locked > 0 && (
+            <span className="ml-1 px-1.5 py-0.5 text-xs bg-primary/20 text-primary rounded-full">
+              {lockSettings.total_locked}
+            </span>
+          )}
+        </Tab>
+        <Tab value="receive">{tabLabels.receive}</Tab>
+      </Tabs>
 
       {/* Tab Content */}
       {activeTab === "transactions" && (
-        <div className="bg-card border border-border rounded-xl overflow-hidden">
+        <Section className="p-0 overflow-hidden">
           <div className="p-4 border-b border-border">
             <h2 className="font-semibold text-foreground">{t("wallet.transactionHistory")}</h2>
           </div>
@@ -251,7 +254,7 @@ export default function WalletPage() {
               ))}
             </div>
           )}
-        </div>
+        </Section>
       )}
 
       {activeTab === "utxos" && (
@@ -285,25 +288,24 @@ export default function WalletPage() {
       )}
 
       {activeTab === "receive" && (
-        <div className="bg-card border border-border rounded-xl p-6">
-          <h2 className="font-semibold text-foreground mb-4">{t("wallet.receiveBitcoin")}</h2>
+        <Section>
+          <SectionHeader
+            icon={QrCode}
+            iconColor="primary"
+            title={t("wallet.receiveBitcoin")}
+          />
 
           {!addressMutation.data ? (
             <div className="text-center py-8">
               <QrCode className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-muted-foreground mb-4">{t("wallet.generateToReceive")}</p>
-              <button
+              <ActionButton
+                variant="primary"
+                loading={addressMutation.isPending}
                 onClick={handleGenerateAddress}
-                disabled={addressMutation.isPending}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium transition-colors hover:bg-primary/90 disabled:opacity-50"
-              >
-                {addressMutation.isPending ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <RefreshCw className="w-4 h-4" />
-                )}
-                {t("wallet.generateAddress")}
-              </button>
+                icon={RefreshCw}
+                label={t("wallet.generateAddress")}
+              />
             </div>
           ) : (
             <div className="flex flex-col items-center gap-6">
@@ -345,7 +347,7 @@ export default function WalletPage() {
               </button>
             </div>
           )}
-        </div>
+        </Section>
       )}
     </div>
   );
@@ -480,7 +482,7 @@ function UtxosSection({
   const endItem = Math.min((page + 1) * UTXOS_PER_PAGE, totalCount);
 
   return (
-    <div className="bg-card border border-border rounded-xl overflow-hidden">
+    <Section className="p-0 overflow-hidden">
       <div className="p-4 border-b border-border flex items-center justify-between">
         <h2 className="font-semibold text-foreground">{t("wallet.unspentOutputs")}</h2>
         <span className="text-sm text-muted-foreground">
@@ -537,7 +539,7 @@ function UtxosSection({
           </div>
         </>
       )}
-    </div>
+    </Section>
   );
 }
 
@@ -630,47 +632,47 @@ function AssetsSection({
 }) {
   if (isLoading) {
     return (
-      <div className="bg-card border border-border rounded-xl p-8 flex items-center justify-center">
+      <Section className="p-8 flex items-center justify-center">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-      </div>
+      </Section>
     );
   }
 
   if (!assets || (assets.domains.length === 0 && assets.tokens.length === 0)) {
     return (
-      <div className="bg-card border border-border rounded-xl p-8 text-center">
+      <Section className="p-8 text-center">
         <Gem className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
         <p className="text-muted-foreground">No assets found in your wallet.</p>
         <p className="text-sm text-muted-foreground mt-2">
           Register domains or mint tokens to see them here.
         </p>
-      </div>
+      </Section>
     );
   }
 
   return (
     <div className="space-y-6">
       {/* Summary */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="bg-card border border-border rounded-xl p-4">
+      <Grid cols={{ default: 2 }} gap="md">
+        <Section>
           <div className="flex items-center gap-3 mb-2">
             <Globe className="w-5 h-5 text-primary" />
             <span className="text-sm text-muted-foreground">Domains</span>
           </div>
           <p className="text-2xl font-bold text-foreground">{assets.total_domains}</p>
-        </div>
-        <div className="bg-card border border-border rounded-xl p-4">
+        </Section>
+        <Section>
           <div className="flex items-center gap-3 mb-2">
             <Gem className="w-5 h-5 text-primary" />
             <span className="text-sm text-muted-foreground">Token Types</span>
           </div>
           <p className="text-2xl font-bold text-foreground">{assets.total_token_types}</p>
-        </div>
-      </div>
+        </Section>
+      </Grid>
 
       {/* Domains */}
       {assets.domains.length > 0 && (
-        <div className="bg-card border border-border rounded-xl overflow-hidden">
+        <Section className="p-0 overflow-hidden">
           <div className="p-4 border-b border-border">
             <h2 className="font-semibold text-foreground flex items-center gap-2">
               <Globe className="w-5 h-5" />
@@ -712,12 +714,12 @@ function AssetsSection({
               </div>
             ))}
           </div>
-        </div>
+        </Section>
       )}
 
       {/* Tokens */}
       {assets.tokens.length > 0 && (
-        <div className="bg-card border border-border rounded-xl overflow-hidden">
+        <Section className="p-0 overflow-hidden">
           <div className="p-4 border-b border-border">
             <h2 className="font-semibold text-foreground flex items-center gap-2">
               <Gem className="w-5 h-5" />
@@ -759,7 +761,7 @@ function AssetsSection({
               </div>
             ))}
           </div>
-        </div>
+        </Section>
       )}
     </div>
   );
@@ -787,16 +789,16 @@ function LocksSection({
 }) {
   if (isLoading) {
     return (
-      <div className="bg-card border border-border rounded-xl p-8 flex items-center justify-center">
+      <Section className="p-8 flex items-center justify-center">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-      </div>
+      </Section>
     );
   }
 
   return (
     <div className="space-y-6">
       {/* Lock Settings Card */}
-      <div className="bg-card border border-border rounded-xl p-6">
+      <Section>
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -809,18 +811,13 @@ function LocksSection({
               </p>
             </div>
           </div>
-          <button
+          <ActionButton
+            variant="primary"
+            loading={isSyncing}
             onClick={onSync}
-            disabled={isSyncing}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium transition-colors hover:bg-primary/90 disabled:opacity-50"
-          >
-            {isSyncing ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <RotateCw className="w-4 h-4" />
-            )}
-            Sync Locks
-          </button>
+            icon={RotateCw}
+            label="Sync Locks"
+          />
         </div>
 
         <div className="grid grid-cols-3 gap-6 pt-6 border-t border-border">
@@ -853,10 +850,10 @@ function LocksSection({
             </p>
           </div>
         </div>
-      </div>
+      </Section>
 
       {/* Locked UTXOs List */}
-      <div className="bg-card border border-border rounded-xl overflow-hidden">
+      <Section className="p-0 overflow-hidden">
         <div className="p-4 border-b border-border flex items-center justify-between">
           <h2 className="font-semibold text-foreground flex items-center gap-2">
             <Lock className="w-5 h-5" />
@@ -915,7 +912,7 @@ function LocksSection({
             ))}
           </div>
         )}
-      </div>
+      </Section>
     </div>
   );
 }

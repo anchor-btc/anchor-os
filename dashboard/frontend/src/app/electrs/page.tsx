@@ -19,6 +19,9 @@ import { cn } from "@/lib/utils";
 import { fetchContainers, fetchContainerLogs } from "@/lib/api";
 import { useState } from "react";
 
+// Import DS components
+import { PageHeader, RefreshButton } from "@/components/ds";
+
 export default function ElectrsPage() {
   const { t } = useTranslation();
   const [showFullLogs, setShowFullLogs] = useState(false);
@@ -67,39 +70,23 @@ export default function ElectrsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-3">
-            <Zap className="w-7 h-7 text-yellow-500" />
-            {t("electrs.title")}
-          </h1>
-          <p className="text-muted-foreground">
-            {isRunning
-              ? t("electrs.subtitle")
-              : t("electrs.notRunning")}
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          {isRunning && (
-            <span className="flex items-center gap-2 px-3 py-1.5 bg-success/10 text-success rounded-lg text-sm">
-              <Activity className="w-4 h-4 animate-pulse" />
-              Live
-            </span>
-          )}
-          <button
-            onClick={() => refetch()}
-            disabled={isRefetching}
-            className="p-2 bg-muted hover:bg-muted/80 rounded-lg transition-colors"
-          >
-            <RefreshCw
-              className={cn(
-                "w-4 h-4 text-muted-foreground",
-                isRefetching && "animate-spin"
-              )}
-            />
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        icon={Zap}
+        iconColor="yellow"
+        title={t("electrs.title")}
+        subtitle={isRunning ? t("electrs.subtitle") : t("electrs.notRunning")}
+        actions={
+          <div className="flex items-center gap-3">
+            {isRunning && (
+              <span className="flex items-center gap-2 px-3 py-1.5 bg-success/10 text-success rounded-lg text-sm">
+                <Activity className="w-4 h-4 animate-pulse" />
+                Live
+              </span>
+            )}
+            <RefreshButton loading={isRefetching} onClick={() => refetch()} />
+          </div>
+        }
+      />
 
       {/* Status Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

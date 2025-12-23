@@ -22,6 +22,17 @@ import { isRequiredService } from "@/lib/service-rules";
 import { Loader2, AppWindow, Search, Network, Play, Square, Cpu, Anchor, LayoutGrid, List } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// Import DS components
+import {
+  PageHeader,
+  Section,
+  SectionHeader,
+  Grid,
+  ActionButton,
+  Tabs,
+  Tab,
+} from "@/components/ds";
+
 type ViewMode = "grid" | "list";
 
 const VIEW_MODE_STORAGE_KEY = "anchor-apps-view-mode";
@@ -43,9 +54,11 @@ export default function AppsPage() {
   }, []);
 
   // Save view mode to localStorage when it changes
-  const handleViewModeChange = (mode: ViewMode) => {
-    setViewMode(mode);
-    localStorage.setItem(VIEW_MODE_STORAGE_KEY, mode);
+  const handleViewModeChange = (mode: string) => {
+    if (mode === "grid" || mode === "list") {
+      setViewMode(mode);
+      localStorage.setItem(VIEW_MODE_STORAGE_KEY, mode);
+    }
   };
 
   const {
@@ -76,16 +89,14 @@ export default function AppsPage() {
   const services = servicesData?.services || [];
 
   // Helper to get install status for an app
-  // App IDs in apps.ts are already the service IDs (e.g., "app-domains", "core-bitcoin")
   const getInstallStatus = (appId: string): ServiceInstallStatus => {
     if (installingService === appId) return "installing";
     if (installedServices.includes(appId)) return "installed";
     
-    // Check if service exists in available services (meaning it can be installed)
     const serviceExists = services.find(s => s.id === appId);
     if (serviceExists) return "not_installed";
     
-    return "installed"; // Default for unknown services
+    return "installed";
   };
 
   // Install service mutation
@@ -137,7 +148,6 @@ export default function AppsPage() {
   // Start all mutation
   const startAllMutation = useMutation({
     mutationFn: async () => {
-      // Start containers sequentially to avoid overwhelming Docker
       for (const name of stoppedContainers) {
         try {
           await startContainer(name);
@@ -152,7 +162,6 @@ export default function AppsPage() {
   // Stop all mutation
   const stopAllMutation = useMutation({
     mutationFn: async () => {
-      // Stop containers sequentially
       for (const container of runningContainers) {
         try {
           await stopContainer(container.name);
@@ -180,84 +189,55 @@ export default function AppsPage() {
 
   return (
     <>
-      <div className="space-y-10">
+      <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">{t("apps.title")}</h1>
-            <p className="text-muted-foreground mt-1">
-              {t("apps.subtitle")}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            {/* View Mode Toggle */}
-            <div className="flex items-center p-1 bg-muted rounded-lg">
-              <button
-                onClick={() => handleViewModeChange("grid")}
-                className={cn(
-                  "p-2 rounded-md transition-colors",
-                  viewMode === "grid"
-                    ? "bg-card text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-                title={t("apps.gridView", "Grid View")}
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => handleViewModeChange("list")}
-                className={cn(
-                  "p-2 rounded-md transition-colors",
-                  viewMode === "list"
-                    ? "bg-card text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-                title={t("apps.listView", "List View")}
-              >
-                <List className="w-4 h-4" />
-              </button>
+        <PageHeader
+          icon={AppWindow}
+          iconColor="purple"
+          title={t("apps.title")}
+          subtitle={t("apps.subtitle")}
+          actions={
+            <div className="flex items-center gap-2">
+              {/* View Mode Toggle */}
+              <Tabs value={viewMode} onChange={handleViewModeChange}>
+                <Tab value="grid" icon={LayoutGrid}>
+                  {t("apps.gridView", "Grid")}
+                </Tab>
+                <Tab value="list" icon={List}>
+                  {t("apps.listView", "List")}
+                </Tab>
+              </Tabs>
+
+              <div className="w-px h-6 bg-border" />
+
+              <ActionButton
+                variant="start"
+                loading={startAllMutation.isPending}
+                onClick={() => startAllMutation.mutate()}
+                disabled={startAllMutation.isPending || stoppedContainers.length === 0}
+                label={t("apps.startAll")}
+              />
+              <ActionButton
+                variant="stop"
+                loading={stopAllMutation.isPending}
+                onClick={() => stopAllMutation.mutate()}
+                disabled={stopAllMutation.isPending || runningContainers.length === 0}
+                label={t("apps.stopAll")}
+              />
             </div>
-
-            <div className="w-px h-6 bg-border" />
-
-            <button
-              onClick={() => startAllMutation.mutate()}
-              disabled={startAllMutation.isPending || stoppedContainers.length === 0}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-success/10 hover:bg-success/20 text-success rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {startAllMutation.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Play className="w-4 h-4" />
-              )}
-              {t("apps.startAll")}
-            </button>
-            <button
-              onClick={() => stopAllMutation.mutate()}
-              disabled={stopAllMutation.isPending || runningContainers.length === 0}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-destructive/10 hover:bg-destructive/20 text-destructive rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {stopAllMutation.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Square className="w-4 h-4" />
-              )}
-              {t("apps.stopAll")}
-            </button>
-          </div>
-        </div>
+          }
+        />
 
         {/* Apps */}
         <section>
-          <div className="flex items-center gap-2 mb-4">
-            <AppWindow className="w-5 h-5 text-primary" />
-            <h2 className="text-xl font-semibold text-foreground">{t("sidebar.apps")}</h2>
-            <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
-              {t("apps.bitcoinApps")}
-            </span>
-          </div>
+          <SectionHeader
+            icon={AppWindow}
+            iconColor="primary"
+            title={t("sidebar.apps")}
+            subtitle={t("apps.bitcoinApps")}
+          />
           {viewMode === "grid" ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <Grid cols={{ default: 1, md: 2, lg: 3 }} gap="md" className="mt-4">
               {appsList.map((app) => (
                 <AppCard
                   key={app.id}
@@ -272,9 +252,9 @@ export default function AppsPage() {
                   isRequired={isRequiredService(app.id, installedServices)}
                 />
               ))}
-            </div>
+            </Grid>
           ) : (
-            <div className="bg-card border border-border rounded-xl overflow-hidden">
+            <Section className="mt-4 p-0 overflow-hidden">
               {appsList.map((app) => (
                 <AppListItem
                   key={app.id}
@@ -289,22 +269,21 @@ export default function AppsPage() {
                   isRequired={isRequiredService(app.id, installedServices)}
                 />
               ))}
-            </div>
+            </Section>
           )}
         </section>
 
         {/* Explorers */}
         {explorerApps.length > 0 && (
           <section>
-            <div className="flex items-center gap-2 mb-4">
-              <Search className="w-5 h-5 text-muted-foreground" />
-              <h2 className="text-xl font-semibold text-foreground">{t("sidebar.explorers")}</h2>
-              <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
-                {t("apps.blockchainExplorers")}
-              </span>
-            </div>
+            <SectionHeader
+              icon={Search}
+              iconColor="blue"
+              title={t("sidebar.explorers")}
+              subtitle={t("apps.blockchainExplorers")}
+            />
             {viewMode === "grid" ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <Grid cols={{ default: 1, md: 2, lg: 3 }} gap="md" className="mt-4">
                 {explorerApps.map((app) => (
                   <AppCard
                     key={app.id}
@@ -319,9 +298,9 @@ export default function AppsPage() {
                     isRequired={isRequiredService(app.id, installedServices)}
                   />
                 ))}
-              </div>
+              </Grid>
             ) : (
-              <div className="bg-card border border-border rounded-xl overflow-hidden">
+              <Section className="mt-4 p-0 overflow-hidden">
                 {explorerApps.map((app) => (
                   <AppListItem
                     key={app.id}
@@ -336,7 +315,7 @@ export default function AppsPage() {
                     isRequired={isRequiredService(app.id, installedServices)}
                   />
                 ))}
-              </div>
+              </Section>
             )}
           </section>
         )}
@@ -344,15 +323,14 @@ export default function AppsPage() {
         {/* Kernel */}
         {kernelApps.length > 0 && (
           <section>
-            <div className="flex items-center gap-2 mb-4">
-              <Cpu className="w-5 h-5 text-muted-foreground" />
-              <h2 className="text-xl font-semibold text-foreground">{t("sidebar.kernel")}</h2>
-              <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
-                {t("apps.coreInfrastructure")}
-              </span>
-            </div>
+            <SectionHeader
+              icon={Cpu}
+              iconColor="orange"
+              title={t("sidebar.kernel")}
+              subtitle={t("apps.coreInfrastructure")}
+            />
             {viewMode === "grid" ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <Grid cols={{ default: 1, md: 2, lg: 3 }} gap="md" className="mt-4">
                 {kernelApps.map((app) => (
                   <AppCard
                     key={app.id}
@@ -367,9 +345,9 @@ export default function AppsPage() {
                     isRequired={isRequiredService(app.id, installedServices)}
                   />
                 ))}
-              </div>
+              </Grid>
             ) : (
-              <div className="bg-card border border-border rounded-xl overflow-hidden">
+              <Section className="mt-4 p-0 overflow-hidden">
                 {kernelApps.map((app) => (
                   <AppListItem
                     key={app.id}
@@ -384,7 +362,7 @@ export default function AppsPage() {
                     isRequired={isRequiredService(app.id, installedServices)}
                   />
                 ))}
-              </div>
+              </Section>
             )}
           </section>
         )}
@@ -392,15 +370,14 @@ export default function AppsPage() {
         {/* Network */}
         {networkApps.length > 0 && (
           <section>
-            <div className="flex items-center gap-2 mb-4">
-              <Network className="w-5 h-5 text-muted-foreground" />
-              <h2 className="text-xl font-semibold text-foreground">{t("sidebar.network")}</h2>
-              <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
-                {t("apps.tunnelsVpn")}
-              </span>
-            </div>
+            <SectionHeader
+              icon={Network}
+              iconColor="purple"
+              title={t("sidebar.network")}
+              subtitle={t("apps.tunnelsVpn")}
+            />
             {viewMode === "grid" ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <Grid cols={{ default: 1, md: 2, lg: 3 }} gap="md" className="mt-4">
                 {networkApps.map((app) => (
                   <AppCard
                     key={app.id}
@@ -415,9 +392,9 @@ export default function AppsPage() {
                     isRequired={isRequiredService(app.id, installedServices)}
                   />
                 ))}
-              </div>
+              </Grid>
             ) : (
-              <div className="bg-card border border-border rounded-xl overflow-hidden">
+              <Section className="mt-4 p-0 overflow-hidden">
                 {networkApps.map((app) => (
                   <AppListItem
                     key={app.id}
@@ -432,7 +409,7 @@ export default function AppsPage() {
                     isRequired={isRequiredService(app.id, installedServices)}
                   />
                 ))}
-              </div>
+              </Section>
             )}
           </section>
         )}
@@ -440,15 +417,14 @@ export default function AppsPage() {
         {/* Anchor Protocol */}
         {anchorApps.length > 0 && (
           <section>
-            <div className="flex items-center gap-2 mb-4">
-              <Anchor className="w-5 h-5 text-muted-foreground" />
-              <h2 className="text-xl font-semibold text-foreground">{t("sidebar.protocol")}</h2>
-              <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
-                {t("apps.anchorProtocol")}
-              </span>
-            </div>
+            <SectionHeader
+              icon={Anchor}
+              iconColor="cyan"
+              title={t("sidebar.protocol")}
+              subtitle={t("apps.anchorProtocol")}
+            />
             {viewMode === "grid" ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <Grid cols={{ default: 1, md: 2, lg: 3 }} gap="md" className="mt-4">
                 {anchorApps.map((app) => (
                   <AppCard
                     key={app.id}
@@ -463,9 +439,9 @@ export default function AppsPage() {
                     isRequired={isRequiredService(app.id, installedServices)}
                   />
                 ))}
-              </div>
+              </Grid>
             ) : (
-              <div className="bg-card border border-border rounded-xl overflow-hidden">
+              <Section className="mt-4 p-0 overflow-hidden">
                 {anchorApps.map((app) => (
                   <AppListItem
                     key={app.id}
@@ -480,20 +456,19 @@ export default function AppsPage() {
                     isRequired={isRequiredService(app.id, installedServices)}
                   />
                 ))}
-              </div>
+              </Section>
             )}
           </section>
         )}
-
       </div>
 
-      {/* Logs Modal (with tabs for multiple containers) */}
+      {/* Logs Modal */}
       <MultiLogsModal
         containerNames={logsContainers}
         onClose={() => setLogsContainers(null)}
       />
 
-      {/* Terminal Modal (with tabs for multiple containers) */}
+      {/* Terminal Modal */}
       <MultiTerminalModal
         containerNames={terminalContainers}
         onClose={() => setTerminalContainers(null)}

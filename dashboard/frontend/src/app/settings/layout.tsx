@@ -13,6 +13,7 @@ import {
   Database,
   Settings,
 } from "lucide-react";
+import { PageHeader } from "@/components/ds";
 
 interface SettingsNavItem {
   href: string;
@@ -72,13 +73,13 @@ export default function SettingsLayout({
   const { t } = useTranslation();
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">
-          {t("settings.title")}
-        </h1>
-        <p className="text-muted-foreground mt-1">{t("settings.subtitle")}</p>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        icon={Settings}
+        iconColor="muted"
+        title={t("settings.title")}
+        subtitle={t("settings.subtitle")}
+      />
 
       <div className="flex gap-8">
         {/* Settings Navigation Sidebar */}

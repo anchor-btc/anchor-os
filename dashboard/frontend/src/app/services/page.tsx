@@ -13,16 +13,18 @@ import {
 import { ServiceCard } from "@/components/service-card";
 import {
   Loader2,
-  RefreshCw,
   Play,
   Square,
   Terminal,
   X,
   Filter,
-  ArrowLeft,
+  Server,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+
+// Import DS components
+import { PageHeader, RefreshButton, ActionButton } from "@/components/ds";
 
 type FilterType = "all" | "running" | "stopped";
 
@@ -88,37 +90,16 @@ export default function ServicesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link
-            href="/apps"
-            className="p-2 bg-muted hover:bg-muted/80 rounded-lg transition-colors"
-            title="Back to Apps"
-          >
-            <ArrowLeft className="w-4 h-4 text-muted-foreground" />
-          </Link>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Advanced Services</h1>
-            <p className="text-muted-foreground">
-              Manage individual Docker containers
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => refetch()}
-            disabled={isRefetching}
-            className="p-2 bg-muted hover:bg-muted/80 rounded-lg transition-colors"
-          >
-            <RefreshCw
-              className={cn(
-                "w-4 h-4 text-muted-foreground",
-                isRefetching && "animate-spin"
-              )}
-            />
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        icon={Server}
+        iconColor="blue"
+        title="Advanced Services"
+        subtitle="Manage individual Docker containers"
+        backHref="/apps"
+        actions={
+          <RefreshButton loading={isRefetching} onClick={() => refetch()} />
+        }
+      />
 
       {/* Stats and Actions */}
       <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-card border border-border rounded-xl">

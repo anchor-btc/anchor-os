@@ -38,6 +38,16 @@ import {
   TestnetConfig,
 } from "@/lib/api";
 
+// Import DS components
+import {
+  PageHeader,
+  Section,
+  SectionHeader,
+  Grid,
+  StatCard,
+  ActionButton,
+} from "@/components/ds";
+
 export default function TestnetPage() {
   const queryClient = useQueryClient();
   const [localConfig, setLocalConfig] = useState<TestnetConfig | null>(null);
@@ -148,89 +158,78 @@ export default function TestnetPage() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Testnet Generator</h1>
-          <p className="text-muted-foreground mt-1">
-            Generate ANCHOR transactions on regtest for testing
-          </p>
-        </div>
-        <div className="flex items-center gap-4">
-          <div
-            className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium",
-              isRunning
-                ? "bg-success/10 text-success"
-                : "bg-warning/10 text-warning"
-            )}
-          >
+      <PageHeader
+        icon={Zap}
+        iconColor="yellow"
+        title="Testnet Generator"
+        subtitle="Generate ANCHOR transactions on regtest for testing"
+        actions={
+          <div className="flex items-center gap-4">
             <div
               className={cn(
-                "w-2 h-2 rounded-full",
-                isRunning ? "bg-success animate-pulse" : "bg-warning"
+                "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium",
+                isRunning
+                  ? "bg-success/10 text-success"
+                  : "bg-warning/10 text-warning"
               )}
+            >
+              <div
+                className={cn(
+                  "w-2 h-2 rounded-full",
+                  isRunning ? "bg-success animate-pulse" : "bg-warning"
+                )}
+              />
+              {isRunning ? "Running" : "Paused"}
+            </div>
+            <ActionButton
+              variant={isRunning ? "stop" : "start"}
+              loading={pauseMutation.isPending || resumeMutation.isPending}
+              onClick={handleTogglePause}
+              label={isRunning ? "Pause" : "Resume"}
+              icon={isRunning ? Pause : Play}
             />
-            {isRunning ? "Running" : "Paused"}
           </div>
-          <button
-            onClick={handleTogglePause}
-            disabled={pauseMutation.isPending || resumeMutation.isPending}
-            className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors",
-              isRunning
-                ? "bg-warning/10 text-warning hover:bg-warning/20"
-                : "bg-success/10 text-success hover:bg-success/20"
-            )}
-          >
-            {pauseMutation.isPending || resumeMutation.isPending ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : isRunning ? (
-              <Pause className="w-4 h-4" />
-            ) : (
-              <Play className="w-4 h-4" />
-            )}
-            {isRunning ? "Pause" : "Resume"}
-          </button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatsCard
+      <Grid cols={{ default: 2, md: 4 }} gap="md">
+        <StatCard
           icon={Activity}
           label="Total Messages"
-          value={stats?.total_messages || 0}
+          value={stats?.total_messages?.toLocaleString() || "0"}
           color="blue"
         />
-        <StatsCard
+        <StatCard
           icon={Box}
           label="Total Blocks"
-          value={stats?.total_blocks || 0}
+          value={stats?.total_blocks?.toLocaleString() || "0"}
           color="orange"
         />
-        <StatsCard
+        <StatCard
           icon={Check}
           label="Successful"
-          value={stats?.success_count || 0}
+          value={stats?.success_count?.toLocaleString() || "0"}
           color="emerald"
         />
-        <StatsCard
+        <StatCard
           icon={X}
           label="Errors"
-          value={stats?.errors_count || 0}
+          value={stats?.errors_count?.toLocaleString() || "0"}
           color="red"
         />
-      </div>
+      </Grid>
 
       {/* Message Type Stats */}
-      <div className="bg-card border border-border rounded-xl p-6">
-        <div className="flex items-center gap-2 mb-6">
-          <Layers className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-semibold text-foreground">Message Statistics</h2>
-        </div>
-        <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-4">
+      <Section>
+        <SectionHeader
+          icon={Layers}
+          iconColor="primary"
+          title="Message Statistics"
+        />
+        <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-4 mt-4">
           <MessageStat icon={MessageSquare} label="Text" value={stats?.text_count || 0} color="blue" />
           <MessageStat icon={Palette} label="Pixel" value={stats?.pixel_count || 0} color="purple" />
           <MessageStat icon={Image} label="Image" value={stats?.image_count || 0} color="pink" />
@@ -241,18 +240,19 @@ export default function TestnetPage() {
           <MessageStat icon={Eye} label="Oracle" value={stats?.oracle_count || 0} color="violet" />
           <MessageStat icon={Sparkles} label="Prediction" value={stats?.prediction_count || 0} color="rose" />
         </div>
-      </div>
+      </Section>
 
       {/* Main Controls Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <Grid cols={{ default: 1, lg: 3 }} gap="lg">
         {/* Timing Controls */}
-        <div className="bg-card border border-border rounded-xl p-6">
-          <div className="flex items-center gap-2 mb-6">
-            <Timer className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-semibold text-foreground">Timing</h2>
-          </div>
+        <Section>
+          <SectionHeader
+            icon={Timer}
+            iconColor="primary"
+            title="Timing"
+          />
 
-          <div className="space-y-6">
+          <div className="space-y-6 mt-4">
             <SliderControl
               label="Min Interval"
               value={localConfig?.min_interval_secs || 3}
@@ -278,16 +278,17 @@ export default function TestnetPage() {
               onChange={(v) => handleConfigChange("blocks_per_cycle", v)}
             />
           </div>
-        </div>
+        </Section>
 
         {/* Message Types */}
-        <div className="bg-card border border-border rounded-xl p-6">
-          <div className="flex items-center gap-2 mb-6">
-            <Zap className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-semibold text-foreground">Message Types</h2>
-          </div>
+        <Section>
+          <SectionHeader
+            icon={Zap}
+            iconColor="primary"
+            title="Message Types"
+          />
 
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-2 mt-4">
             <TypeToggle
               icon={MessageSquare}
               label="Text"
@@ -352,21 +353,22 @@ export default function TestnetPage() {
               color="rose"
             />
           </div>
-        </div>
+        </Section>
 
         {/* Carrier Distribution */}
-        <div className="bg-card border border-border rounded-xl p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
-              <Box className="w-5 h-5 text-primary" />
-              <h2 className="text-lg font-semibold text-foreground">Carriers</h2>
-            </div>
+        <Section>
+          <div className="flex items-center justify-between">
+            <SectionHeader
+              icon={Box}
+              iconColor="primary"
+              title="Carriers"
+            />
             <span className="text-xs text-muted-foreground px-2 py-1 bg-muted rounded">
               weights normalized
             </span>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-4 mt-4">
             <CarrierBar
               label="OP_RETURN"
               emoji="📦"
@@ -408,8 +410,8 @@ export default function TestnetPage() {
               color="pink"
             />
           </div>
-        </div>
-      </div>
+        </Section>
+      </Grid>
 
       {/* Apply Button */}
       <div className="flex items-center justify-end gap-4">
@@ -425,73 +427,17 @@ export default function TestnetPage() {
             <span className="text-sm font-medium">Failed to save</span>
           </div>
         )}
-        <button
+        <ActionButton
+          variant="primary"
+          loading={updateMutation.isPending}
           onClick={handleApplyConfig}
-          disabled={updateMutation.isPending}
-          className={cn(
-            "flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all disabled:opacity-50",
-            saveStatus === "success"
-              ? "bg-success text-success-foreground"
-              : saveStatus === "error"
-              ? "bg-error text-error-foreground"
-              : "bg-primary text-primary-foreground hover:bg-primary/90"
-          )}
-        >
-          {updateMutation.isPending ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : saveStatus === "success" ? (
-            <Check className="w-4 h-4" />
-          ) : saveStatus === "error" ? (
-            <X className="w-4 h-4" />
-          ) : (
-            <RefreshCw className="w-4 h-4" />
-          )}
-          {updateMutation.isPending
-            ? "Saving..."
-            : saveStatus === "success"
-            ? "Saved!"
-            : saveStatus === "error"
-            ? "Try Again"
-            : "Apply Configuration"}
-        </button>
+          icon={saveStatus === "success" ? Check : saveStatus === "error" ? X : RefreshCw}
+          label={updateMutation.isPending ? "Saving..." : saveStatus === "success" ? "Saved!" : saveStatus === "error" ? "Try Again" : "Apply Configuration"}
+        />
       </div>
 
       {/* Live Logs Section */}
       <LiveLogs />
-    </div>
-  );
-}
-
-// Stats Card Component with Apple-style design
-function StatsCard({
-  icon: Icon,
-  label,
-  value,
-  color,
-}: {
-  icon: React.ElementType;
-  label: string;
-  value: number;
-  color: string;
-}) {
-  const colorConfig: Record<string, { icon: string; bg: string; ring: string }> = {
-    blue: { icon: "text-blue-400", bg: "from-blue-500/20 to-blue-600/10", ring: "ring-blue-500/20" },
-    orange: { icon: "text-orange-400", bg: "from-orange-500/20 to-orange-600/10", ring: "ring-orange-500/20" },
-    emerald: { icon: "text-emerald-400", bg: "from-emerald-500/20 to-emerald-600/10", ring: "ring-emerald-500/20" },
-    red: { icon: "text-red-400", bg: "from-red-500/20 to-red-600/10", ring: "ring-red-500/20" },
-  };
-
-  const cfg = colorConfig[color] || colorConfig.blue;
-
-  return (
-    <div className="bg-white/[0.03] rounded-2xl border border-white/[0.05] p-5 transition-colors hover:bg-white/[0.04]">
-      <div className={cn("w-11 h-11 rounded-xl bg-gradient-to-br flex items-center justify-center mb-3 ring-1", cfg.bg, cfg.ring)}>
-        <Icon className={cn("w-5 h-5", cfg.icon)} />
-      </div>
-      <p className="text-3xl font-bold text-foreground tabular-nums tracking-tight">
-        {value.toLocaleString()}
-      </p>
-      <p className="text-sm text-muted-foreground mt-1">{label}</p>
     </div>
   );
 }
@@ -819,7 +765,7 @@ function LiveLogs() {
   const clearLogs = () => setLogs([]);
 
   return (
-    <div className="bg-card border border-border rounded-xl overflow-hidden">
+    <Section className="p-0 overflow-hidden">
       {/* Header */}
       <div
         className="flex items-center justify-between p-4 border-b border-border cursor-pointer hover:bg-white/[0.02] transition-colors"
@@ -937,6 +883,6 @@ function LiveLogs() {
           )}
         </div>
       )}
-    </div>
+    </Section>
   );
 }

@@ -12,7 +12,6 @@ import {
 import {
   Loader2,
   Cloud,
-  CloudOff,
   Key,
   Server,
   Globe,
@@ -21,12 +20,21 @@ import {
   AlertCircle,
   ExternalLink,
   Play,
-  Square,
-  RefreshCw,
   Copy,
   Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+// Import DS components
+import {
+  PageHeader,
+  RefreshButton,
+  Section,
+  SectionHeader,
+  Grid,
+  ActionButton,
+  InfoBox,
+} from "@/components/ds";
 
 export default function CloudflarePage() {
   const { t } = useTranslation();
@@ -34,7 +42,7 @@ export default function CloudflarePage() {
   const [token, setToken] = useState("");
   const [copied, setCopied] = useState<string | null>(null);
 
-  const { data: status, isLoading, refetch } = useQuery({
+  const { data: status, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ["cloudflare-status"],
     queryFn: fetchCloudflareStatus,
     refetchInterval: 5000,
@@ -89,29 +97,20 @@ export default function CloudflarePage() {
   const isRunning = status?.running;
 
   return (
-    <div className="space-y-8 max-w-4xl">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-            <Cloud className="w-8 h-8 text-orange-500" />
-            {t("cloudflare.title")}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {t("cloudflare.subtitle")}
-          </p>
-        </div>
-        <button
-          onClick={() => refetch()}
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
-          title={t("common.refresh")}
-        >
-          <RefreshCw className="w-5 h-5 text-muted-foreground" />
-        </button>
-      </div>
+      <PageHeader
+        icon={Cloud}
+        iconColor="orange"
+        title={t("cloudflare.title")}
+        subtitle={t("cloudflare.subtitle")}
+        actions={
+          <RefreshButton loading={isRefetching} onClick={() => refetch()} />
+        }
+      />
 
       {/* Status Card */}
-      <div className="bg-card border border-border rounded-2xl p-6">
+      <Section>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-semibold text-foreground">{t("cloudflare.connectionStatus")}</h2>
           <div className="flex items-center gap-2">
@@ -135,7 +134,7 @@ export default function CloudflarePage() {
         </div>
 
         {/* Status Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+        <Grid cols={{ default: 2, md: 3 }} gap="md" className="mb-6">
           <div className="bg-muted/50 rounded-xl p-4">
             <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
               <Server className="w-4 h-4" />
@@ -171,51 +170,36 @@ export default function CloudflarePage() {
               {status?.container_status || "-"}
             </div>
           </div>
-        </div>
+        </Grid>
 
         {/* Info when connected */}
         {isConnected && (
-          <div className="bg-success/10 border border-success/20 rounded-xl p-4 mb-6">
-            <div className="flex items-start gap-3">
-              <CheckCircle2 className="w-5 h-5 text-success mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-success">{t("cloudflare.tunnelConnected")}</p>
-                <p className="text-sm text-success/80 mt-1">
-                  {status?.tunnel_info || t("cloudflare.tunnelInfo")}
-                </p>
-              </div>
-            </div>
-          </div>
+          <InfoBox variant="success" icon={CheckCircle2} title={t("cloudflare.tunnelConnected")} className="mb-6">
+            {status?.tunnel_info || t("cloudflare.tunnelInfo")}
+          </InfoBox>
         )}
 
         {/* Container Controls */}
-        <div className="flex items-center gap-3">
-          {isRunning ? (
-            <button
-              onClick={handleDisconnect}
-              disabled={disconnectMutation.isPending}
-              className="flex items-center gap-2 px-4 py-2 bg-error/10 hover:bg-error/20 text-error rounded-xl transition-colors disabled:opacity-50"
-            >
-              {disconnectMutation.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Square className="w-4 h-4" />
-              )}
-              {t("cloudflare.stopTunnel")}
-            </button>
-          ) : null}
-        </div>
-      </div>
+        {isRunning && (
+          <ActionButton
+            variant="stop"
+            loading={disconnectMutation.isPending}
+            onClick={handleDisconnect}
+            label={t("cloudflare.stopTunnel")}
+          />
+        )}
+      </Section>
 
       {/* Connect Form */}
       {!isRunning && (
-        <div className="bg-card border border-border rounded-2xl p-6">
-          <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-            <Key className="w-5 h-5 text-orange-500" />
-            {t("cloudflare.connectToCloudflare")}
-          </h2>
+        <Section>
+          <SectionHeader
+            icon={Key}
+            iconColor="orange"
+            title={t("cloudflare.connectToCloudflare")}
+          />
 
-          <div className="space-y-4">
+          <div className="space-y-4 mt-4">
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
                 {t("cloudflare.tunnelToken")}
@@ -242,58 +226,53 @@ export default function CloudflarePage() {
             </div>
 
             {connectMutation.isError && (
-              <div className="bg-error/10 border border-error/20 text-error text-sm p-3 rounded-xl">
+              <InfoBox variant="error">
                 {t("cloudflare.connectError")}
-              </div>
+              </InfoBox>
             )}
 
             {connectMutation.data && !connectMutation.data.success && (
-              <div className="bg-error/10 border border-error/20 text-error text-sm p-3 rounded-xl">
+              <InfoBox variant="error">
                 {connectMutation.data.message}
-              </div>
+              </InfoBox>
             )}
 
-            <button
+            <ActionButton
+              variant="primary"
+              loading={connectMutation.isPending}
               onClick={handleConnect}
               disabled={!token.trim() || connectMutation.isPending}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {connectMutation.isPending ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  {t("cloudflare.connecting")}
-                </>
-              ) : (
-                <>
-                  <Play className="w-4 h-4" />
-                  {t("cloudflare.startTunnel")}
-                </>
-              )}
-            </button>
+              icon={Play}
+              label={connectMutation.isPending ? t("cloudflare.connecting") : t("cloudflare.startTunnel")}
+              fullWidth
+            />
           </div>
-        </div>
+        </Section>
       )}
 
       {/* Available Services */}
-      <div className="bg-card border border-border rounded-2xl p-6">
-        <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-          <Server className="w-5 h-5 text-muted-foreground" />
-          {t("cloudflare.availableServices")}
-        </h2>
-        <p className="text-sm text-muted-foreground mb-4">
-          {t("cloudflare.configureHostnames")}{" "}
-          <a
-            href="https://one.dash.cloudflare.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-orange-500 hover:underline"
-          >
-            {t("cloudflare.cloudflareDashboard")}
-          </a>
-          . {t("cloudflare.useInternalUrls")}
-        </p>
+      <Section>
+        <SectionHeader
+          icon={Server}
+          iconColor="muted"
+          title={t("cloudflare.availableServices")}
+          subtitle={
+            <>
+              {t("cloudflare.configureHostnames")}{" "}
+              <a
+                href="https://one.dash.cloudflare.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-orange-500 hover:underline"
+              >
+                {t("cloudflare.cloudflareDashboard")}
+              </a>
+              . {t("cloudflare.useInternalUrls")}
+            </>
+          }
+        />
 
-        <div className="space-y-3">
+        <div className="space-y-3 mt-4">
           {servicesData?.services.map((service) => (
             <div
               key={service.name}
@@ -322,10 +301,10 @@ export default function CloudflarePage() {
             </div>
           ))}
         </div>
-      </div>
+      </Section>
 
       {/* Help Section */}
-      <div className="bg-muted/30 border border-border rounded-2xl p-6">
+      <Section className="bg-muted/30">
         <h3 className="font-semibold text-foreground mb-3">{t("cloudflare.howToUse")}</h3>
         <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
           <li>{t("cloudflare.step1")} <a href="https://one.dash.cloudflare.com/" target="_blank" rel="noopener noreferrer" className="text-orange-500 hover:underline">{t("cloudflare.zeroTrustDashboard")}</a></li>
@@ -335,7 +314,7 @@ export default function CloudflarePage() {
           <li>{t("cloudflare.step5")}</li>
           <li>{t("cloudflare.step6")}</li>
         </ol>
-      </div>
+      </Section>
     </div>
   );
 }
