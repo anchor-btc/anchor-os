@@ -6,8 +6,7 @@ use rand::Rng;
 
 use super::sample_data::{
     REPLY_PREFIXES, SAMPLE_CITIES, SAMPLE_DOMAINS, SAMPLE_IMAGES, SAMPLE_MESSAGES,
-    SAMPLE_ORACLE_SOURCES, SAMPLE_PREDICTION_OUTCOMES, SAMPLE_PREDICTION_TITLES,
-    SAMPLE_TOKEN_TICKERS,
+    SAMPLE_ORACLE_CATEGORIES, SAMPLE_ORACLE_NAMES, SAMPLE_ORACLE_SOURCES, SAMPLE_TOKEN_TICKERS,
 };
 use super::types::{CarrierType, CreateMessageRequest, MessageResult};
 use super::wallet_client::WalletClient;
@@ -474,50 +473,63 @@ impl MessageGenerator {
         })
     }
 
-    /// Create an oracle attestation message (Kind 30)
+    /// Create an oracle registration message (Kind 30)
+    /// Format expected by indexer:
+    /// [action u8] [pubkey 32 bytes] [name_len u16 BE] [name] [categories i16 BE] [stake i64 BE] [metadata...]
     async fn create_oracle(&mut self, carrier: CarrierType) -> Result<MessageResult> {
+        let oracle_name = SAMPLE_ORACLE_NAMES
+            .choose(&mut self.rng)
+            .unwrap_or(&"Default Oracle");
+
+        let categories = SAMPLE_ORACLE_CATEGORIES
+            .choose(&mut self.rng)
+            .copied()
+            .unwrap_or(2); // Default to crypto prices
+
         let source = SAMPLE_ORACLE_SOURCES
             .choose(&mut self.rng)
             .unwrap_or(&"BTC/USD");
 
-        // Generate random price/value
-        let value: f64 = match *source {
-            "BTC/USD" => self.rng.gen_range(50_000.0..150_000.0),
-            "ETH/BTC" => self.rng.gen_range(0.03..0.08),
-            "GOLD/USD" => self.rng.gen_range(1_800.0..2_500.0),
-            _ => self.rng.gen_range(1.0..1000.0),
-        };
+        // Generate a random 32-byte pubkey for this oracle
+        let mut oracle_pubkey = [0u8; 32];
+        self.rng.fill(&mut oracle_pubkey);
 
-        // Oracle attestation format
+        // Generate random stake amount (10k to 1M sats)
+        let stake_sats: i64 = self.rng.gen_range(10_000..1_000_000);
+
+        // Oracle registration format (matches indexer expectation)
         let mut data = Vec::new();
-        data.push(0x01); // Operation: Attest
 
-        // Source identifier
-        let source_bytes = source.as_bytes();
-        data.push(source_bytes.len() as u8);
-        data.extend_from_slice(source_bytes);
+        // Action: 0 = register
+        data.push(0x00);
 
-        // Value as f64 bytes
-        data.extend_from_slice(&value.to_be_bytes());
+        // Oracle pubkey (32 bytes)
+        data.extend_from_slice(&oracle_pubkey);
 
-        // Timestamp (current unix time)
-        let timestamp = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_secs();
-        data.extend_from_slice(&timestamp.to_be_bytes());
+        // Name length (u16 big-endian)
+        let name_bytes = oracle_name.as_bytes();
+        data.extend_from_slice(&(name_bytes.len() as u16).to_be_bytes());
 
-        // Confidence score (0-100)
-        let confidence: u8 = self.rng.gen_range(80..100);
-        data.push(confidence);
+        // Name
+        data.extend_from_slice(name_bytes);
+
+        // Categories (i16 big-endian)
+        data.extend_from_slice(&(categories as i16).to_be_bytes());
+
+        // Stake amount (i64 big-endian)
+        data.extend_from_slice(&stake_sats.to_be_bytes());
+
+        // Metadata (optional - add data source info)
+        let metadata = format!("Providing {} data", source);
+        data.extend_from_slice(metadata.as_bytes());
 
         let body = hex::encode(&data);
 
         tracing::info!(
-            "Creating oracle attestation: {} = {:.2} (confidence: {}%)",
-            source,
-            value,
-            confidence
+            "Creating oracle registration: {} (categories: {}, stake: {} sats)",
+            oracle_name,
+            categories,
+            stake_sats
         );
 
         let request = CreateMessageRequest {
@@ -542,60 +554,85 @@ impl MessageGenerator {
         })
     }
 
-    /// Create a prediction market message (Kind 40)
+    /// Create a lottery message (Kind 40 - LotteryCreate)
+    /// Format expected by indexer:
+    /// [lottery_id 32 bytes] [lottery_type u8] [number_count u8] [number_max u8]
+    /// [draw_block u32 BE] [ticket_price i64 BE] [token_type u8] [oracle_pubkey 32 bytes]
     async fn create_prediction(&mut self, carrier: CarrierType) -> Result<MessageResult> {
-        let title = SAMPLE_PREDICTION_TITLES
-            .choose(&mut self.rng)
-            .unwrap_or(&"Will X happen?");
+        // Generate a random 32-byte lottery ID
+        let mut lottery_id = [0u8; 32];
+        self.rng.fill(&mut lottery_id);
 
-        let (outcome_yes, outcome_no) = SAMPLE_PREDICTION_OUTCOMES
-            .choose(&mut self.rng)
-            .copied()
-            .unwrap_or(("Yes", "No"));
+        // Lottery type: 0=daily, 1=weekly, 2=jackpot
+        let lottery_type: u8 = self.rng.gen_range(0..3);
 
-        // End time: 1-30 days from now
-        let end_time = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_secs()
-            + self.rng.gen_range(86400..2592000);
+        // Number of numbers to pick (3-6)
+        let number_count: u8 = self.rng.gen_range(3..7);
 
-        // Prediction market creation format
-        let mut data = Vec::new();
-        data.push(0x01); // Operation: Create
+        // Max number value (30-60)
+        let number_max: u8 = self.rng.gen_range(30..61);
 
-        // Title
-        let title_bytes = title.as_bytes();
-        data.push(title_bytes.len() as u8);
-        data.extend_from_slice(title_bytes);
+        // Draw block: current + 100-1000 blocks
+        let current_block = 7000u32; // Approximate current block
+        let draw_block: u32 = current_block + self.rng.gen_range(100..1000);
 
-        // Outcome 1
-        let outcome1_bytes = outcome_yes.as_bytes();
-        data.push(outcome1_bytes.len() as u8);
-        data.extend_from_slice(outcome1_bytes);
+        // Ticket price: 1000-100000 sats
+        let ticket_price_sats: i64 = self.rng.gen_range(1_000..100_000);
 
-        // Outcome 2
-        let outcome2_bytes = outcome_no.as_bytes();
-        data.push(outcome2_bytes.len() as u8);
-        data.extend_from_slice(outcome2_bytes);
+        // Token type: 0=BTC, 1=AnchorToken
+        let token_type: u8 = if self.rng.gen_bool(0.8) { 0 } else { 1 };
 
-        // End timestamp
-        data.extend_from_slice(&end_time.to_be_bytes());
+        // Random oracle pubkey
+        let mut oracle_pubkey = [0u8; 32];
+        self.rng.fill(&mut oracle_pubkey);
 
-        // Resolution source (empty = creator)
-        data.push(0);
+        // Build lottery creation body
+        let mut data = Vec::with_capacity(80);
+
+        // Lottery ID (32 bytes)
+        data.extend_from_slice(&lottery_id);
+
+        // Lottery type (1 byte)
+        data.push(lottery_type);
+
+        // Number count (1 byte)
+        data.push(number_count);
+
+        // Number max (1 byte)
+        data.push(number_max);
+
+        // Draw block (4 bytes, big-endian)
+        data.extend_from_slice(&draw_block.to_be_bytes());
+
+        // Ticket price (8 bytes, big-endian)
+        data.extend_from_slice(&ticket_price_sats.to_be_bytes());
+
+        // Token type (1 byte)
+        data.push(token_type);
+
+        // Oracle pubkey (32 bytes)
+        data.extend_from_slice(&oracle_pubkey);
 
         let body = hex::encode(&data);
 
+        let lottery_type_name = match lottery_type {
+            0 => "Daily",
+            1 => "Weekly",
+            2 => "Jackpot",
+            _ => "Unknown",
+        };
+
         tracing::info!(
-            "Creating prediction market: {} [{}/{}]",
-            title,
-            outcome_yes,
-            outcome_no
+            "Creating lottery: {} type, pick {} from {}, draw at block {}, ticket {} sats",
+            lottery_type_name,
+            number_count,
+            number_max,
+            draw_block,
+            ticket_price_sats
         );
 
         let request = CreateMessageRequest {
-            kind: 40, // Prediction
+            kind: 40, // LotteryCreate
             body,
             body_is_hex: true,
             parent_txid: None,

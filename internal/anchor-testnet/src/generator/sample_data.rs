@@ -111,6 +111,41 @@ pub const SAMPLE_ORACLE_SOURCES: &[&str] = &[
     "RATES/FED",
 ];
 
+/// Sample oracle names for registration
+pub const SAMPLE_ORACLE_NAMES: &[&str] = &[
+    "Chainlink BTC",
+    "Pyth Network",
+    "DIA Oracle",
+    "Band Protocol",
+    "Umbrella Network",
+    "Razor Network",
+    "Tellor Oracle",
+    "API3 dAPI",
+    "Switchboard",
+    "RedStone Oracle",
+    "Chronicle Labs",
+    "Supra Oracles",
+    "Flare FTSO",
+    "Acurast Oracle",
+    "Witnet Oracle",
+];
+
+/// Sample oracle categories (bitmask values)
+/// 1 = Block/Chain, 2 = Crypto prices, 4 = Sports, 8 = Weather,
+/// 16 = Elections, 32 = Random/VRF, 64 = Custom
+pub const SAMPLE_ORACLE_CATEGORIES: &[i32] = &[
+    2,      // Crypto prices only
+    3,      // Block + Crypto
+    6,      // Crypto + Sports  
+    10,     // Crypto + Weather
+    18,     // Crypto + Elections
+    34,     // Crypto + VRF
+    66,     // Crypto + Custom
+    127,    // All categories
+    4,      // Sports only
+    8,      // Weather only
+];
+
 /// Sample prediction market titles
 pub const SAMPLE_PREDICTION_TITLES: &[&str] = &[
     "BTC above $100k by EOY?",
