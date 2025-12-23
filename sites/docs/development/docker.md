@@ -9,7 +9,7 @@ docker-compose.yml           # Main file (includes all others)
 docker/
 ├── compose.core.yml         # Bitcoin, PostgreSQL, Wallet, Indexer, Testnet
 ├── compose.electrum.yml     # Electrs, Fulcrum
-├── compose.explorers.yml    # Mempool, BTC-RPC Explorer, Esplora, Bitfeed
+├── compose.explorers.yml    # Mempool, BTC-RPC Explorer, Bitfeed
 ├── compose.networking.yml   # Tor, Tailscale, Cloudflare
 ├── compose.monitoring.yml   # Netdata
 ├── compose.dashboard.yml    # Dashboard frontend/backend
@@ -68,7 +68,7 @@ make up-full
 ```
 
 **Additional services:**
-- All explorers (Esplora, Bitfeed, BTC-RPC)
+- All explorers (Bitfeed, BTC-RPC)
 - All apps (Canvas, Domains, Tokens, etc.)
 - Monitoring (Netdata)
 - Additional networking options
@@ -118,7 +118,6 @@ Only one Electrum server can run at a time (same port).
 | `explorer-mempool-web` | 4000 | Mempool.space |
 | `explorer-btc-rpc` | 4010 | BTC-RPC Explorer |
 | `explorer-bitfeed-web` | 4020 | Bitfeed visualizer |
-| `explorer-esplora` | 4030 | Blockstream Esplora |
 
 ### Dashboard
 

@@ -23,7 +23,6 @@ use crate::AppState;
 pub enum BlockExplorer {
     Mempool,
     BtcRpcExplorer,
-    Esplora,
     Bitfeed,
 }
 
@@ -33,7 +32,6 @@ impl BlockExplorer {
         match self {
             BlockExplorer::Mempool => "anchor-explorer-mempool-web",
             BlockExplorer::BtcRpcExplorer => "anchor-explorer-btc-rpc",
-            BlockExplorer::Esplora => "anchor-explorer-esplora",
             BlockExplorer::Bitfeed => "anchor-explorer-bitfeed-web",
         }
     }
@@ -43,7 +41,6 @@ impl BlockExplorer {
         match self {
             BlockExplorer::Mempool => 4000,
             BlockExplorer::BtcRpcExplorer => 4010,
-            BlockExplorer::Esplora => 4030,
             BlockExplorer::Bitfeed => 4020,
         }
     }
@@ -53,7 +50,6 @@ impl BlockExplorer {
         match self {
             BlockExplorer::Mempool => "/tx/{txid}",
             BlockExplorer::BtcRpcExplorer => "/tx/{txid}",
-            BlockExplorer::Esplora => "/tx/{txid}",
             BlockExplorer::Bitfeed => "/", // Bitfeed doesn't have individual tx pages
         }
     }
@@ -63,7 +59,6 @@ impl BlockExplorer {
         match self {
             BlockExplorer::Mempool => "/address/{address}",
             BlockExplorer::BtcRpcExplorer => "/address/{address}",
-            BlockExplorer::Esplora => "/address/{address}",
             BlockExplorer::Bitfeed => "/", // Bitfeed doesn't have individual address pages
         }
     }
@@ -73,7 +68,6 @@ impl BlockExplorer {
         match self {
             BlockExplorer::Mempool => "Mempool",
             BlockExplorer::BtcRpcExplorer => "BTC RPC Explorer",
-            BlockExplorer::Esplora => "Esplora",
             BlockExplorer::Bitfeed => "Bitfeed",
         }
     }
@@ -84,7 +78,6 @@ impl std::fmt::Display for BlockExplorer {
         match self {
             BlockExplorer::Mempool => write!(f, "mempool"),
             BlockExplorer::BtcRpcExplorer => write!(f, "btc-rpc-explorer"),
-            BlockExplorer::Esplora => write!(f, "esplora"),
             BlockExplorer::Bitfeed => write!(f, "bitfeed"),
         }
     }
@@ -97,7 +90,6 @@ impl std::str::FromStr for BlockExplorer {
         match s.to_lowercase().replace('_', "-").as_str() {
             "mempool" => Ok(BlockExplorer::Mempool),
             "btc-rpc-explorer" | "btcrpcexplorer" => Ok(BlockExplorer::BtcRpcExplorer),
-            "esplora" => Ok(BlockExplorer::Esplora),
             "bitfeed" => Ok(BlockExplorer::Bitfeed),
             _ => Err(format!("Unknown block explorer: {}", s)),
         }
@@ -167,7 +159,6 @@ pub async fn get_explorer_settings(
     let explorers = vec![
         BlockExplorer::Mempool,
         BlockExplorer::BtcRpcExplorer,
-        BlockExplorer::Esplora,
         BlockExplorer::Bitfeed,
     ];
 

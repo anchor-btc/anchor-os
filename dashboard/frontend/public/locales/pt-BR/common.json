@@ -1290,7 +1290,6 @@
     "app-tokens": "Tokens baseados em UTXO no Bitcoin - implante, cunhe, transfira como Runes",
     "explorer-bitfeed": "Visualizador de transações Bitcoin em tempo real",
     "explorer-btc-rpc": "Explorador de blocos Bitcoin simples e leve",
-    "explorer-esplora": "Explorador de blocos Bitcoin completo da Blockstream com API REST",
     "explorer-mempool": "Explorador de blocos Bitcoin completo pelo mempool.space",
     "networking-cloudflare": "Exponha serviços Anchor na internet via Cloudflare",
     "networking-tailscale": "Conecte sua stack Anchor à sua rede Tailscale",

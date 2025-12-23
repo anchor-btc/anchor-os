@@ -53,7 +53,6 @@ export const dependencies: Record<string, string[]> = {
   "core-testnet": ["core-wallet", "core-indexer"],
   "explorer-mempool": ["core-bitcoin", "core-electrs"],
   "explorer-btc-rpc": ["core-bitcoin"],
-  "explorer-esplora": ["core-bitcoin"],
   "explorer-bitfeed": ["core-bitcoin"],
   "anchor-dashboard": ["core-bitcoin", "core-postgres"],
   "app-threads": ["core-postgres", "core-wallet"],
@@ -111,7 +110,6 @@ export const appToServiceMap: Record<string, string> = {
   // Explorers
   "explorer-mempool": "explorer-mempool",
   "explorer-btc-rpc": "explorer-btc-rpc",
-  "explorer-esplora": "explorer-esplora",
   "explorer-bitfeed": "explorer-bitfeed",
   // Networking
   "networking-tailscale": "networking-tailscale",
@@ -182,7 +180,6 @@ export const presets: PresetInfo[] = [
       "core-testnet",
       "explorer-mempool",
       "explorer-btc-rpc",
-      "explorer-esplora",
       "explorer-bitfeed",
       "networking-tailscale",
       "networking-cloudflare",

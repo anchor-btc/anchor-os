@@ -209,20 +209,6 @@ export const apps: App[] = [
     featured: false,
   },
   {
-    id: "explorer-esplora",
-    name: "Esplora",
-    description: "Blockstream's full-featured Bitcoin block explorer with REST API",
-    descriptionKey: "appDescriptions.explorer-esplora",
-    icon: "Layers",
-    color: "emerald",
-    url: "http://localhost:4030",
-    port: 4030,
-    containers: ["anchor-explorer-esplora"],
-    category: "explorer",
-    featured: true,
-    supportsIframe: false, // Esplora has X-Frame-Options: SAMEORIGIN
-  },
-  {
     id: "explorer-mempool",
     name: "Mempool Space",
     description: "Full Bitcoin block explorer powered by mempool.space",

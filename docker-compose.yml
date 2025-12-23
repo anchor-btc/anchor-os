@@ -8,7 +8,7 @@
 # Structure:
 #   docker/compose.core.yml        - Bitcoin, PostgreSQL, Indexer, Wallet, Testnet
 #   docker/compose.electrum.yml    - Electrs, Fulcrum
-#   docker/compose.explorers.yml   - Mempool, BTC-RPC Explorer, Esplora, Bitfeed
+#   docker/compose.explorers.yml   - Mempool, BTC-RPC Explorer, Bitfeed
 #   docker/compose.networking.yml  - Tailscale, Cloudflare, Tor
 #   docker/compose.monitoring.yml  - Netdata
 #   docker/compose.dashboard.yml   - Dashboard Backend/Frontend
@@ -48,7 +48,6 @@ volumes:
   
   # Explorers
   mempool-db-data:
-  esplora-data:
   
   # Networking
   tailscale-data:

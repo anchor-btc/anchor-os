@@ -231,7 +231,6 @@ fn get_required_profiles(service: &str) -> Vec<String> {
             "core-electrs".to_string(),  // Mempool depends on electrs!
             "explorer-mempool".to_string(),
         ],
-        "explorer-esplora" => vec!["explorer-esplora".to_string()],
         "explorer-bitfeed" => vec!["explorer-bitfeed".to_string()],
         // Networking
         "networking-tor" => vec!["networking-tor".to_string()],
@@ -288,7 +287,6 @@ fn extract_service_from_container(container_name: &str) -> Option<String> {
         ("explorer-mempool-web", "explorer-mempool"),
         ("explorer-mempool-api", "explorer-mempool"),
         ("explorer-mempool-db", "explorer-mempool"),
-        ("explorer-esplora", "explorer-esplora"),
         ("explorer-bitfeed", "explorer-bitfeed"),
         ("networking-tor", "networking-tor"),
         ("networking-tailscale", "networking-tailscale"),

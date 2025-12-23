@@ -1,6 +1,6 @@
 # =============================================
 # BLOCK EXPLORERS
-# Mempool, BTC-RPC Explorer, Esplora, Bitfeed
+# Mempool, BTC-RPC Explorer, Bitfeed
 # =============================================
 
 services:
@@ -103,27 +103,6 @@ services:
       - minimum
       - full
       - explorer-btc-rpc
-
-  # Esplora - Blockstream Block Explorer
-  explorer-esplora:
-    image: blockstream/esplora:latest
-    container_name: anchor-explorer-esplora
-    ports:
-      - "4030:80"      # Web UI
-    environment:
-      - DEBUG=info
-    volumes:
-      - esplora-data:/data
-    command: ["/srv/explorer/run.sh", "bitcoin-regtest", "explorer"]
-    depends_on:
-      core-bitcoin:
-        condition: service_healthy
-    networks:
-      - anchor-network
-    restart: unless-stopped
-    profiles:
-      - full
-      - explorer-esplora
 
   # Bitfeed - Real-time Bitcoin Transaction Visualizer
   explorer-bitfeed-api:

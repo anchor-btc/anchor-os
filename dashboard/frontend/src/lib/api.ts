@@ -755,7 +755,7 @@ export async function fetchElectrumInfo(): Promise<ElectrumStatus> {
 
 // Block Explorer Types
 
-export type BlockExplorer = "mempool" | "btc-rpc-explorer" | "esplora" | "bitfeed";
+export type BlockExplorer = "mempool" | "btc-rpc-explorer" | "bitfeed";
 
 export interface ExplorerInfo {
   explorer: BlockExplorer;

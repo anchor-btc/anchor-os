@@ -276,19 +276,6 @@ fn get_all_services() -> Vec<ServiceDefinition> {
             depends_on: vec!["core-bitcoin".to_string()],
         },
         ServiceDefinition {
-            id: "explorer-esplora".to_string(),
-            name: "Esplora".to_string(),
-            description: "Blockstream's full-featured Bitcoin block explorer".to_string(),
-            category: ServiceCategory::Explorer,
-            docker_profiles: vec!["full".to_string(), "explorer-esplora".to_string()],
-            containers: vec!["anchor-explorer-esplora".to_string()],
-            install_status: ServiceInstallStatus::NotInstalled,
-            enabled: false,
-            required: false,
-            incompatible_with: vec![],
-            depends_on: vec!["core-bitcoin".to_string()],
-        },
-        ServiceDefinition {
             id: "explorer-bitfeed".to_string(),
             name: "Bitfeed".to_string(),
             description: "Real-time Bitcoin transaction visualizer".to_string(),
@@ -1569,7 +1556,6 @@ fn get_service_profiles(service: &str) -> Vec<String> {
             "core-electrs".to_string(),  // Mempool depends on electrs!
             "explorer-mempool".to_string(),
         ],
-        "explorer-esplora" => vec!["explorer-esplora".to_string()],
         "explorer-bitfeed" => vec!["explorer-bitfeed".to_string()],
         // Networking
         "networking-tor" => vec!["networking-tor".to_string()],
