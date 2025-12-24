@@ -13,6 +13,10 @@ import {
   Database,
   ChevronRight,
   User,
+  ExternalLink,
+  Anchor,
+  BookOpen,
+  Globe,
 } from "lucide-react";
 import { useTheme } from "@/contexts/theme-context";
 import { useAuth } from "@/contexts/auth-context";
@@ -216,6 +220,70 @@ export default function SettingsPage() {
         </div>
       </div>
 
+      {/* Resources */}
+      <div className="bg-card border border-border rounded-xl p-6">
+        <h3 className="text-sm font-medium text-foreground mb-4 flex items-center gap-2">
+          <Globe className="w-4 h-4 text-primary" />
+          {t("settings.resources", "Resources")}
+        </h3>
+        <div className="grid gap-3">
+          <a
+            href="http://localhost:3951"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-4 p-4 rounded-lg border border-border hover:bg-secondary/50 transition-colors group"
+          >
+            <div className="p-2 rounded-lg bg-gradient-to-br from-primary/20 to-orange-500/10 text-primary">
+              <Anchor className="w-6 h-6" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-medium text-foreground">Anchor OS</div>
+              <div className="text-sm text-muted-foreground">
+                {t("settings.anchorOsDescription", "Self-sovereign Bitcoin infrastructure")}
+              </div>
+            </div>
+            <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+          </a>
+
+          <a
+            href="http://localhost:3950"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-4 p-4 rounded-lg border border-border hover:bg-secondary/50 transition-colors group"
+          >
+            <div className="p-2 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/10 text-amber-500">
+              <Anchor className="w-6 h-6" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-medium text-foreground">Anchor Protocol</div>
+              <div className="text-sm text-muted-foreground">
+                {t("settings.anchorProtocolDescription", "Bitcoin-native messaging protocol")}
+              </div>
+            </div>
+            <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+          </a>
+
+          <a
+            href="http://localhost:3900"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-4 p-4 rounded-lg border border-border hover:bg-secondary/50 transition-colors group"
+          >
+            <div className="p-2 rounded-lg bg-secondary text-muted-foreground group-hover:text-primary transition-colors">
+              <BookOpen className="w-6 h-6" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-medium text-foreground">Documentation</div>
+              <div className="text-sm text-muted-foreground">
+                {t("settings.docsDescription", "Learn about Anchor Protocol and SDK")}
+              </div>
+            </div>
+            <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+          </a>
+        </div>
+      </div>
+
+      {/* About */}
       <div className="bg-card border border-border rounded-xl p-6">
         <h3 className="text-sm font-medium text-foreground mb-2">
           {t("settings.about")}

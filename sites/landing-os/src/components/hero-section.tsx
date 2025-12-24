@@ -1,8 +1,19 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 
+const INSTALL_COMMAND = "curl -fsSL http://localhost:3951/install.sh | bash";
+
 export function HeroSection() {
+  const [copied, setCopied] = useState(false);
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(INSTALL_COMMAND);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden">
       {/* Background gradient */}
@@ -89,24 +100,90 @@ export function HeroSection() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
-          className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-12"
+          className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10"
         >
           Run a full Bitcoin node, Electrum server, and decentralized apps — 
           all from one beautiful dashboard. Self-sovereign Bitcoin infrastructure.
         </motion.p>
 
-        {/* CTA Buttons */}
+        {/* Stats - More prominent */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.35, ease: "easeOut" }}
+          className="mb-12"
+        >
+          <div className="inline-flex items-center gap-6 sm:gap-10 px-8 py-5 rounded-2xl glass-card border border-primary/20">
+            {[
+              { value: "8+", label: "Apps Included" },
+              { value: "100%", label: "Self-Hosted" },
+              { value: "24/7", label: "Your Node" },
+            ].map((stat, index) => (
+              <div key={stat.label} className="text-center relative">
+                {index > 0 && (
+                  <div className="absolute left-[-12px] sm:left-[-20px] top-1/2 -translate-y-1/2 w-px h-10 bg-gradient-to-b from-transparent via-primary/30 to-transparent" />
+                )}
+                <div className="text-3xl sm:text-4xl font-bold text-gradient mb-1">{stat.value}</div>
+                <div className="text-xs sm:text-sm text-muted-foreground font-medium">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Quick Install Command */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
+          className="mb-6"
+        >
+          <div className="text-sm text-muted-foreground mb-3 font-medium">
+            Quick Install
+          </div>
+          <div 
+            onClick={copyToClipboard}
+            className="group relative inline-flex items-center gap-3 px-6 py-4 rounded-xl glass-card border border-primary/30 hover:border-primary/60 cursor-pointer transition-all duration-300 hover:scale-[1.02] glow-primary-subtle"
+          >
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <span className="text-primary">$</span>
+            </div>
+            <code className="font-mono text-sm sm:text-base text-foreground">
+              {INSTALL_COMMAND}
+            </code>
+            <button
+              className="flex items-center gap-1 ml-2 px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-sm font-medium transition-colors"
+            >
+              {copied ? (
+                <>
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Copied!
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  Copy
+                </>
+              )}
+            </button>
+          </div>
+        </motion.div>
+
+        {/* CTA Buttons */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.45, ease: "easeOut" }}
           className="flex flex-col sm:flex-row items-center justify-center gap-4"
         >
           <a
             href="#quickstart"
             className="group inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all duration-200 hover:scale-105 glow-primary"
           >
-            Get Started
+            View Full Setup Guide
             <svg
               className="w-4 h-4 transition-transform group-hover:translate-x-1"
               fill="none"
@@ -117,34 +194,16 @@ export function HeroSection() {
             </svg>
           </a>
           <a
-            href="#dashboard"
+            href="https://github.com/AnchorProtocol/anchor"
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-8 py-4 rounded-xl glass-card hover:bg-white/10 text-foreground font-semibold transition-all duration-200"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
             </svg>
-            View Demo
+            GitHub
           </a>
-        </motion.div>
-
-        {/* Stats */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1, delay: 0.8 }}
-          className="mt-20 grid grid-cols-3 gap-8 max-w-lg mx-auto"
-        >
-          {[
-            { value: "8+", label: "Apps" },
-            { value: "100%", label: "Self-Hosted" },
-            { value: "24/7", label: "Your Node" },
-          ].map((stat) => (
-            <div key={stat.label} className="text-center">
-              <div className="text-3xl font-bold text-gradient">{stat.value}</div>
-              <div className="text-sm text-muted-foreground">{stat.label}</div>
-            </div>
-          ))}
         </motion.div>
       </div>
 
@@ -174,4 +233,3 @@ export function HeroSection() {
     </section>
   );
 }
-

@@ -32,6 +32,14 @@
     box-shadow: 0 0 60px rgba(249, 115, 22, 0.3);
   }
   
+  .glow-primary-subtle {
+    box-shadow: 0 0 20px rgba(249, 115, 22, 0.1);
+  }
+  
+  .glow-primary-subtle:hover {
+    box-shadow: 0 0 30px rgba(249, 115, 22, 0.2);
+  }
+  
   .text-gradient {
     @apply bg-gradient-to-r from-primary to-amber-400 bg-clip-text text-transparent;
   }

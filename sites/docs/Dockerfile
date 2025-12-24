@@ -22,6 +22,7 @@ FROM nginx:alpine
 COPY --from=builder /app/.vitepress/dist /usr/share/nginx/html
 
 # Copy custom nginx config for SPA routing with proper cache headers
+# Note: No X-Frame-Options to allow embedding in dashboard iframe
 RUN echo 'server { \
     listen 3900; \
     server_name localhost; \
@@ -33,7 +34,6 @@ RUN echo 'server { \
         add_header Cache-Control "no-cache, no-store, must-revalidate"; \
         add_header Pragma "no-cache"; \
         add_header Expires "0"; \
-        add_header X-Frame-Options "SAMEORIGIN"; \
     } \
     \
     location / { \
@@ -42,7 +42,6 @@ RUN echo 'server { \
         add_header Cache-Control "no-cache, no-store, must-revalidate"; \
         add_header Pragma "no-cache"; \
         add_header Expires "0"; \
-        add_header X-Frame-Options "SAMEORIGIN"; \
     } \
     \
     # Static assets - cache for 1 year (use content hash in filename) \
