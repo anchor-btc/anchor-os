@@ -8,7 +8,6 @@ import {
   fetchNewAddress,
   fetchUtxos,
   fetchTransactions,
-  fetchAssets,
   fetchLockedUtxos,
   fetchLockSettings,
   lockUtxos,
@@ -19,7 +18,6 @@ import {
   shortenHash,
   type Utxo,
   type Transaction,
-  type AssetsOverview,
   type LockedUtxo,
   type LockSettings,
 } from "@/lib/api";
@@ -39,11 +37,8 @@ import {
   ChevronRight,
   Lock,
   Unlock,
-  Globe,
   Gem,
   Shield,
-  ShieldCheck,
-  RotateCw,
   ExternalLink,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -56,13 +51,12 @@ import {
   PageHeader,
   Section,
   SectionHeader,
-  Grid,
   Tabs,
   Tab,
   ActionButton,
 } from "@/components/ds";
 
-type TabId = "transactions" | "utxos" | "assets" | "locks" | "receive" | "backup";
+type TabId = "transactions" | "utxos" | "assets" | "receive" | "backup";
 const UTXOS_PER_PAGE = 50;
 
 export default function WalletPage() {
@@ -90,11 +84,6 @@ export default function WalletPage() {
     refetchInterval: 10000,
   });
 
-  const { data: assets, isLoading: assetsLoading } = useQuery({
-    queryKey: ["wallet-assets"],
-    queryFn: fetchAssets,
-    refetchInterval: 15000,
-  });
 
   const { data: lockedUtxos, isLoading: lockedLoading } = useQuery({
     queryKey: ["locked-utxos"],
@@ -160,7 +149,6 @@ export default function WalletPage() {
     transactions: t("wallet.transactions"),
     utxos: t("wallet.utxos"),
     assets: t("wallet.assets") || "Assets",
-    locks: t("wallet.locks") || "Locks",
     receive: t("wallet.receive"),
     backup: t("wallet.backup", "Backup"),
   };
@@ -224,9 +212,8 @@ export default function WalletPage() {
       <Tabs value={activeTab} onChange={(v) => setActiveTab(v as TabId)}>
         <Tab value="transactions">{tabLabels.transactions}</Tab>
         <Tab value="utxos">{tabLabels.utxos}</Tab>
-        <Tab value="assets" icon={Gem}>{tabLabels.assets}</Tab>
-        <Tab value="locks" icon={Lock}>
-          {tabLabels.locks}
+        <Tab value="assets" icon={Gem}>
+          {tabLabels.assets}
           {lockSettings && lockSettings.total_locked > 0 && (
             <span className="ml-1 px-1.5 py-0.5 text-xs bg-primary/20 text-primary rounded-full">
               {lockSettings.total_locked}
@@ -275,10 +262,6 @@ export default function WalletPage() {
       )}
 
       {activeTab === "assets" && (
-        <AssetsSection assets={assets} isLoading={assetsLoading} t={t} />
-      )}
-
-      {activeTab === "locks" && (
         <LockedAssetsSection t={t} />
       )}
 
@@ -620,298 +603,3 @@ function UtxoRow({
 }
 
 // Assets Section Component
-function AssetsSection({
-  assets,
-  isLoading,
-  t,
-}: {
-  assets?: AssetsOverview;
-  isLoading: boolean;
-  t: (key: string) => string;
-}) {
-  if (isLoading) {
-    return (
-      <Section className="p-8 flex items-center justify-center">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-      </Section>
-    );
-  }
-
-  if (!assets || (assets.domains.length === 0 && assets.tokens.length === 0)) {
-    return (
-      <Section className="p-8 text-center">
-        <Gem className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-        <p className="text-muted-foreground">No assets found in your wallet.</p>
-        <p className="text-sm text-muted-foreground mt-2">
-          Register domains or mint tokens to see them here.
-        </p>
-      </Section>
-    );
-  }
-
-  return (
-    <div className="space-y-6">
-      {/* Summary */}
-      <Grid cols={{ default: 2 }} gap="md">
-        <Section>
-          <div className="flex items-center gap-3 mb-2">
-            <Globe className="w-5 h-5 text-primary" />
-            <span className="text-sm text-muted-foreground">Domains</span>
-          </div>
-          <p className="text-2xl font-bold text-foreground">{assets.total_domains}</p>
-        </Section>
-        <Section>
-          <div className="flex items-center gap-3 mb-2">
-            <Gem className="w-5 h-5 text-primary" />
-            <span className="text-sm text-muted-foreground">Token Types</span>
-          </div>
-          <p className="text-2xl font-bold text-foreground">{assets.total_token_types}</p>
-        </Section>
-      </Grid>
-
-      {/* Domains */}
-      {assets.domains.length > 0 && (
-        <Section className="p-0 overflow-hidden">
-          <div className="p-4 border-b border-border">
-            <h2 className="font-semibold text-foreground flex items-center gap-2">
-              <Globe className="w-5 h-5" />
-              Domains ({assets.domains.length})
-            </h2>
-          </div>
-          <div className="divide-y divide-border">
-            {assets.domains.map((domain) => (
-              <div
-                key={domain.name}
-                className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div className={cn(
-                    "w-10 h-10 rounded-lg flex items-center justify-center",
-                    domain.is_locked ? "bg-success/10" : "bg-primary/10"
-                  )}>
-                    {domain.is_locked ? (
-                      <ShieldCheck className="w-5 h-5 text-success" />
-                    ) : (
-                      <Globe className="w-5 h-5 text-primary" />
-                    )}
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground">{domain.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {domain.record_count} records
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {domain.is_locked && (
-                    <span className="px-2 py-1 text-xs bg-success/10 text-success rounded-full flex items-center gap-1">
-                      <Lock className="w-3 h-3" />
-                      Protected
-                    </span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </Section>
-      )}
-
-      {/* Tokens */}
-      {assets.tokens.length > 0 && (
-        <Section className="p-0 overflow-hidden">
-          <div className="p-4 border-b border-border">
-            <h2 className="font-semibold text-foreground flex items-center gap-2">
-              <Gem className="w-5 h-5" />
-              Tokens ({assets.tokens.length})
-            </h2>
-          </div>
-          <div className="divide-y divide-border">
-            {assets.tokens.map((token) => (
-              <div
-                key={token.ticker}
-                className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div className={cn(
-                    "w-10 h-10 rounded-lg flex items-center justify-center",
-                    token.is_locked ? "bg-success/10" : "bg-primary/10"
-                  )}>
-                    {token.is_locked ? (
-                      <ShieldCheck className="w-5 h-5 text-success" />
-                    ) : (
-                      <Gem className="w-5 h-5 text-primary" />
-                    )}
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground">{token.ticker}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {token.utxo_count} UTXOs
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="font-medium font-tabular text-foreground">{token.balance}</p>
-                  {token.is_locked && (
-                    <span className="px-2 py-0.5 text-xs bg-success/10 text-success rounded-full">
-                      Protected
-                    </span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </Section>
-      )}
-    </div>
-  );
-}
-
-// Locks Section Component
-function LocksSection({
-  lockedUtxos,
-  lockSettings,
-  isLoading,
-  onUnlock,
-  onSync,
-  onToggleAutoLock,
-  isSyncing,
-  t,
-}: {
-  lockedUtxos?: LockedUtxo[];
-  lockSettings?: LockSettings;
-  isLoading: boolean;
-  onUnlock: (txid: string, vout: number) => void;
-  onSync: () => void;
-  onToggleAutoLock: (enabled: boolean) => void;
-  isSyncing: boolean;
-  t: (key: string) => string;
-}) {
-  if (isLoading) {
-    return (
-      <Section className="p-8 flex items-center justify-center">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-      </Section>
-    );
-  }
-
-  return (
-    <div className="space-y-6">
-      {/* Lock Settings Card */}
-      <Section>
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Shield className="w-6 h-6 text-primary" />
-            </div>
-            <div>
-              <h2 className="font-semibold text-foreground">UTXO Lock Protection</h2>
-              <p className="text-sm text-muted-foreground">
-                Prevent accidental spending of ownership UTXOs
-              </p>
-            </div>
-          </div>
-          <ActionButton
-            variant="primary"
-            loading={isSyncing}
-            onClick={onSync}
-            icon={RotateCw}
-            label="Sync Locks"
-          />
-        </div>
-
-        <div className="grid grid-cols-3 gap-6 pt-6 border-t border-border">
-          <div>
-            <p className="text-xs text-muted-foreground mb-1">Total Locked</p>
-            <p className="text-2xl font-bold text-primary">
-              {lockSettings?.total_locked || 0}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground mb-1">Auto-Lock</p>
-            <button
-              onClick={() => onToggleAutoLock(!lockSettings?.auto_lock_enabled)}
-              className={cn(
-                "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
-                lockSettings?.auto_lock_enabled
-                  ? "bg-success/10 text-success"
-                  : "bg-muted text-muted-foreground"
-              )}
-            >
-              {lockSettings?.auto_lock_enabled ? "Enabled" : "Disabled"}
-            </button>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground mb-1">Last Sync</p>
-            <p className="text-sm text-foreground">
-              {lockSettings?.last_sync
-                ? new Date(lockSettings.last_sync).toLocaleString()
-                : "Never"}
-            </p>
-          </div>
-        </div>
-      </Section>
-
-      {/* Locked UTXOs List */}
-      <Section className="p-0 overflow-hidden">
-        <div className="p-4 border-b border-border flex items-center justify-between">
-          <h2 className="font-semibold text-foreground flex items-center gap-2">
-            <Lock className="w-5 h-5" />
-            Locked UTXOs
-          </h2>
-          <span className="text-sm text-muted-foreground">
-            {lockedUtxos?.length || 0} locked
-          </span>
-        </div>
-        {!lockedUtxos || lockedUtxos.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground">
-            <Lock className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>No locked UTXOs</p>
-            <p className="text-sm mt-2">
-              Click "Sync Locks" to automatically detect ownership UTXOs
-            </p>
-          </div>
-        ) : (
-          <div className="divide-y divide-border max-h-[400px] overflow-auto">
-            {lockedUtxos.map((utxo) => (
-              <div
-                key={`${utxo.txid}:${utxo.vout}`}
-                className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center">
-                    <Lock className="w-5 h-5 text-warning" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-mono text-foreground">
-                      {shortenHash(utxo.txid, 8)}:{utxo.vout}
-                    </p>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span className="capitalize">{utxo.reason}</span>
-                      {utxo.asset_id && utxo.asset_type === "domain" ? (
-                        <a
-                          href={`/?app=app-domains&url=${encodeURIComponent(`http://localhost:3400/domain/${utxo.asset_id}/manage`)}`}
-                          className="text-primary hover:text-primary/80 transition-colors inline-flex items-center gap-1"
-                        >
-                          • {utxo.asset_id}
-                        </a>
-                      ) : utxo.asset_id ? (
-                        <span className="text-primary">• {utxo.asset_id}</span>
-                      ) : null}
-                    </div>
-                  </div>
-                </div>
-                <button
-                  onClick={() => onUnlock(utxo.txid, utxo.vout)}
-                  className="p-2 rounded-lg bg-muted hover:bg-muted/80 text-muted-foreground transition-colors"
-                  title="Unlock UTXO"
-                >
-                  <Unlock className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </Section>
-    </div>
-  );
-}

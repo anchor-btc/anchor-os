@@ -89,5 +89,17 @@ pub struct CreateMessageRequest {
     pub parent_vout: Option<u8>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub carrier: Option<u8>,
+    /// Lock the created UTXO for DNS (for new domain registrations)
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub lock_for_dns: bool,
+    /// Domain name for DNS operations
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub domain_name: Option<String>,
+    /// Lock the created UTXO for Token operations
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub lock_for_token: bool,
+    /// Token ticker for token operations
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub token_ticker: Option<String>,
 }
 

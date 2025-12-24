@@ -67,6 +67,12 @@ pub struct CreateMessageRequest {
     pub lock_for_dns: bool,
     /// Domain name for DNS operations (used with unlock_for_dns or lock_for_dns)
     pub domain_name: Option<String>,
+    /// Lock the created UTXO for Token operations
+    /// When true, the anchor output will be locked as a token UTXO
+    #[serde(default)]
+    pub lock_for_token: bool,
+    /// Token ticker for token operations (used with lock_for_token)
+    pub token_ticker: Option<String>,
 }
 
 fn default_fee_rate() -> u64 {
@@ -248,6 +254,26 @@ pub async fn create_message(
                         info!(
                             "Locked domain '{}' UTXO at {}:{}",
                             domain_name, result.txid, lock_vout
+                        );
+                    }
+                }
+            }
+
+            // Handle token lock for mints and deploys
+            if req.lock_for_token {
+                if let Some(ticker) = &req.token_ticker {
+                    // Lock the anchor output as a token UTXO
+                    let lock_vout = result.anchor_vout;
+                    if let Err(e) = state.lock_manager.lock(
+                        result.txid.clone(),
+                        lock_vout,
+                        LockReason::Token { ticker: ticker.clone(), amount: "0".to_string() },
+                    ) {
+                        warn!("Failed to lock token UTXO {}:{}: {}", result.txid, lock_vout, e);
+                    } else {
+                        info!(
+                            "Locked token '{}' UTXO at {}:{}",
+                            ticker, result.txid, lock_vout
                         );
                     }
                 }

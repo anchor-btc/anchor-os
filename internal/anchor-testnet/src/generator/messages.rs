@@ -178,6 +178,10 @@ impl MessageGenerator {
             parent_txid: None,
             parent_vout: None,
             carrier: Some(carrier as u8),
+            lock_for_dns: false,
+            domain_name: None,
+            lock_for_token: false,
+            token_ticker: None,
         };
 
         let response = self.wallet.send_create_message(&request).await?;
@@ -211,6 +215,10 @@ impl MessageGenerator {
             parent_txid: Some(parent.0.clone()),
             parent_vout: Some(parent.1 as u8),
             carrier: Some(carrier as u8),
+            lock_for_dns: false,
+            domain_name: None,
+            lock_for_token: false,
+            token_ticker: None,
         };
 
         let response = self.wallet.send_create_message(&request).await?;
@@ -261,6 +269,10 @@ impl MessageGenerator {
             parent_txid: None,
             parent_vout: None,
             carrier: Some(carrier as u8),
+            lock_for_dns: false,
+            domain_name: None,
+            lock_for_token: false,
+            token_ticker: None,
         };
 
         let response = self.wallet.send_create_message(&request).await?;
@@ -291,6 +303,10 @@ impl MessageGenerator {
             parent_txid: None,
             parent_vout: None,
             carrier: Some(carrier as u8),
+            lock_for_dns: false,
+            domain_name: None,
+            lock_for_token: false,
+            token_ticker: None,
         };
 
         let response = self.wallet.send_create_message(&request).await?;
@@ -338,6 +354,10 @@ impl MessageGenerator {
             parent_txid: None,
             parent_vout: None,
             carrier: Some(carrier as u8),
+            lock_for_dns: false,
+            domain_name: None,
+            lock_for_token: false,
+            token_ticker: None,
         };
 
         let response = self.wallet.send_create_message(&request).await?;
@@ -375,7 +395,7 @@ impl MessageGenerator {
 
         let body = hex::encode(&data);
 
-        tracing::info!("Creating DNS record for: {}", full_domain);
+        tracing::info!("Creating DNS record for: {} (with auto-lock)", full_domain);
 
         let request = CreateMessageRequest {
             kind: 10, // Custom(10) for DNS
@@ -384,6 +404,10 @@ impl MessageGenerator {
             parent_txid: None,
             parent_vout: None,
             carrier: Some(carrier as u8),
+            lock_for_dns: true, // Auto-lock the domain UTXO
+            domain_name: Some(full_domain.clone()),
+            lock_for_token: false,
+            token_ticker: None,
         };
 
         let response = self.wallet.send_create_message(&request).await?;
@@ -437,6 +461,10 @@ impl MessageGenerator {
             parent_txid: None,
             parent_vout: None,
             carrier: Some(carrier as u8),
+            lock_for_dns: false,
+            domain_name: None,
+            lock_for_token: false,
+            token_ticker: None,
         };
 
         let response = self.wallet.send_create_message(&request).await?;
@@ -488,7 +516,7 @@ impl MessageGenerator {
         let body = hex::encode(&data);
 
         tracing::info!(
-            "🪙 Deploying token: {} (decimals: {}, max_supply: {})",
+            "🪙 Deploying token: {} (decimals: {}, max_supply: {}) (with auto-lock)",
             full_ticker,
             decimals,
             max_supply
@@ -501,6 +529,10 @@ impl MessageGenerator {
             parent_txid: None,
             parent_vout: None,
             carrier: Some(carrier as u8),
+            lock_for_dns: false,
+            domain_name: None,
+            lock_for_token: true, // Auto-lock the token UTXO
+            token_ticker: Some(full_ticker.clone()),
         };
 
         let response = self.wallet.send_create_message(&request).await?;
@@ -555,7 +587,7 @@ impl MessageGenerator {
         let body = hex::encode(&data);
 
         tracing::info!(
-            "🪙 Minting {} {} tokens",
+            "🪙 Minting {} {} tokens (with auto-lock)",
             base_amount,
             ticker
         );
@@ -567,6 +599,10 @@ impl MessageGenerator {
             parent_txid: None,
             parent_vout: None,
             carrier: Some(carrier as u8),
+            lock_for_dns: false,
+            domain_name: None,
+            lock_for_token: true, // Auto-lock the minted token UTXO
+            token_ticker: Some(ticker.clone()),
         };
 
         let response = self.wallet.send_create_message(&request).await?;
@@ -639,7 +675,7 @@ impl MessageGenerator {
         let body = hex::encode(&data);
 
         tracing::info!(
-            "🪙 Transferring {} {} tokens (from {} total)",
+            "🪙 Transferring {} {} tokens (from {} total) (with auto-lock)",
             transfer_amount,
             ticker,
             input_amount
@@ -652,6 +688,10 @@ impl MessageGenerator {
             parent_txid: Some(input_txid.clone()),
             parent_vout: Some(input_vout as u8),
             carrier: Some(carrier as u8),
+            lock_for_dns: false,
+            domain_name: None,
+            lock_for_token: true, // Auto-lock the transfer outputs
+            token_ticker: Some(ticker.clone()),
         };
 
         let response = self.wallet.send_create_message(&request).await?;
@@ -717,11 +757,13 @@ impl MessageGenerator {
         let body = hex::encode(&data);
 
         tracing::info!(
-            "🔥 Burning {} {} tokens (from {} total)",
+            "🔥 Burning {} {} tokens (from {} total) (with auto-lock for remaining)",
             burn_amount,
             ticker,
             input_amount
         );
+
+        let remaining = input_amount.saturating_sub(burn_amount);
 
         let request = CreateMessageRequest {
             kind: 20, // Token
@@ -730,6 +772,10 @@ impl MessageGenerator {
             parent_txid: Some(input_txid.clone()),
             parent_vout: Some(input_vout as u8),
             carrier: Some(carrier as u8),
+            lock_for_dns: false,
+            domain_name: None,
+            lock_for_token: remaining > 0, // Only lock if there are remaining tokens
+            token_ticker: if remaining > 0 { Some(ticker.clone()) } else { None },
         };
 
         let response = self.wallet.send_create_message(&request).await?;
@@ -739,7 +785,6 @@ impl MessageGenerator {
             // Remove the spent UTXO
             token.utxos.retain(|(txid, vout, _)| !(txid == &input_txid && *vout == input_vout));
             // Add the remaining tokens as new UTXO
-            let remaining = input_amount.saturating_sub(burn_amount);
             if remaining > 0 {
                 token.utxos.push((response.txid.clone(), 0, remaining));
             }
@@ -822,6 +867,10 @@ impl MessageGenerator {
             parent_txid: None,
             parent_vout: None,
             carrier: Some(carrier as u8),
+            lock_for_dns: false,
+            domain_name: None,
+            lock_for_token: false,
+            token_ticker: None,
         };
 
         let response = self.wallet.send_create_message(&request).await?;
@@ -921,6 +970,10 @@ impl MessageGenerator {
             parent_txid: None,
             parent_vout: None,
             carrier: Some(carrier as u8),
+            lock_for_dns: false,
+            domain_name: None,
+            lock_for_token: false,
+            token_ticker: None,
         };
 
         let response = self.wallet.send_create_message(&request).await?;

@@ -21,6 +21,58 @@ export function formatNumber(num: number | bigint): string {
 }
 
 /**
+ * Format token amount with decimals
+ * @param amount - The raw amount (smallest unit)
+ * @param decimals - Number of decimal places
+ * @param displayDecimals - How many decimals to show (default: all)
+ */
+export function formatTokenAmount(
+  amount: string | bigint,
+  decimals: number,
+  displayDecimals?: number
+): string {
+  const amountBigInt = typeof amount === "string" ? BigInt(amount) : amount;
+  
+  if (decimals === 0) {
+    return amountBigInt.toLocaleString();
+  }
+  
+  const divisor = 10n ** BigInt(decimals);
+  const integerPart = amountBigInt / divisor;
+  const fractionalPart = amountBigInt % divisor;
+  
+  // Pad fractional part with leading zeros
+  let fractionalStr = fractionalPart.toString().padStart(decimals, "0");
+  
+  // Trim trailing zeros if displayDecimals is set
+  if (displayDecimals !== undefined && displayDecimals < decimals) {
+    fractionalStr = fractionalStr.slice(0, displayDecimals);
+  }
+  
+  // Remove trailing zeros
+  fractionalStr = fractionalStr.replace(/0+$/, "");
+  
+  if (fractionalStr === "") {
+    return integerPart.toLocaleString();
+  }
+  
+  return `${integerPart.toLocaleString()}.${fractionalStr}`;
+}
+
+/**
+ * Calculate percentage with formatting
+ */
+export function formatPercentage(part: bigint, total: bigint, decimals: number = 2): string {
+  if (total === 0n) return "0%";
+  
+  const multiplier = 10n ** BigInt(decimals + 2);
+  const percentage = (part * multiplier) / total;
+  const value = Number(percentage) / (10 ** decimals);
+  
+  return `${value.toFixed(decimals)}%`;
+}
+
+/**
  * Format timestamp to relative time
  */
 export function formatRelativeTime(date: Date | string): string {

@@ -184,57 +184,96 @@ pub async fn get_wallet_tokens(
         }));
     }
 
-    // Get unique addresses
-    let addresses: Vec<String> = all_token_utxos
-        .iter()
-        .filter_map(|u| u.owner_address.clone())
-        .collect::<std::collections::HashSet<_>>()
-        .into_iter()
-        .collect();
-
-    // Check which addresses are controlled by the wallet using Bitcoin RPC
-    let client = reqwest::Client::new();
-    let mut wallet_addresses: std::collections::HashSet<String> = std::collections::HashSet::new();
-    
-    // Extract Bitcoin RPC URL from wallet URL (wallet is on same host as Bitcoin RPC)
-    let bitcoin_rpc_url = std::env::var("BITCOIN_RPC_URL").unwrap_or_else(|_| "http://bitcoin:18443".to_string());
+    // Get the network from Bitcoin RPC
+    let bitcoin_rpc_url = std::env::var("BITCOIN_RPC_URL").unwrap_or_else(|_| "http://core-bitcoin:18443".to_string());
     let bitcoin_rpc_user = std::env::var("BITCOIN_RPC_USER").unwrap_or_else(|_| "anchor".to_string());
     let bitcoin_rpc_password = std::env::var("BITCOIN_RPC_PASSWORD").unwrap_or_else(|_| "anchor".to_string());
-
-    let num_addresses = addresses.len();
-    for addr in addresses {
-        // Call Bitcoin RPC getaddressinfo to check if address is ours
+    
+    // Check if we're in regtest mode
+    let client = reqwest::Client::new();
+    let is_regtest = {
         let response = client
             .post(&bitcoin_rpc_url)
             .basic_auth(&bitcoin_rpc_user, Some(&bitcoin_rpc_password))
             .json(&serde_json::json!({
                 "jsonrpc": "1.0",
-                "id": "wallet_tokens",
-                "method": "getaddressinfo",
-                "params": [&addr]
+                "id": "getblockchaininfo",
+                "method": "getblockchaininfo",
+                "params": []
             }))
             .send()
             .await;
-
+        
         if let Ok(resp) = response {
-            if let Ok(result) = resp.json::<serde_json::Value>().await {
-                if result["result"]["ismine"].as_bool() == Some(true) {
-                    wallet_addresses.insert(addr);
+            if let Ok(json) = resp.json::<serde_json::Value>().await {
+                json["result"]["chain"].as_str() == Some("regtest")
+            } else {
+                false
+            }
+        } else {
+            false
+        }
+    };
+
+    // In regtest mode, assume all tokens belong to the user (single wallet environment)
+    // In other networks, we would check address ownership via Bitcoin RPC
+    let wallet_utxos: Vec<TokenUtxo> = if is_regtest {
+        tracing::info!("Regtest mode: returning all {} token UTXOs as wallet-owned", all_token_utxos.len());
+        all_token_utxos
+    } else {
+        // Get unique addresses
+        let addresses: Vec<String> = all_token_utxos
+            .iter()
+            .filter_map(|u| u.owner_address.clone())
+            .collect::<std::collections::HashSet<_>>()
+            .into_iter()
+            .collect();
+
+        let mut wallet_addresses: std::collections::HashSet<String> = std::collections::HashSet::new();
+        
+        // Use wallet-specific URL for getaddressinfo (required for multi-wallet Bitcoin Core)
+        let wallet_rpc_url = format!("{}/wallet/anchor_wallet", bitcoin_rpc_url);
+
+        let num_addresses = addresses.len();
+        tracing::info!("Checking {} unique addresses for wallet ownership", num_addresses);
+        
+        for addr in addresses {
+            // Call Bitcoin RPC getaddressinfo to check if address is ours
+            let response = client
+                .post(&wallet_rpc_url)
+                .basic_auth(&bitcoin_rpc_user, Some(&bitcoin_rpc_password))
+                .json(&serde_json::json!({
+                    "jsonrpc": "1.0",
+                    "id": "wallet_tokens",
+                    "method": "getaddressinfo",
+                    "params": [&addr]
+                }))
+                .send()
+                .await;
+
+            if let Ok(resp) = response {
+                if let Ok(result) = resp.json::<serde_json::Value>().await {
+                    if result["result"]["ismine"].as_bool() == Some(true) {
+                        wallet_addresses.insert(addr.clone());
+                        tracing::debug!("Address {} is owned by wallet", addr);
+                    }
                 }
             }
         }
-    }
+        
+        tracing::info!("Found {} wallet-owned addresses out of {}", wallet_addresses.len(), num_addresses);
 
-    // Filter token UTXOs to only those owned by wallet
-    let wallet_utxos: Vec<TokenUtxo> = all_token_utxos
-        .into_iter()
-        .filter(|u| {
-            u.owner_address
-                .as_ref()
-                .map(|a| wallet_addresses.contains(a))
-                .unwrap_or(false)
-        })
-        .collect();
+        // Filter token UTXOs to only those owned by wallet
+        all_token_utxos
+            .into_iter()
+            .filter(|u| {
+                u.owner_address
+                    .as_ref()
+                    .map(|a| wallet_addresses.contains(a))
+                    .unwrap_or(false)
+            })
+            .collect()
+    };
 
     // Aggregate balances
     let mut token_balances: std::collections::HashMap<i32, (String, i16, i128)> = std::collections::HashMap::new();
@@ -259,10 +298,12 @@ pub async fn get_wallet_tokens(
         })
         .collect();
 
+    let total_utxos = wallet_utxos.len() as i32;
+    
     Ok(Json(WalletTokensResponse {
         balances,
         utxos: wallet_utxos,
-        total_utxos: num_addresses as i32,
+        total_utxos,
     }))
 }
 

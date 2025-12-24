@@ -40,7 +40,8 @@ impl From<TokenRow> for Token {
     fn from(row: TokenRow) -> Self {
         let minted: i128 = row.minted_supply.parse().unwrap_or(0);
         let burned: i128 = row.burned_supply.parse().unwrap_or(0);
-        let circulating = minted - burned;
+        // Ensure circulating never goes negative (indicates data inconsistency)
+        let circulating = (minted - burned).max(0);
 
         Token {
             id: row.id,
@@ -526,11 +527,26 @@ impl Database {
     }
 
     /// Update holder count for a token
+    /// Uses COUNT of unspent UTXOs since owner_address may not always be available
     pub async fn update_holder_count(&self, token_id: i32) -> Result<()> {
-        sqlx::query("SELECT update_holder_count($1)")
-            .bind(token_id)
-            .execute(&self.pool)
-            .await?;
+        // First try to count unique addresses, if none available, count UTXOs
+        sqlx::query(
+            "UPDATE tokens SET holder_count = (
+                SELECT GREATEST(
+                    -- Count unique addresses with balances
+                    (SELECT COUNT(DISTINCT owner_address) FROM token_utxos 
+                     WHERE token_id = $1 AND spent_txid IS NULL AND owner_address IS NOT NULL),
+                    -- Fallback: count UTXOs if no addresses (regtest/dev mode)
+                    CASE WHEN (SELECT COUNT(*) FROM token_utxos 
+                               WHERE token_id = $1 AND spent_txid IS NULL AND owner_address IS NOT NULL) = 0
+                    THEN (SELECT COUNT(*) FROM token_utxos WHERE token_id = $1 AND spent_txid IS NULL)
+                    ELSE 0 END
+                )
+            ) WHERE id = $1"
+        )
+        .bind(token_id)
+        .execute(&self.pool)
+        .await?;
         Ok(())
     }
 
@@ -560,6 +576,7 @@ impl Database {
     }
 
     /// Get token holders
+    /// In regtest mode (no addresses), returns UTXOs as individual "holders"
     pub async fn get_token_holders(
         &self,
         token_id: i32,
@@ -568,18 +585,82 @@ impl Database {
     ) -> Result<PaginatedResponse<TokenHolder>> {
         let offset = (page - 1) * per_page;
 
+        // First try to get real holders from token_balances
+        let balance_count: (i64,) = sqlx::query_as(
+            "SELECT COUNT(*) FROM token_balances WHERE token_id = $1 AND balance > 0"
+        )
+        .bind(token_id)
+        .fetch_one(&self.pool)
+        .await?;
+
+        if balance_count.0 > 0 {
+            // Use token_balances table (production mode with addresses)
+            let rows = sqlx::query(
+                "SELECT address, balance::text as balance, utxo_count, percentage::float8 as percentage 
+                 FROM get_token_holders($1, $2, $3)"
+            )
+            .bind(token_id)
+            .bind(per_page)
+            .bind(offset)
+            .fetch_all(&self.pool)
+            .await?;
+
+            let total_pages = ((balance_count.0 as f64) / (per_page as f64)).ceil() as i32;
+
+            return Ok(PaginatedResponse {
+                data: rows
+                    .into_iter()
+                    .map(|row| TokenHolder {
+                        address: row.get("address"),
+                        balance: row.get("balance"),
+                        percentage: row.get::<f64, _>("percentage"),
+                        utxo_count: row.get("utxo_count"),
+                        txid: None,
+                        vout: None,
+                    })
+                    .collect(),
+                total: balance_count.0,
+                page,
+                per_page,
+                total_pages,
+            });
+        }
+
+        // Fallback: In regtest/dev mode, show UTXOs as "holders"
+        // This gives visibility into token distribution even without addresses
+        let total_supply: Option<(String,)> = sqlx::query_as(
+            "SELECT SUM(amount)::text FROM token_utxos WHERE token_id = $1 AND spent_txid IS NULL"
+        )
+        .bind(token_id)
+        .fetch_optional(&self.pool)
+        .await?;
+
+        let total_supply_val: i128 = total_supply
+            .and_then(|t| t.0.parse().ok())
+            .unwrap_or(0);
+
         let rows = sqlx::query(
-            "SELECT address, balance::text as balance, utxo_count, percentage::float8 as percentage 
-             FROM get_token_holders($1, $2, $3)"
+            "SELECT 
+                COALESCE(owner_address, 'UTXO #' || ROW_NUMBER() OVER (ORDER BY amount DESC)) as address,
+                amount::text as balance,
+                1 as utxo_count,
+                CASE WHEN $4 > 0 THEN (amount::float8 / $4::float8 * 100) ELSE 0 END as percentage,
+                encode(txid, 'hex') as txid_hex,
+                vout
+             FROM token_utxos 
+             WHERE token_id = $1 AND spent_txid IS NULL
+             ORDER BY amount DESC
+             LIMIT $2 OFFSET $3"
         )
         .bind(token_id)
         .bind(per_page)
         .bind(offset)
+        .bind(total_supply_val as i64)
         .fetch_all(&self.pool)
         .await?;
 
         let total: (i64,) = sqlx::query_as(
-            "SELECT COUNT(*) FROM token_balances WHERE token_id = $1 AND balance > 0"
+            "SELECT COUNT(*) FROM token_utxos WHERE token_id = $1 AND spent_txid IS NULL"
         )
         .bind(token_id)
         .fetch_one(&self.pool)
@@ -587,14 +668,28 @@ impl Database {
 
         let total_pages = ((total.0 as f64) / (per_page as f64)).ceil() as i32;
 
+        // Reverse txid bytes for display format (Bitcoin uses little-endian internally)
+        fn reverse_txid_hex(hex: &str) -> String {
+            let bytes: Vec<_> = (0..hex.len())
+                .step_by(2)
+                .filter_map(|i| u8::from_str_radix(&hex[i..i+2], 16).ok())
+                .collect();
+            bytes.iter().rev().map(|b| format!("{:02x}", b)).collect()
+        }
+
         Ok(PaginatedResponse {
             data: rows
                 .into_iter()
-                .map(|row| TokenHolder {
-                    address: row.get("address"),
-                    balance: row.get("balance"),
-                    percentage: row.get::<f64, _>("percentage"),
-                    utxo_count: row.get("utxo_count"),
+                .map(|row| {
+                    let txid_hex: String = row.get("txid_hex");
+                    TokenHolder {
+                        address: row.get("address"),
+                        balance: row.get("balance"),
+                        percentage: row.get::<f64, _>("percentage"),
+                        utxo_count: row.get("utxo_count"),
+                        txid: Some(reverse_txid_hex(&txid_hex)),
+                        vout: Some(row.get("vout")),
+                    }
                 })
                 .collect(),
             total: total.0,

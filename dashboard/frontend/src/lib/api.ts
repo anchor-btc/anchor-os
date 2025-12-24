@@ -1230,9 +1230,11 @@ export interface DomainAsset {
 
 export interface TokenAsset {
   ticker: string;
-  balance: string;
+  name?: string;
   decimals: number;
-  utxo_count: number;
+  max_supply?: string;
+  total_minted?: string;
+  holder_count?: number;
   is_locked: boolean;
 }
 

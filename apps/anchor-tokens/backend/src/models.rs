@@ -111,6 +111,12 @@ pub struct TokenHolder {
     pub balance: String,
     pub percentage: f64,
     pub utxo_count: i32,
+    /// UTXO txid (only in UTXO-based mode when addresses are not available)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub txid: Option<String>,
+    /// UTXO vout (only in UTXO-based mode when addresses are not available)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vout: Option<i32>,
 }
 
 /// Token statistics

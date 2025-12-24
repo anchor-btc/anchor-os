@@ -1,6 +1,6 @@
 //! Wallet proxy handlers - forwards requests to the wallet service
 
-use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
+use axum::{extract::{Query, State}, http::StatusCode, response::IntoResponse, Json};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tracing::error;
@@ -314,9 +314,11 @@ pub struct DomainAsset {
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct TokenAsset {
     pub ticker: String,
-    pub balance: String,
+    pub name: Option<String>,
     pub decimals: i16,
-    pub utxo_count: i32,
+    pub max_supply: Option<String>,
+    pub total_minted: Option<String>,
+    pub holder_count: Option<i32>,
     pub is_locked: bool,
 }
 
@@ -950,11 +952,21 @@ pub async fn get_migration_status(
     Ok(Json(status))
 }
 
+/// Query parameters for locked assets
+#[derive(Debug, Deserialize)]
+pub struct LockedAssetsQuery {
+    /// Filter by lock type: "domain", "token", "manual", or "all"
+    pub filter: Option<String>,
+}
+
 /// Get locked assets overview
 #[utoipa::path(
     get,
     path = "/wallet/locked-assets",
     tag = "Locks",
+    params(
+        ("filter" = Option<String>, Query, description = "Filter by type: domain, token, manual, or all")
+    ),
     responses(
         (status = 200, description = "Locked assets overview", body = LockedAssetsOverview),
         (status = 500, description = "Internal server error")
@@ -962,8 +974,14 @@ pub async fn get_migration_status(
 )]
 pub async fn get_locked_assets(
     State(state): State<Arc<AppState>>,
+    Query(query): Query<LockedAssetsQuery>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
-    let url = format!("{}/wallet/locked-assets", state.config.wallet_url);
+    let mut url = format!("{}/wallet/locked-assets", state.config.wallet_url);
+    
+    // Pass the filter parameter to the wallet service
+    if let Some(filter) = &query.filter {
+        url = format!("{}?filter={}", url, filter);
+    }
 
     let response = state.http_client.get(&url).send().await.map_err(|e| {
         error!("Failed to connect to wallet service: {}", e);

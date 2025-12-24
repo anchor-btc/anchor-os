@@ -1,7 +1,7 @@
 //! Asset aggregation handlers (domains, tokens)
 
 use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tracing::{error, info, warn};
 use utoipa::ToSchema;
@@ -23,9 +23,11 @@ pub struct DomainAsset {
 #[derive(Serialize, ToSchema)]
 pub struct TokenAsset {
     pub ticker: String,
-    pub balance: String,
+    pub name: Option<String>,
     pub decimals: i16,
-    pub utxo_count: i32,
+    pub max_supply: Option<String>,
+    pub total_minted: Option<String>,
+    pub holder_count: Option<i32>,
     pub is_locked: bool,
 }
 
@@ -38,7 +40,42 @@ pub struct AssetsOverview {
     pub total_token_types: usize,
 }
 
+/// Domains API response structure
+#[derive(Deserialize)]
+struct DomainsApiResponse {
+    data: Vec<DomainData>,
+    total: i64,
+}
+
+#[derive(Deserialize)]
+struct DomainData {
+    name: String,
+    txid: String,
+    record_count: Option<i64>,
+    block_height: Option<i32>,
+    created_at: Option<String>,
+}
+
+/// Tokens API response structure
+#[derive(Deserialize)]
+struct TokensApiResponse {
+    data: Vec<TokenData>,
+    total: i64,
+}
+
+#[derive(Deserialize)]
+struct TokenData {
+    ticker: String,
+    name: Option<String>,
+    decimals: Option<i16>,
+    max_supply: Option<String>,
+    total_minted: Option<String>,
+    holder_count: Option<i32>,
+    deploy_txid: Option<String>,
+}
+
 /// Get all assets owned by the wallet
+/// On regtest, this fetches ALL indexed domains and tokens since everything belongs to the user
 #[utoipa::path(
     get,
     path = "/wallet/assets",
@@ -55,96 +92,81 @@ pub async fn get_assets(
 
     let locked_set = state.lock_manager.get_locked_set();
     
-    // Use locked UTXOs instead of all wallet UTXOs (much smaller set)
-    let locked_utxos = state.lock_manager.list_locked();
-    
-    // Get domain txids from locked domain UTXOs
-    let domain_txids: Vec<String> = locked_utxos
-        .iter()
-        .filter(|u| u.reason.is_domain())
-        .map(|u| u.txid.clone())
-        .collect();
-    
-    // Get token txids from locked token UTXOs
-    let token_txids: Vec<String> = locked_utxos
-        .iter()
-        .filter(|u| u.reason.is_token())
-        .map(|u| u.txid.clone())
-        .collect();
-
     let mut domains: Vec<DomainAsset> = Vec::new();
     let mut tokens: Vec<TokenAsset> = Vec::new();
 
-    // Fetch domains from Anchor Domains backend
-    if !domain_txids.is_empty() {
-        let domains_url = format!("{}/my-domains", state.config.domains_url);
-        let params = format!("owner_txids={}", domain_txids.join(","));
-        let full_url = format!("{}?{}", domains_url, params);
-
-        match reqwest::get(&full_url).await {
-            Ok(resp) if resp.status().is_success() => {
-                if let Ok(data) = resp.json::<serde_json::Value>().await {
-                    if let Some(domain_list) = data.get("data").and_then(|d| d.as_array()) {
-                        for domain in domain_list {
-                            let txid = domain.get("txid").and_then(|t| t.as_str()).unwrap_or("");
-                            let is_locked = locked_set.contains(&(txid.to_string(), 0));
-                            
-                            domains.push(DomainAsset {
-                                name: domain.get("name").and_then(|n| n.as_str()).unwrap_or("").to_string(),
-                                txid: txid.to_string(),
-                                record_count: domain.get("record_count").and_then(|r| r.as_i64()).unwrap_or(0),
-                                block_height: domain.get("block_height").and_then(|b| b.as_i64()).map(|b| b as i32),
-                                created_at: domain.get("created_at").and_then(|c| c.as_str()).map(String::from),
-                                is_locked,
-                            });
-                        }
+    // Fetch ALL domains from Anchor Domains backend
+    // On regtest, all domains belong to the wallet
+    let domains_url = format!("{}/domains?per_page=1000", state.config.domains_url);
+    
+    match reqwest::get(&domains_url).await {
+        Ok(resp) if resp.status().is_success() => {
+            match resp.json::<DomainsApiResponse>().await {
+                Ok(data) => {
+                    info!("Fetched {} domains from backend (total: {})", data.data.len(), data.total);
+                    for domain in data.data {
+                        let is_locked = locked_set.contains(&(domain.txid.clone(), 0));
+                        
+                        domains.push(DomainAsset {
+                            name: domain.name,
+                            txid: domain.txid,
+                            record_count: domain.record_count.unwrap_or(0),
+                            block_height: domain.block_height,
+                            created_at: domain.created_at,
+                            is_locked,
+                        });
                     }
                 }
+                Err(e) => {
+                    warn!("Failed to parse domains response: {}", e);
+                }
             }
-            Ok(resp) => {
-                warn!("Domains backend returned status {}", resp.status());
-            }
-            Err(e) => {
-                warn!("Failed to query domains backend: {}", e);
-            }
+        }
+        Ok(resp) => {
+            warn!("Domains backend returned status {}", resp.status());
+        }
+        Err(e) => {
+            warn!("Failed to query domains backend: {}", e);
         }
     }
 
-    // Fetch tokens from Anchor Tokens backend using locked token txids
-    if !token_txids.is_empty() {
-        let tokens_url = format!("{}/tokens/by-txids", state.config.tokens_url);
-        let params = format!("txids={}", token_txids.join(","));
-        let full_url = format!("{}?{}", tokens_url, params);
+    // Fetch ALL tokens from Anchor Tokens backend
+    // On regtest, all tokens belong to the wallet
+    let tokens_url = format!("{}/tokens?per_page=1000", state.config.tokens_url);
 
-        match reqwest::get(&full_url).await {
-            Ok(resp) if resp.status().is_success() => {
-                if let Ok(data) = resp.json::<serde_json::Value>().await {
-                    if let Some(token_list) = data.as_array() {
-                        for token in token_list {
-                            let ticker = token.get("ticker").and_then(|t| t.as_str()).unwrap_or("").to_string();
-                            
-                            // Skip if we already have this token
-                            if tokens.iter().any(|t| t.ticker == ticker) {
-                                continue;
-                            }
-
-                            tokens.push(TokenAsset {
-                                ticker,
-                                balance: token.get("balance").and_then(|b| b.as_str()).unwrap_or("0").to_string(),
-                                decimals: token.get("decimals").and_then(|d| d.as_i64()).unwrap_or(0) as i16,
-                                utxo_count: token.get("utxo_count").and_then(|u| u.as_i64()).unwrap_or(0) as i32,
-                                is_locked: true, // If we're querying by locked txids, they're all locked
-                            });
-                        }
+    match reqwest::get(&tokens_url).await {
+        Ok(resp) if resp.status().is_success() => {
+            match resp.json::<TokensApiResponse>().await {
+                Ok(data) => {
+                    info!("Fetched {} tokens from backend (total: {})", data.data.len(), data.total);
+                    for token in data.data {
+                        // Check if the deploy txid is locked
+                        let is_locked = token.deploy_txid
+                            .as_ref()
+                            .map(|txid| locked_set.contains(&(txid.clone(), 0)))
+                            .unwrap_or(false);
+                        
+                        tokens.push(TokenAsset {
+                            ticker: token.ticker,
+                            name: token.name,
+                            decimals: token.decimals.unwrap_or(0),
+                            max_supply: token.max_supply,
+                            total_minted: token.total_minted,
+                            holder_count: token.holder_count,
+                            is_locked,
+                        });
                     }
                 }
+                Err(e) => {
+                    warn!("Failed to parse tokens response: {}", e);
+                }
             }
-            Ok(resp) => {
-                warn!("Tokens backend returned status {}", resp.status());
-            }
-            Err(e) => {
-                warn!("Failed to query tokens backend: {}", e);
-            }
+        }
+        Ok(resp) => {
+            warn!("Tokens backend returned status {}", resp.status());
+        }
+        Err(e) => {
+            warn!("Failed to query tokens backend: {}", e);
         }
     }
 
@@ -177,58 +199,39 @@ pub async fn get_assets(
 pub async fn get_assets_domains(
     State(state): State<Arc<AppState>>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
-    // Get current wallet UTXOs
-    let _wallet_utxos = match state.wallet.list_utxos() {
-        Ok(utxos) => utxos,
-        Err(e) => {
-            error!("Failed to list wallet UTXOs: {}", e);
-            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
-        }
-    };
-
     let locked_set = state.lock_manager.get_locked_set();
-    
-    // Only query with locked domain UTXOs (not all wallet UTXOs - that would be too many!)
-    let locked_domain_txids: Vec<String> = state.lock_manager
-        .list_locked()
-        .into_iter()
-        .filter(|u| u.reason.is_domain())
-        .map(|u| u.txid)
-        .collect();
-
     let mut domains: Vec<DomainAsset> = Vec::new();
 
-    if !locked_domain_txids.is_empty() {
-        let domains_url = format!("{}/my-domains", state.config.domains_url);
-        let params = format!("owner_txids={}", locked_domain_txids.join(","));
-        let full_url = format!("{}?{}", domains_url, params);
+    // Fetch ALL domains from backend
+    let domains_url = format!("{}/domains?per_page=1000", state.config.domains_url);
 
-        match reqwest::get(&full_url).await {
-            Ok(resp) if resp.status().is_success() => {
-                if let Ok(data) = resp.json::<serde_json::Value>().await {
-                    if let Some(domain_list) = data.get("data").and_then(|d| d.as_array()) {
-                        for domain in domain_list {
-                            let txid = domain.get("txid").and_then(|t| t.as_str()).unwrap_or("");
-                            let is_locked = locked_set.contains(&(txid.to_string(), 0));
-                            
-                            domains.push(DomainAsset {
-                                name: domain.get("name").and_then(|n| n.as_str()).unwrap_or("").to_string(),
-                                txid: txid.to_string(),
-                                record_count: domain.get("record_count").and_then(|r| r.as_i64()).unwrap_or(0),
-                                block_height: domain.get("block_height").and_then(|b| b.as_i64()).map(|b| b as i32),
-                                created_at: domain.get("created_at").and_then(|c| c.as_str()).map(String::from),
-                                is_locked,
-                            });
-                        }
+    match reqwest::get(&domains_url).await {
+        Ok(resp) if resp.status().is_success() => {
+            match resp.json::<DomainsApiResponse>().await {
+                Ok(data) => {
+                    for domain in data.data {
+                        let is_locked = locked_set.contains(&(domain.txid.clone(), 0));
+                        
+                        domains.push(DomainAsset {
+                            name: domain.name,
+                            txid: domain.txid,
+                            record_count: domain.record_count.unwrap_or(0),
+                            block_height: domain.block_height,
+                            created_at: domain.created_at,
+                            is_locked,
+                        });
                     }
                 }
+                Err(e) => {
+                    warn!("Failed to parse domains response: {}", e);
+                }
             }
-            Ok(resp) => {
-                warn!("Domains backend returned status {}", resp.status());
-            }
-            Err(e) => {
-                warn!("Failed to query domains backend: {}", e);
-            }
+        }
+        Ok(resp) => {
+            warn!("Domains backend returned status {}", resp.status());
+        }
+        Err(e) => {
+            warn!("Failed to query domains backend: {}", e);
         }
     }
 
@@ -248,49 +251,45 @@ pub async fn get_assets_domains(
 pub async fn get_assets_tokens(
     State(state): State<Arc<AppState>>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
-    // Get current wallet UTXOs
-    let wallet_utxos = match state.wallet.list_utxos() {
-        Ok(utxos) => utxos,
-        Err(e) => {
-            error!("Failed to list wallet UTXOs: {}", e);
-            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
-        }
-    };
-
     let locked_set = state.lock_manager.get_locked_set();
     let mut tokens: Vec<TokenAsset> = Vec::new();
 
-    // Query token balances
-    let tokens_url = format!("{}/address", state.config.tokens_url);
-    if let Ok(addr) = state.wallet.get_new_address() {
-        let full_url = format!("{}/{}/balances", tokens_url, addr);
-        match reqwest::get(&full_url).await {
-            Ok(resp) if resp.status().is_success() => {
-                if let Ok(data) = resp.json::<serde_json::Value>().await {
-                    if let Some(balance_list) = data.as_array() {
-                        for balance in balance_list {
-                            let ticker = balance.get("ticker").and_then(|t| t.as_str()).unwrap_or("").to_string();
-                            
-                            tokens.push(TokenAsset {
-                                ticker,
-                                balance: balance.get("balance").and_then(|b| b.as_str()).unwrap_or("0").to_string(),
-                                decimals: balance.get("decimals").and_then(|d| d.as_i64()).unwrap_or(0) as i16,
-                                utxo_count: balance.get("utxo_count").and_then(|u| u.as_i64()).unwrap_or(0) as i32,
-                                is_locked: wallet_utxos.iter().any(|u| locked_set.contains(&(u.txid.clone(), u.vout))),
-                            });
-                        }
+    // Fetch ALL tokens from backend
+    let tokens_url = format!("{}/tokens?per_page=1000", state.config.tokens_url);
+
+    match reqwest::get(&tokens_url).await {
+        Ok(resp) if resp.status().is_success() => {
+            match resp.json::<TokensApiResponse>().await {
+                Ok(data) => {
+                    for token in data.data {
+                        let is_locked = token.deploy_txid
+                            .as_ref()
+                            .map(|txid| locked_set.contains(&(txid.clone(), 0)))
+                            .unwrap_or(false);
+                        
+                        tokens.push(TokenAsset {
+                            ticker: token.ticker,
+                            name: token.name,
+                            decimals: token.decimals.unwrap_or(0),
+                            max_supply: token.max_supply,
+                            total_minted: token.total_minted,
+                            holder_count: token.holder_count,
+                            is_locked,
+                        });
                     }
                 }
+                Err(e) => {
+                    warn!("Failed to parse tokens response: {}", e);
+                }
             }
-            Ok(resp) => {
-                warn!("Tokens backend returned status {}", resp.status());
-            }
-            Err(e) => {
-                warn!("Failed to query tokens backend: {}", e);
-            }
+        }
+        Ok(resp) => {
+            warn!("Tokens backend returned status {}", resp.status());
+        }
+        Err(e) => {
+            warn!("Failed to query tokens backend: {}", e);
         }
     }
 
     Ok(Json(tokens))
 }
-

@@ -188,17 +188,52 @@ impl BdkWalletService {
         Ok(service)
     }
 
-    /// Create Electrum client
+    /// Create Electrum client with retries and timeout
     fn create_electrum_client(url: &str) -> Result<electrum_client::Client> {
         info!("Connecting to Electrum server: {}", url);
-        let client = electrum_client::Client::new(url)
-            .context("Failed to connect to Electrum server")?;
-
-        // Test connection
-        let header = client.block_headers_subscribe()?;
-        info!("Connected to Electrum, chain tip height: {}", header.height);
-
-        Ok(client)
+        
+        // Retry connection up to 12 times (2 minutes total)
+        let max_retries = 12;
+        let retry_delay = std::time::Duration::from_secs(10);
+        let connection_timeout = std::time::Duration::from_secs(5);
+        
+        for attempt in 1..=max_retries {
+            // Use a channel to implement connection timeout
+            let url_clone = url.to_string();
+            let (tx, rx) = std::sync::mpsc::channel();
+            
+            std::thread::spawn(move || {
+                let result = electrum_client::Client::new(&url_clone)
+                    .map(|c| {
+                        // Also test the connection
+                        c.block_headers_subscribe().map(|h| (c, h))
+                    });
+                let _ = tx.send(result);
+            });
+            
+            match rx.recv_timeout(connection_timeout) {
+                Ok(Ok(Ok((client, header)))) => {
+                    info!("Connected to Electrum, chain tip height: {}", header.height);
+                    return Ok(client);
+                }
+                Ok(Ok(Err(e))) => {
+                    warn!("Electrum connection test failed (attempt {}/{}): {}", attempt, max_retries, e);
+                }
+                Ok(Err(e)) => {
+                    warn!("Failed to connect to Electrum (attempt {}/{}): {}", attempt, max_retries, e);
+                }
+                Err(_) => {
+                    warn!("Electrum connection timed out (attempt {}/{})", attempt, max_retries);
+                }
+            }
+            
+            if attempt < max_retries {
+                info!("Retrying Electrum connection in 10s...");
+                std::thread::sleep(retry_delay);
+            }
+        }
+        
+        anyhow::bail!("Failed to connect to Electrum server after {} attempts", max_retries)
     }
 
     /// Create a new wallet from mnemonic

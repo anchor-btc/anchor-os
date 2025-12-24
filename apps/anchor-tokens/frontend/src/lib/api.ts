@@ -71,6 +71,8 @@ export interface TokenHolder {
   balance: string;
   percentage: number;
   utxoCount: number;
+  txid?: string;
+  vout?: number;
 }
 
 export interface TokenStats {
