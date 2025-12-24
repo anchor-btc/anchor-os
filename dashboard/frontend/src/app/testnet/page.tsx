@@ -229,14 +229,17 @@ export default function TestnetPage() {
           iconColor="primary"
           title="Message Statistics"
         />
-        <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-4 mt-4">
+        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mt-4">
           <MessageStat icon={MessageSquare} label="Text" value={stats?.text_count || 0} color="blue" />
           <MessageStat icon={Palette} label="Pixel" value={stats?.pixel_count || 0} color="purple" />
           <MessageStat icon={Image} label="Image" value={stats?.image_count || 0} color="pink" />
           <MessageStat icon={Map} label="Map" value={stats?.map_count || 0} color="green" />
           <MessageStat icon={Globe} label="DNS" value={stats?.dns_count || 0} color="cyan" />
           <MessageStat icon={Shield} label="Proof" value={stats?.proof_count || 0} color="yellow" />
-          <MessageStat icon={Coins} label="Token" value={stats?.token_count || 0} color="orange" />
+          <MessageStat icon={Coins} label="Deploy" value={stats?.token_count || 0} color="orange" />
+          <MessageStat icon={Coins} label="Mint" value={stats?.token_mint_count || 0} color="orange" />
+          <MessageStat icon={Coins} label="Transfer" value={stats?.token_transfer_count || 0} color="orange" />
+          <MessageStat icon={Coins} label="Burn" value={stats?.token_burn_count || 0} color="red" />
           <MessageStat icon={Eye} label="Oracle" value={stats?.oracle_count || 0} color="violet" />
           <MessageStat icon={Sparkles} label="Prediction" value={stats?.prediction_count || 0} color="rose" />
         </div>
@@ -333,10 +336,31 @@ export default function TestnetPage() {
             />
             <TypeToggle
               icon={Coins}
-              label="Token"
+              label="Deploy"
               checked={localConfig?.enable_token || false}
               onChange={(v) => handleConfigChange("enable_token", v)}
               color="orange"
+            />
+            <TypeToggle
+              icon={Coins}
+              label="Mint"
+              checked={localConfig?.enable_token_mint || false}
+              onChange={(v) => handleConfigChange("enable_token_mint", v)}
+              color="orange"
+            />
+            <TypeToggle
+              icon={Coins}
+              label="Transfer"
+              checked={localConfig?.enable_token_transfer || false}
+              onChange={(v) => handleConfigChange("enable_token_transfer", v)}
+              color="orange"
+            />
+            <TypeToggle
+              icon={Coins}
+              label="Burn"
+              checked={localConfig?.enable_token_burn || false}
+              onChange={(v) => handleConfigChange("enable_token_burn", v)}
+              color="red"
             />
             <TypeToggle
               icon={Eye}
@@ -462,6 +486,7 @@ function MessageStat({
     cyan: "text-cyan-400 bg-cyan-500/10",
     yellow: "text-yellow-400 bg-yellow-500/10",
     orange: "text-orange-400 bg-orange-500/10",
+    red: "text-red-400 bg-red-500/10",
     violet: "text-violet-400 bg-violet-500/10",
     rose: "text-rose-400 bg-rose-500/10",
   };
@@ -539,6 +564,7 @@ function TypeToggle({
     cyan: { active: "bg-cyan-500/20 border-cyan-500/50 text-cyan-400", inactive: "bg-muted/50 border-border text-muted-foreground" },
     yellow: { active: "bg-yellow-500/20 border-yellow-500/50 text-yellow-400", inactive: "bg-muted/50 border-border text-muted-foreground" },
     orange: { active: "bg-orange-500/20 border-orange-500/50 text-orange-400", inactive: "bg-muted/50 border-border text-muted-foreground" },
+    red: { active: "bg-red-500/20 border-red-500/50 text-red-400", inactive: "bg-muted/50 border-border text-muted-foreground" },
     violet: { active: "bg-violet-500/20 border-violet-500/50 text-violet-400", inactive: "bg-muted/50 border-border text-muted-foreground" },
     rose: { active: "bg-rose-500/20 border-rose-500/50 text-rose-400", inactive: "bg-muted/50 border-border text-muted-foreground" },
   };
@@ -745,10 +771,13 @@ function LiveLogs() {
       dns: "🌐",
       proof: "📜",
       token: "🪙",
+      tokenmint: "⛏️",
+      tokentransfer: "➡️",
+      tokenburn: "🔥",
       oracle: "🔮",
       prediction: "🎲",
     };
-    return emojis[type || ""] || "📨";
+    return emojis[type?.toLowerCase() || ""] || "📨";
   };
 
   const getCarrierEmoji = (carrier?: string) => {

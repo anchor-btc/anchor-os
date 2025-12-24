@@ -58,7 +58,7 @@ const FEATURES: Feature[] = [
     icon: (
       <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
+          </svg>
     ),
     title: "Block Timestamping",
     description: "Every message is cryptographically timestamped by the Bitcoin network. Proof of existence guaranteed.",
@@ -67,7 +67,7 @@ const FEATURES: Feature[] = [
     icon: (
       <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-      </svg>
+          </svg>
     ),
     title: "Data Permanence",
     description: "Your data lives as long as Bitcoin. No servers to maintain, no subscriptions, no data loss.",
@@ -76,7 +76,7 @@ const FEATURES: Feature[] = [
     icon: (
       <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-      </svg>
+          </svg>
     ),
     title: "Small Messages",
     description: "Perfect for compact payloads. Text, hashes, references—all optimized for blockchain efficiency.",
@@ -144,7 +144,7 @@ export function ProtocolComparison() {
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
+              </svg>
             Explore All Message Kinds
           </a>
         </motion.div>

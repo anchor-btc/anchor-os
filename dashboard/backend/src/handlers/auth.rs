@@ -207,10 +207,20 @@ pub async fn login(
         }));
     }
 
-    let stored_hash = auth_value
+    let stored_hash = match auth_value
         .get("password_hash")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| (StatusCode::UNAUTHORIZED, "No password set".to_string()))?;
+        .and_then(|v| v.as_str()) {
+            Some(h) => h,
+            None => {
+                // No password set but auth is enabled - this is an inconsistent state
+                // Return a proper JSON response so frontend can handle it
+                return Ok(Json(LoginResponse {
+                    success: false,
+                    token: None,
+                    message: "No password has been set. Please configure a password in Settings.".to_string(),
+                }));
+            }
+        };
 
     // Verify password
     let parsed_hash = PasswordHash::new(stored_hash)

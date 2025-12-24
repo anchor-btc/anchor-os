@@ -1,5 +1,5 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8010";
-const TESTNET_URL = process.env.NEXT_PUBLIC_TESTNET_URL || "http://localhost:3014";
+const TESTNET_URL = process.env.NEXT_PUBLIC_TESTNET_URL || "http://localhost:8002";
 
 // Types
 export interface Container {
@@ -367,6 +367,9 @@ export interface TestnetConfig {
   enable_dns: boolean;
   enable_proof: boolean;
   enable_token: boolean;
+  enable_token_mint: boolean;
+  enable_token_transfer: boolean;
+  enable_token_burn: boolean;
   enable_oracle: boolean;
   enable_prediction: boolean;
   weight_op_return: number;
@@ -387,6 +390,9 @@ export interface TestnetStats {
   dns_count: number;
   proof_count: number;
   token_count: number;
+  token_mint_count: number;
+  token_transfer_count: number;
+  token_burn_count: number;
   oracle_count: number;
   prediction_count: number;
   carrier_op_return: number;
@@ -1467,7 +1473,7 @@ export async function verifyBackup(
   backup: EncryptedBackup,
   password: string
 ): Promise<VerifyBackupResponse> {
-  const res = await fetch(`${API_URL}/wallet/backup/verify-backup`, {
+  const res = await fetch(`${API_URL}/wallet/backup/verify`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ backup, password }),

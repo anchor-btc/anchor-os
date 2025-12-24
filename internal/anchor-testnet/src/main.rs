@@ -197,6 +197,9 @@ async fn main() -> Result<()> {
                     config::MessageType::Dns => "🌐",
                     config::MessageType::Proof => "📜",
                     config::MessageType::Token => "🪙",
+                    config::MessageType::TokenMint => "⛏️",
+                    config::MessageType::TokenTransfer => "➡️",
+                    config::MessageType::TokenBurn => "🔥",
                     config::MessageType::Oracle => "🔮",
                     config::MessageType::Prediction => "🎲",
                 };

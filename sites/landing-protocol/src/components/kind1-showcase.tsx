@@ -80,14 +80,14 @@ export function Kind1Showcase() {
           >
             <div className="flex items-center justify-between px-4 py-3 bg-muted/50 border-b border-muted">
               <div className="flex items-center gap-2">
-                <div className="flex gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-red-500/50" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-500/50" />
-                  <div className="w-3 h-3 rounded-full bg-green-500/50" />
-                </div>
-                <span className="text-xs text-muted-foreground font-mono ml-2">
+              <div className="flex gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-red-500/50" />
+                <div className="w-3 h-3 rounded-full bg-yellow-500/50" />
+                <div className="w-3 h-3 rounded-full bg-green-500/50" />
+              </div>
+              <span className="text-xs text-muted-foreground font-mono ml-2">
                   {fileName}
-                </span>
+              </span>
               </div>
               
               {/* Language Toggle */}

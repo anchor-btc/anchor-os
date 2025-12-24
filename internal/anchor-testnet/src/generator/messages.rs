@@ -12,11 +12,24 @@ use super::types::{CarrierType, CreateMessageRequest, MessageResult};
 use super::wallet_client::WalletClient;
 use crate::config::{MessageType, SharedConfig, SharedStats, TestnetConfig};
 
+/// Tracked token info for mint/transfer/burn operations
+#[derive(Debug, Clone)]
+pub struct TrackedToken {
+    pub ticker: String,
+    pub deploy_txid: String,
+    pub deploy_vout: u32,
+    pub decimals: u8,
+    /// UTXOs holding this token (txid, vout, amount)
+    pub utxos: Vec<(String, u32, u128)>,
+}
+
 /// Message generator that interacts with the wallet service
 pub struct MessageGenerator {
     wallet: WalletClient,
     /// History of created messages for threading
     message_history: Vec<(String, u32)>, // (txid, vout)
+    /// History of deployed tokens for mint/transfer/burn
+    token_history: Vec<TrackedToken>,
     rng: rand::rngs::ThreadRng,
     config: SharedConfig,
     stats: SharedStats,
@@ -28,6 +41,7 @@ impl MessageGenerator {
         Self {
             wallet: WalletClient::new(wallet_url, stats.clone()),
             message_history: Vec::new(),
+            token_history: Vec::new(),
             rng: rand::thread_rng(),
             config,
             stats,
@@ -93,7 +107,36 @@ impl MessageGenerator {
             MessageType::Map => self.create_map_marker(carrier).await?,
             MessageType::Dns => self.create_dns_record(carrier).await?,
             MessageType::Proof => self.create_proof(carrier).await?,
-            MessageType::Token => self.create_token(carrier).await?,
+            MessageType::Token => self.create_token_deploy(carrier).await?,
+            MessageType::TokenMint => {
+                // Need at least one deployed token
+                if self.token_history.is_empty() {
+                    // Deploy first, then mint
+                    self.create_token_deploy(carrier).await?
+                } else {
+                    self.create_token_mint(carrier).await?
+                }
+            }
+            MessageType::TokenTransfer => {
+                // Need at least one token with balance
+                if self.token_history.iter().any(|t| !t.utxos.is_empty()) {
+                    self.create_token_transfer(carrier).await?
+                } else if !self.token_history.is_empty() {
+                    self.create_token_mint(carrier).await?
+                } else {
+                    self.create_token_deploy(carrier).await?
+                }
+            }
+            MessageType::TokenBurn => {
+                // Need at least one token with balance
+                if self.token_history.iter().any(|t| !t.utxos.is_empty()) {
+                    self.create_token_burn(carrier).await?
+                } else if !self.token_history.is_empty() {
+                    self.create_token_mint(carrier).await?
+                } else {
+                    self.create_token_deploy(carrier).await?
+                }
+            }
             MessageType::Oracle => self.create_oracle(carrier).await?,
             MessageType::Prediction => self.create_prediction(carrier).await?,
         };
@@ -409,8 +452,8 @@ impl MessageGenerator {
         })
     }
 
-    /// Create a token deploy message (Kind 20)
-    async fn create_token(&mut self, carrier: CarrierType) -> Result<MessageResult> {
+    /// Create a token deploy message (Kind 20, Op 0x01)
+    async fn create_token_deploy(&mut self, carrier: CarrierType) -> Result<MessageResult> {
         let ticker = SAMPLE_TOKEN_TICKERS
             .choose(&mut self.rng)
             .unwrap_or(&"TEST");
@@ -445,7 +488,7 @@ impl MessageGenerator {
         let body = hex::encode(&data);
 
         tracing::info!(
-            "Creating token: {} (decimals: {}, max_supply: {})",
+            "🪙 Deploying token: {} (decimals: {}, max_supply: {})",
             full_ticker,
             decimals,
             max_supply
@@ -462,6 +505,15 @@ impl MessageGenerator {
 
         let response = self.wallet.send_create_message(&request).await?;
 
+        // Track the deployed token
+        self.token_history.push(TrackedToken {
+            ticker: full_ticker,
+            deploy_txid: response.txid.clone(),
+            deploy_vout: response.vout,
+            decimals,
+            utxos: Vec::new(),
+        });
+
         Ok(MessageResult {
             txid: response.txid,
             vout: response.vout,
@@ -469,6 +521,237 @@ impl MessageGenerator {
             is_reply: false,
             parent_txid: None,
             parent_vout: None,
+            carrier: CarrierType::from_u8(response.carrier),
+        })
+    }
+
+    /// Create a token mint message (Kind 20, Op 0x02)
+    async fn create_token_mint(&mut self, carrier: CarrierType) -> Result<MessageResult> {
+        // Pick a random deployed token
+        let token_idx = self.rng.gen_range(0..self.token_history.len());
+        let token = &self.token_history[token_idx];
+        let ticker = token.ticker.clone();
+        let decimals = token.decimals;
+
+        // Random mint amount (1 to 1M tokens)
+        let base_amount: u128 = self.rng.gen_range(1..1_000_000);
+        let amount = base_amount * 10u128.pow(decimals as u32);
+
+        // Token Mint payload format
+        let mut data = Vec::new();
+        data.push(0x02); // Operation: Mint
+
+        // Ticker length + ticker
+        let ticker_bytes = ticker.as_bytes();
+        data.push(ticker_bytes.len() as u8);
+        data.extend_from_slice(ticker_bytes);
+
+        // Amount (varint encoding)
+        data.extend_from_slice(&encode_varint(amount));
+
+        // Output index (0 = first output gets the tokens)
+        data.push(0x00);
+
+        let body = hex::encode(&data);
+
+        tracing::info!(
+            "🪙 Minting {} {} tokens",
+            base_amount,
+            ticker
+        );
+
+        let request = CreateMessageRequest {
+            kind: 20, // Token
+            body,
+            body_is_hex: true,
+            parent_txid: None,
+            parent_vout: None,
+            carrier: Some(carrier as u8),
+        };
+
+        let response = self.wallet.send_create_message(&request).await?;
+
+        // Track the minted tokens as a UTXO
+        if let Some(token) = self.token_history.iter_mut().find(|t| t.ticker == ticker) {
+            token.utxos.push((response.txid.clone(), response.vout, amount));
+            // Keep max 10 UTXOs per token
+            if token.utxos.len() > 10 {
+                token.utxos.remove(0);
+            }
+        }
+
+        Ok(MessageResult {
+            txid: response.txid,
+            vout: response.vout,
+            message_type: MessageType::TokenMint,
+            is_reply: false,
+            parent_txid: None,
+            parent_vout: None,
+            carrier: CarrierType::from_u8(response.carrier),
+        })
+    }
+
+    /// Create a token transfer message (Kind 20, Op 0x03)
+    async fn create_token_transfer(&mut self, carrier: CarrierType) -> Result<MessageResult> {
+        // Find a token with UTXOs
+        let tokens_with_utxos: Vec<_> = self.token_history.iter()
+            .filter(|t| !t.utxos.is_empty())
+            .collect();
+
+        if tokens_with_utxos.is_empty() {
+            // Fallback to mint
+            return self.create_token_mint(carrier).await;
+        }
+
+        let token = tokens_with_utxos.choose(&mut self.rng).unwrap();
+        let ticker = token.ticker.clone();
+        let (input_txid, input_vout, input_amount) = token.utxos.last().cloned().unwrap();
+
+        // Transfer a portion (10-90% of the UTXO)
+        let transfer_percent = self.rng.gen_range(10..90) as u128;
+        let transfer_amount = (input_amount * transfer_percent) / 100;
+
+        // Token Transfer payload format
+        let mut data = Vec::new();
+        data.push(0x03); // Operation: Transfer
+
+        // Ticker length + ticker
+        let ticker_bytes = ticker.as_bytes();
+        data.push(ticker_bytes.len() as u8);
+        data.extend_from_slice(ticker_bytes);
+
+        // Input reference (txid:vout)
+        data.extend_from_slice(&hex::decode(&input_txid).unwrap_or_default());
+        data.push(input_vout as u8);
+
+        // Number of outputs
+        data.push(0x02); // 2 outputs: transfer + change
+
+        // Output 1: transfer amount to output 0
+        data.extend_from_slice(&encode_varint(transfer_amount));
+        data.push(0x00); // Output index 0
+
+        // Output 2: change to output 1
+        let change_amount = input_amount.saturating_sub(transfer_amount);
+        data.extend_from_slice(&encode_varint(change_amount));
+        data.push(0x01); // Output index 1
+
+        let body = hex::encode(&data);
+
+        tracing::info!(
+            "🪙 Transferring {} {} tokens (from {} total)",
+            transfer_amount,
+            ticker,
+            input_amount
+        );
+
+        let request = CreateMessageRequest {
+            kind: 20, // Token
+            body,
+            body_is_hex: true,
+            parent_txid: Some(input_txid.clone()),
+            parent_vout: Some(input_vout as u8),
+            carrier: Some(carrier as u8),
+        };
+
+        let response = self.wallet.send_create_message(&request).await?;
+
+        // Update token UTXOs
+        if let Some(token) = self.token_history.iter_mut().find(|t| t.ticker == ticker) {
+            // Remove the spent UTXO
+            token.utxos.retain(|(txid, vout, _)| !(txid == &input_txid && *vout == input_vout));
+            // Add the new UTXOs
+            token.utxos.push((response.txid.clone(), 0, transfer_amount));
+            if change_amount > 0 {
+                token.utxos.push((response.txid.clone(), 1, change_amount));
+            }
+        }
+
+        Ok(MessageResult {
+            txid: response.txid,
+            vout: response.vout,
+            message_type: MessageType::TokenTransfer,
+            is_reply: false,
+            parent_txid: Some(input_txid),
+            parent_vout: Some(input_vout),
+            carrier: CarrierType::from_u8(response.carrier),
+        })
+    }
+
+    /// Create a token burn message (Kind 20, Op 0x04)
+    async fn create_token_burn(&mut self, carrier: CarrierType) -> Result<MessageResult> {
+        // Find a token with UTXOs
+        let tokens_with_utxos: Vec<_> = self.token_history.iter()
+            .filter(|t| !t.utxos.is_empty())
+            .collect();
+
+        if tokens_with_utxos.is_empty() {
+            // Fallback to mint
+            return self.create_token_mint(carrier).await;
+        }
+
+        let token = tokens_with_utxos.choose(&mut self.rng).unwrap();
+        let ticker = token.ticker.clone();
+        let (input_txid, input_vout, input_amount) = token.utxos.last().cloned().unwrap();
+
+        // Burn a portion (10-50% of the UTXO)
+        let burn_percent = self.rng.gen_range(10..50) as u128;
+        let burn_amount = (input_amount * burn_percent) / 100;
+
+        // Token Burn payload format
+        let mut data = Vec::new();
+        data.push(0x04); // Operation: Burn
+
+        // Ticker length + ticker
+        let ticker_bytes = ticker.as_bytes();
+        data.push(ticker_bytes.len() as u8);
+        data.extend_from_slice(ticker_bytes);
+
+        // Input reference (txid:vout)
+        data.extend_from_slice(&hex::decode(&input_txid).unwrap_or_default());
+        data.push(input_vout as u8);
+
+        // Burn amount
+        data.extend_from_slice(&encode_varint(burn_amount));
+
+        let body = hex::encode(&data);
+
+        tracing::info!(
+            "🔥 Burning {} {} tokens (from {} total)",
+            burn_amount,
+            ticker,
+            input_amount
+        );
+
+        let request = CreateMessageRequest {
+            kind: 20, // Token
+            body,
+            body_is_hex: true,
+            parent_txid: Some(input_txid.clone()),
+            parent_vout: Some(input_vout as u8),
+            carrier: Some(carrier as u8),
+        };
+
+        let response = self.wallet.send_create_message(&request).await?;
+
+        // Update token UTXOs
+        if let Some(token) = self.token_history.iter_mut().find(|t| t.ticker == ticker) {
+            // Remove the spent UTXO
+            token.utxos.retain(|(txid, vout, _)| !(txid == &input_txid && *vout == input_vout));
+            // Add the remaining tokens as new UTXO
+            let remaining = input_amount.saturating_sub(burn_amount);
+            if remaining > 0 {
+                token.utxos.push((response.txid.clone(), 0, remaining));
+            }
+        }
+
+        Ok(MessageResult {
+            txid: response.txid,
+            vout: response.vout,
+            message_type: MessageType::TokenBurn,
+            is_reply: false,
+            parent_txid: Some(input_txid),
+            parent_vout: Some(input_vout),
             carrier: CarrierType::from_u8(response.carrier),
         })
     }

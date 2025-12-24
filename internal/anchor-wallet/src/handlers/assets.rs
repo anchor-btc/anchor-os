@@ -53,25 +53,32 @@ pub async fn get_assets(
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     info!("Fetching all wallet assets...");
 
-    // Get current wallet UTXOs
-    let wallet_utxos = match state.wallet.list_utxos() {
-        Ok(utxos) => utxos,
-        Err(e) => {
-            error!("Failed to list wallet UTXOs: {}", e);
-            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
-        }
-    };
-
     let locked_set = state.lock_manager.get_locked_set();
-    let utxo_txids: Vec<String> = wallet_utxos.iter().map(|u| u.txid.clone()).collect();
+    
+    // Use locked UTXOs instead of all wallet UTXOs (much smaller set)
+    let locked_utxos = state.lock_manager.list_locked();
+    
+    // Get domain txids from locked domain UTXOs
+    let domain_txids: Vec<String> = locked_utxos
+        .iter()
+        .filter(|u| u.reason.is_domain())
+        .map(|u| u.txid.clone())
+        .collect();
+    
+    // Get token txids from locked token UTXOs
+    let token_txids: Vec<String> = locked_utxos
+        .iter()
+        .filter(|u| u.reason.is_token())
+        .map(|u| u.txid.clone())
+        .collect();
 
     let mut domains: Vec<DomainAsset> = Vec::new();
     let mut tokens: Vec<TokenAsset> = Vec::new();
 
     // Fetch domains from Anchor Domains backend
-    if !utxo_txids.is_empty() {
+    if !domain_txids.is_empty() {
         let domains_url = format!("{}/my-domains", state.config.domains_url);
-        let params = format!("owner_txids={}", utxo_txids.join(","));
+        let params = format!("owner_txids={}", domain_txids.join(","));
         let full_url = format!("{}?{}", domains_url, params);
 
         match reqwest::get(&full_url).await {
@@ -103,39 +110,41 @@ pub async fn get_assets(
         }
     }
 
-    // Fetch tokens from Anchor Tokens backend
-    // Query token balances for each address in wallet
-    let tokens_url = format!("{}/address", state.config.tokens_url);
-    for utxo in &wallet_utxos {
-        // Get address from Bitcoin Core for this UTXO
-        if let Ok(addr) = state.wallet.get_new_address() {
-            let full_url = format!("{}/{}/balances", tokens_url, addr);
-            match reqwest::get(&full_url).await {
-                Ok(resp) if resp.status().is_success() => {
-                    if let Ok(data) = resp.json::<serde_json::Value>().await {
-                        if let Some(balance_list) = data.as_array() {
-                            for balance in balance_list {
-                                let ticker = balance.get("ticker").and_then(|t| t.as_str()).unwrap_or("").to_string();
-                                
-                                // Skip if we already have this token
-                                if tokens.iter().any(|t| t.ticker == ticker) {
-                                    continue;
-                                }
+    // Fetch tokens from Anchor Tokens backend using locked token txids
+    if !token_txids.is_empty() {
+        let tokens_url = format!("{}/tokens/by-txids", state.config.tokens_url);
+        let params = format!("txids={}", token_txids.join(","));
+        let full_url = format!("{}?{}", tokens_url, params);
 
-                                tokens.push(TokenAsset {
-                                    ticker,
-                                    balance: balance.get("balance").and_then(|b| b.as_str()).unwrap_or("0").to_string(),
-                                    decimals: balance.get("decimals").and_then(|d| d.as_i64()).unwrap_or(0) as i16,
-                                    utxo_count: balance.get("utxo_count").and_then(|u| u.as_i64()).unwrap_or(0) as i32,
-                                    is_locked: locked_set.contains(&(utxo.txid.clone(), utxo.vout)),
-                                });
+        match reqwest::get(&full_url).await {
+            Ok(resp) if resp.status().is_success() => {
+                if let Ok(data) = resp.json::<serde_json::Value>().await {
+                    if let Some(token_list) = data.as_array() {
+                        for token in token_list {
+                            let ticker = token.get("ticker").and_then(|t| t.as_str()).unwrap_or("").to_string();
+                            
+                            // Skip if we already have this token
+                            if tokens.iter().any(|t| t.ticker == ticker) {
+                                continue;
                             }
+
+                            tokens.push(TokenAsset {
+                                ticker,
+                                balance: token.get("balance").and_then(|b| b.as_str()).unwrap_or("0").to_string(),
+                                decimals: token.get("decimals").and_then(|d| d.as_i64()).unwrap_or(0) as i16,
+                                utxo_count: token.get("utxo_count").and_then(|u| u.as_i64()).unwrap_or(0) as i32,
+                                is_locked: true, // If we're querying by locked txids, they're all locked
+                            });
                         }
                     }
                 }
-                _ => {}
             }
-            break; // Only need to query once per wallet (addresses are aggregated)
+            Ok(resp) => {
+                warn!("Tokens backend returned status {}", resp.status());
+            }
+            Err(e) => {
+                warn!("Failed to query tokens backend: {}", e);
+            }
         }
     }
 

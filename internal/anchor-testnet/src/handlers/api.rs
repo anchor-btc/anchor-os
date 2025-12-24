@@ -40,6 +40,12 @@ pub struct UpdateConfigRequest {
     #[serde(default)]
     pub enable_token: Option<bool>,
     #[serde(default)]
+    pub enable_token_mint: Option<bool>,
+    #[serde(default)]
+    pub enable_token_transfer: Option<bool>,
+    #[serde(default)]
+    pub enable_token_burn: Option<bool>,
+    #[serde(default)]
     pub enable_oracle: Option<bool>,
     #[serde(default)]
     pub enable_prediction: Option<bool>,
@@ -103,6 +109,15 @@ pub async fn update_config_handler(
     }
     if let Some(v) = req.enable_token {
         config.enable_token = v;
+    }
+    if let Some(v) = req.enable_token_mint {
+        config.enable_token_mint = v;
+    }
+    if let Some(v) = req.enable_token_transfer {
+        config.enable_token_transfer = v;
+    }
+    if let Some(v) = req.enable_token_burn {
+        config.enable_token_burn = v;
     }
     if let Some(v) = req.enable_oracle {
         config.enable_oracle = v;

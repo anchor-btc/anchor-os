@@ -176,7 +176,7 @@ export default function WalletPage() {
       />
 
       {/* Balance Card */}
-      <div className="bg-gradient-to-br from-primary/10 via-card to-card border border-primary/20 rounded-xl p-8">
+      <Section className="p-6">
         <div className="flex items-center gap-4 mb-6">
           <div className="w-14 h-14 rounded-xl bg-primary/20 flex items-center justify-center">
             <Wallet className="w-7 h-7 text-primary" />
@@ -218,7 +218,7 @@ export default function WalletPage() {
             />
           </div>
         )}
-      </div>
+      </Section>
 
       {/* Tabs */}
       <Tabs value={activeTab} onChange={(v) => setActiveTab(v as TabId)}>

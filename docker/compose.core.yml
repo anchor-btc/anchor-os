@@ -116,7 +116,7 @@ services:
       HOST: 0.0.0.0
       PORT: 8001
       ANCHOR_DOMAINS_URL: http://app-domains-backend:3401
-      ANCHOR_TOKENS_URL: http://app-tokens-backend:3501
+      ANCHOR_TOKENS_URL: http://app-tokens-backend:3601
       ANCHOR_DATA_DIR: /data
       RUST_LOG: info
       # BDK Wallet Configuration

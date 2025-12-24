@@ -16,15 +16,18 @@ pub struct TestnetConfig {
     pub blocks_per_cycle: u32,
 
     // Message types (enabled/disabled)
-    pub enable_text: bool,       // Kind 1
-    pub enable_pixel: bool,      // Kind 2
-    pub enable_image: bool,      // Kind 4
-    pub enable_map: bool,        // Kind 12 (GeoMarker)
-    pub enable_dns: bool,        // Kind 10
-    pub enable_proof: bool,      // Kind 11
-    pub enable_token: bool,      // Kind 20
-    pub enable_oracle: bool,     // Kind 30-33
-    pub enable_prediction: bool, // Kind 40-43
+    pub enable_text: bool,           // Kind 1
+    pub enable_pixel: bool,          // Kind 2
+    pub enable_image: bool,          // Kind 4
+    pub enable_map: bool,            // Kind 12 (GeoMarker)
+    pub enable_dns: bool,            // Kind 10
+    pub enable_proof: bool,          // Kind 11
+    pub enable_token: bool,          // Kind 20 (Deploy)
+    pub enable_token_mint: bool,     // Kind 20 (Mint)
+    pub enable_token_transfer: bool, // Kind 20 (Transfer)
+    pub enable_token_burn: bool,     // Kind 20 (Burn)
+    pub enable_oracle: bool,         // Kind 30-33
+    pub enable_prediction: bool,     // Kind 40-43
 
     // Carrier weights (0-100, will be normalized)
     pub weight_op_return: u8,
@@ -53,6 +56,9 @@ impl Default for TestnetConfig {
             enable_dns: false,
             enable_proof: false,
             enable_token: false,
+            enable_token_mint: false,
+            enable_token_transfer: false,
+            enable_token_burn: false,
             enable_oracle: false,
             enable_prediction: false,
 
@@ -119,6 +125,15 @@ impl TestnetConfig {
         if self.enable_token {
             types.push(MessageType::Token);
         }
+        if self.enable_token_mint {
+            types.push(MessageType::TokenMint);
+        }
+        if self.enable_token_transfer {
+            types.push(MessageType::TokenTransfer);
+        }
+        if self.enable_token_burn {
+            types.push(MessageType::TokenBurn);
+        }
         if self.enable_oracle {
             types.push(MessageType::Oracle);
         }
@@ -160,8 +175,12 @@ pub enum MessageType {
     Map,
     Dns,
     Proof,
-    // New types
-    Token,
+    // Token operations
+    Token,         // Deploy
+    TokenMint,     // Mint
+    TokenTransfer, // Transfer
+    TokenBurn,     // Burn
+    // Other types
     Oracle,
     Prediction,
 }
@@ -178,6 +197,9 @@ impl MessageType {
             MessageType::Dns => 10,
             MessageType::Proof => 11,
             MessageType::Token => 20,
+            MessageType::TokenMint => 20,
+            MessageType::TokenTransfer => 20,
+            MessageType::TokenBurn => 20,
             MessageType::Oracle => 30,
             MessageType::Prediction => 40,
         }
@@ -192,7 +214,10 @@ impl MessageType {
             MessageType::Map => "Map",
             MessageType::Dns => "DNS",
             MessageType::Proof => "Proof",
-            MessageType::Token => "Token",
+            MessageType::Token => "Token Deploy",
+            MessageType::TokenMint => "Token Mint",
+            MessageType::TokenTransfer => "Token Transfer",
+            MessageType::TokenBurn => "Token Burn",
             MessageType::Oracle => "Oracle",
             MessageType::Prediction => "Prediction",
         }
@@ -209,6 +234,9 @@ impl MessageType {
             MessageType::Dns,
             MessageType::Proof,
             MessageType::Token,
+            MessageType::TokenMint,
+            MessageType::TokenTransfer,
+            MessageType::TokenBurn,
             MessageType::Oracle,
             MessageType::Prediction,
         ]
@@ -227,6 +255,9 @@ pub struct GeneratorStats {
     pub dns_count: u64,
     pub proof_count: u64,
     pub token_count: u64,
+    pub token_mint_count: u64,
+    pub token_transfer_count: u64,
+    pub token_burn_count: u64,
     pub oracle_count: u64,
     pub prediction_count: u64,
     pub carrier_op_return: u64,
@@ -260,6 +291,9 @@ impl GeneratorStats {
             MessageType::Dns => self.dns_count += 1,
             MessageType::Proof => self.proof_count += 1,
             MessageType::Token => self.token_count += 1,
+            MessageType::TokenMint => self.token_mint_count += 1,
+            MessageType::TokenTransfer => self.token_transfer_count += 1,
+            MessageType::TokenBurn => self.token_burn_count += 1,
             MessageType::Oracle => self.oracle_count += 1,
             MessageType::Prediction => self.prediction_count += 1,
         }

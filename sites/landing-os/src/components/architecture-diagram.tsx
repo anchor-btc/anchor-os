@@ -92,19 +92,19 @@ export function ArchitectureDiagram() {
         {/* Stack Visualization */}
         <div className="grid lg:grid-cols-5 gap-8 items-start">
           {/* Stack Layers - Visual */}
-          <motion.div
+        <motion.div
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.2 }}
             className="lg:col-span-2 space-y-3"
           >
             {stackLayers.map((layer, index) => (
               <motion.button
-                key={layer.id}
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
+                  key={layer.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: 0.1 * index }}
                 onClick={() => setSelectedLayer(selectedLayer === layer.id ? null : layer.id)}
                 className={cn(
@@ -137,20 +137,20 @@ export function ArchitectureDiagram() {
                         {layer.shortLabel}
                       </h3>
                       <svg 
-                        className={cn(
+                    className={cn(
                           "w-4 h-4 transition-transform duration-300",
                           selectedLayer === layer.id ? "rotate-180" : ""
-                        )}
+                    )}
                         style={{ color: selectedLayer === layer.id ? layer.color : '#a1a1aa' }}
                         fill="none" 
                         viewBox="0 0 24 24" 
                         stroke="currentColor"
-                      >
+                  >
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
                     </div>
                     <p className="text-sm text-muted-foreground truncate">
-                      {layer.label}
+                    {layer.label}
                     </p>
                   </div>
 
@@ -206,13 +206,13 @@ export function ArchitectureDiagram() {
                   >
                     {/* Header */}
                     <div className="flex items-center gap-4 mb-6">
-                      <div 
+                  <div
                         className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl"
                         style={{ backgroundColor: `${activeLayer.color}20` }}
                       >
                         {activeLayer.icon}
                       </div>
-                      <div>
+                  <div>
                         <h3 
                           className="text-2xl font-bold"
                           style={{ color: activeLayer.color }}
@@ -289,14 +289,14 @@ export function ArchitectureDiagram() {
                       <div className="text-center">
                         <div className="text-2xl font-bold text-gradient">1</div>
                         <div className="text-xs text-muted-foreground">Command</div>
-                      </div>
-                    </div>
+                  </div>
+                </div>
                   </motion.div>
-                )}
+              )}
               </AnimatePresence>
             </div>
           </motion.div>
-        </div>
+          </div>
       </div>
     </section>
   );

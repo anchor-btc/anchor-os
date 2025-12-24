@@ -111,15 +111,22 @@ export function BackupSection({ t }: BackupSectionProps) {
       const reader = new FileReader();
       reader.onload = (event) => {
         try {
-          const backup = JSON.parse(event.target?.result as string);
+          const backup = JSON.parse(event.target?.result as string) as EncryptedBackup;
+          // Basic validation of backup structure
+          if (!backup.encrypted_mnemonic || !backup.salt || !backup.nonce) {
+            alert("Invalid backup file: missing required encryption fields");
+            return;
+          }
           setUploadedBackup(backup);
           setShowVerifyModal(true);
         } catch {
-          alert("Invalid backup file");
+          alert("Invalid backup file: could not parse JSON");
         }
       };
       reader.readAsText(file);
     }
+    // Reset input so the same file can be selected again
+    e.target.value = "";
   };
 
   const handleVerify = () => {
@@ -421,9 +428,9 @@ export function BackupSection({ t }: BackupSectionProps) {
 
             {uploadedBackup && (
               <div className="mb-4 p-3 bg-muted rounded-lg text-sm">
-                <p><span className="text-muted-foreground">Network:</span> {uploadedBackup.network}</p>
-                <p><span className="text-muted-foreground">Created:</span> {new Date(uploadedBackup.created_at).toLocaleString()}</p>
-                <p><span className="text-muted-foreground">Locked UTXOs:</span> {uploadedBackup.locked_utxos.length}</p>
+                <p><span className="text-muted-foreground">Network:</span> {uploadedBackup.network || "Unknown"}</p>
+                <p><span className="text-muted-foreground">Created:</span> {uploadedBackup.created_at ? new Date(uploadedBackup.created_at).toLocaleString() : "Unknown"}</p>
+                <p><span className="text-muted-foreground">Locked UTXOs:</span> {uploadedBackup.locked_utxos?.length ?? 0}</p>
               </div>
             )}
 

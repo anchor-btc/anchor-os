@@ -121,12 +121,12 @@ export function TransactionVisualizer() {
       id: "carrier",
       label: activeCarrier.name,
       description: `Anchor message via ${activeCarrier.name}`,
-      x: 530,
-      y: 200,
-      width: 120,
-      height: 50,
-    },
-  ];
+    x: 530,
+    y: 200,
+    width: 120,
+    height: 50,
+  },
+];
 
   return (
     <section className="py-24 px-6 bg-muted/20">
@@ -363,31 +363,31 @@ export function TransactionVisualizer() {
                   </AnimatePresence>
                 ) : (
                   <>
-                    <rect
-                      x={part.x}
-                      y={part.y}
-                      width={part.width}
-                      height={part.height}
-                      rx="8"
-                      className={cn(
-                        "transition-all duration-200",
-                        hoveredPart === part.id
-                          ? "fill-accent/20 stroke-accent"
-                          : "fill-muted/50 stroke-muted"
-                      )}
-                      strokeWidth="2"
-                    />
-                    <text
-                      x={part.x + part.width / 2}
-                      y={part.y + part.height / 2 + 5}
-                      textAnchor="middle"
-                      className={cn(
-                        "text-sm font-medium transition-colors",
-                        hoveredPart === part.id ? "fill-accent" : "fill-foreground"
-                      )}
-                    >
-                      {part.label}
-                    </text>
+                <rect
+                  x={part.x}
+                  y={part.y}
+                  width={part.width}
+                  height={part.height}
+                  rx="8"
+                  className={cn(
+                    "transition-all duration-200",
+                    hoveredPart === part.id
+                      ? "fill-accent/20 stroke-accent"
+                      : "fill-muted/50 stroke-muted"
+                  )}
+                  strokeWidth="2"
+                />
+                <text
+                  x={part.x + part.width / 2}
+                  y={part.y + part.height / 2 + 5}
+                  textAnchor="middle"
+                  className={cn(
+                    "text-sm font-medium transition-colors",
+                    hoveredPart === part.id ? "fill-accent" : "fill-foreground"
+                  )}
+                >
+                  {part.label}
+                </text>
                   </>
                 )}
               </motion.g>
