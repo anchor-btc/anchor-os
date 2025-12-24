@@ -1,6 +1,7 @@
 //! Configuration for the wallet service
 
 use anyhow::{Context, Result};
+use bdk_wallet::bitcoin::Network;
 use std::env;
 use std::path::PathBuf;
 
@@ -25,6 +26,14 @@ pub struct Config {
     pub tokens_url: String,
     /// Whether to auto-lock ownership UTXOs
     pub auto_lock_enabled: bool,
+    /// Electrum server URL for BDK
+    pub electrum_url: String,
+    /// Enable BDK wallet (key management)
+    pub bdk_enabled: bool,
+    /// BDK wallet password (for mnemonic encryption)
+    pub bdk_password: Option<String>,
+    /// Bitcoin network
+    pub network: String,
 }
 
 impl Config {
@@ -37,6 +46,17 @@ impl Config {
                     .unwrap_or_else(|| PathBuf::from("."))
                     .join("anchor-wallet")
             });
+
+        let network = env::var("BITCOIN_NETWORK")
+            .unwrap_or_else(|_| "regtest".to_string());
+
+        // Default Electrum URL based on network
+        // In Docker, use the service name; on host, use localhost
+        let default_electrum = match network.as_str() {
+            "mainnet" | "bitcoin" => "ssl://electrum.blockstream.info:50002",
+            "testnet" => "ssl://electrum.blockstream.info:60002",
+            _ => "tcp://core-electrs:50001", // regtest/signet - use docker service name
+        };
 
         Ok(Self {
             bitcoin_rpc_url: env::var("BITCOIN_RPC_URL")
@@ -60,6 +80,24 @@ impl Config {
                 .unwrap_or_else(|_| "true".to_string())
                 .parse()
                 .unwrap_or(true),
+            electrum_url: env::var("ELECTRUM_URL")
+                .unwrap_or_else(|_| default_electrum.to_string()),
+            bdk_enabled: env::var("BDK_ENABLED")
+                .unwrap_or_else(|_| "true".to_string())
+                .parse()
+                .unwrap_or(true),
+            bdk_password: env::var("BDK_PASSWORD").ok(),
+            network,
         })
+    }
+
+    /// Get the Bitcoin network
+    pub fn get_network(&self) -> Network {
+        match self.network.as_str() {
+            "mainnet" | "bitcoin" => Network::Bitcoin,
+            "testnet" => Network::Testnet,
+            "signet" => Network::Signet,
+            _ => Network::Regtest,
+        }
     }
 }

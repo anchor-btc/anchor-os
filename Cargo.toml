@@ -59,6 +59,19 @@ type_complexity = "allow"
 bitcoin = { version = "0.32", features = ["serde"] }
 bitcoincore-rpc = "0.19"
 
+# BDK (Bitcoin Dev Kit)
+bdk_wallet = { version = "1.0", features = ["keys-bip39"] }
+bdk_electrum = "0.20"
+bdk_file_store = "0.18"
+bip39 = { version = "2.1", features = ["rand"] }
+
+# Cryptography
+aes-gcm = "0.10"
+argon2 = "0.5"
+rand = "0.8"
+base64 = "0.22"
+sha2 = "0.10"
+
 # Async runtime
 tokio = { version = "1", features = ["full"] }
 

@@ -7,8 +7,10 @@
 //! - `transaction` - Transaction operations (broadcast, mine, rawtx)
 //! - `locks` - UTXO lock management
 //! - `assets` - Asset aggregation and browsing
+//! - `backup` - Wallet backup, mnemonic, and recovery
 
 mod assets;
+mod backup;
 mod health;
 mod locks;
 mod message;
@@ -22,4 +24,5 @@ pub use message::*;
 pub use transaction::*;
 pub use locks::*;
 pub use assets::*;
+pub use backup::*;
 

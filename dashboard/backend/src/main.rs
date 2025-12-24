@@ -378,6 +378,14 @@ async fn main() -> Result<()> {
             get(handlers::wallet::get_transactions),
         )
         .route("/wallet/mine", post(handlers::wallet::mine_blocks))
+        // Wallet Backup
+        .route("/wallet/backup/info", get(handlers::wallet::get_backup_info))
+        .route("/wallet/backup/mnemonic", get(handlers::wallet::get_backup_mnemonic))
+        .route("/wallet/backup/descriptors", get(handlers::wallet::get_backup_descriptors))
+        .route("/wallet/backup/export", post(handlers::wallet::export_backup))
+        .route("/wallet/backup/verify", post(handlers::wallet::verify_backup))
+        .route("/wallet/backup/migration-status", get(handlers::wallet::get_migration_status))
+        .route("/wallet/locked-assets", get(handlers::wallet::get_locked_assets))
         // Node management
         .route("/node/config", get(handlers::node::get_node_config))
         .route("/node/switch", post(handlers::node::switch_node))

@@ -662,3 +662,318 @@ pub async fn get_assets_tokens(
 
     Ok(Json(tokens))
 }
+
+// ============================================================================
+// Wallet Backup Proxy Handlers
+// ============================================================================
+
+/// Wallet info response
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct WalletInfoResponse {
+    pub fingerprint: String,
+    pub network: String,
+    pub external_descriptor: String,
+    pub internal_descriptor: String,
+    pub derivation_path: String,
+    pub address_type: String,
+    pub has_mnemonic: bool,
+    pub addresses_used: u32,
+    pub bdk_enabled: bool,
+}
+
+/// Mnemonic response
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct MnemonicResponse {
+    pub available: bool,
+    pub words: Vec<String>,
+    pub word_count: u32,
+    pub warning: String,
+}
+
+/// Descriptors response
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct DescriptorsResponse {
+    pub external: String,
+    pub internal: String,
+}
+
+/// Export backup request
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct ExportBackupRequest {
+    pub password: String,
+}
+
+/// Export backup response
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct ExportBackupResponse {
+    pub success: bool,
+    pub backup: Option<serde_json::Value>,
+    pub error: Option<String>,
+}
+
+/// Verify backup response
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct VerifyBackupResponse {
+    pub valid: bool,
+    pub error: Option<String>,
+}
+
+/// Migration status response
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct MigrationStatusResponse {
+    pub status: serde_json::Value,
+    pub notification: Option<serde_json::Value>,
+}
+
+/// Locked assets overview
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct LockedAssetsOverview {
+    pub summary: LockedAssetsSummary,
+    pub items: Vec<LockedAssetItem>,
+}
+
+/// Locked assets summary
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct LockedAssetsSummary {
+    pub domains: LockedAssetCount,
+    pub tokens: LockedAssetCount,
+    pub manual: LockedAssetCount,
+    pub total: LockedAssetCount,
+}
+
+/// Locked asset count
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct LockedAssetCount {
+    pub count: u32,
+    pub total_sats: u64,
+}
+
+/// Locked asset item
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct LockedAssetItem {
+    pub txid: String,
+    pub vout: u32,
+    pub amount_sats: u64,
+    pub lock_type: String,
+    pub asset_name: Option<String>,
+    pub locked_at: String,
+}
+
+/// Get wallet backup info
+#[utoipa::path(
+    get,
+    path = "/wallet/backup/info",
+    tag = "Backup",
+    responses(
+        (status = 200, description = "Wallet info", body = WalletInfoResponse),
+        (status = 500, description = "Internal server error")
+    )
+)]
+pub async fn get_backup_info(
+    State(state): State<Arc<AppState>>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let url = format!("{}/wallet/backup/info", state.config.wallet_url);
+
+    let response = state.http_client.get(&url).send().await.map_err(|e| {
+        error!("Failed to connect to wallet service: {}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+    })?;
+
+    let info: WalletInfoResponse = response.json().await.map_err(|e| {
+        error!("Failed to parse wallet info: {}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+    })?;
+
+    Ok(Json(info))
+}
+
+/// Get wallet mnemonic
+#[utoipa::path(
+    get,
+    path = "/wallet/backup/mnemonic",
+    tag = "Backup",
+    responses(
+        (status = 200, description = "Mnemonic phrase", body = MnemonicResponse),
+        (status = 500, description = "Internal server error")
+    )
+)]
+pub async fn get_backup_mnemonic(
+    State(state): State<Arc<AppState>>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let url = format!("{}/wallet/backup/mnemonic", state.config.wallet_url);
+
+    let response = state.http_client.get(&url).send().await.map_err(|e| {
+        error!("Failed to connect to wallet service: {}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+    })?;
+
+    let mnemonic: MnemonicResponse = response.json().await.map_err(|e| {
+        error!("Failed to parse mnemonic: {}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+    })?;
+
+    Ok(Json(mnemonic))
+}
+
+/// Get wallet descriptors
+#[utoipa::path(
+    get,
+    path = "/wallet/backup/descriptors",
+    tag = "Backup",
+    responses(
+        (status = 200, description = "Wallet descriptors", body = DescriptorsResponse),
+        (status = 500, description = "Internal server error")
+    )
+)]
+pub async fn get_backup_descriptors(
+    State(state): State<Arc<AppState>>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let url = format!("{}/wallet/backup/descriptors", state.config.wallet_url);
+
+    let response = state.http_client.get(&url).send().await.map_err(|e| {
+        error!("Failed to connect to wallet service: {}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+    })?;
+
+    let descriptors: DescriptorsResponse = response.json().await.map_err(|e| {
+        error!("Failed to parse descriptors: {}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+    })?;
+
+    Ok(Json(descriptors))
+}
+
+/// Export encrypted backup
+#[utoipa::path(
+    post,
+    path = "/wallet/backup/export",
+    tag = "Backup",
+    request_body = ExportBackupRequest,
+    responses(
+        (status = 200, description = "Encrypted backup", body = ExportBackupResponse),
+        (status = 500, description = "Internal server error")
+    )
+)]
+pub async fn export_backup(
+    State(state): State<Arc<AppState>>,
+    Json(req): Json<ExportBackupRequest>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let url = format!("{}/wallet/backup/export", state.config.wallet_url);
+
+    let response = state
+        .http_client
+        .post(&url)
+        .json(&req)
+        .send()
+        .await
+        .map_err(|e| {
+            error!("Failed to connect to wallet service: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+        })?;
+
+    let backup: ExportBackupResponse = response.json().await.map_err(|e| {
+        error!("Failed to parse backup: {}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+    })?;
+
+    Ok(Json(backup))
+}
+
+/// Verify backup request
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct VerifyBackupRequest {
+    pub backup: serde_json::Value,
+    pub password: String,
+}
+
+/// Verify encrypted backup
+#[utoipa::path(
+    post,
+    path = "/wallet/backup/verify",
+    tag = "Backup",
+    request_body = VerifyBackupRequest,
+    responses(
+        (status = 200, description = "Verification result", body = VerifyBackupResponse),
+        (status = 500, description = "Internal server error")
+    )
+)]
+pub async fn verify_backup(
+    State(state): State<Arc<AppState>>,
+    Json(req): Json<VerifyBackupRequest>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let url = format!("{}/wallet/backup/verify-backup", state.config.wallet_url);
+
+    let response = state
+        .http_client
+        .post(&url)
+        .json(&req)
+        .send()
+        .await
+        .map_err(|e| {
+            error!("Failed to connect to wallet service: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+        })?;
+
+    let result: VerifyBackupResponse = response.json().await.map_err(|e| {
+        error!("Failed to parse verification result: {}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+    })?;
+
+    Ok(Json(result))
+}
+
+/// Get migration status
+#[utoipa::path(
+    get,
+    path = "/wallet/backup/migration-status",
+    tag = "Backup",
+    responses(
+        (status = 200, description = "Migration status", body = MigrationStatusResponse),
+        (status = 500, description = "Internal server error")
+    )
+)]
+pub async fn get_migration_status(
+    State(state): State<Arc<AppState>>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let url = format!("{}/wallet/backup/migration-status", state.config.wallet_url);
+
+    let response = state.http_client.get(&url).send().await.map_err(|e| {
+        error!("Failed to connect to wallet service: {}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+    })?;
+
+    let status: MigrationStatusResponse = response.json().await.map_err(|e| {
+        error!("Failed to parse migration status: {}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+    })?;
+
+    Ok(Json(status))
+}
+
+/// Get locked assets overview
+#[utoipa::path(
+    get,
+    path = "/wallet/locked-assets",
+    tag = "Locks",
+    responses(
+        (status = 200, description = "Locked assets overview", body = LockedAssetsOverview),
+        (status = 500, description = "Internal server error")
+    )
+)]
+pub async fn get_locked_assets(
+    State(state): State<Arc<AppState>>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let url = format!("{}/wallet/locked-assets", state.config.wallet_url);
+
+    let response = state.http_client.get(&url).send().await.map_err(|e| {
+        error!("Failed to connect to wallet service: {}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+    })?;
+
+    let assets: LockedAssetsOverview = response.json().await.map_err(|e| {
+        error!("Failed to parse locked assets: {}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+    })?;
+
+    Ok(Json(assets))
+}

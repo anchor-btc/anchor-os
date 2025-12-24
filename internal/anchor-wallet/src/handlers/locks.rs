@@ -79,6 +79,51 @@ pub struct SyncLocksResponse {
     pub stale_locks_removed: usize,
 }
 
+// ============================================================================
+// Unified Locked Assets Types
+// ============================================================================
+
+/// Summary of locked assets by type
+#[derive(Serialize, ToSchema)]
+pub struct LockedAssetsSummary {
+    pub domains: CategorySummary,
+    pub tokens: CategorySummary,
+    pub manual: CategorySummary,
+    pub total: CategorySummary,
+}
+
+/// Summary for a single category
+#[derive(Serialize, ToSchema)]
+pub struct CategorySummary {
+    pub count: usize,
+    pub total_sats: u64,
+}
+
+/// Unified locked asset item
+#[derive(Serialize, ToSchema)]
+pub struct LockedAssetItem {
+    pub txid: String,
+    pub vout: u32,
+    pub amount_sats: u64,
+    pub lock_type: String, // "domain", "token", "manual"
+    pub asset_name: Option<String>,
+    pub locked_at: DateTime<Utc>,
+}
+
+/// Unified locked assets overview response
+#[derive(Serialize, ToSchema)]
+pub struct LockedAssetsOverview {
+    pub summary: LockedAssetsSummary,
+    pub items: Vec<LockedAssetItem>,
+}
+
+/// Query parameters for locked assets
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct LockedAssetsQuery {
+    /// Filter by lock type: "domain", "token", "manual", or "all"
+    pub filter: Option<String>,
+}
+
 /// List all locked UTXOs
 #[utoipa::path(
     get,
@@ -396,5 +441,118 @@ pub async fn set_auto_lock(
             Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
         }
     }
+}
+
+/// Get unified locked assets overview with filtering
+#[utoipa::path(
+    get,
+    path = "/wallet/locked-assets",
+    tag = "Locks",
+    params(
+        ("filter" = Option<String>, Query, description = "Filter by type: domain, token, manual, or all (default)")
+    ),
+    responses(
+        (status = 200, description = "Locked assets overview", body = LockedAssetsOverview),
+        (status = 500, description = "Internal server error")
+    )
+)]
+pub async fn get_locked_assets(
+    State(state): State<Arc<AppState>>,
+    axum::extract::Query(query): axum::extract::Query<LockedAssetsQuery>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    // Get all locked UTXOs
+    let locked = state.lock_manager.list_locked();
+
+    // Get wallet UTXOs to get amounts
+    let wallet_utxos = state.wallet.list_utxos().unwrap_or_default();
+    let utxo_amounts: std::collections::HashMap<(String, u32), u64> = wallet_utxos
+        .iter()
+        .map(|u| ((u.txid.clone(), u.vout), (u.amount * 100_000_000.0) as u64))
+        .collect();
+
+    // Calculate summaries
+    let mut domains_count = 0;
+    let mut domains_sats: u64 = 0;
+    let mut tokens_count = 0;
+    let mut tokens_sats: u64 = 0;
+    let mut manual_count = 0;
+    let mut manual_sats: u64 = 0;
+
+    let mut items: Vec<LockedAssetItem> = Vec::new();
+
+    for locked_utxo in &locked {
+        let amount_sats = utxo_amounts
+            .get(&(locked_utxo.txid.clone(), locked_utxo.vout))
+            .copied()
+            .unwrap_or(0);
+
+        let (lock_type, asset_name) = match &locked_utxo.reason {
+            LockReason::Manual => {
+                manual_count += 1;
+                manual_sats += amount_sats;
+                ("manual".to_string(), None)
+            }
+            LockReason::Domain { name } => {
+                domains_count += 1;
+                domains_sats += amount_sats;
+                ("domain".to_string(), Some(name.clone()))
+            }
+            LockReason::Token { ticker, amount } => {
+                tokens_count += 1;
+                tokens_sats += amount_sats;
+                ("token".to_string(), Some(format!("{} {}", amount, ticker)))
+            }
+            LockReason::Asset { asset_type, asset_id } => {
+                // Treat other assets as manual
+                manual_count += 1;
+                manual_sats += amount_sats;
+                (asset_type.clone(), Some(asset_id.clone()))
+            }
+        };
+
+        // Apply filter
+        let filter = query.filter.as_deref().unwrap_or("all");
+        let include = match filter {
+            "domain" | "domains" => lock_type == "domain",
+            "token" | "tokens" => lock_type == "token",
+            "manual" => lock_type == "manual",
+            _ => true, // "all" or unrecognized
+        };
+
+        if include {
+            items.push(LockedAssetItem {
+                txid: locked_utxo.txid.clone(),
+                vout: locked_utxo.vout,
+                amount_sats,
+                lock_type,
+                asset_name,
+                locked_at: locked_utxo.locked_at,
+            });
+        }
+    }
+
+    // Sort by locked_at descending (newest first)
+    items.sort_by(|a, b| b.locked_at.cmp(&a.locked_at));
+
+    let summary = LockedAssetsSummary {
+        domains: CategorySummary {
+            count: domains_count,
+            total_sats: domains_sats,
+        },
+        tokens: CategorySummary {
+            count: tokens_count,
+            total_sats: tokens_sats,
+        },
+        manual: CategorySummary {
+            count: manual_count,
+            total_sats: manual_sats,
+        },
+        total: CategorySummary {
+            count: domains_count + tokens_count + manual_count,
+            total_sats: domains_sats + tokens_sats + manual_sats,
+        },
+    };
+
+    Ok(Json(LockedAssetsOverview { summary, items }))
 }
 

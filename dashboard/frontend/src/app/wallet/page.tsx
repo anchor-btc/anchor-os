@@ -48,6 +48,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { QRCodeSVG } from "qrcode.react";
+import { BackupSection } from "@/components/wallet/backup-section";
+import { LockedAssetsSection } from "@/components/wallet/locked-assets-section";
 
 // Import DS components
 import {
@@ -60,7 +62,7 @@ import {
   ActionButton,
 } from "@/components/ds";
 
-type TabId = "transactions" | "utxos" | "assets" | "locks" | "receive";
+type TabId = "transactions" | "utxos" | "assets" | "locks" | "receive" | "backup";
 const UTXOS_PER_PAGE = 50;
 
 export default function WalletPage() {
@@ -160,6 +162,7 @@ export default function WalletPage() {
     assets: t("wallet.assets") || "Assets",
     locks: t("wallet.locks") || "Locks",
     receive: t("wallet.receive"),
+    backup: t("wallet.backup", "Backup"),
   };
 
   return (
@@ -231,6 +234,7 @@ export default function WalletPage() {
           )}
         </Tab>
         <Tab value="receive">{tabLabels.receive}</Tab>
+        <Tab value="backup" icon={Shield}>{tabLabels.backup}</Tab>
       </Tabs>
 
       {/* Tab Content */}
@@ -275,16 +279,7 @@ export default function WalletPage() {
       )}
 
       {activeTab === "locks" && (
-        <LocksSection
-          lockedUtxos={lockedUtxos}
-          lockSettings={lockSettings}
-          isLoading={lockedLoading}
-          onUnlock={(txid, vout) => unlockMutation.mutate([{ txid, vout }])}
-          onSync={() => syncMutation.mutate()}
-          onToggleAutoLock={(enabled) => autoLockMutation.mutate(enabled)}
-          isSyncing={syncMutation.isPending}
-          t={t}
-        />
+        <LockedAssetsSection t={t} />
       )}
 
       {activeTab === "receive" && (
@@ -348,6 +343,10 @@ export default function WalletPage() {
             </div>
           )}
         </Section>
+      )}
+
+      {activeTab === "backup" && (
+        <BackupSection t={t} />
       )}
     </div>
   );

@@ -33,5 +33,18 @@ chrono.workspace = true
 dirs.workspace = true
 reqwest.workspace = true
 
+# BDK (Bitcoin Dev Kit) for key management
+bdk_wallet.workspace = true
+bdk_electrum.workspace = true
+bdk_file_store.workspace = true
+bip39.workspace = true
+
+# Cryptography for encrypted backups
+aes-gcm.workspace = true
+argon2.workspace = true
+rand.workspace = true
+base64.workspace = true
+sha2.workspace = true
+
 [dev-dependencies]
 tempfile = "3"

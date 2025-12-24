@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3011";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8010";
 const TESTNET_URL = process.env.NEXT_PUBLIC_TESTNET_URL || "http://localhost:3014";
 
 // Types
@@ -1277,6 +1277,42 @@ export async function syncLocks(): Promise<SyncLocksResponse> {
   return res.json();
 }
 
+// Unified Locked Assets Types
+export interface CategorySummary {
+  count: number;
+  total_sats: number;
+}
+
+export interface LockedAssetsSummary {
+  domains: CategorySummary;
+  tokens: CategorySummary;
+  manual: CategorySummary;
+  total: CategorySummary;
+}
+
+export interface LockedAssetItem {
+  txid: string;
+  vout: number;
+  amount_sats: number;
+  lock_type: string;
+  asset_name: string | null;
+  locked_at: string;
+}
+
+export interface LockedAssetsOverview {
+  summary: LockedAssetsSummary;
+  items: LockedAssetItem[];
+}
+
+export async function fetchLockedAssets(filter?: string): Promise<LockedAssetsOverview> {
+  const url = filter && filter !== "all"
+    ? `${API_URL}/wallet/locked-assets?filter=${filter}`
+    : `${API_URL}/wallet/locked-assets`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Failed to fetch locked assets");
+  return res.json();
+}
+
 export async function fetchLockSettings(): Promise<LockSettings> {
   const res = await fetch(`${API_URL}/wallet/locks/settings`);
   if (!res.ok) throw new Error("Failed to fetch lock settings");
@@ -1308,6 +1344,135 @@ export async function fetchAssetsDomains(): Promise<DomainAsset[]> {
 export async function fetchAssetsTokens(): Promise<TokenAsset[]> {
   const res = await fetch(`${API_URL}/wallet/assets/tokens`);
   if (!res.ok) throw new Error("Failed to fetch token assets");
+  return res.json();
+}
+
+// ============================================================================
+// Wallet Backup Types & API Functions
+// ============================================================================
+
+export interface MnemonicResponse {
+  available: boolean;
+  words: string[] | null;
+  word_count: number | null;
+  warning: string;
+}
+
+export interface WalletInfoResponse {
+  fingerprint: string;
+  network: string;
+  external_descriptor: string;
+  internal_descriptor: string;
+  derivation_path: string;
+  address_type: string;
+  has_mnemonic: boolean;
+  addresses_used: number;
+  bdk_enabled: boolean;
+}
+
+export interface DescriptorsResponse {
+  external: string;
+  internal: string;
+  has_checksum: boolean;
+}
+
+export interface VerifyMnemonicResponse {
+  valid: boolean;
+  matches_wallet: boolean;
+  error: string | null;
+}
+
+export interface LockedUtxoBackup {
+  txid: string;
+  vout: number;
+  reason: string;
+  asset_type: string | null;
+  asset_id: string | null;
+}
+
+export interface EncryptedBackup {
+  version: number;
+  created_at: string;
+  network: string;
+  encrypted_mnemonic: string;
+  salt: string;
+  nonce: string;
+  external_descriptor: string;
+  internal_descriptor: string;
+  locked_utxos: LockedUtxoBackup[];
+  checksum: string;
+}
+
+export interface ExportBackupResponse {
+  success: boolean;
+  backup: EncryptedBackup | null;
+  error: string | null;
+}
+
+export interface VerifyBackupResponse {
+  valid: boolean;
+  checksum_valid: boolean;
+  network: string;
+  locked_utxos_count: number;
+  error: string | null;
+}
+
+export async function fetchMnemonic(): Promise<MnemonicResponse> {
+  const res = await fetch(`${API_URL}/wallet/backup/mnemonic`);
+  if (!res.ok) throw new Error("Failed to fetch mnemonic");
+  return res.json();
+}
+
+export async function fetchWalletInfo(): Promise<WalletInfoResponse> {
+  const res = await fetch(`${API_URL}/wallet/backup/info`);
+  if (!res.ok) throw new Error("Failed to fetch wallet info");
+  return res.json();
+}
+
+export async function fetchDescriptors(): Promise<DescriptorsResponse> {
+  const res = await fetch(`${API_URL}/wallet/backup/descriptors`);
+  if (!res.ok) throw new Error("Failed to fetch descriptors");
+  return res.json();
+}
+
+export async function verifyMnemonic(words: string[]): Promise<VerifyMnemonicResponse> {
+  const res = await fetch(`${API_URL}/wallet/backup/verify`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ words }),
+  });
+  if (!res.ok) throw new Error("Failed to verify mnemonic");
+  return res.json();
+}
+
+export async function syncBdkWallet(): Promise<{ success: boolean; message: string }> {
+  const res = await fetch(`${API_URL}/wallet/backup/sync`, {
+    method: "POST",
+  });
+  if (!res.ok) throw new Error("Failed to sync BDK wallet");
+  return res.json();
+}
+
+export async function exportBackup(password: string): Promise<ExportBackupResponse> {
+  const res = await fetch(`${API_URL}/wallet/backup/export`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password }),
+  });
+  if (!res.ok) throw new Error("Failed to export backup");
+  return res.json();
+}
+
+export async function verifyBackup(
+  backup: EncryptedBackup,
+  password: string
+): Promise<VerifyBackupResponse> {
+  const res = await fetch(`${API_URL}/wallet/backup/verify-backup`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ backup, password }),
+  });
+  if (!res.ok) throw new Error("Failed to verify backup");
   return res.json();
 }
 

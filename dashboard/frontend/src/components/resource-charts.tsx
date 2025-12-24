@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import { Cpu, HardDrive, Wifi, Database, Activity, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3011";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8010";
 
 interface ContainerStats {
   name: string;

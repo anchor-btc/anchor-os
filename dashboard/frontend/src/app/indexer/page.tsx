@@ -55,7 +55,7 @@ import {
   StatCard,
 } from "@/components/ds";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3011";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8010";
 
 interface MessageKindCount {
   kind: number;
