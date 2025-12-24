@@ -48,6 +48,10 @@ pub struct UpdateConfigRequest {
     #[serde(default)]
     pub enable_oracle: Option<bool>,
     #[serde(default)]
+    pub enable_oracle_attestation: Option<bool>,
+    #[serde(default)]
+    pub enable_oracle_dispute: Option<bool>,
+    #[serde(default)]
     pub enable_prediction: Option<bool>,
     #[serde(default)]
     pub weight_op_return: Option<u8>,
@@ -121,6 +125,12 @@ pub async fn update_config_handler(
     }
     if let Some(v) = req.enable_oracle {
         config.enable_oracle = v;
+    }
+    if let Some(v) = req.enable_oracle_attestation {
+        config.enable_oracle_attestation = v;
+    }
+    if let Some(v) = req.enable_oracle_dispute {
+        config.enable_oracle_dispute = v;
     }
     if let Some(v) = req.enable_prediction {
         config.enable_prediction = v;

@@ -371,6 +371,8 @@ export interface TestnetConfig {
   enable_token_transfer: boolean;
   enable_token_burn: boolean;
   enable_oracle: boolean;
+  enable_oracle_attestation: boolean;
+  enable_oracle_dispute: boolean;
   enable_prediction: boolean;
   weight_op_return: number;
   weight_stamps: number;
@@ -394,6 +396,8 @@ export interface TestnetStats {
   token_transfer_count: number;
   token_burn_count: number;
   oracle_count: number;
+  oracle_attestation_count: number;
+  oracle_dispute_count: number;
   prediction_count: number;
   carrier_op_return: number;
   carrier_stamps: number;

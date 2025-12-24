@@ -16,7 +16,159 @@ pub struct Database {
 impl Database {
     pub async fn connect(database_url: &str) -> Result<Self> {
         let pool = PgPool::connect(database_url).await?;
-        Ok(Self { pool })
+        let db = Self { pool };
+        
+        // Run migrations on startup
+        db.run_migrations().await?;
+        
+        Ok(db)
+    }
+    
+    /// Run database migrations
+    async fn run_migrations(&self) -> Result<()> {
+        tracing::info!("Running database migrations...");
+        
+        // Create oracles table
+        sqlx::query(r#"
+            CREATE TABLE IF NOT EXISTS oracles (
+                id SERIAL PRIMARY KEY,
+                pubkey BYTEA NOT NULL UNIQUE,
+                name VARCHAR(255) NOT NULL,
+                description TEXT,
+                categories INTEGER NOT NULL DEFAULT 0,
+                stake_sats BIGINT NOT NULL DEFAULT 0,
+                status VARCHAR(50) NOT NULL DEFAULT 'active',
+                registered_at INTEGER,
+                total_attestations INTEGER NOT NULL DEFAULT 0,
+                successful_attestations INTEGER NOT NULL DEFAULT 0,
+                disputed_attestations INTEGER NOT NULL DEFAULT 0,
+                reputation_score REAL NOT NULL DEFAULT 50.0,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            )
+        "#).execute(&self.pool).await?;
+        
+        // Create indexes for oracles
+        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_oracles_pubkey ON oracles(pubkey)").execute(&self.pool).await;
+        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_oracles_status ON oracles(status)").execute(&self.pool).await;
+        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_oracles_reputation ON oracles(reputation_score DESC)").execute(&self.pool).await;
+        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_oracles_categories ON oracles(categories)").execute(&self.pool).await;
+        
+        // Create attestations table
+        sqlx::query(r#"
+            CREATE TABLE IF NOT EXISTS attestations (
+                id SERIAL PRIMARY KEY,
+                oracle_id INTEGER NOT NULL REFERENCES oracles(id),
+                txid BYTEA NOT NULL,
+                vout INTEGER NOT NULL,
+                block_height INTEGER,
+                category INTEGER NOT NULL,
+                event_id BYTEA NOT NULL,
+                event_description TEXT,
+                outcome_data BYTEA NOT NULL,
+                schnorr_signature BYTEA NOT NULL,
+                status VARCHAR(50) NOT NULL DEFAULT 'valid',
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                UNIQUE(txid, vout)
+            )
+        "#).execute(&self.pool).await?;
+        
+        // Create indexes for attestations
+        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_attestations_oracle ON attestations(oracle_id)").execute(&self.pool).await;
+        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_attestations_event ON attestations(event_id)").execute(&self.pool).await;
+        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_attestations_category ON attestations(category)").execute(&self.pool).await;
+        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_attestations_status ON attestations(status)").execute(&self.pool).await;
+        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_attestations_block ON attestations(block_height)").execute(&self.pool).await;
+        
+        // Create disputes table
+        sqlx::query(r#"
+            CREATE TABLE IF NOT EXISTS disputes (
+                id SERIAL PRIMARY KEY,
+                attestation_id INTEGER NOT NULL REFERENCES attestations(id),
+                disputer_pubkey BYTEA NOT NULL,
+                txid BYTEA NOT NULL,
+                vout INTEGER NOT NULL,
+                block_height INTEGER,
+                reason INTEGER NOT NULL,
+                stake_sats BIGINT NOT NULL DEFAULT 0,
+                status VARCHAR(50) NOT NULL DEFAULT 'pending',
+                resolution TEXT,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                UNIQUE(txid, vout)
+            )
+        "#).execute(&self.pool).await?;
+        
+        // Create indexes for disputes
+        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_disputes_attestation ON disputes(attestation_id)").execute(&self.pool).await;
+        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_disputes_status ON disputes(status)").execute(&self.pool).await;
+        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_disputes_disputer ON disputes(disputer_pubkey)").execute(&self.pool).await;
+        
+        // Create event_requests table
+        sqlx::query(r#"
+            CREATE TABLE IF NOT EXISTS event_requests (
+                id SERIAL PRIMARY KEY,
+                event_id BYTEA NOT NULL UNIQUE,
+                category INTEGER NOT NULL,
+                description TEXT NOT NULL,
+                resolution_block INTEGER,
+                bounty_sats BIGINT NOT NULL DEFAULT 0,
+                status VARCHAR(50) NOT NULL DEFAULT 'pending',
+                fulfilled_by INTEGER REFERENCES oracles(id),
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            )
+        "#).execute(&self.pool).await?;
+        
+        // Create indexes for event_requests
+        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_event_requests_event ON event_requests(event_id)").execute(&self.pool).await;
+        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_event_requests_category ON event_requests(category)").execute(&self.pool).await;
+        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_event_requests_status ON event_requests(status)").execute(&self.pool).await;
+        
+        // Create oracle_stakes table
+        sqlx::query(r#"
+            CREATE TABLE IF NOT EXISTS oracle_stakes (
+                id SERIAL PRIMARY KEY,
+                oracle_id INTEGER NOT NULL REFERENCES oracles(id),
+                txid BYTEA NOT NULL,
+                vout INTEGER NOT NULL,
+                amount_sats BIGINT NOT NULL,
+                action VARCHAR(50) NOT NULL,
+                block_height INTEGER,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            )
+        "#).execute(&self.pool).await?;
+        
+        // Create indexes for oracle_stakes
+        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_oracle_stakes_oracle ON oracle_stakes(oracle_id)").execute(&self.pool).await;
+        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_oracle_stakes_action ON oracle_stakes(action)").execute(&self.pool).await;
+        
+        // Create indexer_state table
+        sqlx::query(r#"
+            CREATE TABLE IF NOT EXISTS indexer_state (
+                id INTEGER PRIMARY KEY DEFAULT 1,
+                last_block_hash BYTEA,
+                last_block_height INTEGER NOT NULL DEFAULT 0,
+                updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            )
+        "#).execute(&self.pool).await?;
+        
+        // Insert initial indexer state if not exists
+        let _ = sqlx::query(
+            "INSERT INTO indexer_state (id, last_block_height) VALUES (1, 0) ON CONFLICT (id) DO NOTHING"
+        ).execute(&self.pool).await;
+        
+        // Create stats view
+        let _ = sqlx::query(r#"
+            CREATE OR REPLACE VIEW oracle_stats AS
+            SELECT 
+                COUNT(*) as total_oracles,
+                COUNT(*) FILTER (WHERE status = 'active') as active_oracles,
+                COALESCE(SUM(stake_sats), 0) as total_staked,
+                AVG(reputation_score) as avg_reputation,
+                COALESCE(SUM(total_attestations), 0) as total_attestations
+            FROM oracles
+        "#).execute(&self.pool).await;
+        
+        tracing::info!("Database migrations completed");
+        Ok(())
     }
 
     // Oracle operations
@@ -128,6 +280,143 @@ impl Database {
         .bind(block_height)
         .fetch_one(&self.pool)
         .await?;
+
+        Ok(row.0)
+    }
+
+    /// Get oracle by pubkey (returns oracle_id if found)
+    pub async fn get_oracle_id_by_pubkey(&self, pubkey: &[u8]) -> Result<Option<i32>> {
+        let row: Option<(i32,)> = sqlx::query_as(
+            "SELECT id FROM oracles WHERE pubkey = $1"
+        )
+        .bind(pubkey)
+        .fetch_optional(&self.pool)
+        .await?;
+        Ok(row.map(|r| r.0))
+    }
+
+    /// Insert attestation
+    pub async fn insert_attestation(
+        &self,
+        oracle_id: i32,
+        txid: &[u8],
+        vout: i32,
+        block_height: Option<i32>,
+        category: i32,
+        event_id: &[u8],
+        event_description: Option<&str>,
+        outcome_data: &[u8],
+        schnorr_signature: &[u8],
+    ) -> Result<i32> {
+        let row: (i32,) = sqlx::query_as(
+            r#"
+            INSERT INTO attestations (oracle_id, txid, vout, block_height, category, event_id, 
+                                      event_description, outcome_data, schnorr_signature)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            ON CONFLICT (txid, vout) DO NOTHING
+            RETURNING id
+            "#,
+        )
+        .bind(oracle_id)
+        .bind(txid)
+        .bind(vout)
+        .bind(block_height)
+        .bind(category)
+        .bind(event_id)
+        .bind(event_description)
+        .bind(outcome_data)
+        .bind(schnorr_signature)
+        .fetch_one(&self.pool)
+        .await?;
+
+        // Update oracle stats
+        let _ = sqlx::query(
+            "UPDATE oracles SET total_attestations = total_attestations + 1, 
+                                successful_attestations = successful_attestations + 1 
+             WHERE id = $1"
+        )
+        .bind(oracle_id)
+        .execute(&self.pool)
+        .await;
+
+        Ok(row.0)
+    }
+
+    /// Insert event request
+    pub async fn insert_event_request(
+        &self,
+        event_id: &[u8],
+        category: i32,
+        description: &str,
+        resolution_block: Option<i32>,
+        bounty_sats: i64,
+    ) -> Result<i32> {
+        let row: (i32,) = sqlx::query_as(
+            r#"
+            INSERT INTO event_requests (event_id, category, description, resolution_block, bounty_sats)
+            VALUES ($1, $2, $3, $4, $5)
+            ON CONFLICT (event_id) DO NOTHING
+            RETURNING id
+            "#,
+        )
+        .bind(event_id)
+        .bind(category)
+        .bind(description)
+        .bind(resolution_block)
+        .bind(bounty_sats)
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(row.0)
+    }
+
+    /// Get attestation ID by txid
+    pub async fn get_attestation_id_by_txid(&self, txid: &[u8]) -> Result<Option<i32>> {
+        let row: Option<(i32,)> = sqlx::query_as(
+            "SELECT id FROM attestations WHERE txid = $1"
+        )
+        .bind(txid)
+        .fetch_optional(&self.pool)
+        .await?;
+        Ok(row.map(|r| r.0))
+    }
+
+    /// Insert dispute
+    pub async fn insert_dispute(
+        &self,
+        attestation_id: i32,
+        disputer_pubkey: &[u8],
+        txid: &[u8],
+        vout: i32,
+        block_height: Option<i32>,
+        reason: i32,
+        stake_sats: i64,
+    ) -> Result<i32> {
+        let row: (i32,) = sqlx::query_as(
+            r#"
+            INSERT INTO disputes (attestation_id, disputer_pubkey, txid, vout, block_height, reason, stake_sats)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            ON CONFLICT (txid, vout) DO NOTHING
+            RETURNING id
+            "#,
+        )
+        .bind(attestation_id)
+        .bind(disputer_pubkey)
+        .bind(txid)
+        .bind(vout)
+        .bind(block_height)
+        .bind(reason)
+        .bind(stake_sats)
+        .fetch_one(&self.pool)
+        .await?;
+
+        // Update attestation status to disputed
+        let _ = sqlx::query(
+            "UPDATE attestations SET status = 'disputed' WHERE id = $1"
+        )
+        .bind(attestation_id)
+        .execute(&self.pool)
+        .await;
 
         Ok(row.0)
     }

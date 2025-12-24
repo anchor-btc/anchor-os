@@ -22,12 +22,14 @@ pub struct TestnetConfig {
     pub enable_map: bool,            // Kind 12 (GeoMarker)
     pub enable_dns: bool,            // Kind 10
     pub enable_proof: bool,          // Kind 11
-    pub enable_token: bool,          // Kind 20 (Deploy)
-    pub enable_token_mint: bool,     // Kind 20 (Mint)
-    pub enable_token_transfer: bool, // Kind 20 (Transfer)
-    pub enable_token_burn: bool,     // Kind 20 (Burn)
-    pub enable_oracle: bool,         // Kind 30-33
-    pub enable_prediction: bool,     // Kind 40-43
+    pub enable_token: bool,               // Kind 20 (Deploy)
+    pub enable_token_mint: bool,          // Kind 20 (Mint)
+    pub enable_token_transfer: bool,      // Kind 20 (Transfer)
+    pub enable_token_burn: bool,          // Kind 20 (Burn)
+    pub enable_oracle: bool,              // Kind 30 (Register)
+    pub enable_oracle_attestation: bool,  // Kind 31 (Attestation)
+    pub enable_oracle_dispute: bool,      // Kind 32 (Dispute)
+    pub enable_prediction: bool,          // Kind 40-43
 
     // Carrier weights (0-100, will be normalized)
     pub weight_op_return: u8,
@@ -60,6 +62,8 @@ impl Default for TestnetConfig {
             enable_token_transfer: false,
             enable_token_burn: false,
             enable_oracle: false,
+            enable_oracle_attestation: false,
+            enable_oracle_dispute: false,
             enable_prediction: false,
 
             // Default carrier weights (matching original distribution)
@@ -137,6 +141,12 @@ impl TestnetConfig {
         if self.enable_oracle {
             types.push(MessageType::Oracle);
         }
+        if self.enable_oracle_attestation {
+            types.push(MessageType::OracleAttestation);
+        }
+        if self.enable_oracle_dispute {
+            types.push(MessageType::OracleDispute);
+        }
         if self.enable_prediction {
             types.push(MessageType::Prediction);
         }
@@ -180,8 +190,11 @@ pub enum MessageType {
     TokenMint,     // Mint
     TokenTransfer, // Transfer
     TokenBurn,     // Burn
+    // Oracle operations
+    Oracle,            // Register (Kind 30)
+    OracleAttestation, // Attestation (Kind 31)
+    OracleDispute,     // Dispute (Kind 32)
     // Other types
-    Oracle,
     Prediction,
 }
 
@@ -201,6 +214,8 @@ impl MessageType {
             MessageType::TokenTransfer => 20,
             MessageType::TokenBurn => 20,
             MessageType::Oracle => 30,
+            MessageType::OracleAttestation => 31,
+            MessageType::OracleDispute => 32,
             MessageType::Prediction => 40,
         }
     }
@@ -218,7 +233,9 @@ impl MessageType {
             MessageType::TokenMint => "Token Mint",
             MessageType::TokenTransfer => "Token Transfer",
             MessageType::TokenBurn => "Token Burn",
-            MessageType::Oracle => "Oracle",
+            MessageType::Oracle => "Oracle Register",
+            MessageType::OracleAttestation => "Oracle Attestation",
+            MessageType::OracleDispute => "Oracle Dispute",
             MessageType::Prediction => "Prediction",
         }
     }
@@ -238,6 +255,8 @@ impl MessageType {
             MessageType::TokenTransfer,
             MessageType::TokenBurn,
             MessageType::Oracle,
+            MessageType::OracleAttestation,
+            MessageType::OracleDispute,
             MessageType::Prediction,
         ]
     }
@@ -259,6 +278,8 @@ pub struct GeneratorStats {
     pub token_transfer_count: u64,
     pub token_burn_count: u64,
     pub oracle_count: u64,
+    pub oracle_attestation_count: u64,
+    pub oracle_dispute_count: u64,
     pub prediction_count: u64,
     pub carrier_op_return: u64,
     pub carrier_stamps: u64,
@@ -295,6 +316,8 @@ impl GeneratorStats {
             MessageType::TokenTransfer => self.token_transfer_count += 1,
             MessageType::TokenBurn => self.token_burn_count += 1,
             MessageType::Oracle => self.oracle_count += 1,
+            MessageType::OracleAttestation => self.oracle_attestation_count += 1,
+            MessageType::OracleDispute => self.oracle_dispute_count += 1,
             MessageType::Prediction => self.prediction_count += 1,
         }
     }

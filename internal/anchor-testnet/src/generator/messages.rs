@@ -23,6 +23,25 @@ pub struct TrackedToken {
     pub utxos: Vec<(String, u32, u128)>,
 }
 
+/// Tracked oracle info for attestations/events/disputes
+#[derive(Debug, Clone)]
+pub struct TrackedOracle {
+    pub pubkey: [u8; 32],
+    pub name: String,
+    pub categories: i16,
+    pub register_txid: String,
+    pub register_vout: u32,
+}
+
+/// Tracked attestation for disputes
+#[derive(Debug, Clone)]
+pub struct TrackedAttestation {
+    pub oracle_pubkey: [u8; 32],
+    pub event_id: [u8; 32],
+    pub txid: String,
+    pub vout: u32,
+}
+
 /// Message generator that interacts with the wallet service
 pub struct MessageGenerator {
     wallet: WalletClient,
@@ -30,6 +49,10 @@ pub struct MessageGenerator {
     message_history: Vec<(String, u32)>, // (txid, vout)
     /// History of deployed tokens for mint/transfer/burn
     token_history: Vec<TrackedToken>,
+    /// History of registered oracles
+    oracle_history: Vec<TrackedOracle>,
+    /// History of attestations for disputes
+    attestation_history: Vec<TrackedAttestation>,
     rng: rand::rngs::ThreadRng,
     config: SharedConfig,
     stats: SharedStats,
@@ -42,6 +65,8 @@ impl MessageGenerator {
             wallet: WalletClient::new(wallet_url, stats.clone()),
             message_history: Vec::new(),
             token_history: Vec::new(),
+            oracle_history: Vec::new(),
+            attestation_history: Vec::new(),
             rng: rand::thread_rng(),
             config,
             stats,
@@ -138,6 +163,26 @@ impl MessageGenerator {
                 }
             }
             MessageType::Oracle => self.create_oracle(carrier).await?,
+            MessageType::OracleAttestation => {
+                // Need at least one registered oracle
+                if self.oracle_history.is_empty() {
+                    self.create_oracle(carrier).await?
+                } else {
+                    self.create_oracle_attestation(carrier).await?
+                }
+            }
+            MessageType::OracleDispute => {
+                // Need at least one attestation
+                if self.attestation_history.is_empty() {
+                    if self.oracle_history.is_empty() {
+                        self.create_oracle(carrier).await?
+                    } else {
+                        self.create_oracle_attestation(carrier).await?
+                    }
+                } else {
+                    self.create_oracle_dispute(carrier).await?
+                }
+            }
             MessageType::Prediction => self.create_prediction(carrier).await?,
         };
 
@@ -875,6 +920,15 @@ impl MessageGenerator {
 
         let response = self.wallet.send_create_message(&request).await?;
 
+        // Track the oracle for attestations/disputes
+        self.oracle_history.push(TrackedOracle {
+            pubkey: oracle_pubkey,
+            name: oracle_name.to_string(),
+            categories: categories as i16,
+            register_txid: response.txid.clone(),
+            register_vout: response.vout,
+        });
+
         Ok(MessageResult {
             txid: response.txid,
             vout: response.vout,
@@ -882,6 +936,198 @@ impl MessageGenerator {
             is_reply: false,
             parent_txid: None,
             parent_vout: None,
+            carrier: CarrierType::from_u8(response.carrier),
+        })
+    }
+
+    /// Create an oracle attestation message (Kind 31)
+    /// Format expected by indexer:
+    /// [category u8] [event_id 32 bytes] [attestation_block i64 BE] [outcome_len u16 BE] [outcome_data] [schnorr_sig 64 bytes]
+    async fn create_oracle_attestation(&mut self, carrier: CarrierType) -> Result<MessageResult> {
+        // Pick a random oracle from history
+        let oracle = self.oracle_history
+            .choose(&mut self.rng)
+            .cloned()
+            .expect("Oracle history should not be empty");
+
+        // Generate a random event ID
+        let mut event_id = [0u8; 32];
+        self.rng.fill(&mut event_id);
+
+        // Category from the oracle's registered categories
+        let category: u8 = (oracle.categories as u8) & 0xFF;
+
+        // Attestation block (simulated as current + random)
+        let attestation_block: i64 = self.rng.gen_range(1000..10000);
+
+        // Generate outcome data (simulated price data)
+        let outcome_data = format!(
+            "{{\"price\":{},\"timestamp\":{}}}",
+            self.rng.gen_range(10000..100000),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_secs()
+        );
+        let outcome_bytes = outcome_data.as_bytes();
+
+        // Generate a fake Schnorr signature (64 bytes)
+        let mut schnorr_sig = [0u8; 64];
+        self.rng.fill(&mut schnorr_sig);
+
+        // Build attestation body
+        let mut data = Vec::new();
+
+        // Category (1 byte)
+        data.push(category);
+
+        // Event ID (32 bytes)
+        data.extend_from_slice(&event_id);
+
+        // Attestation block (8 bytes, big-endian)
+        data.extend_from_slice(&attestation_block.to_be_bytes());
+
+        // Outcome length (2 bytes, big-endian)
+        data.extend_from_slice(&(outcome_bytes.len() as u16).to_be_bytes());
+
+        // Outcome data
+        data.extend_from_slice(outcome_bytes);
+
+        // Schnorr signature (64 bytes)
+        data.extend_from_slice(&schnorr_sig);
+
+        let body = hex::encode(&data);
+
+        tracing::info!(
+            "Creating oracle attestation: oracle={}, event_id={}",
+            oracle.name,
+            hex::encode(&event_id[..8])
+        );
+
+        let request = CreateMessageRequest {
+            kind: 31, // OracleAttestation
+            body,
+            body_is_hex: true,
+            parent_txid: Some(oracle.register_txid.clone()),
+            parent_vout: Some(oracle.register_vout as u8),
+            carrier: Some(carrier as u8),
+            lock_for_dns: false,
+            domain_name: None,
+            lock_for_token: false,
+            token_ticker: None,
+        };
+
+        let response = self.wallet.send_create_message(&request).await?;
+
+        // Track for disputes
+        self.attestation_history.push(TrackedAttestation {
+            oracle_pubkey: oracle.pubkey,
+            event_id,
+            txid: response.txid.clone(),
+            vout: response.vout,
+        });
+
+        Ok(MessageResult {
+            txid: response.txid,
+            vout: response.vout,
+            message_type: MessageType::OracleAttestation,
+            is_reply: false,
+            parent_txid: Some(oracle.register_txid),
+            parent_vout: Some(oracle.register_vout),
+            carrier: CarrierType::from_u8(response.carrier),
+        })
+    }
+
+    /// Create an oracle dispute message (Kind 32)
+    /// Format: [attestation_txid 32 bytes] [attestation_vout u16 BE] [reason u8] [stake i64 BE] [evidence...]
+    async fn create_oracle_dispute(&mut self, carrier: CarrierType) -> Result<MessageResult> {
+        // Pick a random attestation to dispute
+        let attestation = self.attestation_history
+            .choose(&mut self.rng)
+            .cloned()
+            .expect("Attestation history should not be empty");
+
+        // Dispute reasons
+        let reasons: [u8; 4] = [1, 2, 3, 4]; // 1=incorrect, 2=premature, 3=invalid sig, 4=not authorized
+        let reason = *reasons.choose(&mut self.rng).unwrap_or(&1);
+
+        // Stake for dispute
+        let stake: i64 = self.rng.gen_range(5000..50000);
+
+        // Generate disputer pubkey
+        let mut disputer_pubkey = [0u8; 32];
+        self.rng.fill(&mut disputer_pubkey);
+
+        // Evidence (optional text)
+        let evidence = format!("Dispute reason: {}", match reason {
+            1 => "Incorrect outcome reported",
+            2 => "Attestation made before event resolution",
+            3 => "Invalid Schnorr signature",
+            4 => "Oracle not authorized for this category",
+            _ => "Unknown",
+        });
+
+        // Parse attestation txid to bytes
+        let attestation_txid_bytes = hex::decode(&attestation.txid)
+            .unwrap_or_else(|_| vec![0u8; 32]);
+
+        // Build dispute body
+        let mut data = Vec::new();
+
+        // Disputer pubkey (32 bytes)
+        data.extend_from_slice(&disputer_pubkey);
+
+        // Attestation txid (32 bytes)
+        if attestation_txid_bytes.len() >= 32 {
+            data.extend_from_slice(&attestation_txid_bytes[..32]);
+        } else {
+            data.extend_from_slice(&attestation_txid_bytes);
+            data.extend_from_slice(&vec![0u8; 32 - attestation_txid_bytes.len()]);
+        }
+
+        // Attestation vout (2 bytes, big-endian)
+        data.extend_from_slice(&(attestation.vout as u16).to_be_bytes());
+
+        // Reason (1 byte)
+        data.push(reason);
+
+        // Stake (8 bytes, big-endian)
+        data.extend_from_slice(&stake.to_be_bytes());
+
+        // Evidence
+        data.extend_from_slice(evidence.as_bytes());
+
+        let body = hex::encode(&data);
+
+        tracing::info!(
+            "Creating oracle dispute: attestation={}, reason={}, stake={}",
+            &attestation.txid[..16],
+            reason,
+            stake
+        );
+
+        let request = CreateMessageRequest {
+            kind: 32, // OracleDispute
+            body,
+            body_is_hex: true,
+            parent_txid: Some(attestation.txid.clone()),
+            parent_vout: Some(attestation.vout as u8),
+            carrier: Some(carrier as u8),
+            lock_for_dns: false,
+            domain_name: None,
+            lock_for_token: false,
+            token_ticker: None,
+        };
+
+        let response = self.wallet.send_create_message(&request).await?;
+
+        Ok(MessageResult {
+            txid: response.txid,
+            vout: response.vout,
+            message_type: MessageType::OracleDispute,
+            is_reply: false,
+            parent_txid: Some(attestation.txid),
+            parent_vout: Some(attestation.vout),
             carrier: CarrierType::from_u8(response.carrier),
         })
     }

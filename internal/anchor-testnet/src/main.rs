@@ -201,6 +201,8 @@ async fn main() -> Result<()> {
                     config::MessageType::TokenTransfer => "➡️",
                     config::MessageType::TokenBurn => "🔥",
                     config::MessageType::Oracle => "🔮",
+                    config::MessageType::OracleAttestation => "✅",
+                    config::MessageType::OracleDispute => "⚔️",
                     config::MessageType::Prediction => "🎲",
                 };
                 let carrier_icon = match result.carrier {

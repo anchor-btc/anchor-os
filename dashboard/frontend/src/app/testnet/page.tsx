@@ -241,6 +241,8 @@ export default function TestnetPage() {
           <MessageStat icon={Coins} label="Transfer" value={stats?.token_transfer_count || 0} color="orange" />
           <MessageStat icon={Coins} label="Burn" value={stats?.token_burn_count || 0} color="red" />
           <MessageStat icon={Eye} label="Oracle" value={stats?.oracle_count || 0} color="violet" />
+          <MessageStat icon={Check} label="Attestation" value={stats?.oracle_attestation_count || 0} color="emerald" />
+          <MessageStat icon={Zap} label="Dispute" value={stats?.oracle_dispute_count || 0} color="amber" />
           <MessageStat icon={Sparkles} label="Prediction" value={stats?.prediction_count || 0} color="rose" />
         </div>
       </Section>
@@ -370,6 +372,20 @@ export default function TestnetPage() {
               color="violet"
             />
             <TypeToggle
+              icon={Check}
+              label="Attest"
+              checked={localConfig?.enable_oracle_attestation || false}
+              onChange={(v) => handleConfigChange("enable_oracle_attestation", v)}
+              color="emerald"
+            />
+            <TypeToggle
+              icon={Zap}
+              label="Dispute"
+              checked={localConfig?.enable_oracle_dispute || false}
+              onChange={(v) => handleConfigChange("enable_oracle_dispute", v)}
+              color="amber"
+            />
+            <TypeToggle
               icon={Sparkles}
               label="Predict"
               checked={localConfig?.enable_prediction || false}
@@ -489,6 +505,8 @@ function MessageStat({
     red: "text-red-400 bg-red-500/10",
     violet: "text-violet-400 bg-violet-500/10",
     rose: "text-rose-400 bg-rose-500/10",
+    emerald: "text-emerald-400 bg-emerald-500/10",
+    amber: "text-amber-400 bg-amber-500/10",
   };
 
   return (
@@ -567,6 +585,8 @@ function TypeToggle({
     red: { active: "bg-red-500/20 border-red-500/50 text-red-400", inactive: "bg-muted/50 border-border text-muted-foreground" },
     violet: { active: "bg-violet-500/20 border-violet-500/50 text-violet-400", inactive: "bg-muted/50 border-border text-muted-foreground" },
     rose: { active: "bg-rose-500/20 border-rose-500/50 text-rose-400", inactive: "bg-muted/50 border-border text-muted-foreground" },
+    emerald: { active: "bg-emerald-500/20 border-emerald-500/50 text-emerald-400", inactive: "bg-muted/50 border-border text-muted-foreground" },
+    amber: { active: "bg-amber-500/20 border-amber-500/50 text-amber-400", inactive: "bg-muted/50 border-border text-muted-foreground" },
   };
 
   const cfg = colors[color] || colors.blue;
