@@ -1010,6 +1010,7 @@ async fn create_wallet_tx(
 }
 
 /// Create a wallet transaction with required inputs and custom outputs for token transfers
+#[allow(clippy::too_many_arguments)]
 async fn create_wallet_tx_with_inputs(
     wallet_url: &str,
     body: &[u8],

@@ -25,6 +25,7 @@ impl UtxoTracker {
 
     /// Process a MINT operation
     /// Creates a new token UTXO at the specified output
+    #[allow(clippy::too_many_arguments)]
     pub async fn process_mint(
         &self,
         token_id: i32,
@@ -63,6 +64,7 @@ impl UtxoTracker {
 
     /// Process a TRANSFER operation
     /// Spends input UTXOs and creates new output UTXOs
+    #[allow(clippy::too_many_arguments)]
     pub async fn process_transfer(
         &self,
         tx: &Transaction,

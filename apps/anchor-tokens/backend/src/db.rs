@@ -153,6 +153,7 @@ impl Database {
     }
 
     /// Register a new token (DEPLOY)
+    #[allow(clippy::too_many_arguments)]
     pub async fn create_token(
         &self,
         ticker: &str,
@@ -328,6 +329,7 @@ impl Database {
     // ========================================================================
 
     /// Create a new token UTXO
+    #[allow(clippy::too_many_arguments)]
     pub async fn create_utxo(
         &self,
         token_id: i32,
@@ -702,6 +704,7 @@ impl Database {
     // ========================================================================
 
     /// Record a token operation
+    #[allow(clippy::too_many_arguments)]
     pub async fn record_operation(
         &self,
         token_id: i32,
