@@ -47,18 +47,6 @@ impl OracleCategories {
     }
 }
 
-/// Key type for oracle identity
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
-#[serde(rename_all = "snake_case")]
-#[derive(Default)]
-pub enum KeyType {
-    /// secp256k1 Schnorr (Nostr, Bitcoin)
-    #[default]
-    Secp256k1 = 0,
-    /// Ed25519 (Pubky)
-    Ed25519 = 1,
-}
-
 /// Oracle registration/profile
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct Oracle {
