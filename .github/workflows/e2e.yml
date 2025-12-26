@@ -1,0 +1,174 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      spec:
+        description: 'Specific spec to run (e.g., cypress/specs/dashboard/**)'
+        required: false
+        default: ''
+
+jobs:
+  e2e:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Start Docker Services
+        run: |
+          docker compose up -d
+          echo "Waiting for services to be healthy..."
+
+      - name: Wait for services to be ready
+        run: |
+          # Wait for PostgreSQL
+          echo "Waiting for PostgreSQL..."
+          timeout 60 bash -c 'until docker exec core-postgres pg_isready -U postgres; do sleep 2; done'
+          
+          # Wait for Bitcoin Core
+          echo "Waiting for Bitcoin Core..."
+          timeout 120 bash -c 'until docker exec core-bitcoin bitcoin-cli -regtest getblockchaininfo 2>/dev/null; do sleep 5; done'
+          
+          # Wait for Dashboard Frontend
+          echo "Waiting for Dashboard..."
+          timeout 120 bash -c 'until curl -s http://localhost:8000 > /dev/null; do sleep 5; done'
+          
+          echo "All services are ready!"
+
+      - name: Bypass Setup Wizard
+        run: |
+          docker exec core-postgres psql -U anchor -d anchor -c "
+            UPDATE installation_config 
+            SET setup_completed = TRUE, 
+                preset = 'default',
+                services = '{\"core-bitcoin\": true, \"core-wallet\": true, \"core-indexer\": true}',
+                updated_at = NOW() 
+            WHERE id = 1;
+          "
+          echo "Setup wizard bypassed!"
+
+      - name: Mine initial blocks
+        run: |
+          docker exec core-bitcoin bitcoin-cli -regtest generatetoaddress 101 $(docker exec core-bitcoin bitcoin-cli -regtest getnewaddress) || true
+          echo "Initial blocks mined!"
+
+      - name: Install E2E dependencies
+        working-directory: e2e
+        run: npm ci
+
+      - name: Run Cypress Tests
+        uses: cypress-io/github-action@v6
+        with:
+          working-directory: e2e
+          wait-on: 'http://localhost:8000'
+          wait-on-timeout: 120
+          browser: chrome
+          spec: ${{ github.event.inputs.spec || 'cypress/specs/**/*.cy.ts' }}
+        env:
+          CYPRESS_BASE_URL: http://localhost:8000
+
+      - name: Upload Screenshots on Failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-screenshots
+          path: e2e/cypress/screenshots
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload Videos
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cypress-videos
+          path: e2e/cypress/videos
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Docker Logs on Failure
+        if: failure()
+        run: |
+          echo "=== Docker Container Status ==="
+          docker compose ps
+          echo ""
+          echo "=== Dashboard Backend Logs ==="
+          docker compose logs anchor-dashboard-backend --tail=100 || true
+          echo ""
+          echo "=== Core Wallet Logs ==="
+          docker compose logs core-wallet --tail=100 || true
+          echo ""
+          echo "=== Core Indexer Logs ==="
+          docker compose logs core-indexer --tail=100 || true
+
+  # Smoke tests run on all PRs for quick feedback
+  smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Start Docker Services
+        run: docker compose up -d
+
+      - name: Wait for services
+        run: |
+          timeout 60 bash -c 'until docker exec core-postgres pg_isready -U postgres; do sleep 2; done'
+          timeout 120 bash -c 'until curl -s http://localhost:8000 > /dev/null; do sleep 5; done'
+
+      - name: Bypass Setup Wizard
+        run: |
+          docker exec core-postgres psql -U anchor -d anchor -c "
+            UPDATE installation_config SET setup_completed = TRUE WHERE id = 1;
+          "
+
+      - name: Install E2E dependencies
+        working-directory: e2e
+        run: npm ci
+
+      - name: Run Smoke Tests
+        uses: cypress-io/github-action@v6
+        with:
+          working-directory: e2e
+          wait-on: 'http://localhost:8000'
+          wait-on-timeout: 120
+          browser: chrome
+          spec: 'cypress/specs/**/home.cy.ts'
+        env:
+          CYPRESS_BASE_URL: http://localhost:8000
+
+      - name: Upload Screenshots on Failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: smoke-screenshots
+          path: e2e/cypress/screenshots
+          if-no-files-found: ignore
+

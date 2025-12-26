@@ -1,0 +1,30 @@
+{
+  "name": "anchor-e2e",
+  "version": "1.0.0",
+  "description": "E2E tests for Anchor OS using Cypress",
+  "private": true,
+  "scripts": {
+    "cy:open": "cypress open",
+    "cy:run": "cypress run",
+    "cy:run:dashboard": "cypress run --spec 'cypress/specs/dashboard/**'",
+    "cy:run:domains": "cypress run --spec 'cypress/specs/domains/**'",
+    "cy:run:proofs": "cypress run --spec 'cypress/specs/proofs/**'",
+    "cy:run:tokens": "cypress run --spec 'cypress/specs/tokens/**'",
+    "cy:run:threads": "cypress run --spec 'cypress/specs/threads/**'",
+    "cy:run:canvas": "cypress run --spec 'cypress/specs/canvas/**'",
+    "cy:run:places": "cypress run --spec 'cypress/specs/places/**'",
+    "cy:run:oracles": "cypress run --spec 'cypress/specs/oracles/**'",
+    "cy:run:predictions": "cypress run --spec 'cypress/specs/predictions/**'",
+    "cy:run:smoke": "cypress run --spec 'cypress/specs/**/home.cy.ts'",
+    "pretest": "npm run seed:db",
+    "seed:db": "docker exec core-postgres psql -U anchor -d anchor -c \"UPDATE installation_config SET setup_completed = TRUE WHERE id = 1\" || true",
+    "test": "cypress run"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.3",
+    "cypress": "^15.8.1",
+    "pg": "^8.13.0",
+    "typescript": "^5.7.0"
+  }
+}
+
