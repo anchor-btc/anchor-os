@@ -77,6 +77,7 @@ impl OracleRegistration {
 pub struct OracleAttestationBody {
     pub category: u8,
     pub event_id: [u8; 32],
+    #[allow(dead_code)]
     pub attestation_block: i64,
     pub outcome_data: Vec<u8>,
     pub schnorr_signature: [u8; 64],
@@ -119,9 +120,11 @@ impl OracleAttestationBody {
 pub struct OracleDisputeBody {
     pub disputer_pubkey: [u8; 32],
     pub attestation_txid: [u8; 32],
+    #[allow(dead_code)]
     pub attestation_vout: u16,
     pub reason: u8,
     pub stake_sats: i64,
+    #[allow(dead_code)]
     pub evidence: String,
 }
 

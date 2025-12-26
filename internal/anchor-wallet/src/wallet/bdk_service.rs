@@ -23,7 +23,7 @@ use bdk_wallet::{
 };
 use std::fs;
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::{Arc, Mutex};
 use tracing::{info, warn};
 
 use super::types::{Balance, Utxo};

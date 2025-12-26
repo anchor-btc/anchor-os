@@ -100,6 +100,7 @@ pub struct PlaceBetRequest {
     pub user_pubkey: String,
     /// Bitcoin address for the bet transaction output (required for real tx)
     pub bet_address: Option<String>,
+    #[allow(dead_code)]
     pub min_shares: Option<i64>, // Slippage protection
 }
 

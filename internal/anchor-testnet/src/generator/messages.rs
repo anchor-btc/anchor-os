@@ -16,7 +16,9 @@ use crate::config::{MessageType, SharedConfig, SharedStats, TestnetConfig};
 #[derive(Debug, Clone)]
 pub struct TrackedToken {
     pub ticker: String,
+    #[allow(dead_code)]
     pub deploy_txid: String,
+    #[allow(dead_code)]
     pub deploy_vout: u32,
     pub decimals: u8,
     /// UTXOs holding this token (txid, vout, amount)
@@ -36,7 +38,9 @@ pub struct TrackedOracle {
 /// Tracked attestation for disputes
 #[derive(Debug, Clone)]
 pub struct TrackedAttestation {
+    #[allow(dead_code)]
     pub oracle_pubkey: [u8; 32],
+    #[allow(dead_code)]
     pub event_id: [u8; 32],
     pub txid: String,
     pub vout: u32,
@@ -46,11 +50,15 @@ pub struct TrackedAttestation {
 #[derive(Debug, Clone)]
 pub struct TrackedMarket {
     pub market_id: [u8; 32],
+    #[allow(dead_code)]
     pub question: String,
     pub resolution_block: u32,
     pub oracle_pubkey: [u8; 32],
+    #[allow(dead_code)]
     pub initial_liquidity: i64,
+    #[allow(dead_code)]
     pub created_txid: String,
+    #[allow(dead_code)]
     pub created_vout: u32,
     /// Number of bets placed on this market
     pub bet_count: u32,

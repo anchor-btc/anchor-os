@@ -163,10 +163,12 @@ pub struct RegisterOracleRequest {
     pub pubkey: String,
     /// Key type: 0 = secp256k1 (Nostr), 1 = Ed25519 (Pubky)
     #[serde(default)]
+    #[allow(dead_code)]
     pub key_type: i32,
     pub name: String,
     pub categories: i32,
     /// Optional: Link to wallet identity ID
+    #[allow(dead_code)]
     pub identity_id: Option<String>,
 }
 

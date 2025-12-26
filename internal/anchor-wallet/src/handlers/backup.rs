@@ -76,17 +76,6 @@ pub struct VerifyMnemonicResponse {
     pub error: Option<String>,
 }
 
-/// Restore wallet response
-#[derive(Serialize, ToSchema)]
-pub struct RestoreWalletResponse {
-    /// Whether the restore was successful
-    pub success: bool,
-    /// Message
-    pub message: String,
-    /// First address of the restored wallet
-    pub first_address: Option<String>,
-}
-
 /// Get wallet mnemonic (seed phrase)
 ///
 /// WARNING: This endpoint exposes sensitive information. Only call when the user
@@ -395,17 +384,6 @@ pub struct ExportBackupResponse {
     pub backup: Option<EncryptedBackup>,
     /// Error message if failed
     pub error: Option<String>,
-}
-
-/// Import backup response
-#[derive(Serialize, ToSchema)]
-pub struct ImportBackupResponse {
-    /// Whether the import was successful
-    pub success: bool,
-    /// Message
-    pub message: String,
-    /// Number of locked UTXOs restored
-    pub locked_utxos_restored: usize,
 }
 
 /// Verify backup request

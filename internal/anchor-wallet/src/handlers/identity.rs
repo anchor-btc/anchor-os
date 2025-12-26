@@ -128,7 +128,8 @@ pub struct HomeserverInfo {
 #[derive(Debug, Deserialize, ToSchema)]
 pub struct SignMessageRequest {
     /// Message to sign (hex encoded)
-    pub message: String,
+    #[serde(rename = "message")]
+    pub _message: String,
 }
 
 /// Sign message response

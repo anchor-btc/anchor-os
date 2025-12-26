@@ -25,6 +25,7 @@ pub struct AmmState {
 
 impl AmmState {
     /// Create new AMM state with initial liquidity
+    #[cfg(test)]
     pub fn new(initial_liquidity: i64) -> Self {
         let k = (initial_liquidity as i128) * (initial_liquidity as i128);
         Self {

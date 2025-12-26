@@ -43,10 +43,12 @@ pub struct Utxo {
 /// Send request (for OpenAPI schema)
 #[derive(Debug, Deserialize, ToSchema)]
 pub struct SendRequest {
-    pub address: String,
-    pub amount: f64,
-    #[serde(default = "default_fee_rate")]
-    pub fee_rate: u64,
+    #[serde(rename = "address")]
+    pub _address: String,
+    #[serde(rename = "amount")]
+    pub _amount: f64,
+    #[serde(default = "default_fee_rate", rename = "fee_rate")]
+    pub _fee_rate: u64,
 }
 
 fn default_fee_rate() -> u64 {
