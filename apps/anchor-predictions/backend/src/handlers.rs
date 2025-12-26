@@ -22,9 +22,6 @@ pub async fn health() -> impl IntoResponse {
 
 // ==================== Stats ====================
 
-#[derive(Deserialize)]
-pub struct StatsQuery {}
-
 #[utoipa::path(
     get,
     path = "/api/stats",
