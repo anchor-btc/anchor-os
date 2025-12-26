@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, memo, useCallback } from 'react';
+import { useState, useEffect, memo, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useSearchParams } from 'next/navigation';
@@ -281,7 +281,10 @@ export function Sidebar() {
   });
 
   const containers = containersData?.containers || [];
-  const installedServices = installationStatus?.installed_services || [];
+  const installedServices = useMemo(
+    () => installationStatus?.installed_services || [],
+    [installationStatus]
+  );
 
   // Check if a service is installed
   const isServiceInstalled = useCallback(

@@ -9,6 +9,8 @@ on:
 env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: -Dwarnings
+  # Disable Next.js telemetry
+  NEXT_TELEMETRY_DISABLED: 1
 
 jobs:
   # =============================================================================
@@ -78,6 +80,19 @@ jobs:
         run: |
           npm ci
           npm rebuild
+
+      - name: Cache Next.js
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ github.workspace }}/.next/cache
+            ${{ github.workspace }}/dashboard/frontend/.next/cache
+            ${{ github.workspace }}/apps/*/frontend/.next/cache
+            ${{ github.workspace }}/sites/*/.next/cache
+          key: nextjs-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**/*.ts', '**/*.tsx') }}
+          restore-keys: |
+            nextjs-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}-
+            nextjs-${{ runner.os }}-
 
       - name: Build Rust (release check)
         run: cargo build --workspace --all-features
