@@ -1,4 +1,9 @@
 //! Pixel database operations
+//!
+//! Database operations for pixel state and history management.
+//! Complex tuple types are used for sqlx query results.
+
+#![allow(clippy::type_complexity)]
 
 use anyhow::Result;
 use tracing::debug;
@@ -12,6 +17,7 @@ use super::Database;
 
 impl Database {
     /// Insert or update a pixel
+    #[allow(clippy::too_many_arguments)]
     pub async fn upsert_pixel(
         &self,
         x: i32,
