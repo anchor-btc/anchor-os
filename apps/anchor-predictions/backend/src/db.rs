@@ -176,6 +176,7 @@ impl Database {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub async fn insert_market(
         &self,
         market_id: &[u8],
@@ -320,6 +321,7 @@ impl Database {
         Ok(row.map(|r| self.row_to_position(&r)))
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub async fn insert_position(
         &self,
         market_id: &[u8],

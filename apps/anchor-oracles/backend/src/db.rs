@@ -468,6 +468,7 @@ impl Database {
             .collect())
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub async fn insert_oracle(
         &self,
         pubkey: &[u8],
@@ -495,6 +496,7 @@ impl Database {
     }
 
     /// Insert oracle with key_type and optional linked identity
+    #[allow(clippy::too_many_arguments)]
     pub async fn insert_oracle_with_key_type(
         &self,
         pubkey: &[u8],
@@ -550,6 +552,7 @@ impl Database {
     }
 
     /// Insert attestation
+    #[allow(clippy::too_many_arguments)]
     pub async fn insert_attestation(
         &self,
         oracle_id: i32,
@@ -650,6 +653,7 @@ impl Database {
     }
 
     /// Insert dispute
+    #[allow(clippy::too_many_arguments)]
     pub async fn insert_dispute(
         &self,
         attestation_id: i32,
