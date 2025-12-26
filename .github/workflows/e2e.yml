@@ -37,25 +37,22 @@ jobs:
 
       - name: Build Docker Images
         run: |
-          # Pull external images first
-          docker compose --profile default pull --ignore-pull-failures || true
-          
           # Build all images with cache
           docker compose --profile default build
           
           echo "Listing built images..."
-          docker images | grep -E "anchor|core" || true
+          docker images | grep -E "anchor-os" || true
 
       - name: Save Docker Images
         run: |
           mkdir -p /tmp/docker-images
           
-          # Get all image names from compose
-          IMAGES=$(docker compose --profile default config --images | sort -u)
+          # Get ONLY built images (anchor-os-*), not external ones
+          IMAGES=$(docker images --format '{{.Repository}}:{{.Tag}}' | grep "^anchor-os" | sort -u)
           
           echo "Saving images: $IMAGES"
           
-          # Save all images to a single tar file
+          # Save only our built images to a tar file
           docker save $IMAGES -o /tmp/docker-images/anchor-images.tar
           
           # Compress for faster upload
@@ -102,7 +99,10 @@ jobs:
           docker load -i /tmp/docker-images/anchor-images.tar
           
           echo "Loaded images:"
-          docker images | grep -E "anchor|core" || true
+          docker images | grep -E "anchor-os" || true
+          
+          echo "Pulling external images..."
+          docker compose --profile default pull --ignore-pull-failures || true
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
