@@ -12,13 +12,20 @@ on:
         required: false
         default: ''
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}/anchor
+
 jobs:
   # =============================================================================
-  # Build Job - Builds all Docker images once and caches them
+  # Build Job - Builds and pushes Docker images to GitHub Container Registry
   # =============================================================================
   build-images:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: Checkout
@@ -27,47 +34,70 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Cache Docker layers
-        uses: actions/cache@v4
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
         with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build Docker Images
+      - name: Set image tag
+        id: tag
         run: |
-          # Build all images with cache
-          docker compose --profile default build
-          
-          echo "Listing built images..."
-          docker images | grep -E "^anchor" || true
+          # Use short SHA for image tag
+          echo "tag=${{ github.sha }}" >> $GITHUB_OUTPUT
+          echo "short_tag=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
 
-      - name: Save Docker Images
+      - name: Build and Push Images
         run: |
-          mkdir -p /tmp/docker-images
+          TAG="${{ steps.tag.outputs.short_tag }}"
           
-          # Get ONLY built images (anchor-*), not external ones like postgres, mempool, mariadb
-          IMAGES=$(docker images --format '{{.Repository}}:{{.Tag}}' | grep "^anchor" | sort -u)
+          # Build with BuildKit cache and push to registry
+          export DOCKER_BUILDKIT=1
+          export COMPOSE_DOCKER_CLI_BUILD=1
           
-          echo "Saving images: $IMAGES"
+          # Get list of services to build
+          SERVICES=$(docker compose --profile default config --services | grep -E "^(anchor-|app-|core-)" | sort -u)
           
-          # Save only our built images to a tar file
-          docker save $IMAGES -o /tmp/docker-images/anchor-images.tar
+          echo "Building and pushing services: $SERVICES"
           
-          # Compress for faster upload
-          gzip /tmp/docker-images/anchor-images.tar
+          for SERVICE in $SERVICES; do
+            echo "========================================"
+            echo "Building $SERVICE..."
+            echo "========================================"
+            
+            # Build the service
+            docker compose --profile default build $SERVICE
+            
+            # Get the image name
+            IMAGE=$(docker compose --profile default config | grep -A5 "^  $SERVICE:" | grep "image:" | awk '{print $2}' || echo "")
+            
+            if [ -z "$IMAGE" ]; then
+              # If no explicit image name, docker compose uses project_service format
+              IMAGE="anchor-${SERVICE}"
+            fi
+            
+            # Check if image exists
+            if docker images --format '{{.Repository}}:{{.Tag}}' | grep -q "^${IMAGE}"; then
+              REGISTRY_IMAGE="${{ env.IMAGE_PREFIX }}/${SERVICE}:${TAG}"
+              REGISTRY_IMAGE_LATEST="${{ env.IMAGE_PREFIX }}/${SERVICE}:latest"
+              
+              echo "Tagging $IMAGE as $REGISTRY_IMAGE"
+              docker tag "${IMAGE}:latest" "$REGISTRY_IMAGE" || docker tag "$IMAGE" "$REGISTRY_IMAGE" || true
+              docker tag "${IMAGE}:latest" "$REGISTRY_IMAGE_LATEST" || docker tag "$IMAGE" "$REGISTRY_IMAGE_LATEST" || true
+              
+              echo "Pushing $REGISTRY_IMAGE"
+              docker push "$REGISTRY_IMAGE" || true
+              docker push "$REGISTRY_IMAGE_LATEST" || true
+            fi
+          done
           
-          echo "Image archive size:"
-          ls -lh /tmp/docker-images/
+          echo "All images pushed to registry!"
 
-      - name: Upload Docker Images
-        uses: actions/upload-artifact@v4
-        with:
-          name: docker-images
-          path: /tmp/docker-images/anchor-images.tar.gz
-          retention-days: 1
-          compression-level: 0  # Already compressed
+      - name: List pushed images
+        run: |
+          echo "Images in registry:"
+          docker images | grep -E "ghcr.io|anchor" || true
 
   # =============================================================================
   # E2E Tests - Run on multiple browsers in parallel
@@ -76,6 +106,9 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     needs: build-images
+    permissions:
+      contents: read
+      packages: read
     
     strategy:
       fail-fast: false
@@ -86,23 +119,46 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download Docker Images
-        uses: actions/download-artifact@v4
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
         with:
-          name: docker-images
-          path: /tmp/docker-images
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Load Docker Images
+      - name: Set image tag
+        id: tag
         run: |
-          echo "Loading Docker images..."
-          gunzip /tmp/docker-images/anchor-images.tar.gz
-          docker load -i /tmp/docker-images/anchor-images.tar
+          echo "tag=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+
+      - name: Pull Docker Images
+        run: |
+          TAG="${{ steps.tag.outputs.tag }}"
+          
+          echo "Pulling images from registry..."
+          
+          # Pull external images first
+          docker compose --profile default pull --ignore-pull-failures || true
+          
+          # Pull our built images from registry
+          SERVICES=$(docker compose --profile default config --services | grep -E "^(anchor-|app-|core-)" | sort -u)
+          
+          for SERVICE in $SERVICES; do
+            REGISTRY_IMAGE="${{ env.IMAGE_PREFIX }}/${SERVICE}:${TAG}"
+            LOCAL_IMAGE="anchor-${SERVICE}:latest"
+            
+            echo "Pulling $REGISTRY_IMAGE..."
+            if docker pull "$REGISTRY_IMAGE" 2>/dev/null; then
+              docker tag "$REGISTRY_IMAGE" "$LOCAL_IMAGE" || true
+              # Also tag without anchor- prefix if needed
+              docker tag "$REGISTRY_IMAGE" "${SERVICE}:latest" || true
+            else
+              echo "Image $REGISTRY_IMAGE not found, will use local build"
+            fi
+          done
           
           echo "Loaded images:"
-          docker images | grep -E "^anchor" || true
-          
-          echo "Pulling external images..."
-          docker compose --profile default pull --ignore-pull-failures || true
+          docker images | grep -E "anchor|ghcr" || true
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -207,27 +263,53 @@ jobs:
   # =============================================================================
   smoke:
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 60
     if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      packages: read
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Cache Docker layers
-        uses: actions/cache@v4
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
-
-      - name: Build and Start Docker Services
+      - name: Pull cached images or build
         run: |
+          # Try to pull latest images from registry first
+          echo "Attempting to pull cached images..."
+          
+          SERVICES=$(docker compose --profile default config --services | grep -E "^(anchor-|app-|core-)" | sort -u)
+          
+          for SERVICE in $SERVICES; do
+            REGISTRY_IMAGE="${{ env.IMAGE_PREFIX }}/${SERVICE}:latest"
+            LOCAL_IMAGE="anchor-${SERVICE}:latest"
+            
+            if docker pull "$REGISTRY_IMAGE" 2>/dev/null; then
+              docker tag "$REGISTRY_IMAGE" "$LOCAL_IMAGE" || true
+              docker tag "$REGISTRY_IMAGE" "${SERVICE}:latest" || true
+              echo "✓ Pulled $SERVICE from cache"
+            else
+              echo "✗ $SERVICE not in cache, will build"
+            fi
+          done
+          
+          # Pull external images
+          docker compose --profile default pull --ignore-pull-failures || true
+          
+          # Build any missing images
+          echo "Building any missing images..."
           docker compose --profile default up -d --build
+          
           echo "Waiting for services to be healthy..."
 
       - name: Setup Node.js
