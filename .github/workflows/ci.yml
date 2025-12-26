@@ -35,7 +35,9 @@ jobs:
           cache: 'npm'
 
       - name: Install Node dependencies
-        run: npm ci
+        run: |
+          npm ci
+          npm rebuild
 
       - name: Check Rust formatting
         run: cargo fmt --all -- --check
@@ -73,7 +75,9 @@ jobs:
           cache: 'npm'
 
       - name: Install Node dependencies
-        run: npm ci
+        run: |
+          npm ci
+          npm rebuild
 
       - name: Build Rust (release check)
         run: cargo build --workspace --all-features
@@ -115,7 +119,9 @@ jobs:
           cache: 'npm'
 
       - name: Install Node dependencies
-        run: npm ci
+        run: |
+          npm ci
+          npm rebuild
 
       - name: Run Clippy
         run: cargo clippy --workspace --all-targets --all-features

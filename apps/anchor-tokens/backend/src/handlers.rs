@@ -8,6 +8,7 @@ use axum::{
 };
 use serde_json::json;
 use tracing::error;
+use utoipa::ToSchema;
 
 use crate::db::Database;
 use crate::models::{
@@ -29,6 +30,14 @@ pub struct AppState {
 // ============================================================================
 
 /// Health check endpoint
+#[utoipa::path(
+    get,
+    path = "/health",
+    tag = "Health",
+    responses(
+        (status = 200, description = "Service is healthy", body = HealthResponse)
+    )
+)]
 pub async fn health() -> Json<HealthResponse> {
     Json(HealthResponse {
         status: "ok".to_string(),
@@ -37,6 +46,14 @@ pub async fn health() -> Json<HealthResponse> {
 }
 
 /// Get protocol statistics
+#[utoipa::path(
+    get,
+    path = "/stats",
+    tag = "Stats",
+    responses(
+        (status = 200, description = "Protocol statistics", body = TokenStats)
+    )
+)]
 pub async fn get_stats(State(state): State<AppState>) -> Result<Json<TokenStats>, AppError> {
     let stats = state.db.get_stats().await?;
     Ok(Json(stats))
@@ -47,6 +64,19 @@ pub async fn get_stats(State(state): State<AppState>) -> Result<Json<TokenStats>
 // ============================================================================
 
 /// List all tokens
+#[utoipa::path(
+    get,
+    path = "/tokens",
+    tag = "Tokens",
+    params(
+        ("page" = Option<i32>, Query, description = "Page number"),
+        ("per_page" = Option<i32>, Query, description = "Items per page"),
+        ("search" = Option<String>, Query, description = "Search term")
+    ),
+    responses(
+        (status = 200, description = "List of tokens", body = PaginatedResponse<Token>)
+    )
+)]
 pub async fn list_tokens(
     State(state): State<AppState>,
     Query(params): Query<ListParams>,
@@ -59,6 +89,18 @@ pub async fn list_tokens(
 }
 
 /// Get token by ticker
+#[utoipa::path(
+    get,
+    path = "/tokens/{ticker}",
+    tag = "Tokens",
+    params(
+        ("ticker" = String, Path, description = "Token ticker symbol")
+    ),
+    responses(
+        (status = 200, description = "Token details", body = Token),
+        (status = 404, description = "Token not found")
+    )
+)]
 pub async fn get_token(
     State(state): State<AppState>,
     Path(ticker): Path<String>,
@@ -72,6 +114,20 @@ pub async fn get_token(
 }
 
 /// Get token holders
+#[utoipa::path(
+    get,
+    path = "/tokens/{ticker}/holders",
+    tag = "Tokens",
+    params(
+        ("ticker" = String, Path, description = "Token ticker symbol"),
+        ("page" = Option<i32>, Query, description = "Page number"),
+        ("per_page" = Option<i32>, Query, description = "Items per page")
+    ),
+    responses(
+        (status = 200, description = "List of token holders", body = PaginatedResponse<TokenHolder>),
+        (status = 404, description = "Token not found")
+    )
+)]
 pub async fn get_token_holders(
     State(state): State<AppState>,
     Path(ticker): Path<String>,
@@ -91,6 +147,20 @@ pub async fn get_token_holders(
 }
 
 /// Get token operation history
+#[utoipa::path(
+    get,
+    path = "/tokens/{ticker}/history",
+    tag = "Tokens",
+    params(
+        ("ticker" = String, Path, description = "Token ticker symbol"),
+        ("page" = Option<i32>, Query, description = "Page number"),
+        ("per_page" = Option<i32>, Query, description = "Items per page")
+    ),
+    responses(
+        (status = 200, description = "Token operation history", body = PaginatedResponse<TokenOperationResponse>),
+        (status = 404, description = "Token not found")
+    )
+)]
 pub async fn get_token_history(
     State(state): State<AppState>,
     Path(ticker): Path<String>,
@@ -114,6 +184,17 @@ pub async fn get_token_history(
 // ============================================================================
 
 /// Get address token balances
+#[utoipa::path(
+    get,
+    path = "/address/{address}/balances",
+    tag = "Address",
+    params(
+        ("address" = String, Path, description = "Bitcoin address")
+    ),
+    responses(
+        (status = 200, description = "Token balances for address", body = Vec<TokenBalance>)
+    )
+)]
 pub async fn get_address_balances(
     State(state): State<AppState>,
     Path(address): Path<String>,
@@ -123,6 +204,18 @@ pub async fn get_address_balances(
 }
 
 /// Get address token UTXOs
+#[utoipa::path(
+    get,
+    path = "/address/{address}/utxos",
+    tag = "Address",
+    params(
+        ("address" = String, Path, description = "Bitcoin address"),
+        ("ticker" = Option<String>, Query, description = "Filter by token ticker")
+    ),
+    responses(
+        (status = 200, description = "Token UTXOs for address", body = Vec<TokenUtxo>)
+    )
+)]
 pub async fn get_address_utxos(
     State(state): State<AppState>,
     Path(address): Path<String>,
@@ -143,12 +236,25 @@ pub async fn get_address_utxos(
     Ok(Json(utxos))
 }
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, serde::Deserialize, ToSchema)]
 pub struct UtxoParams {
     pub ticker: Option<String>,
 }
 
 /// Get address operation history
+#[utoipa::path(
+    get,
+    path = "/address/{address}/history",
+    tag = "Address",
+    params(
+        ("address" = String, Path, description = "Bitcoin address"),
+        ("page" = Option<i32>, Query, description = "Page number"),
+        ("per_page" = Option<i32>, Query, description = "Items per page")
+    ),
+    responses(
+        (status = 200, description = "Operation history for address", body = PaginatedResponse<TokenOperationResponse>)
+    )
+)]
 pub async fn get_address_history(
     State(_state): State<AppState>,
     Path(_address): Path<String>,
@@ -170,6 +276,14 @@ pub async fn get_address_history(
 
 /// Get all token holdings for the connected wallet
 /// This gets all unspent token UTXOs and checks if their addresses are controlled by the wallet
+#[utoipa::path(
+    get,
+    path = "/wallet/tokens",
+    tag = "Wallet",
+    responses(
+        (status = 200, description = "Wallet token holdings", body = WalletTokensResponse)
+    )
+)]
 pub async fn get_wallet_tokens(
     State(state): State<AppState>,
 ) -> Result<Json<WalletTokensResponse>, AppError> {
@@ -326,7 +440,7 @@ pub async fn get_wallet_tokens(
 }
 
 /// Response for wallet tokens endpoint
-#[derive(Debug, serde::Serialize)]
+#[derive(Debug, serde::Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct WalletTokensResponse {
     pub balances: Vec<TokenBalance>,
@@ -339,6 +453,16 @@ pub struct WalletTokensResponse {
 // ============================================================================
 
 /// Create a deploy transaction
+#[utoipa::path(
+    post,
+    path = "/tx/deploy",
+    tag = "Transactions",
+    request_body = DeployTokenRequest,
+    responses(
+        (status = 200, description = "Deploy transaction created", body = CreateTxResponse),
+        (status = 400, description = "Invalid request")
+    )
+)]
 pub async fn create_deploy_tx(
     State(state): State<AppState>,
     Json(request): Json<DeployTokenRequest>,
@@ -396,6 +520,17 @@ pub async fn create_deploy_tx(
 }
 
 /// Create a mint transaction
+#[utoipa::path(
+    post,
+    path = "/tx/mint",
+    tag = "Transactions",
+    request_body = MintTokenRequest,
+    responses(
+        (status = 200, description = "Mint transaction created", body = CreateTxResponse),
+        (status = 400, description = "Invalid request"),
+        (status = 404, description = "Token not found")
+    )
+)]
 pub async fn create_mint_tx(
     State(state): State<AppState>,
     Json(request): Json<MintTokenRequest>,
@@ -537,6 +672,17 @@ async fn unlock_utxo(txid: &str, vout: u32) -> Result<(), AppError> {
 }
 
 /// Create a transfer transaction
+#[utoipa::path(
+    post,
+    path = "/tx/transfer",
+    tag = "Transactions",
+    request_body = TransferTokenRequest,
+    responses(
+        (status = 200, description = "Transfer transaction created", body = CreateTxResponse),
+        (status = 400, description = "Invalid request or insufficient balance"),
+        (status = 404, description = "Token not found")
+    )
+)]
 pub async fn create_transfer_tx(
     State(state): State<AppState>,
     Json(request): Json<TransferTokenRequest>,
@@ -773,6 +919,17 @@ pub async fn create_transfer_tx(
 }
 
 /// Create a burn transaction
+#[utoipa::path(
+    post,
+    path = "/tx/burn",
+    tag = "Transactions",
+    request_body = BurnTokenRequest,
+    responses(
+        (status = 200, description = "Burn transaction created", body = CreateTxResponse),
+        (status = 400, description = "Invalid request or token not burnable"),
+        (status = 404, description = "Token not found")
+    )
+)]
 pub async fn create_burn_tx(
     State(state): State<AppState>,
     Json(request): Json<BurnTokenRequest>,

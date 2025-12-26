@@ -203,7 +203,7 @@ async fn main() -> anyhow::Result<()> {
     let addr = SocketAddr::from(([0, 0, 0, 0], config.port));
     info!("Listening on {}", addr);
     info!(
-        "API docs available at http://localhost:{}/docs",
+        "Swagger UI available at http://localhost:{}/swagger-ui/",
         config.port
     );
 
@@ -250,7 +250,7 @@ fn build_router(state: Arc<AppState>) -> Router {
         )
         .route("/identities/resolve", get(handlers::resolve_identity))
         // Swagger UI
-        .merge(SwaggerUi::new("/docs").url("/api-doc/openapi.json", ApiDoc::openapi()))
+        .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()))
         // State and middleware
         .with_state(state)
         .layer(

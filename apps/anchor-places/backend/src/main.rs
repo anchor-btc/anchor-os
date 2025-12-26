@@ -29,11 +29,55 @@ use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use utoipa::OpenApi;
+use utoipa_swagger_ui::SwaggerUi;
 
 use crate::config::Config;
 use crate::db::Database;
 use crate::handlers::AppState;
 use crate::indexer::MarkerIndexer;
+
+/// OpenAPI documentation
+#[derive(OpenApi)]
+#[openapi(
+    paths(
+        handlers::health,
+        handlers::get_stats,
+        handlers::get_categories,
+        handlers::get_markers,
+        handlers::get_markers_bounds,
+        handlers::search_markers,
+        handlers::get_my_markers,
+        handlers::get_marker,
+        handlers::create_marker,
+        handlers::create_reply,
+    ),
+    components(schemas(
+        models::HealthResponse,
+        models::MapStats,
+        models::Category,
+        models::Marker,
+        models::MarkerReply,
+        models::MarkerDetail,
+        models::BoundsParams,
+        models::SearchParams,
+        models::MyPlacesParams,
+        models::CreateMarkerRequest,
+        models::CreateMarkerResponse,
+        models::CreateReplyRequest,
+    )),
+    tags(
+        (name = "System", description = "Health check endpoints"),
+        (name = "Map", description = "Map statistics and categories"),
+        (name = "Markers", description = "Marker management"),
+    ),
+    info(
+        title = "Anchor Places API",
+        version = "1.0.0",
+        description = "Bitcoin-powered map markers using the Anchor Protocol"
+    )
+)]
+struct ApiDoc;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -84,6 +128,8 @@ async fn main() -> anyhow::Result<()> {
         .route("/markers/my", get(handlers::get_my_markers))
         .route("/markers/:txid/:vout", get(handlers::get_marker))
         .route("/markers/:txid/:vout/reply", post(handlers::create_reply))
+        // Swagger UI
+        .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()))
         .layer(
             CorsLayer::new()
                 .allow_origin(Any)
@@ -97,6 +143,7 @@ async fn main() -> anyhow::Result<()> {
     let addr = format!("{}:{}", config.host, config.port);
     let listener = tokio::net::TcpListener::bind(&addr).await?;
     info!("Anchor Places Backend listening on {}", addr);
+    info!("Swagger UI available at http://{}/swagger-ui/", addr);
 
     axum::serve(listener, app).await?;
 

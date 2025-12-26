@@ -13,7 +13,7 @@
     "build:ui": "npm run build -w @AnchorProtocol/ui",
     "dev:ui": "npm run dev -w @AnchorProtocol/ui",
     "build:sdk": "npm run build -w @AnchorProtocol/sdk",
-    "build:all": "npm run build --workspaces --if-present",
+    "build:all": "npm run build:ui && npm run build:sdk && npm run build --workspaces --if-present",
     "clean": "rm -rf node_modules && find . -name 'node_modules' -type d -prune -exec rm -rf {} +",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

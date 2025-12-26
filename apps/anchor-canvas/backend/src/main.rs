@@ -24,12 +24,60 @@ use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use utoipa::OpenApi;
+use utoipa_swagger_ui::SwaggerUi;
 
 use crate::canvas::CanvasManager;
 use crate::config::Config;
 use crate::db::Database;
 use crate::handlers::AppState;
 use crate::indexer::CanvasIndexer;
+
+/// OpenAPI documentation
+#[derive(OpenApi)]
+#[openapi(
+    paths(
+        handlers::health,
+        handlers::get_stats,
+        handlers::get_pixel,
+        handlers::get_recent,
+        handlers::get_pixels_by_txids,
+        handlers::get_pixels_by_address,
+        handlers::get_pixels_by_addresses,
+        handlers::get_my_pixels,
+        handlers::get_canvas,
+        handlers::get_preview,
+        handlers::get_region,
+        handlers::get_tile,
+    ),
+    components(schemas(
+        models::HealthResponse,
+        models::CanvasStats,
+        models::Pixel,
+        models::PixelState,
+        models::PixelHistoryEntry,
+        models::PixelInfo,
+        models::RecentPixel,
+        models::UserPixel,
+        models::RegionParams,
+        models::GetPixelsByTxidsRequest,
+        models::GetPixelsByTxidsResponse,
+        models::GetPixelsByAddressParams,
+        models::GetPixelsByAddressesRequest,
+        models::GetPixelsByAddressResponse,
+    )),
+    tags(
+        (name = "System", description = "Health check endpoints"),
+        (name = "Canvas", description = "Canvas rendering and tiles"),
+        (name = "Pixels", description = "Pixel queries and operations"),
+    ),
+    info(
+        title = "Anchor Canvas API",
+        version = "1.0.0",
+        description = "Collaborative pixel canvas on Bitcoin using the Anchor Protocol"
+    )
+)]
+struct ApiDoc;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -85,6 +133,8 @@ async fn main() -> anyhow::Result<()> {
         .route("/canvas/preview", get(handlers::get_preview))
         .route("/canvas/region", get(handlers::get_region))
         .route("/canvas/tile/{z}/{x}/{y}", get(handlers::get_tile))
+        // Swagger UI
+        .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()))
         .layer(
             CorsLayer::new()
                 .allow_origin(Any)
@@ -98,6 +148,7 @@ async fn main() -> anyhow::Result<()> {
     let addr = format!("{}:{}", config.host, config.port);
     let listener = tokio::net::TcpListener::bind(&addr).await?;
     info!("AnchorCanvas Backend listening on {}", addr);
+    info!("Swagger UI available at http://{}/swagger-ui/", addr);
 
     axum::serve(listener, app).await?;
 

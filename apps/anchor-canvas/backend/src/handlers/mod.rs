@@ -17,6 +17,14 @@ pub use pixels::{
 };
 pub use system::{get_stats, health};
 
+// Re-export utoipa path macros for OpenAPI docs
+pub use canvas::{__path_get_canvas, __path_get_preview, __path_get_region, __path_get_tile};
+pub use pixels::{
+    __path_get_my_pixels, __path_get_pixel, __path_get_pixels_by_address,
+    __path_get_pixels_by_addresses, __path_get_pixels_by_txids, __path_get_recent,
+};
+pub use system::{__path_get_stats, __path_health};
+
 /// Application state shared across handlers
 pub struct AppState {
     pub db: Database,
