@@ -69,8 +69,8 @@ export function ImageUpload({ onImport, onPreview }: ImageUploadProps) {
       const dataUrl = event.target?.result as string;
       setPreview(dataUrl);
 
-      // Get original dimensions
-      const img = new Image();
+      // Get original dimensions (use native HTMLImageElement, not Next.js Image)
+      const img = document.createElement('img');
       img.onload = () => {
         setOriginalDimensions({ width: img.width, height: img.height });
         // Auto-set max dimensions based on image aspect ratio
@@ -98,7 +98,8 @@ export function ImageUpload({ onImport, onPreview }: ImageUploadProps) {
     if (!preview) return [];
 
     return new Promise((resolve) => {
-      const img = new Image();
+      // Use native HTMLImageElement, not Next.js Image component
+      const img = document.createElement('img');
       img.onload = () => {
         const canvas = canvasRef.current;
         if (!canvas) {
@@ -167,7 +168,8 @@ export function ImageUpload({ onImport, onPreview }: ImageUploadProps) {
     if (!preview) return { pixels: [], width: 0, height: 0 };
 
     return new Promise((resolve) => {
-      const img = new Image();
+      // Use native HTMLImageElement, not Next.js Image component
+      const img = document.createElement('img');
       img.onload = () => {
         const canvas = canvasRef.current;
         if (!canvas) {
