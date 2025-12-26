@@ -38,7 +38,7 @@ jobs:
       - name: Build Docker Images
         run: |
           # Build all images with cache
-          docker compose --profile minimum build
+          docker compose --profile default build
           
           echo "Listing built images..."
           docker images | grep -E "anchor|core" || true
@@ -48,7 +48,7 @@ jobs:
           mkdir -p /tmp/docker-images
           
           # Get all image names from compose
-          IMAGES=$(docker compose --profile minimum config --images | sort -u)
+          IMAGES=$(docker compose --profile default config --images | sort -u)
           
           echo "Saving images: $IMAGES"
           
@@ -112,7 +112,7 @@ jobs:
 
       - name: Start Docker Services
         run: |
-          docker compose --profile minimum up -d
+          docker compose --profile default up -d
           echo "Waiting for services to be healthy..."
 
       - name: Wait for services to be ready
@@ -185,7 +185,7 @@ jobs:
         if: failure()
         run: |
           echo "=== Docker Container Status ==="
-          docker compose --profile minimum ps
+          docker compose --profile default ps
           echo ""
           echo "=== Dashboard Backend Logs ==="
           docker compose logs anchor-dashboard-backend --tail=100 || true
@@ -224,7 +224,7 @@ jobs:
 
       - name: Build and Start Docker Services
         run: |
-          docker compose --profile minimum up -d --build
+          docker compose --profile default up -d --build
           echo "Waiting for services to be healthy..."
 
       - name: Setup Node.js
