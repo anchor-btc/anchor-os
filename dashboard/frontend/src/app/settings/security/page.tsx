@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Shield, Lock, Clock, Eye, EyeOff, Loader2, Image, Check } from 'lucide-react';
+import { Shield, Lock, Clock, Eye, EyeOff, Loader2, Image as ImageIcon, Check } from 'lucide-react';
 
 const DASHBOARD_BACKEND_URL =
   process.env.NEXT_PUBLIC_DASHBOARD_BACKEND_URL || 'http://localhost:8010';
@@ -84,16 +84,7 @@ export default function SecurityPage() {
   const [selectedTimeout, setSelectedTimeout] = useState(300);
   const [selectedBackground, setSelectedBackground] = useState<string>(DEFAULT_BG);
 
-  useEffect(() => {
-    fetchAuthStatus();
-    // Load saved background preference
-    const savedBg = localStorage.getItem(LOCK_SCREEN_BG_KEY);
-    if (savedBg && BACKGROUND_VIDEOS.some((v) => v.id === savedBg)) {
-      setSelectedBackground(savedBg);
-    }
-  }, []);
-
-  const fetchAuthStatus = async () => {
+  const fetchAuthStatus = useCallback(async () => {
     try {
       const res = await fetch(`${DASHBOARD_BACKEND_URL}/auth/status`);
       if (!res.ok) throw new Error('Failed to fetch auth status');
@@ -105,7 +96,16 @@ export default function SecurityPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
+
+  useEffect(() => {
+    fetchAuthStatus();
+    // Load saved background preference
+    const savedBg = localStorage.getItem(LOCK_SCREEN_BG_KEY);
+    if (savedBg && BACKGROUND_VIDEOS.some((v) => v.id === savedBg)) {
+      setSelectedBackground(savedBg);
+    }
+  }, [fetchAuthStatus]);
 
   const handleSetupPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -543,7 +543,7 @@ export default function SecurityPage() {
       <div className="bg-card border border-border rounded-xl p-6">
         <div className="flex items-center gap-3 mb-6">
           <div className="p-2 rounded-lg bg-cyan-500/10">
-            <Image className="w-5 h-5 text-cyan-500" />
+            <ImageIcon className="w-5 h-5 text-cyan-500" />
           </div>
           <div>
             <h2 className="text-lg font-semibold text-foreground">

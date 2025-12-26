@@ -21,6 +21,7 @@ use super::utils::extract_op_return_data;
 impl WalletService {
     /// Create and broadcast an ANCHOR message transaction with advanced options
     /// Supports required inputs (for UTXO-based token transfers) and custom outputs
+    #[allow(clippy::too_many_arguments)]
     pub fn create_anchor_transaction_advanced(
         &self,
         kind: u8,
@@ -49,6 +50,7 @@ impl WalletService {
 
     /// Create and broadcast an ANCHOR message transaction with advanced options and lock awareness
     /// Supports required inputs (for UTXO-based token transfers) and custom outputs
+    #[allow(clippy::too_many_arguments)]
     pub fn create_anchor_transaction_advanced_with_locks(
         &self,
         kind: u8,

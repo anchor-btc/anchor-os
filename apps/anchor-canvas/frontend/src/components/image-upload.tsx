@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useRef, useState, useMemo } from 'react';
+import Image from 'next/image';
 import { Upload, X, Check, Loader2, ZoomIn, ZoomOut, Maximize2, Move } from 'lucide-react';
 import {
   type Pixel,
@@ -307,8 +308,8 @@ export function ImageUpload({ onImport, onPreview }: ImageUploadProps) {
         ) : (
           <div className="space-y-4">
             <div className="relative aspect-video bg-secondary rounded-lg overflow-hidden">
-              <img src={preview} alt="Preview" className="w-full h-full object-contain" />
-              <div className="absolute top-2 left-2 bg-black/70 px-2 py-1 rounded text-xs">
+              <Image src={preview} alt="Preview" fill className="object-contain" unoptimized />
+              <div className="absolute top-2 left-2 bg-black/70 px-2 py-1 rounded text-xs z-10">
                 {originalDimensions.width} x {originalDimensions.height}
               </div>
             </div>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useTranslation } from 'react-i18next';
 import {
   Shield,
@@ -96,10 +97,13 @@ export default function SettingsPage() {
       preview: (
         <div className="flex items-center gap-2">
           {isImageAvatar ? (
-            <img
-              src={userProfile?.avatar_url}
+            <Image
+              src={userProfile?.avatar_url || ''}
               alt="Avatar"
+              width={24}
+              height={24}
               className="w-6 h-6 rounded-full object-cover"
+              unoptimized
             />
           ) : (
             <span className="text-lg">{userProfile?.avatar_url || '🧑‍💻'}</span>

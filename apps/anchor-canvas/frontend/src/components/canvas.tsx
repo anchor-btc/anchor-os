@@ -597,7 +597,6 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
     hoverPixel,
     showGrid,
     tool,
-    brushSize,
     getBrushPixels,
     imagePreview,
     isDrawingShape,

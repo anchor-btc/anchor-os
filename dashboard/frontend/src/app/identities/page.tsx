@@ -268,17 +268,7 @@ function BackupKeyModal({ isOpen, onClose, identity }: BackupKeyModalProps) {
   const [showKey, setShowKey] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    if (isOpen && identity) {
-      loadKey();
-    } else {
-      setKeyData(null);
-      setShowKey(false);
-      setError(null);
-    }
-  }, [isOpen, identity]);
-
-  const loadKey = async () => {
+  const loadKey = useCallback(async () => {
     if (!identity) return;
     setIsLoading(true);
     setError(null);
@@ -290,7 +280,17 @@ function BackupKeyModal({ isOpen, onClose, identity }: BackupKeyModalProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [identity]);
+
+  useEffect(() => {
+    if (isOpen && identity) {
+      loadKey();
+    } else {
+      setKeyData(null);
+      setShowKey(false);
+      setError(null);
+    }
+  }, [isOpen, identity, loadKey]);
 
   const copyKey = () => {
     if (keyData) {

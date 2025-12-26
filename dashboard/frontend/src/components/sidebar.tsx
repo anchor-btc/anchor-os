@@ -2,6 +2,7 @@
 
 import { useState, useEffect, memo, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -283,12 +284,15 @@ export function Sidebar() {
   const installedServices = installationStatus?.installed_services || [];
 
   // Check if a service is installed
-  const isServiceInstalled = (appId: string): boolean => {
-    // If no installation data, show all (backwards compatibility)
-    if (!installationStatus || installedServices.length === 0) return true;
-    const serviceId = getServiceIdFromAppId(appId);
-    return installedServices.includes(serviceId);
-  };
+  const isServiceInstalled = useCallback(
+    (appId: string): boolean => {
+      // If no installation data, show all (backwards compatibility)
+      if (!installationStatus || installedServices.length === 0) return true;
+      const serviceId = getServiceIdFromAppId(appId);
+      return installedServices.includes(serviceId);
+    },
+    [installationStatus, installedServices]
+  );
 
   const startMutation = useMutation({
     mutationFn: startContainer,
@@ -690,13 +694,15 @@ export function Sidebar() {
                 href="/settings/profile"
                 className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity"
               >
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-orange-500/20 flex items-center justify-center text-xl overflow-hidden border-2 border-primary/20 ring-2 ring-primary/10 shrink-0">
+                <div className="relative w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-orange-500/20 flex items-center justify-center text-xl overflow-hidden border-2 border-primary/20 ring-2 ring-primary/10 shrink-0">
                   {userProfile.avatar_url?.startsWith('data:') ||
                   userProfile.avatar_url?.startsWith('http') ? (
-                    <img
+                    <Image
                       src={userProfile.avatar_url}
                       alt={userProfile.name}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
+                      unoptimized
                     />
                   ) : (
                     <span>{userProfile.avatar_url || '🧑‍💻'}</span>

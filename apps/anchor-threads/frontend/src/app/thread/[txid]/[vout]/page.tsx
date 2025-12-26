@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
+import Image from 'next/image';
 import {
   fetchThread,
   fetchMessage,
@@ -218,14 +219,16 @@ function MessageBody({ message, size = 'md' }: { message: Message; size?: 'sm' |
     return (
       <div className="flex items-center gap-3">
         <div
-          className={`${imgSize} rounded-lg overflow-hidden border border-border bg-secondary flex items-center justify-center flex-shrink-0`}
+          className={`${imgSize} relative rounded-lg overflow-hidden border border-border bg-secondary flex items-center justify-center flex-shrink-0`}
         >
           {imageDataUrl ? (
-            <img
+            <Image
               src={imageDataUrl}
               alt=""
-              className="object-cover w-full h-full"
+              fill
+              className="object-cover"
               style={{ imageRendering: 'pixelated' }}
+              unoptimized
             />
           ) : (
             <ImageIcon className="h-5 w-5 text-muted-foreground" />

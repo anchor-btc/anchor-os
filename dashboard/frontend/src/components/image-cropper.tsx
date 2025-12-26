@@ -115,6 +115,7 @@ export function ImageCropper({ imageSrc, onCropComplete, onCancel }: ImageCroppe
             circularCrop
             className="max-h-[400px]"
           >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               ref={imgRef}
               src={imageSrc}
@@ -169,6 +170,7 @@ export function ImageCropper({ imageSrc, onCropComplete, onCancel }: ImageCroppe
                   style={{ display: 'none' }}
                 />
               )}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={imageSrc}
                 alt="Preview"

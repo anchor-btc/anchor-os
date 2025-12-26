@@ -16,6 +16,7 @@ impl WalletService {
     ///
     /// # Arguments
     /// * `locked_set` - Optional set of locked UTXOs to exclude from coin selection
+    #[allow(clippy::too_many_arguments)]
     pub fn create_anchor_transaction(
         &self,
         kind: u8,
@@ -42,6 +43,7 @@ impl WalletService {
     ///
     /// # Arguments
     /// * `locked_set` - Optional set of locked UTXOs to exclude from coin selection
+    #[allow(clippy::too_many_arguments)]
     pub fn create_anchor_transaction_with_locks(
         &self,
         kind: u8,

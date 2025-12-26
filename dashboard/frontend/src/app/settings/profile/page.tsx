@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -202,14 +203,14 @@ export default function ProfilePage() {
               <div className="relative group">
                 <div
                   className={cn(
-                    'w-24 h-24 rounded-full flex items-center justify-center overflow-hidden',
+                    'relative w-24 h-24 rounded-full flex items-center justify-center overflow-hidden',
                     'bg-gradient-to-br from-primary/20 to-orange-500/20',
                     'border-3 border-border transition-all',
                     'ring-4 ring-primary/10'
                   )}
                 >
                   {isImageAvatar ? (
-                    <img src={avatar} alt="Avatar" className="w-full h-full object-cover" />
+                    <Image src={avatar} alt="Avatar" fill className="object-cover" unoptimized />
                   ) : (
                     <span className="text-5xl">{avatar || '🧑‍💻'}</span>
                   )}
@@ -320,13 +321,13 @@ export default function ProfilePage() {
               <div className="flex items-center gap-3">
                 <div
                   className={cn(
-                    'w-12 h-12 rounded-full flex items-center justify-center overflow-hidden',
+                    'relative w-12 h-12 rounded-full flex items-center justify-center overflow-hidden',
                     'bg-gradient-to-br from-primary/20 to-orange-500/20',
                     'border-2 border-primary/20'
                   )}
                 >
                   {isImageAvatar ? (
-                    <img src={avatar} alt="Avatar preview" className="w-full h-full object-cover" />
+                    <Image src={avatar} alt="Avatar preview" fill className="object-cover" unoptimized />
                   ) : (
                     <span className="text-2xl">{avatar || '🧑‍💻'}</span>
                   )}

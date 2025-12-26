@@ -111,7 +111,7 @@ export function ResourceCharts() {
     if (stats) {
       updateHistory();
     }
-  }, [stats?.timestamp]);
+  }, [stats, updateHistory]);
 
   if (!stats) {
     return (
