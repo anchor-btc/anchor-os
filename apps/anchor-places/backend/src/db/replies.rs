@@ -1,5 +1,7 @@
 //! Reply database operations
 
+#![allow(clippy::type_complexity)]
+
 use anyhow::Result;
 use tracing::debug;
 
@@ -8,6 +10,7 @@ use crate::models::MarkerReply;
 
 impl Database {
     /// Insert a marker reply
+    #[allow(clippy::too_many_arguments)]
     pub async fn insert_reply(
         &self,
         txid: &[u8],

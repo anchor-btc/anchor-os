@@ -1,5 +1,7 @@
 //! Domain CRUD operations
 
+#![allow(clippy::type_complexity)]
+
 use anyhow::Result;
 use tracing::debug;
 

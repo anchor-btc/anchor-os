@@ -1,5 +1,7 @@
 //! Pending transaction database operations
 
+#![allow(clippy::type_complexity)]
+
 use anyhow::Result;
 use tracing::debug;
 

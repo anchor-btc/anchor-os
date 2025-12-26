@@ -1,5 +1,7 @@
 //! DNS record database operations
 
+#![allow(clippy::type_complexity)]
+
 use anyhow::Result;
 
 use super::Database;

@@ -1,5 +1,7 @@
 //! Marker database operations
 
+#![allow(clippy::type_complexity)]
+
 use anyhow::Result;
 use tracing::debug;
 
@@ -8,6 +10,7 @@ use crate::models::{Category, Marker, MarkerDetail};
 
 impl Database {
     /// Insert a new marker
+    #[allow(clippy::too_many_arguments)]
     pub async fn insert_marker(
         &self,
         txid: &[u8],
