@@ -36,4 +36,3 @@ describe('Anchor Tokens Home', () => {
     cy.contains(/how|work|step|deploy|transfer/i, { timeout: 10000 }).should('exist');
   });
 });
-

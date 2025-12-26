@@ -14,15 +14,15 @@ import {
   type Anchor,
   type AnchorMessage,
   type CreateMessageOptions,
-} from "./types.js";
+} from './types.js';
 
 /**
  * Convert a hex string to Uint8Array
  */
 export function hexToBytes(hex: string): Uint8Array {
-  const cleanHex = hex.startsWith("0x") ? hex.slice(2) : hex;
+  const cleanHex = hex.startsWith('0x') ? hex.slice(2) : hex;
   if (cleanHex.length % 2 !== 0) {
-    throw new Error("Invalid hex string length");
+    throw new Error('Invalid hex string length');
   }
   const bytes = new Uint8Array(cleanHex.length / 2);
   for (let i = 0; i < bytes.length; i++) {
@@ -36,8 +36,8 @@ export function hexToBytes(hex: string): Uint8Array {
  */
 export function bytesToHex(bytes: Uint8Array): string {
   return Array.from(bytes)
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
 }
 
 /**
@@ -51,7 +51,7 @@ export function txidToPrefix(txid: string): Uint8Array {
   if (txidBytes.length !== 32) {
     throw new AnchorError(
       AnchorErrorCode.InvalidTxid,
-      `Invalid txid length: expected 32 bytes, got ${txidBytes.length}`,
+      `Invalid txid length: expected 32 bytes, got ${txidBytes.length}`
     );
   }
   // Reverse and take first 8 bytes
@@ -64,7 +64,7 @@ export function txidToPrefix(txid: string): Uint8Array {
  */
 export function createAnchor(txid: string, vout: number): Anchor {
   if (vout < 0 || vout > 255) {
-    throw new Error("vout must be between 0 and 255");
+    throw new Error('vout must be between 0 and 255');
   }
   return {
     txidPrefix: txidToPrefix(txid),
@@ -86,7 +86,7 @@ export function encodeAnchorPayload(message: AnchorMessage): Uint8Array {
   if (payloadSize > MAX_OP_RETURN_SIZE) {
     throw new AnchorError(
       AnchorErrorCode.MessageTooLarge,
-      `Payload too large: ${payloadSize} bytes (max ${MAX_OP_RETURN_SIZE})`,
+      `Payload too large: ${payloadSize} bytes (max ${MAX_OP_RETURN_SIZE})`
     );
   }
 
@@ -131,9 +131,7 @@ export function createMessage(options: CreateMessageOptions): AnchorMessage {
     body = new Uint8Array(0);
   }
 
-  const anchors: Anchor[] = (options.anchors ?? []).map((a) =>
-    createAnchor(a.txid, a.vout),
-  );
+  const anchors: Anchor[] = (options.anchors ?? []).map((a) => createAnchor(a.txid, a.vout));
 
   return { kind, anchors, body };
 }
@@ -143,30 +141,27 @@ export function createMessage(options: CreateMessageOptions): AnchorMessage {
  */
 export function encodeTextMessage(
   text: string,
-  anchors?: Array<{ txid: string; vout: number }>,
+  anchors?: Array<{ txid: string; vout: number }>
 ): Uint8Array {
   return encodeAnchorPayload(
     createMessage({
       kind: AnchorKind.Text,
       body: text,
       anchors,
-    }),
+    })
   );
 }
 
 /**
  * Encode a root message (no anchors)
  */
-export function encodeRootMessage(
-  text: string,
-  kind: AnchorKind = AnchorKind.Text,
-): Uint8Array {
+export function encodeRootMessage(text: string, kind: AnchorKind = AnchorKind.Text): Uint8Array {
   return encodeAnchorPayload(
     createMessage({
       kind,
       body: text,
       anchors: [],
-    }),
+    })
   );
 }
 
@@ -176,14 +171,14 @@ export function encodeRootMessage(
 export function encodeReplyMessage(
   text: string,
   parentTxid: string,
-  parentVout: number = 0,
+  parentVout: number = 0
 ): Uint8Array {
   return encodeAnchorPayload(
     createMessage({
       kind: AnchorKind.Text,
       body: text,
       anchors: [{ txid: parentTxid, vout: parentVout }],
-    }),
+    })
   );
 }
 
@@ -194,4 +189,3 @@ export function maxBodySize(anchorCount: number): number {
   const overhead = 4 + 1 + 1 + anchorCount * 9;
   return MAX_OP_RETURN_SIZE - overhead;
 }
-

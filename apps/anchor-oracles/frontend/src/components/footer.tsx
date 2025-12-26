@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { Footer } from "@AnchorProtocol/ui";
-import { Eye } from "lucide-react";
+import { Footer } from '@AnchorProtocol/ui';
+import { Eye } from 'lucide-react';
 
 export function OraclesFooter() {
   return (

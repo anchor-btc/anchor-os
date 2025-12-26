@@ -1,25 +1,17 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
-import { fetchStats, formatNumber } from "@/lib/api";
-import {
-  AppHeader,
-  AppLogo,
-  NavLink,
-  NavGroup,
-  Container,
-} from "@AnchorProtocol/ui";
-import { Grid3X3, Palette, Zap, Box, BookOpen, Home } from "lucide-react";
+import { useQuery } from '@tanstack/react-query';
+import { fetchStats, formatNumber } from '@/lib/api';
+import { AppHeader, AppLogo, NavLink, NavGroup, Container } from '@AnchorProtocol/ui';
+import { Grid3X3, Palette, Zap, Box, BookOpen, Home } from 'lucide-react';
 
-const DOCS_URL = process.env.NEXT_PUBLIC_DOCS_URL 
-  ? `${process.env.NEXT_PUBLIC_DOCS_URL}/kinds/state.html` 
-  : "http://localhost:3900/kinds/state.html";
+const DOCS_URL = process.env.NEXT_PUBLIC_DOCS_URL
+  ? `${process.env.NEXT_PUBLIC_DOCS_URL}/kinds/state.html`
+  : 'http://localhost:3900/kinds/state.html';
 
 export function Header() {
   const { data: stats } = useQuery({
-    queryKey: ["stats"],
+    queryKey: ['stats'],
     queryFn: fetchStats,
     refetchInterval: 10000,
   });
@@ -55,7 +47,7 @@ export function Header() {
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/[0.06]">
               <Box size={13} className="text-amber-500" />
               <span className="text-xs font-medium text-white/80 font-mono">
-                #{stats?.last_block_height?.toLocaleString() || "—"}
+                #{stats?.last_block_height?.toLocaleString() || '—'}
               </span>
             </div>
           </div>

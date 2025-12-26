@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useQuery } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
-import { HardDrive, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
-import Link from "next/link";
+import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
+import { HardDrive, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import Link from 'next/link';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8010";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8010';
 
 interface BackupStatus {
   running: boolean;
@@ -21,19 +21,22 @@ interface BackupStatus {
 
 async function fetchBackupStatus(): Promise<BackupStatus> {
   const res = await fetch(`${API_URL}/backup/status`);
-  if (!res.ok) throw new Error("Failed to fetch backup status");
+  if (!res.ok) throw new Error('Failed to fetch backup status');
   return res.json();
 }
 
 function formatBytes(bytes: number): string {
-  if (bytes === 0) return "0 B";
+  if (bytes === 0) return '0 B';
   const k = 1024;
-  const sizes = ["B", "KB", "MB", "GB"];
+  const sizes = ['B', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
 
-function formatTimeAgo(dateStr: string, t: (key: string, opts?: Record<string, unknown>) => string): string {
+function formatTimeAgo(
+  dateStr: string,
+  t: (key: string, opts?: Record<string, unknown>) => string
+): string {
   const date = new Date(dateStr);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -41,16 +44,16 @@ function formatTimeAgo(dateStr: string, t: (key: string, opts?: Record<string, u
   const diffHours = Math.floor(diffMins / 60);
   const diffDays = Math.floor(diffHours / 24);
 
-  if (diffMins < 1) return t("time.justNow");
-  if (diffMins < 60) return t("time.minutesAgo", { count: diffMins });
-  if (diffHours < 24) return t("time.hoursAgo", { count: diffHours });
-  return t("time.daysAgo", { count: diffDays });
+  if (diffMins < 1) return t('time.justNow');
+  if (diffMins < 60) return t('time.minutesAgo', { count: diffMins });
+  if (diffHours < 24) return t('time.hoursAgo', { count: diffHours });
+  return t('time.daysAgo', { count: diffDays });
 }
 
 export function BackupStatusWidget() {
   const { t } = useTranslation();
   const { data, isLoading, error } = useQuery({
-    queryKey: ["backup-status"],
+    queryKey: ['backup-status'],
     queryFn: fetchBackupStatus,
     refetchInterval: 30000,
   });
@@ -74,8 +77,8 @@ export function BackupStatusWidget() {
               <AlertCircle className="w-4 h-4 text-destructive" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">{t("widgets.backup")}</p>
-              <p className="text-sm text-muted-foreground">{t("widgets.unavailable")}</p>
+              <p className="text-xs text-muted-foreground">{t('widgets.backup')}</p>
+              <p className="text-sm text-muted-foreground">{t('widgets.unavailable')}</p>
             </div>
           </div>
         </div>
@@ -84,27 +87,31 @@ export function BackupStatusWidget() {
   }
 
   const lastBackup = data.last_backup;
-  const isHealthy = lastBackup?.status === "completed";
+  const isHealthy = lastBackup?.status === 'completed';
 
   return (
     <Link href="/backup" className="block">
       <div className="bg-card border border-border rounded-xl p-4 card-hover">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${isHealthy ? "bg-success/10" : "bg-warning/10"}`}>
-              <HardDrive className={`w-4 h-4 ${isHealthy ? "text-success" : "text-warning"}`} />
+            <div
+              className={`w-9 h-9 rounded-lg flex items-center justify-center ${isHealthy ? 'bg-success/10' : 'bg-warning/10'}`}
+            >
+              <HardDrive className={`w-4 h-4 ${isHealthy ? 'text-success' : 'text-warning'}`} />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">{t("widgets.backupStatus")}</p>
+              <p className="text-xs text-muted-foreground">{t('widgets.backupStatus')}</p>
               {lastBackup ? (
                 <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
                   <CheckCircle2 className="w-3 h-3 text-success" />
                   <span>{formatTimeAgo(lastBackup.completed_at, t)}</span>
                   <span className="text-muted-foreground">•</span>
-                  <span className="text-muted-foreground font-normal">{formatBytes(lastBackup.size_bytes)}</span>
+                  <span className="text-muted-foreground font-normal">
+                    {formatBytes(lastBackup.size_bytes)}
+                  </span>
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">{t("widgets.noBackups")}</p>
+                <p className="text-sm text-muted-foreground">{t('widgets.noBackups')}</p>
               )}
             </div>
           </div>

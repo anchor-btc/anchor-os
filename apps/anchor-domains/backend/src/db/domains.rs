@@ -4,9 +4,7 @@ use anyhow::Result;
 use tracing::debug;
 
 use super::Database;
-use crate::models::{
-    DnsRecord, DnsStats, Domain, DomainListItem, ResolveResponse,
-};
+use crate::models::{DnsRecord, DnsStats, Domain, DomainListItem, ResolveResponse};
 
 impl Database {
     /// Check if a domain name is available
@@ -95,12 +93,11 @@ impl Database {
         let mut tx = self.pool.begin().await?;
 
         // Get domain ID
-        let domain_row: Option<(i32,)> = sqlx::query_as(
-            "SELECT id FROM domains WHERE LOWER(name) = LOWER($1)",
-        )
-        .bind(name)
-        .fetch_optional(&mut *tx)
-        .await?;
+        let domain_row: Option<(i32,)> =
+            sqlx::query_as("SELECT id FROM domains WHERE LOWER(name) = LOWER($1)")
+                .bind(name)
+                .fetch_optional(&mut *tx)
+                .await?;
 
         let domain_id = match domain_row {
             Some((id,)) => id,
@@ -187,8 +184,12 @@ impl Database {
     }
 
     /// Resolve a domain by txid prefix (first 8 bytes)
-    pub async fn resolve_by_txid_prefix(&self, prefix_hex: &str) -> Result<Option<ResolveResponse>> {
-        let prefix_bytes = hex::decode(prefix_hex).map_err(|e| anyhow::anyhow!("Invalid hex: {}", e))?;
+    pub async fn resolve_by_txid_prefix(
+        &self,
+        prefix_hex: &str,
+    ) -> Result<Option<ResolveResponse>> {
+        let prefix_bytes =
+            hex::decode(prefix_hex).map_err(|e| anyhow::anyhow!("Invalid hex: {}", e))?;
         if prefix_bytes.len() != 8 {
             return Err(anyhow::anyhow!("Prefix must be 8 bytes (16 hex chars)"));
         }
@@ -276,9 +277,15 @@ impl Database {
         let offset = (page - 1) * per_page;
 
         let (rows, total): (Vec<_>, i64) = if let Some(q) = search {
-            let rows: Vec<(i32, String, Vec<u8>, i64, Option<i32>, chrono::DateTime<chrono::Utc>)> =
-                sqlx::query_as(
-                    r#"
+            let rows: Vec<(
+                i32,
+                String,
+                Vec<u8>,
+                i64,
+                Option<i32>,
+                chrono::DateTime<chrono::Utc>,
+            )> = sqlx::query_as(
+                r#"
                     SELECT d.id, d.name, d.txid, 
                            COUNT(r.id) FILTER (WHERE r.is_active = TRUE) as record_count,
                            d.block_height, d.created_at
@@ -289,25 +296,30 @@ impl Database {
                     ORDER BY d.created_at DESC
                     LIMIT $2 OFFSET $3
                     "#,
-                )
-                .bind(q)
-                .bind(per_page)
-                .bind(offset)
-                .fetch_all(&self.pool)
-                .await?;
-
-            let total: (i64,) = sqlx::query_as(
-                "SELECT COUNT(*) FROM domains WHERE name ILIKE '%' || $1 || '%'",
             )
             .bind(q)
-            .fetch_one(&self.pool)
+            .bind(per_page)
+            .bind(offset)
+            .fetch_all(&self.pool)
             .await?;
+
+            let total: (i64,) =
+                sqlx::query_as("SELECT COUNT(*) FROM domains WHERE name ILIKE '%' || $1 || '%'")
+                    .bind(q)
+                    .fetch_one(&self.pool)
+                    .await?;
 
             (rows, total.0)
         } else {
-            let rows: Vec<(i32, String, Vec<u8>, i64, Option<i32>, chrono::DateTime<chrono::Utc>)> =
-                sqlx::query_as(
-                    r#"
+            let rows: Vec<(
+                i32,
+                String,
+                Vec<u8>,
+                i64,
+                Option<i32>,
+                chrono::DateTime<chrono::Utc>,
+            )> = sqlx::query_as(
+                r#"
                     SELECT d.id, d.name, d.txid,
                            COUNT(r.id) FILTER (WHERE r.is_active = TRUE) as record_count,
                            d.block_height, d.created_at
@@ -317,11 +329,11 @@ impl Database {
                     ORDER BY d.created_at DESC
                     LIMIT $1 OFFSET $2
                     "#,
-                )
-                .bind(per_page)
-                .bind(offset)
-                .fetch_all(&self.pool)
-                .await?;
+            )
+            .bind(per_page)
+            .bind(offset)
+            .fetch_all(&self.pool)
+            .await?;
 
             let total: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM domains")
                 .fetch_one(&self.pool)
@@ -355,7 +367,15 @@ impl Database {
     pub async fn get_domain_history(
         &self,
         name: &str,
-    ) -> Result<Vec<(Vec<u8>, i32, i16, Option<i32>, chrono::DateTime<chrono::Utc>)>> {
+    ) -> Result<
+        Vec<(
+            Vec<u8>,
+            i32,
+            i16,
+            Option<i32>,
+            chrono::DateTime<chrono::Utc>,
+        )>,
+    > {
         let rows = sqlx::query_as(
             r#"
             SELECT h.txid, h.vout, h.operation, h.block_height, h.created_at
@@ -374,10 +394,15 @@ impl Database {
 
     /// Get statistics
     pub async fn get_stats(&self) -> Result<DnsStats> {
-        let row: (i64, i64, i64, Option<i32>, Option<chrono::DateTime<chrono::Utc>>) =
-            sqlx::query_as("SELECT * FROM anchor_domains_stats")
-                .fetch_one(&self.pool)
-                .await?;
+        let row: (
+            i64,
+            i64,
+            i64,
+            Option<i32>,
+            Option<chrono::DateTime<chrono::Utc>>,
+        ) = sqlx::query_as("SELECT * FROM anchor_domains_stats")
+            .fetch_one(&self.pool)
+            .await?;
 
         Ok(DnsStats {
             total_domains: row.0,
@@ -390,13 +415,12 @@ impl Database {
 
     /// Check if a transaction exists
     pub async fn tx_exists(&self, txid: &[u8], vout: i32) -> Result<bool> {
-        let row: (bool,) = sqlx::query_as(
-            "SELECT EXISTS(SELECT 1 FROM domains WHERE txid = $1 AND vout = $2)",
-        )
-        .bind(txid)
-        .bind(vout)
-        .fetch_one(&self.pool)
-        .await?;
+        let row: (bool,) =
+            sqlx::query_as("SELECT EXISTS(SELECT 1 FROM domains WHERE txid = $1 AND vout = $2)")
+                .bind(txid)
+                .bind(vout)
+                .fetch_one(&self.pool)
+                .await?;
         Ok(row.0)
     }
 
@@ -443,9 +467,15 @@ impl Database {
             return Ok(vec![]);
         }
 
-        let rows: Vec<(i32, String, Vec<u8>, i64, Option<i32>, chrono::DateTime<chrono::Utc>)> =
-            sqlx::query_as(
-                r#"
+        let rows: Vec<(
+            i32,
+            String,
+            Vec<u8>,
+            i64,
+            Option<i32>,
+            chrono::DateTime<chrono::Utc>,
+        )> = sqlx::query_as(
+            r#"
                 SELECT d.id, d.name, d.txid, 
                        COUNT(r.id) FILTER (WHERE r.is_active = TRUE) as record_count,
                        d.block_height, d.created_at
@@ -455,10 +485,10 @@ impl Database {
                 GROUP BY d.id
                 ORDER BY d.created_at DESC
                 "#,
-            )
-            .bind(txids)
-            .fetch_all(&self.pool)
-            .await?;
+        )
+        .bind(txids)
+        .fetch_all(&self.pool)
+        .await?;
 
         let items = rows
             .into_iter()
@@ -480,4 +510,3 @@ impl Database {
         Ok(items)
     }
 }
-

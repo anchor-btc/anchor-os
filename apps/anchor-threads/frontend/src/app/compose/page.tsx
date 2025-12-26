@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, Card, Input, Container } from "@AnchorProtocol/ui";
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Button, Card, Input, Container } from '@AnchorProtocol/ui';
 import {
   createMessage,
   fetchWalletBalance,
@@ -11,28 +11,19 @@ import {
   mineBlocks,
   CARRIER_OPTIONS,
   saveMyMessageRef,
-} from "@/lib/api";
-import {
-  PenLine,
-  Send,
-  Loader2,
-  Wallet,
-  Copy,
-  Check,
-  Hammer,
-  AlertCircle,
-} from "lucide-react";
-import Link from "next/link";
+} from '@/lib/api';
+import { PenLine, Send, Loader2, Wallet, Copy, Check, Hammer, AlertCircle } from 'lucide-react';
+import Link from 'next/link';
 
 function ComposeForm() {
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
-  
+
   // Get initial values from URL params
-  const parentFromUrl = searchParams.get("parent") || "";
-  const voutFromUrl = searchParams.get("vout") || "0";
-  
-  const [body, setBody] = useState("");
+  const parentFromUrl = searchParams.get('parent') || '';
+  const voutFromUrl = searchParams.get('vout') || '0';
+
+  const [body, setBody] = useState('');
   const [parentTxid, setParentTxid] = useState(parentFromUrl);
   const [parentVout, setParentVout] = useState(voutFromUrl);
   const [carrier, setCarrier] = useState(0); // Default to OP_RETURN
@@ -41,7 +32,7 @@ function ComposeForm() {
   const [success, setSuccess] = useState<{ txid: string; vout: number; carrier?: number } | null>(
     null
   );
-  
+
   // Update state when URL params change
   useEffect(() => {
     if (parentFromUrl) {
@@ -53,12 +44,12 @@ function ComposeForm() {
   }, [parentFromUrl, voutFromUrl]);
 
   const { data: balance, isLoading: balanceLoading } = useQuery({
-    queryKey: ["wallet-balance"],
+    queryKey: ['wallet-balance'],
     queryFn: fetchWalletBalance,
   });
 
   const { data: address, refetch: refetchAddress } = useQuery({
-    queryKey: ["wallet-address"],
+    queryKey: ['wallet-address'],
     queryFn: fetchNewAddress,
     enabled: false,
   });
@@ -67,21 +58,21 @@ function ComposeForm() {
     mutationFn: async (req: Parameters<typeof createMessage>[0]) => {
       // Create the message
       const result = await createMessage(req);
-      
+
       // Automatically mine a block to confirm the transaction
       await mineBlocks(1);
-      
+
       // Wait a bit for the indexer to pick it up
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
       return result;
     },
     onSuccess: (data) => {
       setSuccess({ txid: data.txid, vout: data.vout, carrier: data.carrier });
-      setBody("");
+      setBody('');
       setCarrier(0); // Reset to default
       setError(null);
-      
+
       // Save to localStorage for "My Threads" feature
       saveMyMessageRef({
         txid: data.txid,
@@ -89,23 +80,23 @@ function ComposeForm() {
         createdAt: new Date().toISOString(),
         isReply: !!parentTxid,
       });
-      
+
       // Invalidate caches
-      queryClient.invalidateQueries({ queryKey: ["stats"] });
-      queryClient.invalidateQueries({ queryKey: ["roots"] });
-      queryClient.invalidateQueries({ queryKey: ["wallet-balance"] });
-      queryClient.invalidateQueries({ queryKey: ["messages"] });
-      queryClient.invalidateQueries({ queryKey: ["my-messages"] }); // Also invalidate my messages
-      
+      queryClient.invalidateQueries({ queryKey: ['stats'] });
+      queryClient.invalidateQueries({ queryKey: ['roots'] });
+      queryClient.invalidateQueries({ queryKey: ['wallet-balance'] });
+      queryClient.invalidateQueries({ queryKey: ['messages'] });
+      queryClient.invalidateQueries({ queryKey: ['my-messages'] }); // Also invalidate my messages
+
       // If it was a reply, invalidate the parent's replies cache
       if (parentTxid) {
-        queryClient.invalidateQueries({ queryKey: ["replies", parentTxid, parseInt(parentVout)] });
-        queryClient.invalidateQueries({ queryKey: ["message", parentTxid, parseInt(parentVout)] });
-        queryClient.invalidateQueries({ queryKey: ["thread", parentTxid, parseInt(parentVout)] });
+        queryClient.invalidateQueries({ queryKey: ['replies', parentTxid, parseInt(parentVout)] });
+        queryClient.invalidateQueries({ queryKey: ['message', parentTxid, parseInt(parentVout)] });
+        queryClient.invalidateQueries({ queryKey: ['thread', parentTxid, parseInt(parentVout)] });
       }
-      
+
       // Clear parent fields after invalidation
-      setParentTxid("");
+      setParentTxid('');
     },
     onError: (err: Error) => {
       setError(err.message);
@@ -116,8 +107,8 @@ function ComposeForm() {
   const mineMutation = useMutation({
     mutationFn: () => mineBlocks(1),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["wallet-balance"] });
-      queryClient.invalidateQueries({ queryKey: ["stats"] });
+      queryClient.invalidateQueries({ queryKey: ['wallet-balance'] });
+      queryClient.invalidateQueries({ queryKey: ['stats'] });
     },
   });
 
@@ -160,24 +151,14 @@ function ComposeForm() {
           {balanceLoading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            <span className="font-mono text-foreground">
-              {balance?.total.toFixed(8)} BTC
-            </span>
+            <span className="font-mono text-foreground">{balance?.total.toFixed(8)} BTC</span>
           )}
         </div>
 
         <div className="flex gap-2 mt-4">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={handleGetAddress}
-          >
-            {copied ? (
-              <Check className="h-4 w-4" />
-            ) : (
-              <Copy className="h-4 w-4" />
-            )}
-            {copied ? "Copied!" : "Get Address"}
+          <Button variant="secondary" size="sm" onClick={handleGetAddress}>
+            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+            {copied ? 'Copied!' : 'Get Address'}
           </Button>
           <Button
             variant="secondary"
@@ -219,7 +200,7 @@ function ComposeForm() {
         <Card className="p-4 bg-destructive/10 border-destructive/30">
           <div className="flex items-start gap-3">
             <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
-          <div>
+            <div>
               <p className="font-medium text-destructive">Error</p>
               <p className="text-sm text-destructive/80">{error}</p>
             </div>
@@ -234,8 +215,8 @@ function ComposeForm() {
             <p className="font-medium text-success">Message Created!</p>
             {success.carrier !== undefined && (
               <span className="text-xs bg-success/20 text-success px-2 py-1 rounded-full">
-                {CARRIER_OPTIONS.find(c => c.value === success.carrier)?.icon}{" "}
-                {CARRIER_OPTIONS.find(c => c.value === success.carrier)?.label}
+                {CARRIER_OPTIONS.find((c) => c.value === success.carrier)?.icon}{' '}
+                {CARRIER_OPTIONS.find((c) => c.value === success.carrier)?.label}
               </span>
             )}
           </div>
@@ -263,9 +244,7 @@ function ComposeForm() {
 
         {/* Carrier Selection */}
         <div>
-          <label className="block text-sm font-medium mb-2 text-foreground">
-            Data Carrier
-          </label>
+          <label className="block text-sm font-medium mb-2 text-foreground">Data Carrier</label>
           <div className="grid grid-cols-3 gap-3">
             {CARRIER_OPTIONS.map((option) => (
               <button
@@ -274,8 +253,8 @@ function ComposeForm() {
                 onClick={() => setCarrier(option.value)}
                 className={`relative p-4 rounded-lg border-2 transition-all text-left ${
                   carrier === option.value
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:border-primary/50 bg-secondary"
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover:border-primary/50 bg-secondary'
                 }`}
               >
                 <div className="flex items-center gap-2 mb-1">
@@ -293,12 +272,14 @@ function ComposeForm() {
           </div>
           {carrier === 2 && (
             <p className="mt-2 text-xs text-warning bg-warning/10 p-2 rounded-lg">
-              Stamps are permanent and cannot be pruned. They increase storage requirements for all Bitcoin nodes.
+              Stamps are permanent and cannot be pruned. They increase storage requirements for all
+              Bitcoin nodes.
             </p>
           )}
           {carrier === 3 && (
             <p className="mt-2 text-xs text-primary bg-primary/10 p-2 rounded-lg">
-              Taproot Annex transactions are valid but not relayed by standard nodes. They need libre relay nodes or direct miner submission.
+              Taproot Annex transactions are valid but not relayed by standard nodes. They need
+              libre relay nodes or direct miner submission.
             </p>
           )}
         </div>
@@ -306,8 +287,7 @@ function ComposeForm() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium mb-2 text-foreground">
-              Parent TXID{" "}
-              <span className="text-muted-foreground">(optional)</span>
+              Parent TXID <span className="text-muted-foreground">(optional)</span>
             </label>
             <Input
               type="text"
@@ -318,9 +298,7 @@ function ComposeForm() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2 text-foreground">
-              Parent Vout
-            </label>
+            <label className="block text-sm font-medium mb-2 text-foreground">Parent Vout</label>
             <Input
               type="number"
               value={parentVout}
@@ -339,10 +317,10 @@ function ComposeForm() {
           loading={createMutation.isPending}
         >
           {createMutation.isPending ? (
-            "Creating & Mining..."
+            'Creating & Mining...'
           ) : (
             <>
-            <Send className="h-5 w-5" />
+              <Send className="h-5 w-5" />
               Send Message
             </>
           )}
@@ -351,17 +329,21 @@ function ComposeForm() {
 
       {/* Info */}
       <div className="text-sm text-muted-foreground space-y-2">
-        <p>
-          Messages are embedded in Bitcoin transactions using different data carriers:
-        </p>
+        <p>Messages are embedded in Bitcoin transactions using different data carriers:</p>
         <ul className="list-disc list-inside space-y-1 text-xs">
-          <li><strong>OP_RETURN</strong> - Standard prunable output, 80 bytes (100KB in v30+)</li>
-          <li><strong>Inscription</strong> - Ordinals-style witness data, up to ~4MB with 75% fee discount</li>
-          <li><strong>Stamps</strong> - Permanent bare multisig, stored in UTXO set forever</li>
+          <li>
+            <strong>OP_RETURN</strong> - Standard prunable output, 80 bytes (100KB in v30+)
+          </li>
+          <li>
+            <strong>Inscription</strong> - Ordinals-style witness data, up to ~4MB with 75% fee
+            discount
+          </li>
+          <li>
+            <strong>Stamps</strong> - Permanent bare multisig, stored in UTXO set forever
+          </li>
         </ul>
         <p>
-          If you provide a Parent TXID, your message will be anchored as a reply
-          to that message.
+          If you provide a Parent TXID, your message will be anchored as a reply to that message.
         </p>
       </div>
     </Container>

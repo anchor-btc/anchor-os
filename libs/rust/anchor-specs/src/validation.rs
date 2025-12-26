@@ -91,4 +91,3 @@ pub trait OwnedSpec: KindSpec {
         0
     }
 }
-

@@ -22,8 +22,9 @@ impl Config {
                 .unwrap_or_else(|_| "3801".to_string())
                 .parse()
                 .expect("PORT must be a number"),
-            database_url: env::var("DATABASE_URL")
-                .unwrap_or_else(|_| "postgres://anchor:anchor@localhost:5432/anchor_lottery".to_string()),
+            database_url: env::var("DATABASE_URL").unwrap_or_else(|_| {
+                "postgres://anchor:anchor@localhost:5432/anchor_lottery".to_string()
+            }),
             bitcoin_rpc_url: env::var("BITCOIN_RPC_URL")
                 .unwrap_or_else(|_| "http://localhost:18443".to_string()),
             bitcoin_rpc_user: env::var("BITCOIN_RPC_USER")
@@ -33,4 +34,3 @@ impl Config {
         }
     }
 }
-

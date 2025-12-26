@@ -16,23 +16,23 @@ pub struct TestnetConfig {
     pub blocks_per_cycle: u32,
 
     // Message types (enabled/disabled)
-    pub enable_text: bool,           // Kind 1
-    pub enable_pixel: bool,          // Kind 2
-    pub enable_image: bool,          // Kind 4
-    pub enable_map: bool,            // Kind 12 (GeoMarker)
-    pub enable_dns: bool,            // Kind 10
-    pub enable_proof: bool,          // Kind 11
-    pub enable_token: bool,               // Kind 20 (Deploy)
-    pub enable_token_mint: bool,          // Kind 20 (Mint)
-    pub enable_token_transfer: bool,      // Kind 20 (Transfer)
-    pub enable_token_burn: bool,          // Kind 20 (Burn)
-    pub enable_oracle: bool,              // Kind 30 (Register)
-    pub enable_oracle_attestation: bool,  // Kind 31 (Attestation)
-    pub enable_oracle_dispute: bool,      // Kind 32 (Dispute)
-    pub enable_oracle_event: bool,        // Event Requests (via API)
-    pub enable_prediction: bool,          // Kind 40 (LotteryCreate)
-    pub enable_prediction_ticket: bool,   // Kind 41 (LotteryTicket)
-    pub enable_prediction_draw: bool,     // Kind 42 (LotteryDraw)
+    pub enable_text: bool,               // Kind 1
+    pub enable_pixel: bool,              // Kind 2
+    pub enable_image: bool,              // Kind 4
+    pub enable_map: bool,                // Kind 12 (GeoMarker)
+    pub enable_dns: bool,                // Kind 10
+    pub enable_proof: bool,              // Kind 11
+    pub enable_token: bool,              // Kind 20 (Deploy)
+    pub enable_token_mint: bool,         // Kind 20 (Mint)
+    pub enable_token_transfer: bool,     // Kind 20 (Transfer)
+    pub enable_token_burn: bool,         // Kind 20 (Burn)
+    pub enable_oracle: bool,             // Kind 30 (Register)
+    pub enable_oracle_attestation: bool, // Kind 31 (Attestation)
+    pub enable_oracle_dispute: bool,     // Kind 32 (Dispute)
+    pub enable_oracle_event: bool,       // Event Requests (via API)
+    pub enable_prediction: bool,         // Kind 40 (LotteryCreate)
+    pub enable_prediction_ticket: bool,  // Kind 41 (LotteryTicket)
+    pub enable_prediction_draw: bool,    // Kind 42 (LotteryDraw)
 
     // Carrier weights (0-100, will be normalized)
     pub weight_op_return: u8,
@@ -211,9 +211,9 @@ pub enum MessageType {
     OracleDispute,     // Dispute (Kind 32)
     OracleEvent,       // Event Request (via API)
     // Prediction/Lottery types
-    Prediction,        // Kind 40 (LotteryCreate)
-    PredictionTicket,  // Kind 41 (LotteryTicket)
-    PredictionDraw,    // Kind 42 (LotteryDraw)
+    Prediction,       // Kind 40 (LotteryCreate)
+    PredictionTicket, // Kind 41 (LotteryTicket)
+    PredictionDraw,   // Kind 42 (LotteryDraw)
 }
 
 impl MessageType {

@@ -1,11 +1,6 @@
 //! Tor network management handlers
 
-use axum::{
-    extract::State,
-    http::StatusCode,
-    response::IntoResponse,
-    Json,
-};
+use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tracing::{error, info};
@@ -68,12 +63,14 @@ pub async fn get_tor_status(
         ..Default::default()
     });
 
-    let containers = state.docker.list_containers(options).await
+    let containers = state
+        .docker
+        .list_containers(options)
+        .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     let container = containers.first();
-    let container_status = container
-        .and_then(|c| c.state.clone());
+    let container_status = container.and_then(|c| c.state.clone());
     let running = container_status.as_deref() == Some("running");
 
     if !running {
@@ -130,11 +127,17 @@ async fn check_tor_circuit(state: &Arc<AppState>) -> Result<bool, String> {
         ..Default::default()
     };
 
-    let exec = state.docker.create_exec(TOR_CONTAINER, exec_options).await
+    let exec = state
+        .docker
+        .create_exec(TOR_CONTAINER, exec_options)
+        .await
         .map_err(|e| e.to_string())?;
 
     let mut output = String::new();
-    if let Ok(StartExecResults::Attached { output: mut stream, .. }) = state.docker.start_exec(&exec.id, None).await {
+    if let Ok(StartExecResults::Attached {
+        output: mut stream, ..
+    }) = state.docker.start_exec(&exec.id, None).await
+    {
         while let Some(Ok(chunk)) = stream.next().await {
             output.push_str(&chunk.to_string());
         }
@@ -155,18 +158,25 @@ async fn get_tor_version(state: &Arc<AppState>) -> Result<String, String> {
         ..Default::default()
     };
 
-    let exec = state.docker.create_exec(TOR_CONTAINER, exec_options).await
+    let exec = state
+        .docker
+        .create_exec(TOR_CONTAINER, exec_options)
+        .await
         .map_err(|e| e.to_string())?;
 
     let mut output = String::new();
-    if let Ok(StartExecResults::Attached { output: mut stream, .. }) = state.docker.start_exec(&exec.id, None).await {
+    if let Ok(StartExecResults::Attached {
+        output: mut stream, ..
+    }) = state.docker.start_exec(&exec.id, None).await
+    {
         while let Some(Ok(chunk)) = stream.next().await {
             output.push_str(&chunk.to_string());
         }
     }
 
     // Parse version from "Tor version 0.4.x.x"
-    let version = output.lines()
+    let version = output
+        .lines()
         .next()
         .and_then(|line| line.strip_prefix("Tor version "))
         .map(|v| v.trim().to_string())
@@ -190,11 +200,17 @@ async fn get_external_ip_via_tor(state: &Arc<AppState>) -> Result<String, String
         ..Default::default()
     };
 
-    let exec = state.docker.create_exec(TOR_CONTAINER, exec_options).await
+    let exec = state
+        .docker
+        .create_exec(TOR_CONTAINER, exec_options)
+        .await
         .map_err(|e| e.to_string())?;
 
     let mut output = String::new();
-    if let Ok(StartExecResults::Attached { output: mut stream, .. }) = state.docker.start_exec(&exec.id, None).await {
+    if let Ok(StartExecResults::Attached {
+        output: mut stream, ..
+    }) = state.docker.start_exec(&exec.id, None).await
+    {
         while let Some(Ok(chunk)) = stream.next().await {
             output.push_str(&chunk.to_string());
         }
@@ -223,10 +239,17 @@ async fn get_onion_addresses(state: &Arc<AppState>) -> Result<OnionAddresses, St
             ..Default::default()
         };
 
-        let exec = state.docker.create_exec(TOR_CONTAINER, exec_options).await.ok()?;
+        let exec = state
+            .docker
+            .create_exec(TOR_CONTAINER, exec_options)
+            .await
+            .ok()?;
 
         let mut output = String::new();
-        if let Ok(StartExecResults::Attached { output: mut stream, .. }) = state.docker.start_exec(&exec.id, None).await {
+        if let Ok(StartExecResults::Attached {
+            output: mut stream, ..
+        }) = state.docker.start_exec(&exec.id, None).await
+        {
             while let Some(Ok(chunk)) = stream.next().await {
                 output.push_str(&chunk.to_string());
             }
@@ -264,7 +287,8 @@ async fn get_onion_addresses(state: &Arc<AppState>) -> Result<OnionAddresses, St
 pub async fn get_onion_addresses_handler(
     State(state): State<Arc<AppState>>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
-    let addresses = get_onion_addresses(&state).await
+    let addresses = get_onion_addresses(&state)
+        .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?;
 
     Ok(Json(addresses))
@@ -295,21 +319,28 @@ pub async fn new_tor_circuit(
         attach_stderr: Some(true),
         attach_stdin: Some(true),
         cmd: Some(vec![
-            "sh", "-c",
+            "sh",
+            "-c",
             r#"curl -s telnet://localhost:9051 <<EOF
 AUTHENTICATE "anchor"
 SIGNAL NEWNYM
 QUIT
-EOF"#
+EOF"#,
         ]),
         ..Default::default()
     };
 
-    let exec = state.docker.create_exec(TOR_CONTAINER, exec_options).await
+    let exec = state
+        .docker
+        .create_exec(TOR_CONTAINER, exec_options)
+        .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     let mut output = String::new();
-    if let Ok(StartExecResults::Attached { output: mut stream, .. }) = state.docker.start_exec(&exec.id, None).await {
+    if let Ok(StartExecResults::Attached {
+        output: mut stream, ..
+    }) = state.docker.start_exec(&exec.id, None).await
+    {
         while let Some(Ok(chunk)) = stream.next().await {
             output.push_str(&chunk.to_string());
         }
@@ -351,13 +382,15 @@ pub async fn enable_tor(
     info!("Enabling Tor...");
 
     // Start the Tor container
-    match state.docker.start_container::<String>(TOR_CONTAINER, None).await {
-        Ok(_) => {
-            Ok(Json(TorActionResponse {
-                success: true,
-                message: "Tor container started successfully".to_string(),
-            }))
-        }
+    match state
+        .docker
+        .start_container::<String>(TOR_CONTAINER, None)
+        .await
+    {
+        Ok(_) => Ok(Json(TorActionResponse {
+            success: true,
+            message: "Tor container started successfully".to_string(),
+        })),
         Err(e) => {
             // Check if already running
             if e.to_string().contains("already started") || e.to_string().contains("304") {
@@ -393,12 +426,10 @@ pub async fn disable_tor(
 
     // Stop the Tor container
     match state.docker.stop_container(TOR_CONTAINER, None).await {
-        Ok(_) => {
-            Ok(Json(TorActionResponse {
-                success: true,
-                message: "Tor container stopped successfully".to_string(),
-            }))
-        }
+        Ok(_) => Ok(Json(TorActionResponse {
+            success: true,
+            message: "Tor container stopped successfully".to_string(),
+        })),
         Err(e) => {
             // Check if already stopped
             if e.to_string().contains("not running") || e.to_string().contains("304") {

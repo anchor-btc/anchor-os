@@ -2,13 +2,13 @@
 
 use anyhow::Result;
 
-use crate::backup_config::BackupConfig as Config;
 use super::StorageInfo;
+use crate::backup_config::BackupConfig as Config;
 
 /// Get S3 storage info
 pub async fn get_storage_info(config: &Config) -> Result<StorageInfo> {
     let configured = config.s3_configured();
-    
+
     if !configured {
         return Ok(StorageInfo {
             name: "Amazon S3".to_string(),
@@ -19,7 +19,7 @@ pub async fn get_storage_info(config: &Config) -> Result<StorageInfo> {
             available_bytes: None,
         });
     }
-    
+
     // S3 doesn't have traditional size limits, but we could query bucket size
     // For now, just return configured status
     Ok(StorageInfo {

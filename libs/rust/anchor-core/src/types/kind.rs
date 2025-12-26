@@ -86,4 +86,3 @@ impl From<AnchorKind> for u8 {
         }
     }
 }
-

@@ -23,7 +23,7 @@ describe('Anchor Tokens List', () => {
 describe('Anchor Tokens Token Detail', () => {
   it('should navigate to token details if tokens exist', () => {
     cy.visitApp('tokens', '/tokens');
-    
+
     // Click on a token if available
     cy.get('a[href*="/token/"]').then(($links) => {
       if ($links.length > 0) {
@@ -39,11 +39,11 @@ describe('Anchor Tokens Token Detail', () => {
 
   it('should show token page content', () => {
     cy.visitApp('tokens', '/tokens');
-    
+
     cy.get('a[href*="/token/"]').then(($links) => {
       if ($links.length > 0) {
         cy.wrap($links.first()).click();
-        
+
         // Token detail page should have content
         cy.get('div').should('have.length.greaterThan', 0);
       } else {
@@ -52,4 +52,3 @@ describe('Anchor Tokens Token Detail', () => {
     });
   });
 });
-

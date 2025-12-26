@@ -1,12 +1,12 @@
 //! Installation and setup wizard handlers
 
+use axum::response::sse::{Event, KeepAlive};
 use axum::{
     extract::State,
     http::StatusCode,
     response::{IntoResponse, Sse},
     Json,
 };
-use axum::response::sse::{Event, KeepAlive};
 use bollard::container::ListContainersOptions;
 use futures::stream::Stream;
 use serde::{Deserialize, Serialize};
@@ -149,7 +149,12 @@ fn get_all_services() -> Vec<ServiceDefinition> {
             name: "Bitcoin Node".to_string(),
             description: "Bitcoin Core full node".to_string(),
             category: ServiceCategory::Core,
-            docker_profiles: vec!["minimum".to_string(), "default".to_string(), "full".to_string(), "core-bitcoin".to_string()],
+            docker_profiles: vec![
+                "minimum".to_string(),
+                "default".to_string(),
+                "full".to_string(),
+                "core-bitcoin".to_string(),
+            ],
             containers: vec!["anchor-core-bitcoin".to_string()],
             install_status: ServiceInstallStatus::NotInstalled,
             enabled: false,
@@ -162,7 +167,12 @@ fn get_all_services() -> Vec<ServiceDefinition> {
             name: "Database".to_string(),
             description: "PostgreSQL database for storing data".to_string(),
             category: ServiceCategory::Core,
-            docker_profiles: vec!["minimum".to_string(), "default".to_string(), "full".to_string(), "core-postgres".to_string()],
+            docker_profiles: vec![
+                "minimum".to_string(),
+                "default".to_string(),
+                "full".to_string(),
+                "core-postgres".to_string(),
+            ],
             containers: vec!["anchor-core-postgres".to_string()],
             install_status: ServiceInstallStatus::NotInstalled,
             enabled: false,
@@ -175,7 +185,11 @@ fn get_all_services() -> Vec<ServiceDefinition> {
             name: "Electrs".to_string(),
             description: "Electrum server - lightweight and efficient".to_string(),
             category: ServiceCategory::Core,
-            docker_profiles: vec!["default".to_string(), "full".to_string(), "core-electrs".to_string()],
+            docker_profiles: vec![
+                "default".to_string(),
+                "full".to_string(),
+                "core-electrs".to_string(),
+            ],
             containers: vec!["anchor-core-electrs".to_string()],
             install_status: ServiceInstallStatus::NotInstalled,
             enabled: false,
@@ -188,7 +202,11 @@ fn get_all_services() -> Vec<ServiceDefinition> {
             name: "Fulcrum".to_string(),
             description: "High-performance Electrum server".to_string(),
             category: ServiceCategory::Core,
-            docker_profiles: vec!["default".to_string(), "full".to_string(), "core-fulcrum".to_string()],
+            docker_profiles: vec![
+                "default".to_string(),
+                "full".to_string(),
+                "core-fulcrum".to_string(),
+            ],
             containers: vec!["anchor-core-fulcrum".to_string()],
             install_status: ServiceInstallStatus::NotInstalled,
             enabled: false,
@@ -201,7 +219,12 @@ fn get_all_services() -> Vec<ServiceDefinition> {
             name: "Anchor Indexer".to_string(),
             description: "Indexes ANCHOR messages from the blockchain".to_string(),
             category: ServiceCategory::Core,
-            docker_profiles: vec!["minimum".to_string(), "default".to_string(), "full".to_string(), "core-indexer".to_string()],
+            docker_profiles: vec![
+                "minimum".to_string(),
+                "default".to_string(),
+                "full".to_string(),
+                "core-indexer".to_string(),
+            ],
             containers: vec!["anchor-core-indexer".to_string()],
             install_status: ServiceInstallStatus::NotInstalled,
             enabled: false,
@@ -214,7 +237,12 @@ fn get_all_services() -> Vec<ServiceDefinition> {
             name: "Anchor Wallet".to_string(),
             description: "REST API for creating and broadcasting transactions".to_string(),
             category: ServiceCategory::Core,
-            docker_profiles: vec!["minimum".to_string(), "default".to_string(), "full".to_string(), "core-wallet".to_string()],
+            docker_profiles: vec![
+                "minimum".to_string(),
+                "default".to_string(),
+                "full".to_string(),
+                "core-wallet".to_string(),
+            ],
             containers: vec!["anchor-core-wallet".to_string()],
             install_status: ServiceInstallStatus::NotInstalled,
             enabled: false,
@@ -227,7 +255,12 @@ fn get_all_services() -> Vec<ServiceDefinition> {
             name: "Anchor Testnet".to_string(),
             description: "Automatically generates test transactions and mines blocks".to_string(),
             category: ServiceCategory::Core,
-            docker_profiles: vec!["minimum".to_string(), "default".to_string(), "full".to_string(), "core-testnet".to_string()],
+            docker_profiles: vec![
+                "minimum".to_string(),
+                "default".to_string(),
+                "full".to_string(),
+                "core-testnet".to_string(),
+            ],
             containers: vec!["anchor-core-testnet".to_string()],
             install_status: ServiceInstallStatus::NotInstalled,
             enabled: false,
@@ -238,9 +271,15 @@ fn get_all_services() -> Vec<ServiceDefinition> {
         ServiceDefinition {
             id: "anchor-docs".to_string(),
             name: "Anchor Docs".to_string(),
-            description: "Protocol documentation - kinds, SDK, examples, and API reference".to_string(),
+            description: "Protocol documentation - kinds, SDK, examples, and API reference"
+                .to_string(),
             category: ServiceCategory::Core,
-            docker_profiles: vec!["minimum".to_string(), "default".to_string(), "full".to_string(), "anchor-docs".to_string()],
+            docker_profiles: vec![
+                "minimum".to_string(),
+                "default".to_string(),
+                "full".to_string(),
+                "anchor-docs".to_string(),
+            ],
             containers: vec!["anchor-docs".to_string()],
             install_status: ServiceInstallStatus::NotInstalled,
             enabled: false,
@@ -254,8 +293,16 @@ fn get_all_services() -> Vec<ServiceDefinition> {
             name: "Mempool Space".to_string(),
             description: "Full Bitcoin block explorer powered by mempool.space".to_string(),
             category: ServiceCategory::Explorer,
-            docker_profiles: vec!["default".to_string(), "full".to_string(), "explorer-mempool".to_string()],
-            containers: vec!["anchor-explorer-mempool-web".to_string(), "anchor-explorer-mempool-api".to_string(), "anchor-explorer-mempool-db".to_string()],
+            docker_profiles: vec![
+                "default".to_string(),
+                "full".to_string(),
+                "explorer-mempool".to_string(),
+            ],
+            containers: vec![
+                "anchor-explorer-mempool-web".to_string(),
+                "anchor-explorer-mempool-api".to_string(),
+                "anchor-explorer-mempool-db".to_string(),
+            ],
             install_status: ServiceInstallStatus::NotInstalled,
             enabled: false,
             required: false,
@@ -267,7 +314,11 @@ fn get_all_services() -> Vec<ServiceDefinition> {
             name: "BTC RPC Explorer".to_string(),
             description: "Simple and lightweight Bitcoin block explorer".to_string(),
             category: ServiceCategory::Explorer,
-            docker_profiles: vec!["minimum".to_string(), "full".to_string(), "explorer-btc-rpc".to_string()],
+            docker_profiles: vec![
+                "minimum".to_string(),
+                "full".to_string(),
+                "explorer-btc-rpc".to_string(),
+            ],
             containers: vec!["anchor-explorer-btc-rpc".to_string()],
             install_status: ServiceInstallStatus::NotInstalled,
             enabled: false,
@@ -281,7 +332,10 @@ fn get_all_services() -> Vec<ServiceDefinition> {
             description: "Real-time Bitcoin transaction visualizer".to_string(),
             category: ServiceCategory::Explorer,
             docker_profiles: vec!["full".to_string(), "explorer-bitfeed".to_string()],
-            containers: vec!["anchor-explorer-bitfeed-web".to_string(), "anchor-explorer-bitfeed-api".to_string()],
+            containers: vec![
+                "anchor-explorer-bitfeed-web".to_string(),
+                "anchor-explorer-bitfeed-api".to_string(),
+            ],
             install_status: ServiceInstallStatus::NotInstalled,
             enabled: false,
             required: false,
@@ -320,7 +374,12 @@ fn get_all_services() -> Vec<ServiceDefinition> {
             name: "Tor Network".to_string(),
             description: "Privacy network for anonymous Bitcoin connections".to_string(),
             category: ServiceCategory::Networking,
-            docker_profiles: vec!["minimum".to_string(), "default".to_string(), "full".to_string(), "networking-tor".to_string()],
+            docker_profiles: vec![
+                "minimum".to_string(),
+                "default".to_string(),
+                "full".to_string(),
+                "networking-tor".to_string(),
+            ],
             containers: vec!["anchor-networking-tor".to_string()],
             install_status: ServiceInstallStatus::NotInstalled,
             enabled: false,
@@ -348,8 +407,16 @@ fn get_all_services() -> Vec<ServiceDefinition> {
             name: "Anchor Dashboard".to_string(),
             description: "Main control panel for managing Anchor OS".to_string(),
             category: ServiceCategory::Dashboard,
-            docker_profiles: vec!["minimum".to_string(), "default".to_string(), "full".to_string(), "anchor-dashboard".to_string()],
-            containers: vec!["anchor-dashboard-backend".to_string(), "anchor-dashboard-frontend".to_string()],
+            docker_profiles: vec![
+                "minimum".to_string(),
+                "default".to_string(),
+                "full".to_string(),
+                "anchor-dashboard".to_string(),
+            ],
+            containers: vec![
+                "anchor-dashboard-backend".to_string(),
+                "anchor-dashboard-frontend".to_string(),
+            ],
             install_status: ServiceInstallStatus::NotInstalled,
             enabled: false,
             required: true,
@@ -362,8 +429,16 @@ fn get_all_services() -> Vec<ServiceDefinition> {
             name: "Anchor Threads".to_string(),
             description: "Social messaging on Bitcoin".to_string(),
             category: ServiceCategory::App,
-            docker_profiles: vec!["minimum".to_string(), "default".to_string(), "full".to_string(), "app-threads".to_string()],
-            containers: vec!["anchor-app-threads-frontend".to_string(), "anchor-app-threads-backend".to_string()],
+            docker_profiles: vec![
+                "minimum".to_string(),
+                "default".to_string(),
+                "full".to_string(),
+                "app-threads".to_string(),
+            ],
+            containers: vec![
+                "anchor-app-threads-frontend".to_string(),
+                "anchor-app-threads-backend".to_string(),
+            ],
             install_status: ServiceInstallStatus::NotInstalled,
             enabled: false,
             required: false,
@@ -376,12 +451,19 @@ fn get_all_services() -> Vec<ServiceDefinition> {
             description: "Collaborative pixel canvas powered by Bitcoin".to_string(),
             category: ServiceCategory::App,
             docker_profiles: vec!["full".to_string(), "app-canvas".to_string()],
-            containers: vec!["anchor-app-canvas-frontend".to_string(), "anchor-app-canvas-backend".to_string()],
+            containers: vec![
+                "anchor-app-canvas-frontend".to_string(),
+                "anchor-app-canvas-backend".to_string(),
+            ],
             install_status: ServiceInstallStatus::NotInstalled,
             enabled: false,
             required: false,
             incompatible_with: vec![],
-            depends_on: vec!["core-postgres".to_string(), "core-bitcoin".to_string(), "core-wallet".to_string()],
+            depends_on: vec![
+                "core-postgres".to_string(),
+                "core-bitcoin".to_string(),
+                "core-wallet".to_string(),
+            ],
         },
         ServiceDefinition {
             id: "app-places".to_string(),
@@ -389,25 +471,40 @@ fn get_all_services() -> Vec<ServiceDefinition> {
             description: "Place permanent markers on a map using Bitcoin".to_string(),
             category: ServiceCategory::App,
             docker_profiles: vec!["full".to_string(), "app-places".to_string()],
-            containers: vec!["anchor-app-places-frontend".to_string(), "anchor-app-places-backend".to_string()],
+            containers: vec![
+                "anchor-app-places-frontend".to_string(),
+                "anchor-app-places-backend".to_string(),
+            ],
             install_status: ServiceInstallStatus::NotInstalled,
             enabled: false,
             required: false,
             incompatible_with: vec![],
-            depends_on: vec!["core-postgres".to_string(), "core-bitcoin".to_string(), "core-wallet".to_string()],
+            depends_on: vec![
+                "core-postgres".to_string(),
+                "core-bitcoin".to_string(),
+                "core-wallet".to_string(),
+            ],
         },
         ServiceDefinition {
             id: "app-domains".to_string(),
             name: "Anchor Domains".to_string(),
-            description: "Decentralized DNS on Bitcoin - .btc, .sat, .anchor, .anc, .bit domains".to_string(),
+            description: "Decentralized DNS on Bitcoin - .btc, .sat, .anchor, .anc, .bit domains"
+                .to_string(),
             category: ServiceCategory::App,
             docker_profiles: vec!["full".to_string(), "app-domains".to_string()],
-            containers: vec!["anchor-app-domains-frontend".to_string(), "anchor-app-domains-backend".to_string()],
+            containers: vec![
+                "anchor-app-domains-frontend".to_string(),
+                "anchor-app-domains-backend".to_string(),
+            ],
             install_status: ServiceInstallStatus::NotInstalled,
             enabled: false,
             required: false,
             incompatible_with: vec![],
-            depends_on: vec!["core-postgres".to_string(), "core-bitcoin".to_string(), "core-wallet".to_string()],
+            depends_on: vec![
+                "core-postgres".to_string(),
+                "core-bitcoin".to_string(),
+                "core-wallet".to_string(),
+            ],
         },
         ServiceDefinition {
             id: "app-proof".to_string(),
@@ -415,12 +512,19 @@ fn get_all_services() -> Vec<ServiceDefinition> {
             description: "Proof of Existence - timestamp files on Bitcoin".to_string(),
             category: ServiceCategory::App,
             docker_profiles: vec!["full".to_string(), "app-proof".to_string()],
-            containers: vec!["anchor-app-proof-frontend".to_string(), "anchor-app-proof-backend".to_string()],
+            containers: vec![
+                "anchor-app-proof-frontend".to_string(),
+                "anchor-app-proof-backend".to_string(),
+            ],
             install_status: ServiceInstallStatus::NotInstalled,
             enabled: false,
             required: false,
             incompatible_with: vec![],
-            depends_on: vec!["core-postgres".to_string(), "core-bitcoin".to_string(), "core-wallet".to_string()],
+            depends_on: vec![
+                "core-postgres".to_string(),
+                "core-bitcoin".to_string(),
+                "core-wallet".to_string(),
+            ],
         },
         ServiceDefinition {
             id: "app-tokens".to_string(),
@@ -428,12 +532,19 @@ fn get_all_services() -> Vec<ServiceDefinition> {
             description: "UTXO-based tokens on Bitcoin".to_string(),
             category: ServiceCategory::App,
             docker_profiles: vec!["full".to_string(), "app-tokens".to_string()],
-            containers: vec!["anchor-app-tokens-frontend".to_string(), "anchor-app-tokens-backend".to_string()],
+            containers: vec![
+                "anchor-app-tokens-frontend".to_string(),
+                "anchor-app-tokens-backend".to_string(),
+            ],
             install_status: ServiceInstallStatus::NotInstalled,
             enabled: false,
             required: false,
             incompatible_with: vec![],
-            depends_on: vec!["core-postgres".to_string(), "core-bitcoin".to_string(), "core-wallet".to_string()],
+            depends_on: vec![
+                "core-postgres".to_string(),
+                "core-bitcoin".to_string(),
+                "core-wallet".to_string(),
+            ],
         },
         ServiceDefinition {
             id: "app-oracles".to_string(),
@@ -441,7 +552,11 @@ fn get_all_services() -> Vec<ServiceDefinition> {
             description: "Decentralized oracle network for Bitcoin".to_string(),
             category: ServiceCategory::App,
             docker_profiles: vec!["full".to_string(), "app-oracles".to_string()],
-            containers: vec!["anchor-app-oracles-frontend".to_string(), "anchor-app-oracles-backend".to_string(), "anchor-app-oracles-postgres".to_string()],
+            containers: vec![
+                "anchor-app-oracles-frontend".to_string(),
+                "anchor-app-oracles-backend".to_string(),
+                "anchor-app-oracles-postgres".to_string(),
+            ],
             install_status: ServiceInstallStatus::NotInstalled,
             enabled: false,
             required: false,
@@ -454,7 +569,11 @@ fn get_all_services() -> Vec<ServiceDefinition> {
             description: "Trustless lottery with DLC-based payouts".to_string(),
             category: ServiceCategory::App,
             docker_profiles: vec!["full".to_string(), "app-predictions".to_string()],
-            containers: vec!["anchor-app-predictions-frontend".to_string(), "anchor-app-predictions-backend".to_string(), "anchor-app-predictions-postgres".to_string()],
+            containers: vec![
+                "anchor-app-predictions-frontend".to_string(),
+                "anchor-app-predictions-backend".to_string(),
+                "anchor-app-predictions-postgres".to_string(),
+            ],
             install_status: ServiceInstallStatus::NotInstalled,
             enabled: false,
             required: false,
@@ -490,12 +609,7 @@ fn get_preset_services(preset: InstallationPreset) -> Vec<String> {
             "app-threads".to_string(),
             "anchor-dashboard".to_string(),
         ],
-        InstallationPreset::Full => {
-            get_all_services()
-                .iter()
-                .map(|s| s.id.clone())
-                .collect()
-        },
+        InstallationPreset::Full => get_all_services().iter().map(|s| s.id.clone()).collect(),
         InstallationPreset::Custom => vec![],
     }
 }
@@ -560,7 +674,7 @@ pub async fn get_installation_status(
 
     // Get installation config from database (always use id = 1)
     let row = sqlx::query(
-        "SELECT preset, services, setup_completed FROM installation_config WHERE id = 1"
+        "SELECT preset, services, setup_completed FROM installation_config WHERE id = 1",
     )
     .fetch_optional(pool)
     .await
@@ -595,14 +709,12 @@ pub async fn get_installation_status(
                 active_profiles: vec![preset.to_string()],
             }))
         }
-        None => {
-            Ok(Json(InstallationStatus {
-                setup_completed: false,
-                preset: InstallationPreset::Default,
-                installed_services: vec![],
-                active_profiles: vec![],
-            }))
-        }
+        None => Ok(Json(InstallationStatus {
+            setup_completed: false,
+            preset: InstallationPreset::Default,
+            installed_services: vec![],
+            active_profiles: vec![],
+        })),
     }
 }
 
@@ -636,7 +748,9 @@ pub async fn get_services(
             let all_running = service.containers.iter().all(|container_name| {
                 containers.iter().any(|c| {
                     c.names.as_ref().is_some_and(|names| {
-                        names.iter().any(|n| n.trim_start_matches('/') == container_name)
+                        names
+                            .iter()
+                            .any(|n| n.trim_start_matches('/') == container_name)
                     }) && c.state.as_deref() == Some("running")
                 })
             });
@@ -644,7 +758,9 @@ pub async fn get_services(
             let any_exists = service.containers.iter().any(|container_name| {
                 containers.iter().any(|c| {
                     c.names.as_ref().is_some_and(|names| {
-                        names.iter().any(|n| n.trim_start_matches('/') == container_name)
+                        names
+                            .iter()
+                            .any(|n| n.trim_start_matches('/') == container_name)
                     })
                 })
             });
@@ -699,7 +815,7 @@ pub async fn apply_preset(
     sqlx::query(
         "INSERT INTO installation_config (id, preset, services, setup_completed, updated_at)
          VALUES (1, $1, $2, FALSE, NOW())
-         ON CONFLICT (id) DO UPDATE SET preset = $1, services = $2, updated_at = NOW()"
+         ON CONFLICT (id) DO UPDATE SET preset = $1, services = $2, updated_at = NOW()",
     )
     .bind(req.preset.to_string())
     .bind(&services_value)
@@ -707,7 +823,10 @@ pub async fn apply_preset(
     .await
     .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-    info!("Applied preset: {:?} with services: {:?}", req.preset, services);
+    info!(
+        "Applied preset: {:?} with services: {:?}",
+        req.preset, services
+    );
 
     Ok(Json(InstallationActionResponse {
         success: true,
@@ -751,7 +870,10 @@ pub async fn apply_custom(
                 if req.services.contains(incompatible) {
                     return Err((
                         StatusCode::BAD_REQUEST,
-                        format!("Service '{}' is incompatible with '{}'", service_id, incompatible),
+                        format!(
+                            "Service '{}' is incompatible with '{}'",
+                            service_id, incompatible
+                        ),
                     ));
                 }
             }
@@ -782,20 +904,24 @@ pub async fn apply_custom(
         }
     }
 
-    let services_json: HashMap<String, bool> = final_services.iter().map(|s| (s.clone(), true)).collect();
+    let services_json: HashMap<String, bool> =
+        final_services.iter().map(|s| (s.clone(), true)).collect();
     let services_value = serde_json::to_value(&services_json).unwrap_or_default();
 
     sqlx::query(
         "INSERT INTO installation_config (id, preset, services, setup_completed, updated_at)
          VALUES (1, 'custom', $1, FALSE, NOW())
-         ON CONFLICT (id) DO UPDATE SET preset = 'custom', services = $1, updated_at = NOW()"
+         ON CONFLICT (id) DO UPDATE SET preset = 'custom', services = $1, updated_at = NOW()",
     )
     .bind(&services_value)
     .execute(pool)
     .await
     .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-    info!("Applied custom installation with services: {:?}", final_services);
+    info!(
+        "Applied custom installation with services: {:?}",
+        final_services
+    );
 
     Ok(Json(InstallationActionResponse {
         success: true,
@@ -841,7 +967,7 @@ pub async fn complete_setup(
 
     // Determine which profiles to use
     let mut profiles: Vec<String> = vec![];
-    
+
     if preset == "custom" {
         // For custom, use individual service profiles
         if let Some(services_map) = services_value.as_object() {
@@ -863,16 +989,19 @@ pub async fn complete_setup(
     // This endpoint only prepares the configuration.
 
     // Mark setup as starting (the SSE stream will complete the installation)
-    sqlx::query("UPDATE installation_config SET setup_completed = TRUE, updated_at = NOW() WHERE id = 1")
-        .execute(pool)
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    sqlx::query(
+        "UPDATE installation_config SET setup_completed = TRUE, updated_at = NOW() WHERE id = 1",
+    )
+    .execute(pool)
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     info!("Setup completed");
 
     Ok(Json(InstallationActionResponse {
         success: true,
-        message: "Setup completed. Containers are being built and started in the background.".to_string(),
+        message: "Setup completed. Containers are being built and started in the background."
+            .to_string(),
         installed_services: profiles,
     }))
 }
@@ -894,8 +1023,13 @@ pub async fn install_service(
     Json(req): Json<ServiceActionRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     let all_services = get_all_services();
-    let service = all_services.iter().find(|s| s.id == req.service_id)
-        .ok_or((StatusCode::BAD_REQUEST, format!("Unknown service: {}", req.service_id)))?;
+    let service = all_services
+        .iter()
+        .find(|s| s.id == req.service_id)
+        .ok_or((
+            StatusCode::BAD_REQUEST,
+            format!("Unknown service: {}", req.service_id),
+        ))?;
 
     let pool = match &state.db_pool {
         Some(p) => p,
@@ -927,7 +1061,10 @@ pub async fn install_service(
         if services.get(incompatible).copied().unwrap_or(false) {
             return Err((
                 StatusCode::BAD_REQUEST,
-                format!("Cannot install '{}' - incompatible with installed service '{}'", req.service_id, incompatible),
+                format!(
+                    "Cannot install '{}' - incompatible with installed service '{}'",
+                    req.service_id, incompatible
+                ),
             ));
         }
     }
@@ -946,45 +1083,63 @@ pub async fn install_service(
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-    info!("Installing service: {} - starting containers...", req.service_id);
+    info!(
+        "Installing service: {} - starting containers...",
+        req.service_id
+    );
 
     // Run docker compose to start the service containers with all required profiles
     let service_id_clone = req.service_id.clone();
     let required_profiles = get_service_profiles(&service_id_clone);
-    
-    info!("Installing {} with profiles: {:?}", service_id_clone, required_profiles);
-    
+
+    info!(
+        "Installing {} with profiles: {:?}",
+        service_id_clone, required_profiles
+    );
+
     tokio::spawn(async move {
         let mut cmd = std::process::Command::new("docker");
         cmd.current_dir("/anchor-project");
         cmd.arg("compose");
-        
+
         // Add all required profiles
         for profile in &required_profiles {
             cmd.arg("--profile");
             cmd.arg(profile);
         }
-        
+
         cmd.args(["up", "-d", "--remove-orphans"]);
 
         match cmd.output() {
             Ok(output) => {
                 if output.status.success() {
-                    info!("Successfully started containers for service: {}", service_id_clone);
+                    info!(
+                        "Successfully started containers for service: {}",
+                        service_id_clone
+                    );
                 } else {
                     let stderr = String::from_utf8_lossy(&output.stderr);
-                    info!("Failed to start containers for {}: {}", service_id_clone, stderr);
+                    info!(
+                        "Failed to start containers for {}: {}",
+                        service_id_clone, stderr
+                    );
                 }
             }
             Err(e) => {
-                info!("Failed to run docker compose for {}: {}", service_id_clone, e);
+                info!(
+                    "Failed to run docker compose for {}: {}",
+                    service_id_clone, e
+                );
             }
         }
     });
 
     Ok(Json(InstallationActionResponse {
         success: true,
-        message: format!("Service '{}' is being installed. Containers starting...", req.service_id),
+        message: format!(
+            "Service '{}' is being installed. Containers starting...",
+            req.service_id
+        ),
         installed_services: services.keys().cloned().collect(),
     }))
 }
@@ -1006,11 +1161,19 @@ pub async fn uninstall_service(
     Json(req): Json<ServiceUninstallRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     let all_services = get_all_services();
-    let service = all_services.iter().find(|s| s.id == req.service_id)
-        .ok_or((StatusCode::BAD_REQUEST, format!("Unknown service: {}", req.service_id)))?;
+    let service = all_services
+        .iter()
+        .find(|s| s.id == req.service_id)
+        .ok_or((
+            StatusCode::BAD_REQUEST,
+            format!("Unknown service: {}", req.service_id),
+        ))?;
 
     if service.required {
-        return Err((StatusCode::BAD_REQUEST, "Cannot uninstall required service".to_string()));
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "Cannot uninstall required service".to_string(),
+        ));
     }
 
     let pool = match &state.db_pool {
@@ -1045,7 +1208,10 @@ pub async fn uninstall_service(
         {
             return Err((
                 StatusCode::BAD_REQUEST,
-                format!("Cannot uninstall '{}' - service '{}' depends on it", req.service_id, other_service.id),
+                format!(
+                    "Cannot uninstall '{}' - service '{}' depends on it",
+                    req.service_id, other_service.id
+                ),
             ));
         }
     }
@@ -1065,10 +1231,10 @@ pub async fn uninstall_service(
     // Remove containers if requested
     if req.remove_containers {
         info!("Removing containers for service: {}", req.service_id);
-        
+
         let service_id_clone = req.service_id.clone();
         let containers_to_remove = service.containers.clone();
-        
+
         // Remove containers in background
         tokio::spawn(async move {
             for container_name in containers_to_remove {
@@ -1087,7 +1253,10 @@ pub async fn uninstall_service(
     Ok(Json(InstallationActionResponse {
         success: true,
         message: if req.remove_containers {
-            format!("Service '{}' uninstalled and containers removed", req.service_id)
+            format!(
+                "Service '{}' uninstalled and containers removed",
+                req.service_id
+            )
         } else {
             format!("Service '{}' uninstalled successfully", req.service_id)
         },
@@ -1159,7 +1328,7 @@ pub async fn reset_installation(
     // Stop and remove non-essential containers using shell command (more reliable)
     if req.reset_services {
         info!("Stopping and removing non-essential containers via shell...");
-        
+
         // Use shell command to forcefully remove all non-essential containers
         // This is more reliable than using bollard API
         let essential_pattern = essential_containers.join("|");
@@ -1175,26 +1344,32 @@ pub async fn reset_installation(
             "#,
             essential_pattern
         );
-        
+
         let output = std::process::Command::new("sh")
             .arg("-c")
             .arg(&script)
             .output();
-        
+
         match output {
             Ok(out) => {
                 if !out.stdout.is_empty() {
-                    info!("Container removal output: {}", String::from_utf8_lossy(&out.stdout));
+                    info!(
+                        "Container removal output: {}",
+                        String::from_utf8_lossy(&out.stdout)
+                    );
                 }
                 if !out.stderr.is_empty() {
-                    info!("Container removal stderr: {}", String::from_utf8_lossy(&out.stderr));
+                    info!(
+                        "Container removal stderr: {}",
+                        String::from_utf8_lossy(&out.stderr)
+                    );
                 }
             }
             Err(e) => {
                 info!("Failed to run container removal script: {}", e);
             }
         }
-        
+
         info!("Non-essential containers removed");
     }
 
@@ -1235,15 +1410,15 @@ pub async fn reset_installation(
             .await;
         info!("Reset auth settings to default (no password)");
     }
-    
+
     // Reset language to English (default)
     let _ = sqlx::query(
         r#"UPDATE system_settings
            SET value = '{"current": "en"}'::jsonb
-           WHERE key = 'language'"#
+           WHERE key = 'language'"#,
     )
-        .execute(pool)
-        .await;
+    .execute(pool)
+    .await;
     info!("Reset language to English (default)");
 
     // Reset user profile (name, avatar)
@@ -1290,9 +1465,9 @@ pub async fn get_profiles(
         Some(row) => {
             let preset_str: String = row.get("preset");
             let services_value: serde_json::Value = row.get("services");
-            
+
             let mut profiles = vec![preset_str.clone()];
-            
+
             // For custom preset, add individual service profiles
             if preset_str == "custom" {
                 if let Some(services) = services_value.as_object() {
@@ -1303,7 +1478,7 @@ pub async fn get_profiles(
                     }
                 }
             }
-            
+
             Ok(Json(profiles))
         }
         None => Ok(Json(vec!["default".to_string()])),
@@ -1317,7 +1492,10 @@ pub async fn stream_installation(
     let pool = match &state.db_pool {
         Some(p) => p,
         None => {
-            return Err((StatusCode::INTERNAL_SERVER_ERROR, "Database not available".to_string()));
+            return Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Database not available".to_string(),
+            ));
         }
     };
 
@@ -1334,7 +1512,7 @@ pub async fn stream_installation(
 
     // Determine which profiles to use
     let mut profiles: Vec<String> = vec![];
-    
+
     if preset == "custom" {
         if let Some(services_map) = services_value.as_object() {
             for (service_id, enabled) in services_map {
@@ -1347,7 +1525,10 @@ pub async fn stream_installation(
         profiles.push(preset.clone());
     }
 
-    info!("Starting SSE stream for installation with profiles: {:?}", profiles);
+    info!(
+        "Starting SSE stream for installation with profiles: {:?}",
+        profiles
+    );
 
     // Create the stream
     let stream = async_stream::stream! {
@@ -1359,7 +1540,7 @@ pub async fn stream_installation(
             return;
         }
 
-        yield Ok(Event::default().data("[INFO] Removing conflicting containers...")); 
+        yield Ok(Event::default().data("[INFO] Removing conflicting containers..."));
 
         // Remove ALL non-essential anchor containers (running or stopped)
         // This ensures no naming conflicts during installation
@@ -1377,7 +1558,7 @@ pub async fn stream_installation(
                 esac
             done
         "#;
-        
+
         let cleanup_result = Command::new("sh")
             .arg("-c")
             .arg(cleanup_script)
@@ -1385,7 +1566,7 @@ pub async fn stream_installation(
             .stderr(std::process::Stdio::piped())
             .output()
             .await;
-        
+
         if let Ok(output) = cleanup_result {
             let stdout = String::from_utf8_lossy(&output.stdout);
             for line in stdout.lines() {
@@ -1394,43 +1575,43 @@ pub async fn stream_installation(
                 }
             }
         }
-        
+
         // First, remove any containers stuck in "Created" state (but not running ones)
         // This prevents conflicts while preserving the running dashboard-backend
         yield Ok(Event::default().data("[INFO] Cleaning up stuck containers..."));
-        
+
         let cleanup_created = Command::new("sh")
             .arg("-c")
             .arg("docker rm -f $(docker ps -aq --filter 'status=created' --filter 'name=anchor-') 2>/dev/null || true")
             .output()
             .await;
-        
+
         if let Ok(output) = cleanup_created {
             let removed = String::from_utf8_lossy(&output.stdout);
             if !removed.trim().is_empty() {
                 yield Ok(Event::default().data("[CLEANUP] Removed stuck containers"));
             }
         }
-        
-        yield Ok(Event::default().data("[INFO] Building and starting containers...")); 
+
+        yield Ok(Event::default().data("[INFO] Building and starting containers..."));
 
         // Build the docker compose up command
         let mut cmd = Command::new("docker");
         cmd.current_dir("/anchor-project");
         cmd.arg("compose");
-        
+
         for profile in &profiles {
             cmd.arg("--profile");
             cmd.arg(profile);
         }
-        
+
         // Use --no-recreate to avoid recreating the dashboard-backend which is running this code!
         // Also use --remove-orphans to clean up old containers
         cmd.args(["up", "-d", "--no-recreate", "--remove-orphans"]);
         cmd.stdout(std::process::Stdio::piped());
         cmd.stderr(std::process::Stdio::piped());
 
-        yield Ok(Event::default().data(format!("[CMD] docker compose {} up -d", 
+        yield Ok(Event::default().data(format!("[CMD] docker compose {} up -d",
             profiles.iter().map(|p| format!("--profile {}", p)).collect::<Vec<_>>().join(" "))));
 
         match cmd.spawn() {
@@ -1439,7 +1620,7 @@ pub async fn stream_installation(
                 if let Some(stderr) = child.stderr.take() {
                     let reader = BufReader::new(stderr);
                     let mut lines = reader.lines();
-                    
+
                     while let Ok(Some(line)) = lines.next_line().await {
                         // Clean up ANSI codes for cleaner display
                         let clean_line = strip_ansi_codes(&line);
@@ -1453,7 +1634,7 @@ pub async fn stream_installation(
                 if let Some(stdout) = child.stdout.take() {
                     let reader = BufReader::new(stdout);
                     let mut lines = reader.lines();
-                    
+
                     while let Ok(Some(line)) = lines.next_line().await {
                         let clean_line = strip_ansi_codes(&line);
                         if !clean_line.trim().is_empty() {
@@ -1464,19 +1645,19 @@ pub async fn stream_installation(
 
                 // Wait for the process to complete
                 let exit_status = child.wait().await;
-                
+
                 // Give containers a moment to start
                 tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
-                
+
                 // Check how many containers are actually running (don't rely on exit code)
                 yield Ok(Event::default().data("[INFO] Verifying container status..."));
-                
+
                 let check_result = Command::new("sh")
                     .arg("-c")
                     .arg("docker ps --filter 'name=anchor-' --format '{{.Names}}' | wc -l")
                     .output()
                     .await;
-                
+
                 let running_count: i32 = match check_result {
                     Ok(output) => {
                         String::from_utf8_lossy(&output.stdout)
@@ -1486,7 +1667,7 @@ pub async fn stream_installation(
                     }
                     Err(_) => 0,
                 };
-                
+
                 // Consider success if we have more than just the 4 essential containers
                 // (bitcoin, postgres, backend, frontend)
                 if running_count > 4 {
@@ -1517,17 +1698,15 @@ pub async fn stream_installation(
 
 /// Helper function to strip ANSI escape codes
 fn strip_ansi_codes(s: &str) -> String {
-    let re = regex::Regex::new(r"\x1b\[[0-9;]*m").unwrap_or_else(|_| regex::Regex::new("").unwrap());
+    let re =
+        regex::Regex::new(r"\x1b\[[0-9;]*m").unwrap_or_else(|_| regex::Regex::new("").unwrap());
     re.replace_all(s, "").to_string()
 }
 
 /// Get all required profiles for a service (including dependencies)
 fn get_service_profiles(service: &str) -> Vec<String> {
     // Base profiles that are always needed for most services
-    let mut all_profiles = vec![
-        "core-bitcoin".to_string(),
-        "core-postgres".to_string(),
-    ];
+    let mut all_profiles = vec!["core-bitcoin".to_string(), "core-postgres".to_string()];
 
     // Service-specific dependencies (including ALL required deps)
     let service_deps: Vec<String> = match service {
@@ -1535,25 +1714,29 @@ fn get_service_profiles(service: &str) -> Vec<String> {
         "app-threads" => vec!["core-wallet".to_string(), "app-threads".to_string()],
         "app-canvas" | "app-places" | "app-domains" | "app-proof" | "app-tokens" => {
             vec!["core-wallet".to_string(), service.to_string()]
-        },
+        }
         // Oracles has its own postgres
         "app-oracles" => vec!["core-wallet".to_string(), "app-oracles".to_string()],
         // Lottery depends on oracles
         "app-predictions" => vec![
             "core-wallet".to_string(),
-            "app-oracles".to_string(),  // Lottery depends on oracles!
+            "app-oracles".to_string(), // Lottery depends on oracles!
             "app-predictions".to_string(),
         ],
         // Core services
         "core-wallet" => vec!["core-wallet".to_string()],
         "core-indexer" => vec!["core-indexer".to_string()],
-        "core-testnet" => vec!["core-wallet".to_string(), "core-indexer".to_string(), "core-testnet".to_string()],
+        "core-testnet" => vec![
+            "core-wallet".to_string(),
+            "core-indexer".to_string(),
+            "core-testnet".to_string(),
+        ],
         "core-fulcrum" => vec!["core-fulcrum".to_string()],
         "core-electrs" => vec!["core-electrs".to_string()],
         // Explorers - mempool needs electrs!
         "explorer-btc-rpc" => vec!["explorer-btc-rpc".to_string()],
         "explorer-mempool" => vec![
-            "core-electrs".to_string(),  // Mempool depends on electrs!
+            "core-electrs".to_string(), // Mempool depends on electrs!
             "explorer-mempool".to_string(),
         ],
         "explorer-bitfeed" => vec!["explorer-bitfeed".to_string()],

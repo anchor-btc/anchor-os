@@ -2,8 +2,8 @@
  * AnchorCanvas API Client
  */
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3003";
-const WALLET_URL = process.env.NEXT_PUBLIC_WALLET_URL || "http://localhost:3001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3003';
+const WALLET_URL = process.env.NEXT_PUBLIC_WALLET_URL || 'http://localhost:3001';
 
 // Canvas dimensions
 export const CANVAS_WIDTH = 4580;
@@ -129,34 +129,37 @@ export interface CreatePixelResponse {
 }
 
 // Carrier types
-export type CarrierType = "op_return" | "witness_data" | "inscription";
+export type CarrierType = 'op_return' | 'witness_data' | 'inscription';
 
-export const CARRIER_INFO: Record<CarrierType, { 
-  id: number; 
-  name: string; 
-  maxBytes: number; 
-  description: string;
-  feeMultiplier: number;
-}> = {
+export const CARRIER_INFO: Record<
+  CarrierType,
+  {
+    id: number;
+    name: string;
+    maxBytes: number;
+    description: string;
+    feeMultiplier: number;
+  }
+> = {
   op_return: {
     id: 0,
-    name: "OP_RETURN",
+    name: 'OP_RETURN',
     maxBytes: 100000, // Bitcoin Core v30+ supports 100KB
-    description: "Standard, ~14K pixels max",
+    description: 'Standard, ~14K pixels max',
     feeMultiplier: 1,
   },
   witness_data: {
     id: 4,
-    name: "Witness Data",
+    name: 'Witness Data',
     maxBytes: 520000, // ~520KB practical limit
-    description: "Large capacity, 75% fee discount",
+    description: 'Large capacity, 75% fee discount',
     feeMultiplier: 0.25,
   },
   inscription: {
     id: 1,
-    name: "Inscription",
+    name: 'Inscription',
     maxBytes: 3900000, // ~3.9MB (almost full block with witness discount)
-    description: "Ordinals-style, ~557K pixels max",
+    description: 'Ordinals-style, ~557K pixels max',
     feeMultiplier: 0.25,
   },
 };
@@ -164,19 +167,19 @@ export const CARRIER_INFO: Record<CarrierType, {
 // API Functions
 export async function fetchStats(): Promise<CanvasStats> {
   const res = await fetch(`${API_URL}/stats`);
-  if (!res.ok) throw new Error("Failed to fetch stats");
+  if (!res.ok) throw new Error('Failed to fetch stats');
   return res.json();
 }
 
 export async function fetchPixelInfo(x: number, y: number): Promise<PixelInfo> {
   const res = await fetch(`${API_URL}/pixel/${x}/${y}`);
-  if (!res.ok) throw new Error("Failed to fetch pixel info");
+  if (!res.ok) throw new Error('Failed to fetch pixel info');
   return res.json();
 }
 
 export async function fetchRecentPixels(limit = 100): Promise<RecentPixel[]> {
   const res = await fetch(`${API_URL}/recent?per_page=${limit}`);
-  if (!res.ok) throw new Error("Failed to fetch recent pixels");
+  if (!res.ok) throw new Error('Failed to fetch recent pixels');
   return res.json();
 }
 
@@ -188,12 +191,7 @@ export async function fetchTileUrl(z: number, x: number, y: number): Promise<str
   return `${API_URL}/canvas/tile/${z}/${x}/${y}`;
 }
 
-export async function fetchRegionUrl(
-  x: number,
-  y: number,
-  w: number,
-  h: number
-): Promise<string> {
+export async function fetchRegionUrl(x: number, y: number, w: number, h: number): Promise<string> {
   return `${API_URL}/canvas/region?x=${x}&y=${y}&w=${w}&h=${h}`;
 }
 
@@ -203,7 +201,7 @@ export async function fetchRegionUrl(
  */
 export async function fetchCanvasData(): Promise<Map<string, Pixel>> {
   const res = await fetch(`${API_URL}/canvas`);
-  if (!res.ok) throw new Error("Failed to fetch canvas data");
+  if (!res.ok) throw new Error('Failed to fetch canvas data');
 
   const buffer = await res.arrayBuffer();
   const view = new DataView(buffer);
@@ -229,7 +227,7 @@ export async function fetchCanvasData(): Promise<Map<string, Pixel>> {
 // Wallet API
 export async function fetchWalletBalance(): Promise<WalletBalance> {
   const res = await fetch(`${WALLET_URL}/wallet/balance`);
-  if (!res.ok) throw new Error("Failed to fetch balance");
+  if (!res.ok) throw new Error('Failed to fetch balance');
   return res.json();
 }
 
@@ -247,8 +245,8 @@ export function calculatePayloadSize(pixelCount: number): number {
 export function getRecommendedCarrier(pixelCount: number): CarrierType {
   const payloadSize = calculatePayloadSize(pixelCount);
   // With 100KB OP_RETURN limit, can fit ~14K pixels
-  if (payloadSize <= 99000) return "op_return";
-  return "inscription"; // Default to inscription for larger payloads
+  if (payloadSize <= 99000) return 'op_return';
+  return 'inscription'; // Default to inscription for larger payloads
 }
 
 /**
@@ -265,13 +263,13 @@ export function canCarrierHandle(carrier: CarrierType, pixelCount: number): bool
 export function estimateTxSize(pixelCount: number, carrier: CarrierType): number {
   const payloadSize = calculatePayloadSize(pixelCount);
   const baseSize = 150; // Base tx overhead
-  
+
   switch (carrier) {
-    case "op_return":
+    case 'op_return':
       return baseSize + payloadSize + 10; // OP_RETURN overhead
-    case "witness_data":
+    case 'witness_data':
       return baseSize + Math.ceil(payloadSize * 0.25) + 50; // Witness discount
-    case "inscription":
+    case 'inscription':
       return baseSize + Math.ceil(payloadSize * 0.25) + 100; // Inscription overhead
     default:
       return baseSize + payloadSize;
@@ -285,19 +283,21 @@ export async function createPixelTransaction(
 ): Promise<CreatePixelResponse> {
   const encodedBody = encodePixelsToHex(pixels);
   const payloadSize = encodedBody.length / 2;
-  
+
   // Auto-select carrier if not specified
   const selectedCarrier = carrierType || getRecommendedCarrier(pixels.length);
   const carrierId = CARRIER_INFO[selectedCarrier].id;
-  
+
   // Validate payload size for OP_RETURN (Bitcoin Core v30+ supports 100KB)
-  if (selectedCarrier === "op_return" && payloadSize > 99900) {
-    throw new Error(`Payload too large for OP_RETURN (${payloadSize} bytes). Use Witness Data or Inscription.`);
+  if (selectedCarrier === 'op_return' && payloadSize > 99900) {
+    throw new Error(
+      `Payload too large for OP_RETURN (${payloadSize} bytes). Use Witness Data or Inscription.`
+    );
   }
-  
+
   const res = await fetch(`${WALLET_URL}/wallet/create-message`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       kind: 2, // State type for pixels
       body: encodedBody,
@@ -309,7 +309,7 @@ export async function createPixelTransaction(
 
   if (!res.ok) {
     const error = await res.text();
-    throw new Error(error || "Failed to create pixel transaction");
+    throw new Error(error || 'Failed to create pixel transaction');
   }
 
   return res.json();
@@ -317,11 +317,11 @@ export async function createPixelTransaction(
 
 export async function mineBlocks(count = 1): Promise<{ blocks: string[] }> {
   const res = await fetch(`${WALLET_URL}/wallet/mine`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ count }),
   });
-  if (!res.ok) throw new Error("Failed to mine blocks");
+  if (!res.ok) throw new Error('Failed to mine blocks');
   return res.json();
 }
 
@@ -350,8 +350,8 @@ function encodePixelsToHex(pixels: Pixel[]): string {
 
   // Convert to hex
   return Array.from(new Uint8Array(buffer))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
 }
 
 // Utilities
@@ -361,7 +361,7 @@ export function truncateTxid(txid: string, chars = 8): string {
 }
 
 export function rgbToHex(r: number, g: number, b: number): string {
-  return `#${[r, g, b].map((c) => c.toString(16).padStart(2, "0")).join("")}`;
+  return `#${[r, g, b].map((c) => c.toString(16).padStart(2, '0')).join('')}`;
 }
 
 export function hexToRgb(hex: string): { r: number; g: number; b: number } {
@@ -393,7 +393,7 @@ export function formatNumber(n: number): string {
  */
 export async function fetchWalletAddress(): Promise<string> {
   const res = await fetch(`${WALLET_URL}/wallet/address`);
-  if (!res.ok) throw new Error("Failed to fetch wallet address");
+  if (!res.ok) throw new Error('Failed to fetch wallet address');
   const data: WalletAddressResponse = await res.json();
   return data.address;
 }
@@ -403,7 +403,7 @@ export async function fetchWalletAddress(): Promise<string> {
  */
 export async function fetchWalletAddresses(): Promise<string[]> {
   const res = await fetch(`${WALLET_URL}/wallet/addresses`);
-  if (!res.ok) throw new Error("Failed to fetch wallet addresses");
+  if (!res.ok) throw new Error('Failed to fetch wallet addresses');
   const data: WalletAddressesResponse = await res.json();
   return data.addresses;
 }
@@ -414,7 +414,7 @@ export async function fetchWalletAddresses(): Promise<string[]> {
  */
 export async function fetchMyPixels(perPage: number = 1000): Promise<MyPixelsByAddressResponse> {
   const res = await fetch(`${API_URL}/pixels/my?per_page=${perPage}`);
-  if (!res.ok) throw new Error("Failed to fetch my pixels");
+  if (!res.ok) throw new Error('Failed to fetch my pixels');
   return res.json();
 }
 
@@ -423,7 +423,7 @@ export async function fetchMyPixels(perPage: number = 1000): Promise<MyPixelsByA
  */
 export async function fetchWalletUtxos(): Promise<WalletUtxo[]> {
   const res = await fetch(`${WALLET_URL}/wallet/utxos`);
-  if (!res.ok) throw new Error("Failed to fetch wallet UTXOs");
+  if (!res.ok) throw new Error('Failed to fetch wallet UTXOs');
   return res.json();
 }
 
@@ -431,8 +431,8 @@ export async function fetchWalletUtxos(): Promise<WalletUtxo[]> {
  * Fetch pixels painted by a specific address
  */
 export async function fetchPixelsByAddress(
-  address: string, 
-  page = 0, 
+  address: string,
+  page = 0,
   perPage = 100
 ): Promise<MyPixelsByAddressResponse> {
   const params = new URLSearchParams({
@@ -440,9 +440,9 @@ export async function fetchPixelsByAddress(
     page: page.toString(),
     per_page: perPage.toString(),
   });
-  
+
   const res = await fetch(`${API_URL}/pixels/by-address?${params}`);
-  if (!res.ok) throw new Error("Failed to fetch pixels by address");
+  if (!res.ok) throw new Error('Failed to fetch pixels by address');
   return res.json();
 }
 
@@ -453,14 +453,13 @@ export async function fetchPixelsByTxids(txids: string[]): Promise<MyPixelsRespo
   if (txids.length === 0) {
     return { pixels: [], total_pixels: 0, unique_transactions: 0 };
   }
-  
+
   const res = await fetch(`${API_URL}/pixels/by-txids`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ txids }),
   });
-  
-  if (!res.ok) throw new Error("Failed to fetch pixels by txids");
+
+  if (!res.ok) throw new Error('Failed to fetch pixels by txids');
   return res.json();
 }
-

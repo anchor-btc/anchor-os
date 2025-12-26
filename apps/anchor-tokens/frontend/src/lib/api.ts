@@ -2,8 +2,8 @@
  * Anchor Tokens API Client
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3016";
-const WALLET_URL = process.env.NEXT_PUBLIC_WALLET_URL || "http://localhost:3001";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3016';
+const WALLET_URL = process.env.NEXT_PUBLIC_WALLET_URL || 'http://localhost:3001';
 
 // ============================================================================
 // Types
@@ -112,7 +112,7 @@ async function fetchApi<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       ...options?.headers,
     },
   });
@@ -129,7 +129,7 @@ async function fetchWallet<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${WALLET_URL}${path}`, {
     ...options,
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       ...options?.headers,
     },
   });
@@ -147,7 +147,7 @@ async function fetchWallet<T>(path: string, options?: RequestInit): Promise<T> {
 // ============================================================================
 
 export async function getStats(): Promise<TokenStats> {
-  return fetchApi("/stats");
+  return fetchApi('/stats');
 }
 
 export async function getTokens(
@@ -159,7 +159,7 @@ export async function getTokens(
     page: page.toString(),
     per_page: perPage.toString(),
   });
-  if (search) params.set("search", search);
+  if (search) params.set('search', search);
   return fetchApi(`/tokens?${params}`);
 }
 
@@ -199,11 +199,8 @@ export async function getAddressBalances(address: string): Promise<TokenBalance[
   return fetchApi(`/address/${address}/balances`);
 }
 
-export async function getAddressUtxos(
-  address: string,
-  ticker?: string
-): Promise<TokenUtxo[]> {
-  const params = ticker ? `?ticker=${ticker}` : "";
+export async function getAddressUtxos(address: string, ticker?: string): Promise<TokenUtxo[]> {
+  const params = ticker ? `?ticker=${ticker}` : '';
   return fetchApi(`/address/${address}/utxos${params}`);
 }
 
@@ -256,29 +253,29 @@ export interface BurnRequest {
 }
 
 export async function createDeployTx(request: DeployRequest): Promise<CreateTxResponse> {
-  return fetchApi("/tx/deploy", {
-    method: "POST",
+  return fetchApi('/tx/deploy', {
+    method: 'POST',
     body: JSON.stringify(request),
   });
 }
 
 export async function createMintTx(request: MintRequest): Promise<CreateTxResponse> {
-  return fetchApi("/tx/mint", {
-    method: "POST",
+  return fetchApi('/tx/mint', {
+    method: 'POST',
     body: JSON.stringify(request),
   });
 }
 
 export async function createTransferTx(request: TransferRequest): Promise<CreateTxResponse> {
-  return fetchApi("/tx/transfer", {
-    method: "POST",
+  return fetchApi('/tx/transfer', {
+    method: 'POST',
     body: JSON.stringify(request),
   });
 }
 
 export async function createBurnTx(request: BurnRequest): Promise<CreateTxResponse> {
-  return fetchApi("/tx/burn", {
-    method: "POST",
+  return fetchApi('/tx/burn', {
+    method: 'POST',
     body: JSON.stringify(request),
   });
 }
@@ -288,23 +285,23 @@ export async function createBurnTx(request: BurnRequest): Promise<CreateTxRespon
 // ============================================================================
 
 export async function getWalletBalance(): Promise<WalletBalance> {
-  return fetchWallet("/wallet/balance");
+  return fetchWallet('/wallet/balance');
 }
 
 export async function getWalletAddress(): Promise<{ address: string }> {
-  return fetchWallet("/wallet/address");
+  return fetchWallet('/wallet/address');
 }
 
 export async function broadcastTx(hex: string): Promise<{ txid: string }> {
-  return fetchWallet("/wallet/broadcast", {
-    method: "POST",
+  return fetchWallet('/wallet/broadcast', {
+    method: 'POST',
     body: JSON.stringify({ hex }),
   });
 }
 
 export async function mineBlocks(count: number = 1): Promise<{ blocks: number }> {
-  return fetchWallet("/wallet/mine", {
-    method: "POST",
+  return fetchWallet('/wallet/mine', {
+    method: 'POST',
     body: JSON.stringify({ blocks: count }),
   });
 }
@@ -320,5 +317,5 @@ export interface WalletTokensResponse {
 }
 
 export async function getWalletTokens(): Promise<WalletTokensResponse> {
-  return fetchApi("/wallet/tokens");
+  return fetchApi('/wallet/tokens');
 }

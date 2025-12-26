@@ -1,18 +1,9 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useRef, useCallback } from "react";
-import {
-  Radio,
-  Pause,
-  Play,
-  Trash2,
-  ArrowDown,
-  MessageSquare,
-  Box,
-  Loader2,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { getIndexerWebSocketUrl, LiveMessageEvent, LiveMessage } from "@/lib/api";
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Radio, Pause, Play, Trash2, ArrowDown, MessageSquare, Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { getIndexerWebSocketUrl, LiveMessageEvent, LiveMessage } from '@/lib/api';
 
 export function LiveFeed() {
   const [messages, setMessages] = useState<LiveMessage[]>([]);
@@ -36,13 +27,13 @@ export function LiveFeed() {
         try {
           const data: LiveMessageEvent = JSON.parse(event.data);
 
-          if (data.event_type === "new_message" && data.message) {
+          if (data.event_type === 'new_message' && data.message) {
             if (isPaused) {
               pausedMessagesRef.current.push(data.message);
             } else {
               setMessages((prev) => [...prev.slice(-99), data.message!]);
             }
-          } else if (data.event_type === "stats" && data.stats) {
+          } else if (data.event_type === 'stats' && data.stats) {
             setStats({
               total: data.stats.total_messages,
               block: data.stats.last_indexed_block,
@@ -102,23 +93,27 @@ export function LiveFeed() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className={cn(
-            "w-10 h-10 rounded-lg flex items-center justify-center",
-            isConnected ? "bg-green-500/10" : "bg-red-500/10"
-          )}>
-            <Radio className={cn(
-              "w-5 h-5",
-              isConnected ? "text-green-500 animate-pulse" : "text-red-500"
-            )} />
+          <div
+            className={cn(
+              'w-10 h-10 rounded-lg flex items-center justify-center',
+              isConnected ? 'bg-green-500/10' : 'bg-red-500/10'
+            )}
+          >
+            <Radio
+              className={cn(
+                'w-5 h-5',
+                isConnected ? 'text-green-500 animate-pulse' : 'text-red-500'
+              )}
+            />
           </div>
           <div>
             <h2 className="font-semibold text-foreground">Live Feed</h2>
             <p className="text-sm text-muted-foreground">
-              {isConnected ? (
-                stats ? `Block ${stats.block.toLocaleString()} • ${stats.total.toLocaleString()} total` : "Connected"
-              ) : (
-                "Connecting..."
-              )}
+              {isConnected
+                ? stats
+                  ? `Block ${stats.block.toLocaleString()} • ${stats.total.toLocaleString()} total`
+                  : 'Connected'
+                : 'Connecting...'}
             </p>
           </div>
         </div>
@@ -130,22 +125,26 @@ export function LiveFeed() {
             </span>
           )}
           <button
-            onClick={() => isPaused ? handleResume() : setIsPaused(true)}
+            onClick={() => (isPaused ? handleResume() : setIsPaused(true))}
             className={cn(
-              "p-2 rounded-lg transition-colors",
-              isPaused ? "bg-green-500/20 text-green-400" : "bg-muted text-muted-foreground hover:bg-muted/80"
+              'p-2 rounded-lg transition-colors',
+              isPaused
+                ? 'bg-green-500/20 text-green-400'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80'
             )}
-            title={isPaused ? "Resume" : "Pause"}
+            title={isPaused ? 'Resume' : 'Pause'}
           >
             {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
           </button>
           <button
             onClick={() => setAutoScroll(!autoScroll)}
             className={cn(
-              "p-2 rounded-lg transition-colors",
-              autoScroll ? "bg-cyan-500/20 text-cyan-400" : "bg-muted text-muted-foreground hover:bg-muted/80"
+              'p-2 rounded-lg transition-colors',
+              autoScroll
+                ? 'bg-cyan-500/20 text-cyan-400'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80'
             )}
-            title={autoScroll ? "Auto-scroll ON" : "Auto-scroll OFF"}
+            title={autoScroll ? 'Auto-scroll ON' : 'Auto-scroll OFF'}
           >
             <ArrowDown className="w-4 h-4" />
           </button>
@@ -187,35 +186,35 @@ export function LiveFeed() {
 
 function LiveMessageRow({ message }: { message: LiveMessage }) {
   const kindColors: Record<string, string> = {
-    "Text": "text-orange-400",
-    "Canvas": "text-purple-400",
-    "Image": "text-pink-400",
-    "Map": "text-blue-400",
-    "DNS": "text-cyan-400",
-    "Proof": "text-emerald-400",
-    "Token Deploy": "text-amber-400",
-    "Token Mint": "text-amber-400",
-    "Token Transfer": "text-amber-400",
+    Text: 'text-orange-400',
+    Canvas: 'text-purple-400',
+    Image: 'text-pink-400',
+    Map: 'text-blue-400',
+    DNS: 'text-cyan-400',
+    Proof: 'text-emerald-400',
+    'Token Deploy': 'text-amber-400',
+    'Token Mint': 'text-amber-400',
+    'Token Transfer': 'text-amber-400',
   };
 
   const carrierColors: Record<string, string> = {
-    "OP_RETURN": "text-blue-400",
-    "Inscription": "text-orange-400",
-    "Stamps": "text-pink-400",
-    "Taproot Annex": "text-green-400",
-    "Witness Data": "text-purple-400",
+    OP_RETURN: 'text-blue-400',
+    Inscription: 'text-orange-400',
+    Stamps: 'text-pink-400',
+    'Taproot Annex': 'text-green-400',
+    'Witness Data': 'text-purple-400',
   };
 
   return (
     <div className="flex items-center gap-2 py-1 border-b border-slate-800 last:border-0">
-      <span className={cn("w-24 shrink-0", kindColors[message.kind_name] || "text-gray-400")}>
+      <span className={cn('w-24 shrink-0', kindColors[message.kind_name] || 'text-gray-400')}>
         {message.kind_name}
       </span>
-      <span className={cn("w-20 shrink-0", carrierColors[message.carrier_name] || "text-gray-400")}>
+      <span className={cn('w-20 shrink-0', carrierColors[message.carrier_name] || 'text-gray-400')}>
         {message.carrier_name}
       </span>
       <span className="text-slate-500 w-16 shrink-0 text-right">
-        #{message.block_height ?? "?"}
+        #{message.block_height ?? '?'}
       </span>
       <span className="text-slate-400 flex-1 truncate">
         {message.txid.slice(0, 16)}...:{message.vout}
@@ -228,4 +227,3 @@ function LiveMessageRow({ message }: { message: LiveMessage }) {
     </div>
   );
 }
-

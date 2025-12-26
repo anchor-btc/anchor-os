@@ -1,6 +1,6 @@
 /* Anchor UI Design System */
-@import "@AnchorProtocol/ui/styles/globals.css";
-@import "@AnchorProtocol/ui/styles/themes/oracles.css";
+@import '@AnchorProtocol/ui/styles/globals.css';
+@import '@AnchorProtocol/ui/styles/themes/oracles.css';
 
 /* App-specific overrides */
 :root {

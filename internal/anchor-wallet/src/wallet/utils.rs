@@ -46,4 +46,3 @@ pub fn extract_op_return_data(script: &ScriptBuf) -> Vec<u8> {
     }
     bytes.to_vec()
 }
-

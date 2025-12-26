@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { File, ExternalLink, Clock, CheckCircle, XCircle } from "lucide-react";
-import { formatFileSize, truncateHash } from "@/lib/hash";
-import { getExplorerTxUrl } from "@/lib/api";
+import Link from 'next/link';
+import { File, ExternalLink, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { formatFileSize } from '@/lib/hash';
+import { getExplorerTxUrl } from '@/lib/api';
 
 interface ProofCardProps {
   proof: {
@@ -24,7 +24,9 @@ interface ProofCardProps {
 }
 
 export function ProofCard({ proof, showDetails = false }: ProofCardProps) {
-  const mimeCategory = proof.mime_type?.split("/")[0] || "unknown";
+  // Intentionally unused for now, reserved for future filtering
+  const _mimeCategory = proof.mime_type?.split('/')[0] || 'unknown';
+  void _mimeCategory;
 
   return (
     <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4 hover:border-slate-600 transition-colors">
@@ -35,8 +37,11 @@ export function ProofCard({ proof, showDetails = false }: ProofCardProps) {
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="text-white font-medium truncate max-w-[180px]" title={proof.filename || "Unnamed file"}>
-                {proof.filename || "Unnamed file"}
+              <h3
+                className="text-white font-medium truncate max-w-[180px]"
+                title={proof.filename || 'Unnamed file'}
+              >
+                {proof.filename || 'Unnamed file'}
               </h3>
               {proof.is_revoked ? (
                 <span className="flex items-center gap-1 text-xs text-red-400 bg-red-500/20 px-2 py-0.5 rounded-full flex-shrink-0">
@@ -51,14 +56,14 @@ export function ProofCard({ proof, showDetails = false }: ProofCardProps) {
               )}
             </div>
             <p className="text-sm text-slate-400 mt-0.5 truncate">
-              {proof.mime_type || "application/octet-stream"}
+              {proof.mime_type || 'application/octet-stream'}
               {proof.file_size && ` • ${formatFileSize(proof.file_size)}`}
             </p>
           </div>
         </div>
 
         <Link
-          href={`/proof/${proof.file_hash}?algo=${proof.hash_algo_name.toLowerCase().replace("-", "")}`}
+          href={`/proof/${proof.file_hash}?algo=${proof.hash_algo_name.toLowerCase().replace('-', '')}`}
           className="flex items-center gap-1 text-sm text-emerald-500 hover:text-emerald-400 flex-shrink-0"
         >
           View
@@ -81,9 +86,7 @@ export function ProofCard({ proof, showDetails = false }: ProofCardProps) {
                 Copy
               </button>
             </div>
-            <p className="font-mono text-xs text-white break-all">
-              {proof.file_hash}
-            </p>
+            <p className="font-mono text-xs text-white break-all">{proof.file_hash}</p>
           </div>
 
           {/* Transaction */}
@@ -100,9 +103,7 @@ export function ProofCard({ proof, showDetails = false }: ProofCardProps) {
                 <ExternalLink className="w-3 h-3" />
               </a>
             </div>
-            <p className="font-mono text-xs text-white break-all">
-              {proof.txid}
-            </p>
+            <p className="font-mono text-xs text-white break-all">{proof.txid}</p>
           </div>
         </div>
       )}
@@ -113,9 +114,7 @@ export function ProofCard({ proof, showDetails = false }: ProofCardProps) {
           <Clock className="w-4 h-4" />
           <span>{new Date(proof.created_at).toLocaleDateString()}</span>
         </div>
-        {proof.block_height && (
-          <span>Block #{proof.block_height.toLocaleString()}</span>
-        )}
+        {proof.block_height && <span>Block #{proof.block_height.toLocaleString()}</span>}
       </div>
     </div>
   );

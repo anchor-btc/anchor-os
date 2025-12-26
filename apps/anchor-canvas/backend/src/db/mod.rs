@@ -4,8 +4,8 @@
 //! - `pixels` - Pixel state and history operations
 //! - `indexer` - Indexer state tracking
 
-mod pixels;
 mod indexer;
+mod pixels;
 
 use anyhow::Result;
 use sqlx::postgres::PgPool;

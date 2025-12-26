@@ -9,7 +9,7 @@ use bitcoincore_rpc::{Auth, Client, RpcApi};
 use std::sync::Arc;
 use tokio::time::{sleep, Duration};
 
-use crate::amm::{AmmState, INITIAL_LIQUIDITY};
+use crate::amm::INITIAL_LIQUIDITY;
 use crate::config::Config;
 use crate::db::Database;
 
@@ -181,7 +181,10 @@ impl Indexer {
     pub fn new(config: &Config, db: Arc<Database>) -> Result<Self> {
         let rpc = Client::new(
             &config.bitcoin_rpc_url,
-            Auth::UserPass(config.bitcoin_rpc_user.clone(), config.bitcoin_rpc_password.clone()),
+            Auth::UserPass(
+                config.bitcoin_rpc_user.clone(),
+                config.bitcoin_rpc_password.clone(),
+            ),
         )?;
 
         Ok(Self { db, rpc })
@@ -210,7 +213,9 @@ impl Indexer {
             let block: Block = deserialize(&block_bytes)?;
 
             self.process_block(&block, target_height).await?;
-            self.db.update_last_block(&block_hash[..], target_height).await?;
+            self.db
+                .update_last_block(&block_hash[..], target_height)
+                .await?;
 
             last_height = target_height;
             if target_height % 100 == 0 {

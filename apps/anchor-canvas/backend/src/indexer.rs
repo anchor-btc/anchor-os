@@ -23,8 +23,8 @@ use crate::models::Pixel;
 
 /// Parse pixel data from Anchor message body using StateSpec
 pub fn parse_pixel_payload(body: &[u8]) -> Result<Vec<Pixel>> {
-    let spec = StateSpec::from_bytes(body)
-        .map_err(|e| anyhow!("Failed to parse StateSpec: {}", e))?;
+    let spec =
+        StateSpec::from_bytes(body).map_err(|e| anyhow!("Failed to parse StateSpec: {}", e))?;
 
     let mut pixels = Vec::with_capacity(spec.pixels.len());
     for pixel_data in spec.pixels {
@@ -59,7 +59,10 @@ pub struct CanvasIndexer {
 impl CanvasIndexer {
     /// Create a new indexer
     pub fn new(db: Database, config: Config) -> Result<Self> {
-        let auth = Auth::UserPass(config.bitcoin_rpc_user.clone(), config.bitcoin_rpc_password.clone());
+        let auth = Auth::UserPass(
+            config.bitcoin_rpc_user.clone(),
+            config.bitcoin_rpc_password.clone(),
+        );
         let rpc = Client::new(&config.bitcoin_rpc_url, auth)?;
 
         Ok(Self {
@@ -114,11 +117,7 @@ impl CanvasIndexer {
             return Ok(());
         }
 
-        info!(
-            "Indexing blocks {} to {}",
-            last_indexed + 1,
-            current_height
-        );
+        info!("Indexing blocks {} to {}", last_indexed + 1, current_height);
 
         for height in (last_indexed + 1)..=current_height {
             self.index_block(height).await?;
@@ -132,17 +131,21 @@ impl CanvasIndexer {
         let block_hash = self.rpc.get_block_hash(height as u64)?;
         let block = self.rpc.get_block(&block_hash)?;
 
-        debug!("Indexing block {} with {} transactions", height, block.txdata.len());
+        debug!(
+            "Indexing block {} with {} transactions",
+            height,
+            block.txdata.len()
+        );
 
         let mut pixel_count = 0;
 
         for tx in &block.txdata {
             if let Some(pixels) = self.extract_pixels_from_tx(tx)? {
                 let txid = tx.compute_txid();
-                
+
                 // Extract creator address from the first input
                 let creator_address = self.get_creator_address(tx);
-                
+
                 for (vout, pixel) in pixels.iter().enumerate() {
                     self.db
                         .upsert_pixel(
@@ -173,7 +176,7 @@ impl CanvasIndexer {
 
         Ok(())
     }
-    
+
     /// Get the creator address from the transaction
     /// For Anchor transactions, we look at the change output (non-OP_RETURN outputs)
     /// This works for both regular transactions and inscriptions
@@ -182,7 +185,7 @@ impl CanvasIndexer {
         if tx.is_coinbase() {
             return None;
         }
-        
+
         // First try: Look for a change output in the transaction itself
         // Skip outputs that are OP_RETURN (nulldata) or zero value
         for output in &tx.output {
@@ -195,16 +198,18 @@ impl CanvasIndexer {
                 continue;
             }
             // Try to extract address from the script pubkey
-            if let Ok(addr) = bitcoin::Address::from_script(&output.script_pubkey, bitcoin::Network::Regtest) {
+            if let Ok(addr) =
+                bitcoin::Address::from_script(&output.script_pubkey, bitcoin::Network::Regtest)
+            {
                 return Some(addr.to_string());
             }
         }
-        
+
         // Fallback: Get the address from the first input's previous output
         if let Some(first_input) = tx.input.first() {
             let prev_txid = first_input.previous_output.txid;
             let prev_vout = first_input.previous_output.vout;
-            
+
             // Fetch the previous transaction to get the address
             match self.rpc.get_raw_transaction_info(&prev_txid, None) {
                 Ok(prev_tx_info) => {
@@ -219,7 +224,7 @@ impl CanvasIndexer {
                 }
             }
         }
-        
+
         None
     }
 
@@ -229,7 +234,7 @@ impl CanvasIndexer {
         // Use CarrierSelector to detect Anchor messages from all carriers
         let selector = CarrierSelector::new();
         let detected = selector.detect(tx);
-        
+
         for detection in detected {
             // Check if it's a State message (kind = 2) - used for pixels
             if matches!(detection.message.kind, AnchorKind::State) {
@@ -238,7 +243,7 @@ impl CanvasIndexer {
                     detection.message.body.len(),
                     detection.carrier_type
                 );
-                
+
                 // Parse the pixel payload
                 if let Ok(pixels) = parse_pixel_payload(&detection.message.body) {
                     if !pixels.is_empty() {
@@ -307,4 +312,3 @@ mod tests {
         assert_eq!(decoded.b, 32);
     }
 }
-

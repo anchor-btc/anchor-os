@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useTranslation } from "react-i18next";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   NodeConfig,
   NodeSettings,
@@ -10,30 +10,21 @@ import {
   updateNodeSettings,
   resetNodeSettings,
   restartContainer,
-} from "@/lib/api";
+} from '@/lib/api';
 import {
-  Settings,
   Network,
   Database,
   Shield,
   Server,
-  Wifi,
   HardDrive,
   Loader2,
   Save,
   RotateCw,
   AlertTriangle,
-  Info,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-import {
-  Section,
-  SectionHeader,
-  Grid,
-  ActionButton,
-  InfoBox,
-} from "@/components/ds";
+import { Section, SectionHeader, Grid, ActionButton } from '@/components/ds';
 
 interface NodeSettingsTabProps {
   nodeConfig: NodeConfig | undefined;
@@ -42,7 +33,7 @@ interface NodeSettingsTabProps {
 // Default node settings
 const DEFAULT_SETTINGS: NodeSettings = {
   // Network
-  network: "regtest",
+  network: 'regtest',
   listen: true,
   maxconnections: 125,
   bantime: 86400,
@@ -52,14 +43,14 @@ const DEFAULT_SETTINGS: NodeSettings = {
   minrelaytxfee: 0.00001,
   datacarriersize: 100000,
   // RPC
-  rpcuser: "anchor",
-  rpcpassword: "anchor",
+  rpcuser: 'anchor',
+  rpcpassword: 'anchor',
   rpcport: 18443,
   rpcthreads: 4,
   // Tor
-  proxy: "",
+  proxy: '',
   listenonion: false,
-  onlynet: "",
+  onlynet: '',
   // Performance
   dbcache: 450,
   prune: 0,
@@ -69,7 +60,7 @@ const DEFAULT_SETTINGS: NodeSettings = {
   logtimestamps: true,
 };
 
-export function NodeSettingsTab({ nodeConfig }: NodeSettingsTabProps) {
+export function NodeSettingsTab({}: NodeSettingsTabProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [settings, setSettings] = useState<NodeSettings>(DEFAULT_SETTINGS);
@@ -78,7 +69,7 @@ export function NodeSettingsTab({ nodeConfig }: NodeSettingsTabProps) {
 
   // Fetch settings from backend
   const { data: settingsData, isLoading } = useQuery({
-    queryKey: ["node-settings"],
+    queryKey: ['node-settings'],
     queryFn: fetchNodeSettings,
   });
 
@@ -101,7 +92,7 @@ export function NodeSettingsTab({ nodeConfig }: NodeSettingsTabProps) {
     onSuccess: () => {
       setSavedSettings(settings);
       setHasChanges(false);
-      queryClient.invalidateQueries({ queryKey: ["node-settings"] });
+      queryClient.invalidateQueries({ queryKey: ['node-settings'] });
     },
   });
 
@@ -112,16 +103,16 @@ export function NodeSettingsTab({ nodeConfig }: NodeSettingsTabProps) {
       setSettings(data.settings);
       setSavedSettings(data.settings);
       setHasChanges(false);
-      queryClient.invalidateQueries({ queryKey: ["node-settings"] });
+      queryClient.invalidateQueries({ queryKey: ['node-settings'] });
     },
   });
 
   // Restart node mutation
   const restartMutation = useMutation({
-    mutationFn: () => restartContainer("anchor-core-bitcoin"),
+    mutationFn: () => restartContainer('anchor-core-bitcoin'),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["node-status"] });
-      queryClient.invalidateQueries({ queryKey: ["node-config"] });
+      queryClient.invalidateQueries({ queryKey: ['node-status'] });
+      queryClient.invalidateQueries({ queryKey: ['node-config'] });
     },
   });
 
@@ -133,9 +124,11 @@ export function NodeSettingsTab({ nodeConfig }: NodeSettingsTabProps) {
     setSettings(savedSettings);
   };
 
-  const handleResetToDefaults = () => {
+  // Reserved for future use - resets to factory defaults
+  const _handleResetToDefaults = () => {
     resetMutation.mutate();
   };
+  void _handleResetToDefaults; // Suppress unused warning
 
   const updateSetting = <K extends keyof NodeSettings>(key: K, value: NodeSettings[K]) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
@@ -159,10 +152,13 @@ export function NodeSettingsTab({ nodeConfig }: NodeSettingsTabProps) {
           </div>
           <div>
             <p className="text-sm font-medium text-foreground">
-              {t("node.settingsWarning", "Note")}
+              {t('node.settingsWarning', 'Note')}
             </p>
             <p className="text-sm text-muted-foreground">
-              {t("node.settingsRequireRestart", "Most settings require a node restart to take effect.")}
+              {t(
+                'node.settingsRequireRestart',
+                'Most settings require a node restart to take effect.'
+              )}
             </p>
           </div>
         </div>
@@ -171,7 +167,7 @@ export function NodeSettingsTab({ nodeConfig }: NodeSettingsTabProps) {
           onClick={() => restartMutation.mutate()}
           loading={restartMutation.isPending}
           icon={RotateCw}
-          label={t("node.restartNode", "Restart Node")}
+          label={t('node.restartNode', 'Restart Node')}
         />
       </div>
 
@@ -180,21 +176,23 @@ export function NodeSettingsTab({ nodeConfig }: NodeSettingsTabProps) {
         <div className="flex items-center justify-between p-4 bg-warning/10 border border-warning/20 rounded-xl">
           <div className="flex items-center gap-2 text-warning">
             <AlertTriangle className="w-4 h-4" />
-            <span className="text-sm font-medium">{t("node.unsavedChanges", "You have unsaved changes")}</span>
+            <span className="text-sm font-medium">
+              {t('node.unsavedChanges', 'You have unsaved changes')}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <ActionButton
               variant="secondary"
               onClick={handleReset}
               icon={RotateCw}
-              label={t("common.reset", "Reset")}
+              label={t('common.reset', 'Reset')}
               disabled={saveMutation.isPending}
             />
             <ActionButton
               variant="primary"
               onClick={handleSave}
               icon={Save}
-              label={t("common.save", "Save")}
+              label={t('common.save', 'Save')}
               loading={saveMutation.isPending}
             />
           </div>
@@ -205,14 +203,17 @@ export function NodeSettingsTab({ nodeConfig }: NodeSettingsTabProps) {
       {saveMutation.isSuccess && (
         <div className="flex items-center justify-between p-4 bg-success/10 border border-success/20 rounded-xl">
           <p className="text-sm text-success">
-            {t("node.settingsSaved", "Settings saved successfully. Restart the node to apply changes.")}
+            {t(
+              'node.settingsSaved',
+              'Settings saved successfully. Restart the node to apply changes.'
+            )}
           </p>
           <ActionButton
             variant="restart"
             onClick={() => restartMutation.mutate()}
             loading={restartMutation.isPending}
             icon={RotateCw}
-            label={t("node.restartNode", "Restart Node")}
+            label={t('node.restartNode', 'Restart Node')}
           />
         </div>
       )}
@@ -220,7 +221,7 @@ export function NodeSettingsTab({ nodeConfig }: NodeSettingsTabProps) {
       {restartMutation.isSuccess && (
         <div className="p-4 bg-success/10 border border-success/20 rounded-xl">
           <p className="text-sm text-success">
-            {t("node.restartSuccess", "Node restarted successfully")}
+            {t('node.restartSuccess', 'Node restarted successfully')}
           </p>
         </div>
       )}
@@ -228,7 +229,7 @@ export function NodeSettingsTab({ nodeConfig }: NodeSettingsTabProps) {
       {restartMutation.isError && (
         <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-xl">
           <p className="text-sm text-destructive">
-            {t("node.restartError", "Failed to restart node")}
+            {t('node.restartError', 'Failed to restart node')}
           </p>
         </div>
       )}
@@ -236,7 +237,7 @@ export function NodeSettingsTab({ nodeConfig }: NodeSettingsTabProps) {
       {saveMutation.isError && (
         <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-xl">
           <p className="text-sm text-destructive">
-            {t("node.settingsError", "Failed to save settings. Please try again.")}
+            {t('node.settingsError', 'Failed to save settings. Please try again.')}
           </p>
         </div>
       )}
@@ -247,41 +248,41 @@ export function NodeSettingsTab({ nodeConfig }: NodeSettingsTabProps) {
           <SectionHeader
             icon={Network}
             iconColor="blue"
-            title={t("node.networkSettings", "Network")}
-            subtitle={t("node.networkSettingsDesc", "Connection and peer settings")}
+            title={t('node.networkSettings', 'Network')}
+            subtitle={t('node.networkSettingsDesc', 'Connection and peer settings')}
           />
           <div className="space-y-4">
             <SettingSelect
-              label={t("node.network", "Network")}
+              label={t('node.network', 'Network')}
               value={settings.network}
               options={[
-                { value: "regtest", label: "Regtest" },
-                { value: "testnet", label: "Testnet" },
-                { value: "signet", label: "Signet" },
-                { value: "mainnet", label: "Mainnet" },
+                { value: 'regtest', label: 'Regtest' },
+                { value: 'testnet', label: 'Testnet' },
+                { value: 'signet', label: 'Signet' },
+                { value: 'mainnet', label: 'Mainnet' },
               ]}
-              onChange={(v) => updateSetting("network", v)}
+              onChange={(v) => updateSetting('network', v)}
               restart
             />
             <SettingToggle
-              label={t("node.listen", "Accept Connections")}
-              description={t("node.listenDesc", "Accept incoming peer connections")}
+              label={t('node.listen', 'Accept Connections')}
+              description={t('node.listenDesc', 'Accept incoming peer connections')}
               checked={settings.listen}
-              onChange={(v) => updateSetting("listen", v)}
+              onChange={(v) => updateSetting('listen', v)}
               restart
             />
             <SettingNumber
-              label={t("node.maxConnections", "Max Connections")}
+              label={t('node.maxConnections', 'Max Connections')}
               value={settings.maxconnections}
-              onChange={(v) => updateSetting("maxconnections", v)}
+              onChange={(v) => updateSetting('maxconnections', v)}
               min={0}
               max={1000}
               restart
             />
             <SettingNumber
-              label={t("node.banTime", "Ban Time (seconds)")}
+              label={t('node.banTime', 'Ban Time (seconds)')}
               value={settings.bantime}
-              onChange={(v) => updateSetting("bantime", v)}
+              onChange={(v) => updateSetting('bantime', v)}
               min={0}
               restart
             />
@@ -293,37 +294,37 @@ export function NodeSettingsTab({ nodeConfig }: NodeSettingsTabProps) {
           <SectionHeader
             icon={Database}
             iconColor="purple"
-            title={t("node.mempoolSettings", "Mempool")}
-            subtitle={t("node.mempoolSettingsDesc", "Transaction pool configuration")}
+            title={t('node.mempoolSettings', 'Mempool')}
+            subtitle={t('node.mempoolSettingsDesc', 'Transaction pool configuration')}
           />
           <div className="space-y-4">
             <SettingNumber
-              label={t("node.maxMempool", "Max Mempool (MB)")}
+              label={t('node.maxMempool', 'Max Mempool (MB)')}
               value={settings.maxmempool}
-              onChange={(v) => updateSetting("maxmempool", v)}
+              onChange={(v) => updateSetting('maxmempool', v)}
               min={5}
               max={10000}
               restart
             />
             <SettingNumber
-              label={t("node.mempoolExpiry", "Mempool Expiry (hours)")}
+              label={t('node.mempoolExpiry', 'Mempool Expiry (hours)')}
               value={settings.mempoolexpiry}
-              onChange={(v) => updateSetting("mempoolexpiry", v)}
+              onChange={(v) => updateSetting('mempoolexpiry', v)}
               min={1}
               restart
             />
             <SettingNumber
-              label={t("node.minRelayFee", "Min Relay Fee (BTC/kB)")}
+              label={t('node.minRelayFee', 'Min Relay Fee (BTC/kB)')}
               value={settings.minrelaytxfee}
-              onChange={(v) => updateSetting("minrelaytxfee", v)}
+              onChange={(v) => updateSetting('minrelaytxfee', v)}
               min={0}
               step={0.00001}
               restart
             />
             <SettingNumber
-              label={t("node.datacarrierSize", "Datacarrier Size (bytes)")}
+              label={t('node.datacarrierSize', 'Datacarrier Size (bytes)')}
               value={settings.datacarriersize}
-              onChange={(v) => updateSetting("datacarriersize", v)}
+              onChange={(v) => updateSetting('datacarriersize', v)}
               min={0}
               max={100000}
               restart
@@ -336,35 +337,35 @@ export function NodeSettingsTab({ nodeConfig }: NodeSettingsTabProps) {
           <SectionHeader
             icon={Server}
             iconColor="green"
-            title={t("node.rpcSettings", "RPC")}
-            subtitle={t("node.rpcSettingsDesc", "Remote procedure call configuration")}
+            title={t('node.rpcSettings', 'RPC')}
+            subtitle={t('node.rpcSettingsDesc', 'Remote procedure call configuration')}
           />
           <div className="space-y-4">
             <SettingText
-              label={t("node.rpcUser", "RPC User")}
+              label={t('node.rpcUser', 'RPC User')}
               value={settings.rpcuser}
-              onChange={(v) => updateSetting("rpcuser", v)}
+              onChange={(v) => updateSetting('rpcuser', v)}
               restart
             />
             <SettingText
-              label={t("node.rpcPassword", "RPC Password")}
+              label={t('node.rpcPassword', 'RPC Password')}
               value={settings.rpcpassword}
-              onChange={(v) => updateSetting("rpcpassword", v)}
+              onChange={(v) => updateSetting('rpcpassword', v)}
               type="password"
               restart
             />
             <SettingNumber
-              label={t("node.rpcPort", "RPC Port")}
+              label={t('node.rpcPort', 'RPC Port')}
               value={settings.rpcport}
-              onChange={(v) => updateSetting("rpcport", v)}
+              onChange={(v) => updateSetting('rpcport', v)}
               min={1}
               max={65535}
               restart
             />
             <SettingNumber
-              label={t("node.rpcThreads", "RPC Threads")}
+              label={t('node.rpcThreads', 'RPC Threads')}
               value={settings.rpcthreads}
-              onChange={(v) => updateSetting("rpcthreads", v)}
+              onChange={(v) => updateSetting('rpcthreads', v)}
               min={1}
               max={64}
               restart
@@ -377,34 +378,34 @@ export function NodeSettingsTab({ nodeConfig }: NodeSettingsTabProps) {
           <SectionHeader
             icon={Shield}
             iconColor="purple"
-            title={t("node.torSettings", "Tor")}
-            subtitle={t("node.torSettingsDesc", "Privacy and anonymity settings")}
+            title={t('node.torSettings', 'Tor')}
+            subtitle={t('node.torSettingsDesc', 'Privacy and anonymity settings')}
           />
           <div className="space-y-4">
             <SettingText
-              label={t("node.proxy", "SOCKS5 Proxy")}
+              label={t('node.proxy', 'SOCKS5 Proxy')}
               value={settings.proxy}
-              onChange={(v) => updateSetting("proxy", v)}
+              onChange={(v) => updateSetting('proxy', v)}
               placeholder="networking-tor:9050"
               restart
             />
             <SettingToggle
-              label={t("node.listenOnion", "Listen on Onion")}
-              description={t("node.listenOnionDesc", "Accept connections via Tor hidden service")}
+              label={t('node.listenOnion', 'Listen on Onion')}
+              description={t('node.listenOnionDesc', 'Accept connections via Tor hidden service')}
               checked={settings.listenonion}
-              onChange={(v) => updateSetting("listenonion", v)}
+              onChange={(v) => updateSetting('listenonion', v)}
               restart
             />
             <SettingSelect
-              label={t("node.onlyNet", "Only Network")}
+              label={t('node.onlyNet', 'Only Network')}
               value={settings.onlynet}
               options={[
-                { value: "", label: t("node.allNetworks", "All Networks") },
-                { value: "onion", label: "Tor Only" },
-                { value: "ipv4", label: "IPv4 Only" },
-                { value: "ipv6", label: "IPv6 Only" },
+                { value: '', label: t('node.allNetworks', 'All Networks') },
+                { value: 'onion', label: 'Tor Only' },
+                { value: 'ipv4', label: 'IPv4 Only' },
+                { value: 'ipv6', label: 'IPv6 Only' },
               ]}
-              onChange={(v) => updateSetting("onlynet", v)}
+              onChange={(v) => updateSetting('onlynet', v)}
               restart
             />
           </div>
@@ -415,51 +416,51 @@ export function NodeSettingsTab({ nodeConfig }: NodeSettingsTabProps) {
           <SectionHeader
             icon={HardDrive}
             iconColor="orange"
-            title={t("node.performanceSettings", "Performance")}
-            subtitle={t("node.performanceSettingsDesc", "Database and indexing options")}
+            title={t('node.performanceSettings', 'Performance')}
+            subtitle={t('node.performanceSettingsDesc', 'Database and indexing options')}
           />
           <Grid cols={{ default: 1, md: 2 }} gap="md">
             <SettingNumber
-              label={t("node.dbCache", "DB Cache (MB)")}
+              label={t('node.dbCache', 'DB Cache (MB)')}
               value={settings.dbcache}
-              onChange={(v) => updateSetting("dbcache", v)}
+              onChange={(v) => updateSetting('dbcache', v)}
               min={4}
               max={16384}
               restart
             />
             <SettingNumber
-              label={t("node.prune", "Prune (MB, 0=disabled)")}
+              label={t('node.prune', 'Prune (MB, 0=disabled)')}
               value={settings.prune}
-              onChange={(v) => updateSetting("prune", v)}
+              onChange={(v) => updateSetting('prune', v)}
               min={0}
               restart
             />
             <SettingToggle
-              label={t("node.txIndex", "Transaction Index")}
-              description={t("node.txIndexDesc", "Maintain a full transaction index")}
+              label={t('node.txIndex', 'Transaction Index')}
+              description={t('node.txIndexDesc', 'Maintain a full transaction index')}
               checked={settings.txindex}
-              onChange={(v) => updateSetting("txindex", v)}
+              onChange={(v) => updateSetting('txindex', v)}
               restart
             />
             <SettingToggle
-              label={t("node.blockFilterIndex", "Block Filter Index")}
-              description={t("node.blockFilterIndexDesc", "Maintain compact block filter index")}
+              label={t('node.blockFilterIndex', 'Block Filter Index')}
+              description={t('node.blockFilterIndexDesc', 'Maintain compact block filter index')}
               checked={settings.blockfilterindex}
-              onChange={(v) => updateSetting("blockfilterindex", v)}
+              onChange={(v) => updateSetting('blockfilterindex', v)}
               restart
             />
             <SettingToggle
-              label={t("node.coinstatsIndex", "Coinstats Index")}
-              description={t("node.coinstatsIndexDesc", "Maintain UTXO set statistics index")}
+              label={t('node.coinstatsIndex', 'Coinstats Index')}
+              description={t('node.coinstatsIndexDesc', 'Maintain UTXO set statistics index')}
               checked={settings.coinstatsindex}
-              onChange={(v) => updateSetting("coinstatsindex", v)}
+              onChange={(v) => updateSetting('coinstatsindex', v)}
               restart
             />
             <SettingToggle
-              label={t("node.logTimestamps", "Log Timestamps")}
-              description={t("node.logTimestampsDesc", "Prepend timestamps to debug output")}
+              label={t('node.logTimestamps', 'Log Timestamps')}
+              description={t('node.logTimestampsDesc', 'Prepend timestamps to debug output')}
               checked={settings.logtimestamps}
-              onChange={(v) => updateSetting("logtimestamps", v)}
+              onChange={(v) => updateSetting('logtimestamps', v)}
               restart
             />
           </Grid>
@@ -491,21 +492,19 @@ function SettingToggle({
           <span className="text-sm font-medium text-foreground">{label}</span>
           {restart && <RestartBadge />}
         </div>
-        {description && (
-          <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
-        )}
+        {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
       </div>
       <button
         onClick={() => onChange(!checked)}
         className={cn(
-          "relative w-11 h-6 rounded-full transition-colors shrink-0",
-          checked ? "bg-primary" : "bg-muted"
+          'relative w-11 h-6 rounded-full transition-colors shrink-0',
+          checked ? 'bg-primary' : 'bg-muted'
         )}
       >
         <span
           className={cn(
-            "absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-all duration-200 shadow-sm",
-            checked && "translate-x-5"
+            'absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-all duration-200 shadow-sm',
+            checked && 'translate-x-5'
           )}
         />
       </button>
@@ -554,14 +553,14 @@ function SettingText({
   value,
   onChange,
   placeholder,
-  type = "text",
+  type = 'text',
   restart = false,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
-  type?: "text" | "password";
+  type?: 'text' | 'password';
   restart?: boolean;
 }) {
   return (
@@ -620,8 +619,7 @@ function RestartBadge() {
   return (
     <span className="text-[10px] bg-warning/10 text-warning px-1.5 py-0.5 rounded flex items-center gap-1">
       <RotateCw className="w-2.5 h-2.5" />
-      {t("node.restart", "Restart")}
+      {t('node.restart', 'Restart')}
     </span>
   );
 }
-

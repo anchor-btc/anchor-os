@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useState, useRef, useEffect } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { execContainer } from "@/lib/api";
-import { apps } from "@/lib/apps";
-import { Loader2, Terminal, X, Send, Trash2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useState, useRef, useEffect } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { execContainer } from '@/lib/api';
+import { apps } from '@/lib/apps';
+import { Loader2, Terminal, X, Send, Trash2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface MultiTerminalModalProps {
   containerNames: string[] | null;
@@ -34,22 +34,20 @@ function getContainerLabel(containerName: string): string {
     }
   }
   // Fallback: extract a readable name from container name
-  const parts = containerName.split("-");
+  const parts = containerName.split('-');
   return parts[parts.length - 1].charAt(0).toUpperCase() + parts[parts.length - 1].slice(1);
 }
 
 function getAppName(containerNames: string[]): string {
-  if (!containerNames.length) return "";
+  if (!containerNames.length) return '';
   // Find the app that contains these containers
-  const app = apps.find((a) => 
-    containerNames.some((name) => a.containers.includes(name))
-  );
+  const app = apps.find((a) => containerNames.some((name) => a.containers.includes(name)));
   return app?.name || containerNames[0];
 }
 
 export function MultiTerminalModal({ containerNames, onClose }: MultiTerminalModalProps) {
   const [activeTab, setActiveTab] = useState(0);
-  const [command, setCommand] = useState("");
+  const [command, setCommand] = useState('');
   const [tabStates, setTabStates] = useState<Record<string, TabState>>({});
   const outputEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -73,7 +71,7 @@ export function MultiTerminalModal({ containerNames, onClose }: MultiTerminalMod
         return newState;
       });
       setActiveTab(0);
-      setCommand("");
+      setCommand('');
     }
   }, [containerNames]);
 
@@ -116,7 +114,7 @@ export function MultiTerminalModal({ containerNames, onClose }: MultiTerminalMod
   // Auto-scroll to bottom
   useEffect(() => {
     if (outputEndRef.current) {
-      outputEndRef.current.scrollIntoView({ behavior: "smooth" });
+      outputEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [currentTabState?.history]);
 
@@ -124,14 +122,14 @@ export function MultiTerminalModal({ containerNames, onClose }: MultiTerminalMod
     e.preventDefault();
     if (!command.trim() || execMutation.isPending) return;
     execMutation.mutate(command);
-    setCommand("");
+    setCommand('');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (!currentTabState) return;
     const { commandHistory, historyIndex } = currentTabState;
 
-    if (e.key === "ArrowUp") {
+    if (e.key === 'ArrowUp') {
       e.preventDefault();
       if (commandHistory.length > 0) {
         const newIndex = historyIndex < commandHistory.length - 1 ? historyIndex + 1 : historyIndex;
@@ -141,9 +139,9 @@ export function MultiTerminalModal({ containerNames, onClose }: MultiTerminalMod
             [activeContainer]: { ...prev[activeContainer], historyIndex: newIndex },
           }));
         }
-        setCommand(commandHistory[commandHistory.length - 1 - newIndex] || "");
+        setCommand(commandHistory[commandHistory.length - 1 - newIndex] || '');
       }
-    } else if (e.key === "ArrowDown") {
+    } else if (e.key === 'ArrowDown') {
       e.preventDefault();
       if (historyIndex > 0) {
         const newIndex = historyIndex - 1;
@@ -153,7 +151,7 @@ export function MultiTerminalModal({ containerNames, onClose }: MultiTerminalMod
             [activeContainer]: { ...prev[activeContainer], historyIndex: newIndex },
           }));
         }
-        setCommand(commandHistory[commandHistory.length - 1 - newIndex] || "");
+        setCommand(commandHistory[commandHistory.length - 1 - newIndex] || '');
       } else if (historyIndex === 0) {
         if (activeContainer) {
           setTabStates((prev) => ({
@@ -161,7 +159,7 @@ export function MultiTerminalModal({ containerNames, onClose }: MultiTerminalMod
             [activeContainer]: { ...prev[activeContainer], historyIndex: -1 },
           }));
         }
-        setCommand("");
+        setCommand('');
       }
     }
   };
@@ -182,11 +180,11 @@ export function MultiTerminalModal({ containerNames, onClose }: MultiTerminalMod
   const history = currentTabState?.history || [];
 
   return (
-    <div 
+    <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
       onClick={onClose}
     >
-      <div 
+      <div
         className="w-full max-w-5xl max-h-[85vh] bg-card border border-border rounded-2xl overflow-hidden shadow-2xl flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
@@ -199,7 +197,7 @@ export function MultiTerminalModal({ containerNames, onClose }: MultiTerminalMod
             <div>
               <h3 className="font-semibold text-foreground">{appName}</h3>
               <p className="text-xs text-muted-foreground">
-                {hasTabs ? `${containerNames.length} containers` : "Container terminal"}
+                {hasTabs ? `${containerNames.length} containers` : 'Container terminal'}
               </p>
             </div>
           </div>
@@ -211,10 +209,7 @@ export function MultiTerminalModal({ containerNames, onClose }: MultiTerminalMod
             >
               <Trash2 className="w-4 h-4 text-muted-foreground" />
             </button>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-muted rounded-lg transition-colors"
-            >
+            <button onClick={onClose} className="p-2 hover:bg-muted rounded-lg transition-colors">
               <X className="w-4 h-4 text-muted-foreground" />
             </button>
           </div>
@@ -228,13 +223,13 @@ export function MultiTerminalModal({ containerNames, onClose }: MultiTerminalMod
                 key={name}
                 onClick={() => {
                   setActiveTab(index);
-                  setCommand("");
+                  setCommand('');
                 }}
                 className={cn(
-                  "px-4 py-2 text-sm font-medium rounded-lg transition-all",
+                  'px-4 py-2 text-sm font-medium rounded-lg transition-all',
                   activeTab === index
-                    ? "bg-emerald-500 text-white shadow-lg"
-                    : "bg-slate-700/50 text-slate-400 hover:text-slate-200 hover:bg-slate-700"
+                    ? 'bg-emerald-500 text-white shadow-lg'
+                    : 'bg-slate-700/50 text-slate-400 hover:text-slate-200 hover:bg-slate-700'
                 )}
               >
                 {getContainerLabel(name)}
@@ -244,7 +239,7 @@ export function MultiTerminalModal({ containerNames, onClose }: MultiTerminalMod
         )}
 
         {/* Terminal output */}
-        <div 
+        <div
           className="flex-1 overflow-auto p-4 bg-slate-900 font-mono text-sm leading-relaxed min-h-[300px]"
           onClick={() => inputRef.current?.focus()}
         >
@@ -264,18 +259,18 @@ export function MultiTerminalModal({ containerNames, onClose }: MultiTerminalMod
                     <span>{entry.command}</span>
                   </div>
                   {/* Output */}
-                  <div className={`mt-1 whitespace-pre-wrap break-all ${
-                    entry.exitCode !== 0 && entry.exitCode !== null 
-                      ? "text-red-400" 
-                      : "text-slate-300"
-                  }`}>
+                  <div
+                    className={`mt-1 whitespace-pre-wrap break-all ${
+                      entry.exitCode !== 0 && entry.exitCode !== null
+                        ? 'text-red-400'
+                        : 'text-slate-300'
+                    }`}
+                  >
                     {entry.output || <span className="text-slate-500">(no output)</span>}
                   </div>
                   {/* Exit code if non-zero */}
                   {entry.exitCode !== null && entry.exitCode !== 0 && (
-                    <div className="text-xs text-red-400 mt-1">
-                      Exit code: {entry.exitCode}
-                    </div>
+                    <div className="text-xs text-red-400 mt-1">Exit code: {entry.exitCode}</div>
                   )}
                 </div>
               ))}

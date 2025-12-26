@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { cn } from "../utils/cn";
+import * as React from 'react';
+import { cn } from '../utils/cn';
 
 export interface MiniFooterProps {
   /**
@@ -24,7 +24,7 @@ export interface MiniFooterProps {
 
 /**
  * MiniFooter - Minimal footer component for fullscreen apps.
- * 
+ *
  * Features:
  * - Fixed small height (h-7)
  * - Three-zone layout (left, center, right)
@@ -49,26 +49,20 @@ export function MiniFooter({
   return (
     <footer
       className={cn(
-        "h-7 flex items-center justify-between px-4",
-        "bg-white/[0.02] border-t border-white/[0.06]",
-        "text-[10px] text-white/30 font-mono",
+        'h-7 flex items-center justify-between px-4',
+        'bg-white/[0.02] border-t border-white/[0.06]',
+        'text-[10px] text-white/30 font-mono',
         className
       )}
     >
       {/* Left section */}
-      <div className="flex items-center gap-2">
-        {leftContent}
-      </div>
+      <div className="flex items-center gap-2">{leftContent}</div>
 
       {/* Center section */}
-      <div className="flex items-center gap-2">
-        {centerContent}
-      </div>
+      <div className="flex items-center gap-2">{centerContent}</div>
 
       {/* Right section */}
-      <div className="flex items-center gap-2">
-        {rightContent}
-      </div>
+      <div className="flex items-center gap-2">{rightContent}</div>
     </footer>
   );
 }
@@ -79,4 +73,3 @@ export function MiniFooter({
 export function MiniFooterDivider() {
   return <span className="text-white/10">|</span>;
 }
-

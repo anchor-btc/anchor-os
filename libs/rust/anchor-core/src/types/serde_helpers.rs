@@ -88,11 +88,8 @@ pub mod option_txid_hex {
     {
         let s: Option<String> = Option::deserialize(deserializer)?;
         match s {
-            Some(s) => Ok(Some(
-                Txid::from_str(&s).map_err(serde::de::Error::custom)?,
-            )),
+            Some(s) => Ok(Some(Txid::from_str(&s).map_err(serde::de::Error::custom)?)),
             None => Ok(None),
         }
     }
 }
-

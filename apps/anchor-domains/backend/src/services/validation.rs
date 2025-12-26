@@ -4,7 +4,9 @@
 //! across handlers.
 
 use crate::error::{AppError, AppResult};
-use crate::models::{is_valid_domain_name, is_txid_prefix, DnsRecord, DnsRecordInput, SUPPORTED_TLDS};
+use crate::models::{
+    is_txid_prefix, is_valid_domain_name, DnsRecord, DnsRecordInput, SUPPORTED_TLDS,
+};
 
 /// Validate a domain name and return an error if invalid
 pub fn validate_domain_name(name: &str) -> AppResult<()> {
@@ -30,10 +32,7 @@ pub fn validate_txid_prefix(prefix: &str) -> AppResult<()> {
 /// Convert and validate DNS record inputs to DnsRecord
 /// Returns an error if no valid records are provided
 pub fn validate_records(inputs: &[DnsRecordInput]) -> AppResult<Vec<DnsRecord>> {
-    let records: Vec<DnsRecord> = inputs
-        .iter()
-        .filter_map(|r| r.to_dns_record())
-        .collect();
+    let records: Vec<DnsRecord> = inputs.iter().filter_map(|r| r.to_dns_record()).collect();
 
     if records.is_empty() {
         return Err(AppError::bad_request(
@@ -47,7 +46,7 @@ pub fn validate_records(inputs: &[DnsRecordInput]) -> AppResult<Vec<DnsRecord>> 
 /// Parse a comma-separated list of txids (hex-encoded)
 pub fn parse_txid_list(txids_str: &str) -> AppResult<Vec<Vec<u8>>> {
     let txid_strings: Vec<&str> = txids_str.split(',').collect();
-    
+
     let txids: Result<Vec<Vec<u8>>, _> = txid_strings
         .iter()
         .filter(|s| !s.is_empty())
@@ -59,10 +58,7 @@ pub fn parse_txid_list(txids_str: &str) -> AppResult<Vec<Vec<u8>>> {
 
 /// Parse a list of txids from a Vec<String>
 pub fn parse_txids(txids: &[String]) -> AppResult<Vec<Vec<u8>>> {
-    let result: Result<Vec<Vec<u8>>, _> = txids
-        .iter()
-        .map(hex::decode)
-        .collect();
+    let result: Result<Vec<Vec<u8>>, _> = txids.iter().map(hex::decode).collect();
 
     result.map_err(|e| AppError::bad_request(format!("Invalid txid hex format: {}", e)))
 }
@@ -99,4 +95,3 @@ mod tests {
         assert!(validate_records(&inputs).is_err());
     }
 }
-

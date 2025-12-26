@@ -16,8 +16,7 @@ impl Config {
     /// Load configuration from environment variables
     pub fn from_env() -> Result<Self> {
         Ok(Self {
-            database_url: env::var("DATABASE_URL")
-                .context("DATABASE_URL must be set")?,
+            database_url: env::var("DATABASE_URL").context("DATABASE_URL must be set")?,
             port: env::var("PORT")
                 .unwrap_or_else(|_| "3101".to_string())
                 .parse()
@@ -25,4 +24,3 @@ impl Config {
         })
     }
 }
-

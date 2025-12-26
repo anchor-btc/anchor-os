@@ -1,30 +1,17 @@
-"use client";
+'use client';
 
-import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { 
-  getMyMessageRefs, 
-  fetchMyMessages,
-  clearMyMessageRefs,
-  type Message 
-} from "@/lib/api";
-import { MessageCard } from "@/components/message-card";
-import { Button, Card, Container } from "@AnchorProtocol/ui";
-import Link from "next/link";
-import {
-  Loader2,
-  User,
-  MessageSquare,
-  Reply,
-  RefreshCw,
-  PenLine,
-  Trash2,
-} from "lucide-react";
+import { useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { getMyMessageRefs, fetchMyMessages, clearMyMessageRefs } from '@/lib/api';
+import { MessageCard } from '@/components/message-card';
+import { Button, Card, Container } from '@AnchorProtocol/ui';
+import Link from 'next/link';
+import { Loader2, User, MessageSquare, Reply, RefreshCw, PenLine, Trash2 } from 'lucide-react';
 
-type TabType = "threads" | "replies";
+type TabType = 'threads' | 'replies';
 
 export default function MyThreadsPage() {
-  const [activeTab, setActiveTab] = useState<TabType>("threads");
+  const [activeTab, setActiveTab] = useState<TabType>('threads');
 
   // Get message refs from localStorage
   const messageRefs = useMemo(() => getMyMessageRefs(), []);
@@ -36,14 +23,14 @@ export default function MyThreadsPage() {
     refetch,
     isRefetching,
   } = useQuery({
-    queryKey: ["my-messages", messageRefs.map(r => `${r.txid}:${r.vout}`).join(",")],
+    queryKey: ['my-messages', messageRefs.map((r) => `${r.txid}:${r.vout}`).join(',')],
     queryFn: () => fetchMyMessages(messageRefs),
     enabled: messageRefs.length > 0,
   });
 
   // Filter based on active tab
   const filteredMessages = (messages ?? []).filter((msg) => {
-    if (activeTab === "threads") {
+    if (activeTab === 'threads') {
       // Root messages (no anchors)
       return msg.anchors.length === 0;
     } else {
@@ -64,15 +51,15 @@ export default function MyThreadsPage() {
 
   // Handle clear history
   const handleClearHistory = () => {
-    if (confirm("Are you sure you want to clear your message history? This cannot be undone.")) {
+    if (confirm('Are you sure you want to clear your message history? This cannot be undone.')) {
       clearMyMessageRefs();
       window.location.reload();
     }
   };
 
   // Count threads and replies
-  const threadCount = (messages ?? []).filter(m => m.anchors.length === 0).length;
-  const replyCount = (messages ?? []).filter(m => m.anchors.length > 0).length;
+  const threadCount = (messages ?? []).filter((m) => m.anchors.length === 0).length;
+  const replyCount = (messages ?? []).filter((m) => m.anchors.length > 0).length;
 
   return (
     <Container className="space-y-6">
@@ -84,17 +71,12 @@ export default function MyThreadsPage() {
             My Threads
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {messageRefs.length} message{messageRefs.length !== 1 ? "s" : ""} saved locally
+            {messageRefs.length} message{messageRefs.length !== 1 ? 's' : ''} saved locally
           </p>
         </div>
         <div className="flex items-center gap-3">
           {messageRefs.length > 0 && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleClearHistory}
-              title="Clear history"
-            >
+            <Button variant="ghost" size="icon" onClick={handleClearHistory} title="Clear history">
               <Trash2 className="h-4 w-4 text-muted-foreground" />
             </Button>
           )}
@@ -104,7 +86,7 @@ export default function MyThreadsPage() {
             onClick={() => refetch()}
             disabled={isRefetching || messageRefs.length === 0}
           >
-            <RefreshCw className={`h-4 w-4 ${isRefetching ? "animate-spin" : ""}`} />
+            <RefreshCw className={`h-4 w-4 ${isRefetching ? 'animate-spin' : ''}`} />
           </Button>
           <Button asChild variant="accent">
             <Link href="/compose" className="flex items-center gap-2">
@@ -118,22 +100,22 @@ export default function MyThreadsPage() {
       {/* Tabs */}
       <div className="flex gap-1 p-1 bg-secondary rounded-lg w-fit">
         <button
-          onClick={() => setActiveTab("threads")}
+          onClick={() => setActiveTab('threads')}
           className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            activeTab === "threads"
-              ? "bg-background text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
+            activeTab === 'threads'
+              ? 'bg-background text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
           }`}
         >
           <MessageSquare className="h-4 w-4" />
           My Threads ({threadCount})
         </button>
         <button
-          onClick={() => setActiveTab("replies")}
+          onClick={() => setActiveTab('replies')}
           className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-            activeTab === "replies"
-              ? "bg-background text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
+            activeTab === 'replies'
+              ? 'bg-background text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
           }`}
         >
           <Reply className="h-4 w-4" />
@@ -182,7 +164,7 @@ function EmptyState({ type, isNew = false }: { type: TabType; isNew?: boolean })
 
   return (
     <Card className="text-center py-16 bg-secondary/50">
-      {type === "threads" ? (
+      {type === 'threads' ? (
         <>
           <MessageSquare className="h-10 w-10 text-muted-foreground/30 mx-auto mb-4" />
           <h3 className="font-medium text-foreground mb-2">No threads in this tab</h3>

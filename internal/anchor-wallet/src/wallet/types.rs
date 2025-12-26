@@ -31,4 +31,3 @@ pub struct CreatedTransaction {
     pub carrier: u8,
     pub carrier_name: String,
 }
-

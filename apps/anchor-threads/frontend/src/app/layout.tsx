@@ -1,25 +1,25 @@
-import type { Metadata } from "next";
-import Script from "next/script";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import { Providers } from "./providers";
-import { AppShell, AppMain, APP_BACKGROUND_CLASS } from "@AnchorProtocol/ui";
-import { Header } from "@/components/header";
-import { ThreadsFooter } from "@/components/footer";
+import type { Metadata } from 'next';
+import Script from 'next/script';
+import { Geist, Geist_Mono } from 'next/font/google';
+import './globals.css';
+import { Providers } from './providers';
+import { AppShell, AppMain, APP_BACKGROUND_CLASS } from '@AnchorProtocol/ui';
+import { Header } from '@/components/header';
+import { ThreadsFooter } from '@/components/footer';
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
 });
 
 export const metadata: Metadata = {
-  title: "Anchor Threads",
-  description: "Explore and create threaded messages on Bitcoin",
+  title: 'Anchor Threads',
+  description: 'Explore and create threaded messages on Bitcoin',
 };
 
 export default function RootLayout({
@@ -33,10 +33,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} dark antialiased ${APP_BACKGROUND_CLASS}`}
       >
         <Providers>
-          <AppShell
-            header={<Header />}
-            footer={<ThreadsFooter />}
-          >
+          <AppShell header={<Header />} footer={<ThreadsFooter />}>
             <AppMain size="lg">{children}</AppMain>
           </AppShell>
         </Providers>
@@ -45,4 +42,3 @@ export default function RootLayout({
     </html>
   );
 }
-

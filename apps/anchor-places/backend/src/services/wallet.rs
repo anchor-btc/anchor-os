@@ -58,7 +58,10 @@ impl WalletClient {
             .await?;
 
         if !res.status().is_success() {
-            let error_text = res.text().await.unwrap_or_else(|_| "Unknown error".to_string());
+            let error_text = res
+                .text()
+                .await
+                .unwrap_or_else(|_| "Unknown error".to_string());
             return Err(AppError::internal(format!("Wallet error: {}", error_text)));
         }
 
@@ -95,7 +98,10 @@ impl WalletClient {
             .await?;
 
         if !res.status().is_success() {
-            let error_text = res.text().await.unwrap_or_else(|_| "Unknown error".to_string());
+            let error_text = res
+                .text()
+                .await
+                .unwrap_or_else(|_| "Unknown error".to_string());
             tracing::error!("Wallet reply error: {}", error_text);
             return Err(AppError::internal(format!("Wallet error: {}", error_text)));
         }
@@ -104,4 +110,3 @@ impl WalletClient {
         Ok(response)
     }
 }
-

@@ -1,9 +1,9 @@
-import { defineConfig } from 'vitepress'
+import { defineConfig } from 'vitepress';
 
 export default defineConfig({
   title: 'Anchor Protocol',
   description: 'Bitcoin-native messaging protocol for embedding structured data on-chain',
-  
+
   // Ignore dead links to external files during build
   ignoreDeadLinks: [
     /^\.\.\//, // Ignore relative links to parent directories
@@ -14,12 +14,18 @@ export default defineConfig({
     ['meta', { name: 'theme-color', content: '#f7931a' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:title', content: 'Anchor Protocol Documentation' }],
-    ['meta', { property: 'og:description', content: 'Bitcoin-native messaging protocol for embedding structured data on-chain' }],
+    [
+      'meta',
+      {
+        property: 'og:description',
+        content: 'Bitcoin-native messaging protocol for embedding structured data on-chain',
+      },
+    ],
   ],
 
   themeConfig: {
     logo: '/logo.svg',
-    
+
     nav: [
       { text: 'Quickstart', link: '/quickstart' },
       { text: 'Concepts', link: '/concepts/' },
@@ -59,31 +65,27 @@ export default defineConfig({
         { text: 'Threaded Messages', link: '/tutorials/threaded-messages' },
         { text: 'Reading Messages', link: '/tutorials/reading-messages' },
       ],
-      '/contributing/': [
-        { text: 'Getting Started', link: '/contributing/' },
-      ],
+      '/contributing/': [{ text: 'Getting Started', link: '/contributing/' }],
     },
 
-    socialLinks: [
-      { icon: 'github', link: 'https://github.com/AnchorProtocol/anchor' }
-    ],
+    socialLinks: [{ icon: 'github', link: 'https://github.com/AnchorProtocol/anchor' }],
 
     footer: {
       message: 'Released under the MIT License.',
-      copyright: 'Copyright © 2024 Anchor Protocol'
+      copyright: 'Copyright © 2024 Anchor Protocol',
     },
 
     search: {
-      provider: 'local'
+      provider: 'local',
     },
 
     outline: {
-      level: [2, 3]
+      level: [2, 3],
     },
 
     editLink: {
       pattern: 'https://github.com/AnchorProtocol/anchor/edit/main/sites/docs/:path',
-      text: 'Edit this page on GitHub'
-    }
-  }
-})
+      text: 'Edit this page on GitHub',
+    },
+  },
+});

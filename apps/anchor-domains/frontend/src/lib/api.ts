@@ -2,10 +2,11 @@
  * Anchor Domains API Client
  */
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3006";
-const WALLET_URL = process.env.NEXT_PUBLIC_WALLET_URL || "http://localhost:3001";
-const DASHBOARD_API_URL = process.env.NEXT_PUBLIC_DASHBOARD_API_URL || "http://localhost:8000";
-const DEFAULT_BLOCK_EXPLORER_URL = process.env.NEXT_PUBLIC_BLOCK_EXPLORER_URL || "http://localhost:4000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3006';
+const WALLET_URL = process.env.NEXT_PUBLIC_WALLET_URL || 'http://localhost:3001';
+const DASHBOARD_API_URL = process.env.NEXT_PUBLIC_DASHBOARD_API_URL || 'http://localhost:8000';
+const DEFAULT_BLOCK_EXPLORER_URL =
+  process.env.NEXT_PUBLIC_BLOCK_EXPLORER_URL || 'http://localhost:4000';
 
 // Explorer cache
 let cachedExplorerUrl: string | null = null;
@@ -20,13 +21,13 @@ async function fetchDefaultExplorerUrl(): Promise<string> {
       return data.base_url;
     }
   } catch (e) {
-    console.warn("Failed to fetch default explorer, using fallback:", e);
+    console.warn('Failed to fetch default explorer, using fallback:', e);
   }
   return DEFAULT_BLOCK_EXPLORER_URL;
 }
 
 // Initialize explorer URL on module load
-if (typeof window !== "undefined") {
+if (typeof window !== 'undefined') {
   fetchDefaultExplorerUrl();
 }
 
@@ -164,15 +165,15 @@ export interface PendingStatusResponse {
 
 export async function getStats(): Promise<DnsStats> {
   const res = await fetch(`${API_URL}/stats`);
-  if (!res.ok) throw new Error("Failed to fetch stats");
+  if (!res.ok) throw new Error('Failed to fetch stats');
   return res.json();
 }
 
 export async function resolveDomain(name: string): Promise<ResolveResponse> {
   const res = await fetch(`${API_URL}/resolve/${encodeURIComponent(name)}`);
   if (!res.ok) {
-    if (res.status === 404) throw new Error("Domain not found");
-    throw new Error("Failed to resolve domain");
+    if (res.status === 404) throw new Error('Domain not found');
+    throw new Error('Failed to resolve domain');
   }
   return res.json();
 }
@@ -180,8 +181,8 @@ export async function resolveDomain(name: string): Promise<ResolveResponse> {
 export async function resolveByTxid(prefix: string): Promise<ResolveResponse> {
   const res = await fetch(`${API_URL}/resolve/txid/${prefix}`);
   if (!res.ok) {
-    if (res.status === 404) throw new Error("Domain not found");
-    throw new Error("Failed to resolve domain");
+    if (res.status === 404) throw new Error('Domain not found');
+    throw new Error('Failed to resolve domain');
   }
   return res.json();
 }
@@ -195,18 +196,18 @@ export async function listDomains(
     page: page.toString(),
     per_page: perPage.toString(),
   });
-  if (search) params.set("search", search);
+  if (search) params.set('search', search);
 
   const res = await fetch(`${API_URL}/domains?${params}`);
-  if (!res.ok) throw new Error("Failed to fetch domains");
+  if (!res.ok) throw new Error('Failed to fetch domains');
   return res.json();
 }
 
 export async function getDomain(name: string): Promise<Domain> {
   const res = await fetch(`${API_URL}/domains/${encodeURIComponent(name)}`);
   if (!res.ok) {
-    if (res.status === 404) throw new Error("Domain not found");
-    throw new Error("Failed to fetch domain");
+    if (res.status === 404) throw new Error('Domain not found');
+    throw new Error('Failed to fetch domain');
   }
   return res.json();
 }
@@ -214,15 +215,15 @@ export async function getDomain(name: string): Promise<Domain> {
 export async function getDomainHistory(name: string): Promise<HistoryEntry[]> {
   const res = await fetch(`${API_URL}/domains/${encodeURIComponent(name)}/history`);
   if (!res.ok) {
-    if (res.status === 404) throw new Error("Domain not found");
-    throw new Error("Failed to fetch history");
+    if (res.status === 404) throw new Error('Domain not found');
+    throw new Error('Failed to fetch history');
   }
   return res.json();
 }
 
 export async function checkAvailability(name: string): Promise<AvailabilityResponse> {
   const res = await fetch(`${API_URL}/available/${encodeURIComponent(name)}`);
-  if (!res.ok) throw new Error("Failed to check availability");
+  if (!res.ok) throw new Error('Failed to check availability');
   return res.json();
 }
 
@@ -232,13 +233,13 @@ export async function registerDomain(
   carrier?: number
 ): Promise<CreateTxResponse> {
   const res = await fetch(`${API_URL}/register`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name, records, carrier }),
   });
   if (!res.ok) {
     const error = await res.text();
-    throw new Error(error || "Failed to register domain");
+    throw new Error(error || 'Failed to register domain');
   }
   return res.json();
 }
@@ -249,27 +250,25 @@ export async function updateDomain(
   carrier?: number
 ): Promise<CreateTxResponse> {
   const res = await fetch(`${API_URL}/update/${encodeURIComponent(name)}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ records, carrier }),
   });
   if (!res.ok) {
     const error = await res.text();
-    throw new Error(error || "Failed to update domain");
+    throw new Error(error || 'Failed to update domain');
   }
   return res.json();
 }
 
-export async function getDomainsByOwner(
-  txids: string[]
-): Promise<DomainListItem[]> {
+export async function getDomainsByOwner(txids: string[]): Promise<DomainListItem[]> {
   const res = await fetch(`${API_URL}/domains/by-owner`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ txids }),
   });
   if (!res.ok) {
-    throw new Error("Failed to fetch domains by owner");
+    throw new Error('Failed to fetch domains by owner');
   }
   return res.json();
 }
@@ -278,13 +277,13 @@ export async function getDomainsByOwner(
 
 export async function getPendingStatus(name: string): Promise<PendingStatusResponse> {
   const res = await fetch(`${API_URL}/pending/${encodeURIComponent(name)}`);
-  if (!res.ok) throw new Error("Failed to fetch pending status");
+  if (!res.ok) throw new Error('Failed to fetch pending status');
   return res.json();
 }
 
 export async function listPendingTransactions(): Promise<PendingTransaction[]> {
   const res = await fetch(`${API_URL}/pending`);
-  if (!res.ok) throw new Error("Failed to fetch pending transactions");
+  if (!res.ok) throw new Error('Failed to fetch pending transactions');
   return res.json();
 }
 
@@ -292,13 +291,13 @@ export async function listPendingTransactions(): Promise<PendingTransaction[]> {
 
 export async function getWalletBalance(): Promise<WalletBalance> {
   const res = await fetch(`${WALLET_URL}/wallet/balance`);
-  if (!res.ok) throw new Error("Failed to fetch wallet balance");
+  if (!res.ok) throw new Error('Failed to fetch wallet balance');
   return res.json();
 }
 
 export async function getWalletUtxos(): Promise<WalletUtxo[]> {
   const res = await fetch(`${WALLET_URL}/wallet/utxos`);
-  if (!res.ok) throw new Error("Failed to fetch wallet UTXOs");
+  if (!res.ok) throw new Error('Failed to fetch wallet UTXOs');
   return res.json();
 }
 
@@ -311,16 +310,16 @@ export async function getWalletTransactions(): Promise<string[]> {
 
 export async function mineBlocks(count = 1): Promise<{ blocks: number }> {
   const res = await fetch(`${WALLET_URL}/wallet/mine`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ blocks: count }),
   });
-  if (!res.ok) throw new Error("Failed to mine blocks");
+  if (!res.ok) throw new Error('Failed to mine blocks');
   return res.json();
 }
 
 // Identity Types
-export type IdentityType = "nostr" | "pubky";
+export type IdentityType = 'nostr' | 'pubky';
 
 export interface WalletIdentity {
   id: string;
@@ -339,7 +338,7 @@ export interface IdentitiesResponse {
 
 export async function getWalletIdentities(): Promise<IdentitiesResponse> {
   const res = await fetch(`${WALLET_URL}/wallet/identities`);
-  if (!res.ok) throw new Error("Failed to fetch wallet identities");
+  if (!res.ok) throw new Error('Failed to fetch wallet identities');
   return res.json();
 }
 
@@ -351,7 +350,7 @@ export function formatIdentityAsTxt(identity: WalletIdentity): string {
   if (identity.formatted_public_key) {
     return identity.formatted_public_key;
   }
-  const prefix = identity.identity_type === "nostr" ? "npub1" : "pk:";
+  const prefix = identity.identity_type === 'nostr' ? 'npub1' : 'pk:';
   return `${prefix}${identity.public_key}`;
 }
 
@@ -371,7 +370,7 @@ export interface ListIdentitiesResponse {
 
 export async function listDomainIdentities(domain: string): Promise<ListIdentitiesResponse> {
   const res = await fetch(`${API_URL}/domains/${encodeURIComponent(domain)}/identities`);
-  if (!res.ok) throw new Error("Failed to fetch domain identities");
+  if (!res.ok) throw new Error('Failed to fetch domain identities');
   return res.json();
 }
 
@@ -391,21 +390,21 @@ export function truncateTxid(txid: string, length = 8): string {
 
 export function getRecordTypeColor(type: string): string {
   switch (type.toUpperCase()) {
-    case "A":
-      return "bg-green-100 text-green-800";
-    case "AAAA":
-      return "bg-blue-100 text-blue-800";
-    case "CNAME":
-      return "bg-purple-100 text-purple-800";
-    case "TXT":
-      return "bg-yellow-100 text-yellow-800";
-    case "MX":
-      return "bg-red-100 text-red-800";
-    case "NS":
-      return "bg-indigo-100 text-indigo-800";
-    case "SRV":
-      return "bg-pink-100 text-pink-800";
+    case 'A':
+      return 'bg-green-100 text-green-800';
+    case 'AAAA':
+      return 'bg-blue-100 text-blue-800';
+    case 'CNAME':
+      return 'bg-purple-100 text-purple-800';
+    case 'TXT':
+      return 'bg-yellow-100 text-yellow-800';
+    case 'MX':
+      return 'bg-red-100 text-red-800';
+    case 'NS':
+      return 'bg-indigo-100 text-indigo-800';
+    case 'SRV':
+      return 'bg-pink-100 text-pink-800';
     default:
-      return "bg-gray-100 text-gray-800";
+      return 'bg-gray-100 text-gray-800';
   }
 }

@@ -7,4 +7,3 @@ mod wallet_client;
 
 pub use messages::MessageGenerator;
 pub use types::CarrierType;
-

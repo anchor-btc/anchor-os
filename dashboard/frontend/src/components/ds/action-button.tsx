@@ -1,10 +1,17 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { Play, Square, RotateCw, RefreshCw, Loader2, type LucideIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
+import * as React from 'react';
+import { Play, Square, RotateCw, RefreshCw, Loader2, type LucideIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-export type ActionVariant = "start" | "stop" | "restart" | "refresh" | "primary" | "secondary" | "destructive";
+export type ActionVariant =
+  | 'start'
+  | 'stop'
+  | 'restart'
+  | 'refresh'
+  | 'primary'
+  | 'secondary'
+  | 'destructive';
 
 const variantConfig: Record<
   ActionVariant,
@@ -17,35 +24,35 @@ const variantConfig: Record<
 > = {
   start: {
     icon: Play,
-    label: "Start",
-    className: "bg-success/10 hover:bg-success/20 text-success",
+    label: 'Start',
+    className: 'bg-success/10 hover:bg-success/20 text-success',
   },
   stop: {
     icon: Square,
-    label: "Stop",
-    className: "bg-muted hover:bg-error/20 text-muted-foreground hover:text-error",
+    label: 'Stop',
+    className: 'bg-muted hover:bg-error/20 text-muted-foreground hover:text-error',
   },
   restart: {
     icon: RotateCw,
-    label: "Restart",
-    className: "bg-muted hover:bg-warning/20 text-muted-foreground hover:text-warning",
+    label: 'Restart',
+    className: 'bg-muted hover:bg-warning/20 text-muted-foreground hover:text-warning',
   },
   refresh: {
     icon: RefreshCw,
-    label: "Refresh",
-    className: "bg-muted hover:bg-muted/80 text-muted-foreground",
+    label: 'Refresh',
+    className: 'bg-muted hover:bg-muted/80 text-muted-foreground',
   },
   primary: {
-    label: "Submit",
-    className: "bg-primary hover:bg-primary/90 text-primary-foreground",
+    label: 'Submit',
+    className: 'bg-primary hover:bg-primary/90 text-primary-foreground',
   },
   secondary: {
-    label: "Cancel",
-    className: "bg-muted hover:bg-muted/80 text-foreground",
+    label: 'Cancel',
+    className: 'bg-muted hover:bg-muted/80 text-foreground',
   },
   destructive: {
-    label: "Delete",
-    className: "bg-destructive hover:bg-destructive/90 text-destructive-foreground",
+    label: 'Delete',
+    className: 'bg-destructive hover:bg-destructive/90 text-destructive-foreground',
   },
 };
 
@@ -99,9 +106,9 @@ export function ActionButton({
       onClick={onClick}
       disabled={disabled || loading}
       className={cn(
-        "flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50",
+        'flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50',
         config.className,
-        fullWidth && "flex-1",
+        fullWidth && 'flex-1',
         className
       )}
     >
@@ -145,17 +152,11 @@ export function RefreshButton({
       onClick={onClick}
       disabled={disabled || loading}
       className={cn(
-        "p-2 bg-muted hover:bg-muted/80 rounded-lg transition-colors disabled:opacity-50",
+        'p-2 bg-muted hover:bg-muted/80 rounded-lg transition-colors disabled:opacity-50',
         className
       )}
     >
-      <RefreshCw
-        className={cn(
-          "w-4 h-4 text-muted-foreground",
-          loading && "animate-spin"
-        )}
-      />
+      <RefreshCw className={cn('w-4 h-4 text-muted-foreground', loading && 'animate-spin')} />
     </button>
   );
 }
-

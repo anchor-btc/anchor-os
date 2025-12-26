@@ -4,7 +4,9 @@ use anyhow::Result;
 use tracing::debug;
 
 use crate::config::{CANVAS_HEIGHT, CANVAS_WIDTH};
-use crate::models::{CanvasStats, PixelHistoryEntry, PixelInfo, PixelState, RecentPixel, UserPixel};
+use crate::models::{
+    CanvasStats, PixelHistoryEntry, PixelInfo, PixelState, RecentPixel, UserPixel,
+};
 
 use super::Database;
 
@@ -69,7 +71,10 @@ impl Database {
         .execute(&self.pool)
         .await?;
 
-        debug!("Upserted pixel ({}, {}) with color ({}, {}, {}) by {:?}", x, y, r, g, b, creator_address);
+        debug!(
+            "Upserted pixel ({}, {}) with color ({}, {}, {}) by {:?}",
+            x, y, r, g, b, creator_address
+        );
         Ok(())
     }
 
@@ -101,18 +106,27 @@ impl Database {
 
     /// Get a single pixel's current state
     pub async fn get_pixel(&self, x: i32, y: i32) -> Result<Option<PixelState>> {
-        let row: Option<(i32, i32, i16, i16, i16, Vec<u8>, i32, Option<i32>, chrono::DateTime<chrono::Utc>)> =
-            sqlx::query_as(
-                r#"
+        let row: Option<(
+            i32,
+            i32,
+            i16,
+            i16,
+            i16,
+            Vec<u8>,
+            i32,
+            Option<i32>,
+            chrono::DateTime<chrono::Utc>,
+        )> = sqlx::query_as(
+            r#"
                 SELECT x, y, r, g, b, last_txid, last_vout, last_block_height, updated_at
                 FROM pixel_state
                 WHERE x = $1 AND y = $2
                 "#,
-            )
-            .bind(x)
-            .bind(y)
-            .fetch_optional(&self.pool)
-            .await?;
+        )
+        .bind(x)
+        .bind(y)
+        .fetch_optional(&self.pool)
+        .await?;
 
         Ok(row.map(|r| PixelState {
             x: r.0,
@@ -128,22 +142,34 @@ impl Database {
     }
 
     /// Get pixel history
-    pub async fn get_pixel_history(&self, x: i32, y: i32, limit: i32) -> Result<Vec<PixelHistoryEntry>> {
-        let rows: Vec<(i16, i16, i16, Vec<u8>, i32, Option<i32>, chrono::DateTime<chrono::Utc>)> =
-            sqlx::query_as(
-                r#"
+    pub async fn get_pixel_history(
+        &self,
+        x: i32,
+        y: i32,
+        limit: i32,
+    ) -> Result<Vec<PixelHistoryEntry>> {
+        let rows: Vec<(
+            i16,
+            i16,
+            i16,
+            Vec<u8>,
+            i32,
+            Option<i32>,
+            chrono::DateTime<chrono::Utc>,
+        )> = sqlx::query_as(
+            r#"
                 SELECT r, g, b, txid, vout, block_height, created_at
                 FROM pixel_history
                 WHERE x = $1 AND y = $2
                 ORDER BY created_at DESC
                 LIMIT $3
                 "#,
-            )
-            .bind(x)
-            .bind(y)
-            .bind(limit)
-            .fetch_all(&self.pool)
-            .await?;
+        )
+        .bind(x)
+        .bind(y)
+        .bind(limit)
+        .fetch_all(&self.pool)
+        .await?;
 
         Ok(rows
             .into_iter()
@@ -163,23 +189,36 @@ impl Database {
     pub async fn get_pixel_info(&self, x: i32, y: i32) -> Result<PixelInfo> {
         let current = self.get_pixel(x, y).await?;
         let history = self.get_pixel_history(x, y, 50).await?;
-        Ok(PixelInfo { x, y, current, history })
+        Ok(PixelInfo {
+            x,
+            y,
+            current,
+            history,
+        })
     }
 
     /// Get recent pixel changes
     pub async fn get_recent_pixels(&self, limit: i32) -> Result<Vec<RecentPixel>> {
-        let rows: Vec<(i32, i32, i16, i16, i16, Vec<u8>, Option<i32>, chrono::DateTime<chrono::Utc>)> =
-            sqlx::query_as(
-                r#"
+        let rows: Vec<(
+            i32,
+            i32,
+            i16,
+            i16,
+            i16,
+            Vec<u8>,
+            Option<i32>,
+            chrono::DateTime<chrono::Utc>,
+        )> = sqlx::query_as(
+            r#"
                 SELECT x, y, r, g, b, last_txid, last_block_height, updated_at
                 FROM pixel_state
                 ORDER BY updated_at DESC
                 LIMIT $1
                 "#,
-            )
-            .bind(limit)
-            .fetch_all(&self.pool)
-            .await?;
+        )
+        .bind(limit)
+        .fetch_all(&self.pool)
+        .await?;
 
         Ok(rows
             .into_iter()
@@ -244,18 +283,27 @@ impl Database {
             return Ok(vec![]);
         }
 
-        let rows: Vec<(i32, i32, i16, i16, i16, Vec<u8>, i32, Option<i32>, chrono::DateTime<chrono::Utc>)> =
-            sqlx::query_as(
-                r#"
+        let rows: Vec<(
+            i32,
+            i32,
+            i16,
+            i16,
+            i16,
+            Vec<u8>,
+            i32,
+            Option<i32>,
+            chrono::DateTime<chrono::Utc>,
+        )> = sqlx::query_as(
+            r#"
                 SELECT x, y, r, g, b, txid, vout, block_height, created_at
                 FROM pixel_history
                 WHERE txid = ANY($1)
                 ORDER BY created_at DESC
                 "#,
-            )
-            .bind(txids)
-            .fetch_all(&self.pool)
-            .await?;
+        )
+        .bind(txids)
+        .fetch_all(&self.pool)
+        .await?;
 
         Ok(rows
             .into_iter()
@@ -296,22 +344,36 @@ impl Database {
     }
 
     /// Get pixels painted by a specific address
-    pub async fn get_pixels_by_address(&self, address: &str, limit: i32, offset: i32) -> Result<Vec<UserPixel>> {
-        let rows: Vec<(i32, i32, i16, i16, i16, Vec<u8>, i32, Option<i32>, chrono::DateTime<chrono::Utc>)> =
-            sqlx::query_as(
-                r#"
+    pub async fn get_pixels_by_address(
+        &self,
+        address: &str,
+        limit: i32,
+        offset: i32,
+    ) -> Result<Vec<UserPixel>> {
+        let rows: Vec<(
+            i32,
+            i32,
+            i16,
+            i16,
+            i16,
+            Vec<u8>,
+            i32,
+            Option<i32>,
+            chrono::DateTime<chrono::Utc>,
+        )> = sqlx::query_as(
+            r#"
                 SELECT x, y, r, g, b, txid, vout, block_height, created_at
                 FROM pixel_history
                 WHERE creator_address = $1
                 ORDER BY created_at DESC
                 LIMIT $2 OFFSET $3
                 "#,
-            )
-            .bind(address)
-            .bind(limit)
-            .bind(offset)
-            .fetch_all(&self.pool)
-            .await?;
+        )
+        .bind(address)
+        .bind(limit)
+        .bind(offset)
+        .fetch_all(&self.pool)
+        .await?;
 
         Ok(rows
             .into_iter()
@@ -349,25 +411,38 @@ impl Database {
     }
 
     /// Get pixels painted by multiple addresses
-    pub async fn get_pixels_by_addresses(&self, addresses: &[String], limit: i32) -> Result<Vec<UserPixel>> {
+    pub async fn get_pixels_by_addresses(
+        &self,
+        addresses: &[String],
+        limit: i32,
+    ) -> Result<Vec<UserPixel>> {
         if addresses.is_empty() {
             return Ok(vec![]);
         }
 
-        let rows: Vec<(i32, i32, i16, i16, i16, Vec<u8>, i32, Option<i32>, chrono::DateTime<chrono::Utc>)> =
-            sqlx::query_as(
-                r#"
+        let rows: Vec<(
+            i32,
+            i32,
+            i16,
+            i16,
+            i16,
+            Vec<u8>,
+            i32,
+            Option<i32>,
+            chrono::DateTime<chrono::Utc>,
+        )> = sqlx::query_as(
+            r#"
                 SELECT x, y, r, g, b, txid, vout, block_height, created_at
                 FROM pixel_history
                 WHERE creator_address = ANY($1)
                 ORDER BY created_at DESC
                 LIMIT $2
                 "#,
-            )
-            .bind(addresses)
-            .bind(limit)
-            .fetch_all(&self.pool)
-            .await?;
+        )
+        .bind(addresses)
+        .bind(limit)
+        .fetch_all(&self.pool)
+        .await?;
 
         Ok(rows
             .into_iter()
@@ -386,7 +461,10 @@ impl Database {
     }
 
     /// Get pixel statistics for multiple addresses
-    pub async fn get_pixels_stats_by_addresses(&self, addresses: &[String]) -> Result<(i64, i64, i64)> {
+    pub async fn get_pixels_stats_by_addresses(
+        &self,
+        addresses: &[String],
+    ) -> Result<(i64, i64, i64)> {
         if addresses.is_empty() {
             return Ok((0, 0, 0));
         }
@@ -408,4 +486,3 @@ impl Database {
         Ok(row)
     }
 }
-

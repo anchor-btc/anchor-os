@@ -28,4 +28,3 @@ describe('Anchor Places Home', () => {
     cy.get('input[type="text"], input[type="search"]').should('exist');
   });
 });
-

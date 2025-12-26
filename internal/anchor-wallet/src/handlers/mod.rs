@@ -20,12 +20,11 @@ mod transaction;
 mod wallet;
 
 // Re-export all handlers
-pub use health::*;
-pub use wallet::*;
-pub use message::*;
-pub use transaction::*;
-pub use locks::*;
 pub use assets::*;
 pub use backup::*;
+pub use health::*;
 pub use identity::*;
-
+pub use locks::*;
+pub use message::*;
+pub use transaction::*;
+pub use wallet::*;

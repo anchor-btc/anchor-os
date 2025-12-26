@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { Highlight, themes } from "prism-react-renderer";
+import { Highlight, themes } from 'prism-react-renderer';
 
 interface CodeBlockProps {
   code: string;
-  language: "typescript" | "rust" | "bash" | "json";
+  language: 'typescript' | 'rust' | 'bash' | 'json';
   title?: string;
 }
 
@@ -20,7 +20,7 @@ export function CodeBlock({ code, language, title }: CodeBlockProps) {
         {({ className, style, tokens, getLineProps, getTokenProps }) => (
           <pre
             className={`${className} p-4 overflow-x-auto text-sm`}
-            style={{ ...style, margin: 0, background: "#011627" }}
+            style={{ ...style, margin: 0, background: '#011627' }}
           >
             {tokens.map((line, i) => (
               <div key={i} {...getLineProps({ line })}>
@@ -38,4 +38,3 @@ export function CodeBlock({ code, language, title }: CodeBlockProps) {
     </div>
   );
 }
-

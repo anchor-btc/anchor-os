@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useState, useCallback } from "react";
-import { Search, X, Loader2 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { searchMarkers, type Marker } from "@/lib/api";
-import { CategoryBadge } from "./category-filter";
-import { debounce } from "@/lib/utils";
+import { useState, useCallback } from 'react';
+import { Search, X, Loader2 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { searchMarkers, type Marker } from '@/lib/api';
+import { CategoryBadge } from './category-filter';
+import { debounce } from '@/lib/utils';
 
 interface SearchBoxProps {
   onMarkerSelect: (marker: Marker) => void;
@@ -13,8 +13,8 @@ interface SearchBoxProps {
 }
 
 export function SearchBox({ onMarkerSelect, categoryFilter }: SearchBoxProps) {
-  const [query, setQuery] = useState("");
-  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [query, setQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
 
   // Debounce the search query
@@ -25,7 +25,7 @@ export function SearchBox({ onMarkerSelect, categoryFilter }: SearchBoxProps) {
   );
 
   const { data: results, isLoading } = useQuery({
-    queryKey: ["search", debouncedQuery, categoryFilter],
+    queryKey: ['search', debouncedQuery, categoryFilter],
     queryFn: () => searchMarkers(debouncedQuery, categoryFilter ?? undefined, 20),
     enabled: debouncedQuery.length >= 2,
   });
@@ -38,8 +38,8 @@ export function SearchBox({ onMarkerSelect, categoryFilter }: SearchBoxProps) {
   };
 
   const handleClear = () => {
-    setQuery("");
-    setDebouncedQuery("");
+    setQuery('');
+    setDebouncedQuery('');
     setIsOpen(false);
   };
 
@@ -88,9 +88,7 @@ export function SearchBox({ onMarkerSelect, categoryFilter }: SearchBoxProps) {
                   className="w-full px-4 py-3 text-left hover:bg-map-bg transition-colors"
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm text-foreground line-clamp-2">
-                      {marker.message}
-                    </p>
+                    <p className="text-sm text-foreground line-clamp-2">{marker.message}</p>
                     <CategoryBadge category={marker.category} />
                   </div>
                   <p className="text-xs text-secondary-foreground mt-1">
@@ -100,13 +98,10 @@ export function SearchBox({ onMarkerSelect, categoryFilter }: SearchBoxProps) {
               ))}
             </div>
           ) : debouncedQuery.length >= 2 ? (
-            <div className="py-8 text-center text-secondary-foreground">
-              No markers found
-            </div>
+            <div className="py-8 text-center text-secondary-foreground">No markers found</div>
           ) : null}
         </div>
       )}
     </div>
   );
 }
-

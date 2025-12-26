@@ -29,12 +29,12 @@ impl Config {
         dotenvy::dotenv().ok();
 
         Self {
-            database_url: env::var("DATABASE_URL")
-                .unwrap_or_else(|_| "postgres://postgres:postgres@localhost:5432/anchor".to_string()),
+            database_url: env::var("DATABASE_URL").unwrap_or_else(|_| {
+                "postgres://postgres:postgres@localhost:5432/anchor".to_string()
+            }),
             bitcoin_rpc_url: env::var("BITCOIN_RPC_URL")
                 .unwrap_or_else(|_| "http://127.0.0.1:18443".to_string()),
-            bitcoin_rpc_user: env::var("BITCOIN_RPC_USER")
-                .unwrap_or_else(|_| "user".to_string()),
+            bitcoin_rpc_user: env::var("BITCOIN_RPC_USER").unwrap_or_else(|_| "user".to_string()),
             bitcoin_rpc_password: env::var("BITCOIN_RPC_PASSWORD")
                 .unwrap_or_else(|_| "pass".to_string()),
             wallet_url: env::var("WALLET_URL")
@@ -51,4 +51,3 @@ impl Config {
         }
     }
 }
-

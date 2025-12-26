@@ -23,4 +23,3 @@ impl Database {
         Ok(Self { pool })
     }
 }
-

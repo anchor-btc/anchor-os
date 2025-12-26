@@ -26,4 +26,3 @@ pub async fn health() -> Json<HealthResponse> {
         service: "anchor-wallet".to_string(),
     })
 }
-

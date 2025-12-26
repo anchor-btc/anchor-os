@@ -1,15 +1,8 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  fetchLockedAssets,
-  unlockUtxos,
-  syncLocks,
-  type LockedAssetsOverview,
-  type LockedAssetItem,
-} from "@/lib/api";
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { fetchLockedAssets, unlockUtxos, syncLocks, type LockedAssetItem } from '@/lib/api';
 import {
   Lock,
   Unlock,
@@ -21,39 +14,39 @@ import {
   ExternalLink,
   Filter,
   Check,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Section, SectionHeader, ActionButton } from "@/components/ds";
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Section, ActionButton } from '@/components/ds';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 interface LockedAssetsSectionProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   t: any; // i18next TFunction
 }
 
-type FilterType = "all" | "domains" | "tokens" | "manual";
+type FilterType = 'all' | 'domains' | 'tokens' | 'manual';
 
 export function LockedAssetsSection({ t }: LockedAssetsSectionProps) {
-  const [activeFilter, setActiveFilter] = useState<FilterType>("all");
+  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [selectedUtxos, setSelectedUtxos] = useState<Set<string>>(new Set());
   const queryClient = useQueryClient();
 
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: ["locked-assets", activeFilter],
-    queryFn: () => fetchLockedAssets(activeFilter === "all" ? undefined : activeFilter),
+  const { data, isLoading } = useQuery({
+    queryKey: ['locked-assets', activeFilter],
+    queryFn: () => fetchLockedAssets(activeFilter === 'all' ? undefined : activeFilter),
     refetchInterval: 10000,
   });
 
   const syncMutation = useMutation({
     mutationFn: syncLocks,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["locked-assets"] });
+      queryClient.invalidateQueries({ queryKey: ['locked-assets'] });
     },
   });
 
   const unlockMutation = useMutation({
     mutationFn: (utxos: { txid: string; vout: number }[]) => unlockUtxos(utxos),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["locked-assets"] });
+      queryClient.invalidateQueries({ queryKey: ['locked-assets'] });
       setSelectedUtxos(new Set());
     },
   });
@@ -71,17 +64,17 @@ export function LockedAssetsSection({ t }: LockedAssetsSectionProps) {
 
   const handleUnlockSelected = () => {
     const utxos = Array.from(selectedUtxos).map((key) => {
-      const [txid, vout] = key.split(":");
+      const [txid, vout] = key.split(':');
       return { txid, vout: parseInt(vout) };
     });
     unlockMutation.mutate(utxos);
   };
 
   const filters: { id: FilterType; label: string; icon: typeof Lock }[] = [
-    { id: "all", label: "All", icon: Filter },
-    { id: "domains", label: "Domains", icon: Globe },
-    { id: "tokens", label: "Tokens", icon: Coins },
-    { id: "manual", label: "Manual", icon: Hand },
+    { id: 'all', label: 'All', icon: Filter },
+    { id: 'domains', label: 'Domains', icon: Globe },
+    { id: 'tokens', label: 'Tokens', icon: Coins },
+    { id: 'manual', label: 'Manual', icon: Hand },
   ];
 
   const formatSats = (sats: number) => {
@@ -147,23 +140,25 @@ export function LockedAssetsSection({ t }: LockedAssetsSectionProps) {
                 key={filter.id}
                 onClick={() => setActiveFilter(filter.id)}
                 className={cn(
-                  "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
+                  'flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
                   activeFilter === filter.id
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted hover:bg-muted/80 text-muted-foreground"
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted hover:bg-muted/80 text-muted-foreground'
                 )}
               >
                 <filter.icon className="w-4 h-4" />
                 {filter.label}
                 {data?.summary && (
                   <span className="text-xs opacity-75">
-                    ({filter.id === "all"
+                    (
+                    {filter.id === 'all'
                       ? data.summary.total.count
-                      : filter.id === "domains"
-                      ? data.summary.domains.count
-                      : filter.id === "tokens"
-                      ? data.summary.tokens.count
-                      : data.summary.manual.count})
+                      : filter.id === 'domains'
+                        ? data.summary.domains.count
+                        : filter.id === 'tokens'
+                          ? data.summary.tokens.count
+                          : data.summary.manual.count}
+                    )
                   </span>
                 )}
               </button>
@@ -196,11 +191,9 @@ export function LockedAssetsSection({ t }: LockedAssetsSectionProps) {
       <Section className="p-0 overflow-hidden">
         <div className="p-4 border-b border-border flex items-center justify-between">
           <h2 className="font-semibold text-foreground">
-            {t("wallet.lockedAssets", "Locked Assets")}
+            {t('wallet.lockedAssets', 'Locked Assets')}
           </h2>
-          <span className="text-sm text-muted-foreground">
-            {data?.items.length ?? 0} items
-          </span>
+          <span className="text-sm text-muted-foreground">{data?.items.length ?? 0} items</span>
         </div>
 
         {isLoading ? (
@@ -246,21 +239,18 @@ function SummaryCard({
   label: string;
   count: number;
   sats: number;
-  color: "primary" | "accent" | "purple" | "success";
+  color: 'primary' | 'accent' | 'purple' | 'success';
   formatSats: (sats: number) => string;
 }) {
   const colorClasses = {
-    primary: "bg-primary/10 text-primary border-primary/20",
-    accent: "bg-accent/10 text-accent border-accent/20",
-    purple: "bg-purple-500/10 text-purple-500 border-purple-500/20",
-    success: "bg-success/10 text-success border-success/20",
+    primary: 'bg-primary/10 text-primary border-primary/20',
+    accent: 'bg-accent/10 text-accent border-accent/20',
+    purple: 'bg-purple-500/10 text-purple-500 border-purple-500/20',
+    success: 'bg-success/10 text-success border-success/20',
   };
 
   return (
-    <div className={cn(
-      "rounded-xl border p-4",
-      colorClasses[color]
-    )}>
+    <div className={cn('rounded-xl border p-4', colorClasses[color])}>
       <div className="flex items-center gap-2 mb-2">
         <Icon className="w-5 h-5" />
         <span className="text-sm font-medium">{label}</span>
@@ -286,9 +276,9 @@ function LockedAssetRow({
 }) {
   const getTypeIcon = () => {
     switch (item.lock_type) {
-      case "domain":
+      case 'domain':
         return <Globe className="w-5 h-5 text-primary" />;
-      case "token":
+      case 'token':
         return <Coins className="w-5 h-5 text-accent" />;
       default:
         return <Hand className="w-5 h-5 text-purple-500" />;
@@ -297,37 +287,35 @@ function LockedAssetRow({
 
   const getTypeColor = () => {
     switch (item.lock_type) {
-      case "domain":
-        return "bg-primary/10";
-      case "token":
-        return "bg-accent/10";
+      case 'domain':
+        return 'bg-primary/10';
+      case 'token':
+        return 'bg-accent/10';
       default:
-        return "bg-purple-500/10";
+        return 'bg-purple-500/10';
     }
   };
 
   return (
     <div
       className={cn(
-        "flex items-center gap-4 p-4 hover:bg-muted/50 transition-colors cursor-pointer",
-        selected && "bg-primary/5"
+        'flex items-center gap-4 p-4 hover:bg-muted/50 transition-colors cursor-pointer',
+        selected && 'bg-primary/5'
       )}
       onClick={onSelect}
     >
       {/* Checkbox */}
       <div
         className={cn(
-          "w-5 h-5 rounded border-2 flex items-center justify-center transition-colors",
-          selected
-            ? "bg-primary border-primary text-white"
-            : "border-muted-foreground/30"
+          'w-5 h-5 rounded border-2 flex items-center justify-center transition-colors',
+          selected ? 'bg-primary border-primary text-white' : 'border-muted-foreground/30'
         )}
       >
         {selected && <Check className="w-3 h-3" />}
       </div>
 
       {/* Type Icon */}
-      <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center", getTypeColor())}>
+      <div className={cn('w-10 h-10 rounded-lg flex items-center justify-center', getTypeColor())}>
         {getTypeIcon()}
       </div>
 
@@ -335,14 +323,17 @@ function LockedAssetRow({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="font-medium text-foreground">
-            {item.asset_name || `${item.lock_type.charAt(0).toUpperCase() + item.lock_type.slice(1)} Lock`}
+            {item.asset_name ||
+              `${item.lock_type.charAt(0).toUpperCase() + item.lock_type.slice(1)} Lock`}
           </span>
           <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
             {item.lock_type}
           </span>
         </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span className="font-mono">{shortenTxid(item.txid)}:{item.vout}</span>
+          <span className="font-mono">
+            {shortenTxid(item.txid)}:{item.vout}
+          </span>
           <span>•</span>
           <span>{new Date(item.locked_at).toLocaleDateString()}</span>
         </div>
@@ -368,4 +359,3 @@ function LockedAssetRow({
     </div>
   );
 }
-

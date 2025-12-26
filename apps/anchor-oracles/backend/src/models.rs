@@ -22,13 +22,27 @@ impl OracleCategories {
 
     pub fn names(&self) -> Vec<&'static str> {
         let mut names = Vec::new();
-        if self.has(Self::BLOCK) { names.push("Block"); }
-        if self.has(Self::PRICES) { names.push("Prices"); }
-        if self.has(Self::SPORTS) { names.push("Sports"); }
-        if self.has(Self::WEATHER) { names.push("Weather"); }
-        if self.has(Self::ELECTIONS) { names.push("Elections"); }
-        if self.has(Self::RANDOM) { names.push("Random"); }
-        if self.has(Self::CUSTOM) { names.push("Custom"); }
+        if self.has(Self::BLOCK) {
+            names.push("Block");
+        }
+        if self.has(Self::PRICES) {
+            names.push("Prices");
+        }
+        if self.has(Self::SPORTS) {
+            names.push("Sports");
+        }
+        if self.has(Self::WEATHER) {
+            names.push("Weather");
+        }
+        if self.has(Self::ELECTIONS) {
+            names.push("Elections");
+        }
+        if self.has(Self::RANDOM) {
+            names.push("Random");
+        }
+        if self.has(Self::CUSTOM) {
+            names.push("Custom");
+        }
         names
     }
 }
@@ -36,13 +50,16 @@ impl OracleCategories {
 /// Key type for oracle identity
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "snake_case")]
+#[derive(Default)]
 pub enum KeyType {
     /// secp256k1 Schnorr (Nostr, Bitcoin)
+    #[default]
     Secp256k1 = 0,
     /// Ed25519 (Pubky)
     Ed25519 = 1,
 }
 
+#[allow(dead_code)]
 impl KeyType {
     pub fn from_byte(b: u8) -> Self {
         match b {
@@ -51,7 +68,7 @@ impl KeyType {
         }
     }
 
-    pub fn to_byte(&self) -> u8 {
+    pub fn to_byte(self) -> u8 {
         match self {
             KeyType::Secp256k1 => 0,
             KeyType::Ed25519 => 1,
@@ -63,12 +80,6 @@ impl KeyType {
             KeyType::Secp256k1 => "Nostr (secp256k1)",
             KeyType::Ed25519 => "Pubky (Ed25519)",
         }
-    }
-}
-
-impl Default for KeyType {
-    fn default() -> Self {
-        KeyType::Secp256k1
     }
 }
 
@@ -172,6 +183,7 @@ pub struct CategoryInfo {
 
 /// Request to register an oracle
 #[derive(Debug, Clone, Deserialize, ToSchema)]
+#[allow(dead_code)]
 pub struct RegisterOracleRequest {
     pub pubkey: String,
     /// Key type: 0 = secp256k1 (Nostr), 1 = Ed25519 (Pubky)
@@ -229,4 +241,3 @@ pub fn key_type_name(key_type: i32) -> String {
         _ => format!("Unknown({})", key_type),
     }
 }
-

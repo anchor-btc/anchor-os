@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { Footer } from "@AnchorProtocol/ui";
-import { FileCheck } from "lucide-react";
+import { Footer } from '@AnchorProtocol/ui';
+import { FileCheck } from 'lucide-react';
 
 export function ProofsFooter() {
   return (

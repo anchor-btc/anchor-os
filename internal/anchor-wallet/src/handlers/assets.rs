@@ -3,7 +3,7 @@
 use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use tracing::{error, info, warn};
+use tracing::{info, warn};
 use utoipa::ToSchema;
 
 use crate::AppState;
@@ -91,37 +91,39 @@ pub async fn get_assets(
     info!("Fetching all wallet assets...");
 
     let locked_set = state.lock_manager.get_locked_set();
-    
+
     let mut domains: Vec<DomainAsset> = Vec::new();
     let mut tokens: Vec<TokenAsset> = Vec::new();
 
     // Fetch ALL domains from Anchor Domains backend
     // On regtest, all domains belong to the wallet
     let domains_url = format!("{}/domains?per_page=1000", state.config.domains_url);
-    
+
     match reqwest::get(&domains_url).await {
-        Ok(resp) if resp.status().is_success() => {
-            match resp.json::<DomainsApiResponse>().await {
-                Ok(data) => {
-                    info!("Fetched {} domains from backend (total: {})", data.data.len(), data.total);
-                    for domain in data.data {
-                        let is_locked = locked_set.contains(&(domain.txid.clone(), 0));
-                        
-                        domains.push(DomainAsset {
-                            name: domain.name,
-                            txid: domain.txid,
-                            record_count: domain.record_count.unwrap_or(0),
-                            block_height: domain.block_height,
-                            created_at: domain.created_at,
-                            is_locked,
-                        });
-                    }
-                }
-                Err(e) => {
-                    warn!("Failed to parse domains response: {}", e);
+        Ok(resp) if resp.status().is_success() => match resp.json::<DomainsApiResponse>().await {
+            Ok(data) => {
+                info!(
+                    "Fetched {} domains from backend (total: {})",
+                    data.data.len(),
+                    data.total
+                );
+                for domain in data.data {
+                    let is_locked = locked_set.contains(&(domain.txid.clone(), 0));
+
+                    domains.push(DomainAsset {
+                        name: domain.name,
+                        txid: domain.txid,
+                        record_count: domain.record_count.unwrap_or(0),
+                        block_height: domain.block_height,
+                        created_at: domain.created_at,
+                        is_locked,
+                    });
                 }
             }
-        }
+            Err(e) => {
+                warn!("Failed to parse domains response: {}", e);
+            }
+        },
         Ok(resp) => {
             warn!("Domains backend returned status {}", resp.status());
         }
@@ -138,14 +140,19 @@ pub async fn get_assets(
         Ok(resp) if resp.status().is_success() => {
             match resp.json::<TokensApiResponse>().await {
                 Ok(data) => {
-                    info!("Fetched {} tokens from backend (total: {})", data.data.len(), data.total);
+                    info!(
+                        "Fetched {} tokens from backend (total: {})",
+                        data.data.len(),
+                        data.total
+                    );
                     for token in data.data {
                         // Check if the deploy txid is locked
-                        let is_locked = token.deploy_txid
+                        let is_locked = token
+                            .deploy_txid
                             .as_ref()
                             .map(|txid| locked_set.contains(&(txid.clone(), 0)))
                             .unwrap_or(false);
-                        
+
                         tokens.push(TokenAsset {
                             ticker: token.ticker,
                             name: token.name,
@@ -206,27 +213,25 @@ pub async fn get_assets_domains(
     let domains_url = format!("{}/domains?per_page=1000", state.config.domains_url);
 
     match reqwest::get(&domains_url).await {
-        Ok(resp) if resp.status().is_success() => {
-            match resp.json::<DomainsApiResponse>().await {
-                Ok(data) => {
-                    for domain in data.data {
-                        let is_locked = locked_set.contains(&(domain.txid.clone(), 0));
-                        
-                        domains.push(DomainAsset {
-                            name: domain.name,
-                            txid: domain.txid,
-                            record_count: domain.record_count.unwrap_or(0),
-                            block_height: domain.block_height,
-                            created_at: domain.created_at,
-                            is_locked,
-                        });
-                    }
-                }
-                Err(e) => {
-                    warn!("Failed to parse domains response: {}", e);
+        Ok(resp) if resp.status().is_success() => match resp.json::<DomainsApiResponse>().await {
+            Ok(data) => {
+                for domain in data.data {
+                    let is_locked = locked_set.contains(&(domain.txid.clone(), 0));
+
+                    domains.push(DomainAsset {
+                        name: domain.name,
+                        txid: domain.txid,
+                        record_count: domain.record_count.unwrap_or(0),
+                        block_height: domain.block_height,
+                        created_at: domain.created_at,
+                        is_locked,
+                    });
                 }
             }
-        }
+            Err(e) => {
+                warn!("Failed to parse domains response: {}", e);
+            }
+        },
         Ok(resp) => {
             warn!("Domains backend returned status {}", resp.status());
         }
@@ -258,31 +263,30 @@ pub async fn get_assets_tokens(
     let tokens_url = format!("{}/tokens?per_page=1000", state.config.tokens_url);
 
     match reqwest::get(&tokens_url).await {
-        Ok(resp) if resp.status().is_success() => {
-            match resp.json::<TokensApiResponse>().await {
-                Ok(data) => {
-                    for token in data.data {
-                        let is_locked = token.deploy_txid
-                            .as_ref()
-                            .map(|txid| locked_set.contains(&(txid.clone(), 0)))
-                            .unwrap_or(false);
-                        
-                        tokens.push(TokenAsset {
-                            ticker: token.ticker,
-                            name: token.name,
-                            decimals: token.decimals.unwrap_or(0),
-                            max_supply: token.max_supply,
-                            total_minted: token.total_minted,
-                            holder_count: token.holder_count,
-                            is_locked,
-                        });
-                    }
-                }
-                Err(e) => {
-                    warn!("Failed to parse tokens response: {}", e);
+        Ok(resp) if resp.status().is_success() => match resp.json::<TokensApiResponse>().await {
+            Ok(data) => {
+                for token in data.data {
+                    let is_locked = token
+                        .deploy_txid
+                        .as_ref()
+                        .map(|txid| locked_set.contains(&(txid.clone(), 0)))
+                        .unwrap_or(false);
+
+                    tokens.push(TokenAsset {
+                        ticker: token.ticker,
+                        name: token.name,
+                        decimals: token.decimals.unwrap_or(0),
+                        max_supply: token.max_supply,
+                        total_minted: token.total_minted,
+                        holder_count: token.holder_count,
+                        is_locked,
+                    });
                 }
             }
-        }
+            Err(e) => {
+                warn!("Failed to parse tokens response: {}", e);
+            }
+        },
         Ok(resp) => {
             warn!("Tokens backend returned status {}", resp.status());
         }

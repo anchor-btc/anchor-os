@@ -37,4 +37,3 @@ pub async fn get_stats(State(state): State<Arc<AppState>>) -> Result<Json<MapSta
     let stats = state.db.get_stats().await.map_err(AppError::from)?;
     Ok(Json(stats))
 }
-

@@ -381,7 +381,7 @@ impl Database {
             "UPDATE token_utxos 
              SET spent_txid = $1, spent_vout = $2, spent_block_height = $3, spent_at = NOW()
              WHERE token_id = $4 AND txid = $5 AND vout = $6 AND spent_txid IS NULL
-             RETURNING owner_address"
+             RETURNING owner_address",
         )
         .bind(spent_txid)
         .bind(spent_vout)
@@ -415,7 +415,7 @@ impl Database {
              WHERE token_id = $1 
                AND substring(txid from 1 for 8) = $2 
                AND vout = $3 
-               AND spent_txid IS NULL"
+               AND spent_txid IS NULL",
         )
         .bind(token_id)
         .bind(txid_prefix)
@@ -557,7 +557,7 @@ impl Database {
              FROM token_balances b
              JOIN tokens t ON t.id = b.token_id
              WHERE b.address = $1 AND b.balance > 0
-             ORDER BY t.ticker"
+             ORDER BY t.ticker",
         )
         .bind(address)
         .fetch_all(&self.pool)
@@ -587,7 +587,7 @@ impl Database {
 
         // First try to get real holders from token_balances
         let balance_count: (i64,) = sqlx::query_as(
-            "SELECT COUNT(*) FROM token_balances WHERE token_id = $1 AND balance > 0"
+            "SELECT COUNT(*) FROM token_balances WHERE token_id = $1 AND balance > 0",
         )
         .bind(token_id)
         .fetch_one(&self.pool)
@@ -629,15 +629,13 @@ impl Database {
         // Fallback: In regtest/dev mode, show UTXOs as "holders"
         // This gives visibility into token distribution even without addresses
         let total_supply: Option<(String,)> = sqlx::query_as(
-            "SELECT SUM(amount)::text FROM token_utxos WHERE token_id = $1 AND spent_txid IS NULL"
+            "SELECT SUM(amount)::text FROM token_utxos WHERE token_id = $1 AND spent_txid IS NULL",
         )
         .bind(token_id)
         .fetch_optional(&self.pool)
         .await?;
 
-        let total_supply_val: i128 = total_supply
-            .and_then(|t| t.0.parse().ok())
-            .unwrap_or(0);
+        let total_supply_val: i128 = total_supply.and_then(|t| t.0.parse().ok()).unwrap_or(0);
 
         let rows = sqlx::query(
             "SELECT 
@@ -660,7 +658,7 @@ impl Database {
         .await?;
 
         let total: (i64,) = sqlx::query_as(
-            "SELECT COUNT(*) FROM token_utxos WHERE token_id = $1 AND spent_txid IS NULL"
+            "SELECT COUNT(*) FROM token_utxos WHERE token_id = $1 AND spent_txid IS NULL",
         )
         .bind(token_id)
         .fetch_one(&self.pool)
@@ -672,7 +670,7 @@ impl Database {
         fn reverse_txid_hex(hex: &str) -> String {
             let bytes: Vec<_> = (0..hex.len())
                 .step_by(2)
-                .filter_map(|i| u8::from_str_radix(&hex[i..i+2], 16).ok())
+                .filter_map(|i| u8::from_str_radix(&hex[i..i + 2], 16).ok())
                 .collect();
             bytes.iter().rev().map(|b| format!("{:02x}", b)).collect()
         }
@@ -760,12 +758,11 @@ impl Database {
         .fetch_all(&self.pool)
         .await?;
 
-        let total: (i64,) = sqlx::query_as(
-            "SELECT COUNT(*) FROM token_operations WHERE token_id = $1"
-        )
-        .bind(token_id)
-        .fetch_one(&self.pool)
-        .await?;
+        let total: (i64,) =
+            sqlx::query_as("SELECT COUNT(*) FROM token_operations WHERE token_id = $1")
+                .bind(token_id)
+                .fetch_one(&self.pool)
+                .await?;
 
         let op_names = ["", "DEPLOY", "MINT", "TRANSFER", "BURN", "SPLIT"];
         let total_pages = ((total.0 as f64) / (per_page as f64)).ceil() as i32;
@@ -805,7 +802,7 @@ impl Database {
     pub async fn get_stats(&self) -> Result<TokenStats> {
         let row = sqlx::query(
             "SELECT total_tokens, total_holders, total_operations, last_block_height 
-             FROM token_stats"
+             FROM token_stats",
         )
         .fetch_one(&self.pool)
         .await?;
@@ -820,13 +817,12 @@ impl Database {
 
     /// Check if a transaction exists
     pub async fn tx_exists(&self, txid: &[u8], vout: i32) -> Result<bool> {
-        let row: (i64,) = sqlx::query_as(
-            "SELECT COUNT(*) FROM token_operations WHERE txid = $1 AND vout = $2"
-        )
-        .bind(txid)
-        .bind(vout)
-        .fetch_one(&self.pool)
-        .await?;
+        let row: (i64,) =
+            sqlx::query_as("SELECT COUNT(*) FROM token_operations WHERE txid = $1 AND vout = $2")
+                .bind(txid)
+                .bind(vout)
+                .fetch_one(&self.pool)
+                .await?;
 
         Ok(row.0 > 0)
     }

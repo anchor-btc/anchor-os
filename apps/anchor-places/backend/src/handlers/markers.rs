@@ -9,8 +9,8 @@ use std::sync::Arc;
 use crate::error::{AppError, Result};
 use crate::handlers::AppState;
 use crate::models::{
-    BoundsParams, CreateMarkerRequest, CreateMarkerResponse, CreateReplyRequest,
-    ListParams, Marker, MarkerDetail, MyPlacesParams, SearchParams,
+    BoundsParams, CreateMarkerRequest, CreateMarkerResponse, CreateReplyRequest, ListParams,
+    Marker, MarkerDetail, MyPlacesParams, SearchParams,
 };
 
 /// Get markers within bounds (for map viewport)
@@ -185,7 +185,12 @@ pub async fn get_marker(
         return Err(AppError::bad_request("Invalid txid hex"));
     }
 
-    match state.db.get_marker_detail(&txid, vout).await.map_err(AppError::from)? {
+    match state
+        .db
+        .get_marker_detail(&txid, vout)
+        .await
+        .map_err(AppError::from)?
+    {
         Some(detail) => Ok(Json(detail)),
         None => Err(AppError::not_found("Marker not found")),
     }
@@ -290,4 +295,3 @@ pub async fn create_reply(
 
     Ok(Json(response))
 }
-

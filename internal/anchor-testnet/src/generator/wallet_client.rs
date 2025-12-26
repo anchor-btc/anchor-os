@@ -90,4 +90,3 @@ impl WalletClient {
         Ok(response)
     }
 }
-

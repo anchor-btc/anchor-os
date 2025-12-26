@@ -17,7 +17,7 @@ impl Database {
         carrier: Option<i16>,
     ) -> Result<i32> {
         let records_json = records.map(|r| serde_json::to_value(r).unwrap_or_default());
-        
+
         let row: (i32,) = sqlx::query_as(
             r#"
             INSERT INTO pending_transactions (txid, domain_name, operation, records_json, carrier)
@@ -45,7 +45,10 @@ impl Database {
     }
 
     /// Get pending transaction for a domain
-    pub async fn get_pending_transaction(&self, domain_name: &str) -> Result<Option<PendingTransaction>> {
+    pub async fn get_pending_transaction(
+        &self,
+        domain_name: &str,
+    ) -> Result<Option<PendingTransaction>> {
         let row: Option<(
             i32,
             Vec<u8>,
@@ -102,17 +105,19 @@ impl Database {
 
     /// Delete a pending transaction by domain name
     pub async fn delete_pending_by_domain(&self, domain_name: &str) -> Result<bool> {
-        let result = sqlx::query(
-            "DELETE FROM pending_transactions WHERE LOWER(domain_name) = LOWER($1)"
-        )
-        .bind(domain_name)
-        .execute(&self.pool)
-        .await?;
+        let result =
+            sqlx::query("DELETE FROM pending_transactions WHERE LOWER(domain_name) = LOWER($1)")
+                .bind(domain_name)
+                .execute(&self.pool)
+                .await?;
         Ok(result.rows_affected() > 0)
     }
 
     /// Get all pending transactions for domains owned by given txids
-    pub async fn get_pending_by_owner_domains(&self, domain_names: &[String]) -> Result<Vec<PendingTransaction>> {
+    pub async fn get_pending_by_owner_domains(
+        &self,
+        domain_names: &[String],
+    ) -> Result<Vec<PendingTransaction>> {
         if domain_names.is_empty() {
             return Ok(vec![]);
         }
@@ -201,9 +206,9 @@ impl Database {
             3 => "transfer".to_string(),
             _ => format!("unknown({})", row.3),
         };
-        
-        let records: Option<Vec<DnsRecordInput>> = row.4
-            .and_then(|v| serde_json::from_value(v).ok());
+
+        let records: Option<Vec<DnsRecordInput>> =
+            row.4.and_then(|v| serde_json::from_value(v).ok());
 
         PendingTransaction {
             id: row.0,
@@ -216,4 +221,3 @@ impl Database {
         }
     }
 }
-

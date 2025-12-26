@@ -153,10 +153,7 @@ pub enum TokenOperation {
         allocations: Vec<TokenAllocation>,
     },
     /// Burn tokens
-    Burn {
-        token_id: u64,
-        amount: u128,
-    },
+    Burn { token_id: u64, amount: u128 },
     /// Split tokens across outputs
     Split {
         token_id: u64,
@@ -585,13 +582,14 @@ fn parse_transfer(bytes: &[u8]) -> Result<TokenOperation> {
 
     let mut allocations = Vec::with_capacity(count);
     for _ in 0..count {
-        let output_index = bytes
-            .get(offset)
-            .copied()
-            .ok_or_else(|| SpecError::PayloadTooShort {
-                expected: offset + 1,
-                actual: bytes.len(),
-            })?;
+        let output_index =
+            bytes
+                .get(offset)
+                .copied()
+                .ok_or_else(|| SpecError::PayloadTooShort {
+                    expected: offset + 1,
+                    actual: bytes.len(),
+                })?;
         offset += 1;
 
         let (amount, bytes_read) = decode_varint(&bytes[offset..])?;
@@ -653,7 +651,9 @@ fn parse_split(bytes: &[u8]) -> Result<TokenOperation> {
 /// Validate a token ticker
 pub fn validate_ticker(ticker: &str) -> Result<()> {
     if ticker.is_empty() {
-        return Err(SpecError::InvalidTicker("Ticker cannot be empty".to_string()));
+        return Err(SpecError::InvalidTicker(
+            "Ticker cannot be empty".to_string(),
+        ));
     }
     if ticker.len() > MAX_TICKER_LENGTH {
         return Err(SpecError::InvalidTicker(format!(
@@ -681,7 +681,18 @@ mod tests {
 
     #[test]
     fn test_varint_roundtrip() {
-        let values: Vec<u128> = vec![0, 1, 127, 128, 255, 256, 16383, 16384, 1_000_000, u64::MAX as u128];
+        let values: Vec<u128> = vec![
+            0,
+            1,
+            127,
+            128,
+            255,
+            256,
+            16383,
+            16384,
+            1_000_000,
+            u64::MAX as u128,
+        ];
 
         for value in values {
             let encoded = encode_varint(value);
@@ -755,4 +766,3 @@ mod tests {
         assert!(transfer.requires_anchor());
     }
 }
-

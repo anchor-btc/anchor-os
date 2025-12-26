@@ -21,4 +21,3 @@ pub async fn get_categories(State(state): State<Arc<AppState>>) -> Result<Json<V
     let categories = state.db.get_categories().await.map_err(AppError::from)?;
     Ok(Json(categories))
 }
-

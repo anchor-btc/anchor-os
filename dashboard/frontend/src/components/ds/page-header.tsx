@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import Link from "next/link";
-import { LucideIcon, ArrowLeft } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { IconBox } from "./icon-box";
-import { type DSColor } from "./colors";
+import * as React from 'react';
+import Link from 'next/link';
+import { LucideIcon, ArrowLeft } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { IconBox } from './icon-box';
+import { type DSColor } from './colors';
 
 export interface PageHeaderProps {
   /** Page title */
@@ -44,14 +44,14 @@ export function PageHeader({
   title,
   subtitle,
   icon,
-  iconColor = "primary",
+  iconColor = 'primary',
   backHref,
   actions,
   className,
   children,
 }: PageHeaderProps) {
   return (
-    <div className={cn("flex items-center justify-between", className)}>
+    <div className={cn('flex items-center justify-between', className)}>
       <div className="flex items-center gap-3">
         {backHref && (
           <Link
@@ -63,12 +63,8 @@ export function PageHeader({
         )}
         {icon && <IconBox icon={icon} color={iconColor} size="lg" />}
         <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-3">
-            {title}
-          </h1>
-          {subtitle && (
-            <p className="text-muted-foreground">{subtitle}</p>
-          )}
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-3">{title}</h1>
+          {subtitle && <p className="text-muted-foreground">{subtitle}</p>}
           {children}
         </div>
       </div>
@@ -76,4 +72,3 @@ export function PageHeader({
     </div>
   );
 }
-

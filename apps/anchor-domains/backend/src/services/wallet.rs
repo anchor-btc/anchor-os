@@ -54,7 +54,7 @@ impl WalletClient {
 
         // Build request
         let url = format!("{}/wallet/create-message", self.base_url);
-        
+
         let request_body = match &params.owner_anchor {
             Some((owner_txid, owner_vout)) => {
                 // Update operation - needs anchor to owner
@@ -89,7 +89,8 @@ impl WalletClient {
             }
         };
 
-        let response = self.client
+        let response = self
+            .client
             .post(&url)
             .json(&request_body)
             .send()
@@ -101,10 +102,9 @@ impl WalletClient {
             return Err(AppError::wallet_error(error_text));
         }
 
-        let wallet_response: serde_json::Value = response
-            .json()
-            .await
-            .map_err(|e| AppError::wallet_error(format!("Failed to parse wallet response: {}", e)))?;
+        let wallet_response: serde_json::Value = response.json().await.map_err(|e| {
+            AppError::wallet_error(format!("Failed to parse wallet response: {}", e))
+        })?;
 
         Ok(CreateTxResponse {
             txid: wallet_response["txid"].as_str().unwrap_or("").to_string(),
@@ -119,7 +119,7 @@ impl WalletClient {
     }
 
     /// Normalize carrier type for DNS operations
-    /// 
+    ///
     /// DNS operations MUST use a carrier that creates spendable UTXOs for ownership tracking.
     /// OP_RETURN (0) doesn't create spendable outputs, so we force Inscription (1) for DNS.
     fn normalize_carrier(&self, carrier: Option<u8>, operation: &DnsOperation) -> u8 {
@@ -136,5 +136,3 @@ impl WalletClient {
         }
     }
 }
-
-

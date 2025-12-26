@@ -17,12 +17,7 @@
 
   /* Hero gradient */
   --vp-home-hero-name-color: transparent;
-  --vp-home-hero-name-background: linear-gradient(
-    135deg,
-    #f7931a 0%,
-    #ffc107 50%,
-    #f7931a 100%
-  );
+  --vp-home-hero-name-background: linear-gradient(135deg, #f7931a 0%, #ffc107 50%, #f7931a 100%);
 
   --vp-home-hero-image-background-image: linear-gradient(
     -45deg,
@@ -65,7 +60,9 @@
 /* Feature cards */
 .VPFeature {
   border-radius: 16px !important;
-  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease !important;
 }
 
 .VPFeature:hover {
@@ -147,13 +144,15 @@
 
 /* Animation for anchor icon */
 @keyframes anchor-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
 }
 
 .anchor-icon {
   animation: anchor-float 3s ease-in-out infinite;
 }
-
-
-

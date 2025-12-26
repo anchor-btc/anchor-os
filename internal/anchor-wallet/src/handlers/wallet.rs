@@ -131,13 +131,10 @@ pub async fn list_addresses(
     State(state): State<Arc<AppState>>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     match state.wallet.list_received_addresses() {
-        Ok(addresses) => {
-            Ok(Json(AddressesResponse { addresses }))
-        }
+        Ok(addresses) => Ok(Json(AddressesResponse { addresses })),
         Err(e) => {
             error!("Failed to list addresses: {}", e);
             Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
         }
     }
 }
-

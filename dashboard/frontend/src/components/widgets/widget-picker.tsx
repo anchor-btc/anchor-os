@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Plus,
   X,
@@ -18,8 +18,8 @@ import {
   Search,
   Network,
   Server,
-} from "lucide-react";
-import { WidgetType, WidgetDefinition } from "@/types/widgets";
+} from 'lucide-react';
+import { WidgetType, WidgetDefinition } from '@/types/widgets';
 
 const iconMap: Record<string, React.ElementType> = {
   Rocket,
@@ -58,21 +58,18 @@ export function WidgetPicker({ availableWidgets, onAddWidget }: WidgetPickerProp
         className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary hover:bg-primary/20 rounded-lg transition-colors text-sm font-medium"
       >
         <Plus className="w-4 h-4" />
-        {t("dashboard.addWidget")}
+        {t('dashboard.addWidget')}
       </button>
 
       {isOpen && (
         <>
           {/* Backdrop */}
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setIsOpen(false)}
-          />
+          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
 
           {/* Dropdown */}
           <div className="absolute right-0 top-full mt-2 w-80 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden">
             <div className="flex items-center justify-between p-4 border-b border-border">
-              <h3 className="font-semibold text-foreground">{t("dashboard.addWidget")}</h3>
+              <h3 className="font-semibold text-foreground">{t('dashboard.addWidget')}</h3>
               <button
                 onClick={() => setIsOpen(false)}
                 className="p-1 hover:bg-muted rounded-lg transition-colors"
@@ -84,7 +81,7 @@ export function WidgetPicker({ availableWidgets, onAddWidget }: WidgetPickerProp
             <div className="max-h-80 overflow-y-auto p-2">
               {availableWidgets.length === 0 ? (
                 <p className="text-center text-muted-foreground py-8 text-sm">
-                  {t("widgetPicker.allAdded")}
+                  {t('widgetPicker.allAdded')}
                 </p>
               ) : (
                 <div className="space-y-1">

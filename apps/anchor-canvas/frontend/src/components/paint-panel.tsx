@@ -1,19 +1,29 @@
-"use client";
+'use client';
 
-import { useState, useMemo } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { 
-  createPixelTransaction, 
-  type Pixel, 
+import { useState, useMemo } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  createPixelTransaction,
+  type Pixel,
   type CarrierType,
   CARRIER_INFO,
   calculatePayloadSize,
   getRecommendedCarrier,
   canCarrierHandle,
   estimateTxSize,
-} from "@/lib/api";
-import { ColorPicker } from "./color-picker";
-import { AlertCircle, Bitcoin, CheckCircle, Loader2, Paintbrush, ChevronDown, ChevronUp, Zap, Settings } from "lucide-react";
+} from '@/lib/api';
+import { ColorPicker } from './color-picker';
+import {
+  AlertCircle,
+  Bitcoin,
+  CheckCircle,
+  Loader2,
+  Paintbrush,
+  ChevronDown,
+  ChevronUp,
+  Zap,
+  Settings,
+} from 'lucide-react';
 
 interface PaintPanelProps {
   selectedPixels: Map<string, Pixel>;
@@ -38,18 +48,18 @@ export function PaintPanel({
 }: PaintPanelProps) {
   const queryClient = useQueryClient();
   const [txResult, setTxResult] = useState<{ txid: string; carrier?: string } | null>(null);
-  const [selectedCarrier, setSelectedCarrier] = useState<CarrierType>("inscription");
+  const [selectedCarrier, setSelectedCarrier] = useState<CarrierType>('inscription');
   const [showCarrierOptions, setShowCarrierOptions] = useState(false);
   const [showFeeSettings, setShowFeeSettings] = useState(false);
 
   const pixelCount = selectedPixels.size;
   const payloadSize = useMemo(() => calculatePayloadSize(pixelCount), [pixelCount]);
   const recommendedCarrier = useMemo(() => getRecommendedCarrier(pixelCount), [pixelCount]);
-  
+
   // Estimate fees for each carrier using current fee rate
   const carrierFees = useMemo(() => {
-    const carriers: CarrierType[] = ["op_return", "witness_data", "inscription"];
-    return carriers.map(c => ({
+    const carriers: CarrierType[] = ['op_return', 'witness_data', 'inscription'];
+    return carriers.map((c) => ({
       carrier: c,
       info: CARRIER_INFO[c],
       txSize: estimateTxSize(pixelCount, c),
@@ -59,14 +69,14 @@ export function PaintPanel({
   }, [pixelCount, feeRate]);
 
   const currentCarrierFee = useMemo(() => {
-    return carrierFees.find(c => c.carrier === selectedCarrier);
+    return carrierFees.find((c) => c.carrier === selectedCarrier);
   }, [carrierFees, selectedCarrier]);
 
   const paintMutation = useMutation({
     mutationFn: async () => {
       const pixels = Array.from(selectedPixels.values());
       if (pixels.length === 0) {
-        throw new Error("No pixels selected");
+        throw new Error('No pixels selected');
       }
       return createPixelTransaction(pixels, selectedCarrier, feeRate);
     },
@@ -81,9 +91,9 @@ export function PaintPanel({
       }
       // Refresh data after a delay
       setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ["stats"] });
-        queryClient.invalidateQueries({ queryKey: ["recent-pixels"] });
-        queryClient.invalidateQueries({ queryKey: ["balance"] });
+        queryClient.invalidateQueries({ queryKey: ['stats'] });
+        queryClient.invalidateQueries({ queryKey: ['recent-pixels'] });
+        queryClient.invalidateQueries({ queryKey: ['balance'] });
         onTransactionSuccess?.();
       }, 2000);
     },
@@ -94,7 +104,7 @@ export function PaintPanel({
     const carrierInfo = CARRIER_INFO[selectedCarrier];
     return Math.floor((carrierInfo.maxBytes - 4) / 7);
   }, [selectedCarrier]);
-  
+
   const canPaint = pixelCount > 0 && currentCarrierFee?.available;
 
   return (
@@ -117,7 +127,7 @@ export function PaintPanel({
             <span className="text-gray-400">Pixels selected</span>
             <span
               className={`font-mono ${
-                !currentCarrierFee?.available ? "text-red-400" : "text-primary"
+                !currentCarrierFee?.available ? 'text-red-400' : 'text-primary'
               }`}
             >
               {pixelCount.toLocaleString()}
@@ -126,15 +136,16 @@ export function PaintPanel({
 
           <div className="flex justify-between text-sm">
             <span className="text-gray-400">Payload size</span>
-            <span className="font-mono text-gray-300">
-              {payloadSize.toLocaleString()} bytes
-            </span>
+            <span className="font-mono text-gray-300">{payloadSize.toLocaleString()} bytes</span>
           </div>
 
           {!currentCarrierFee?.available && pixelCount > 0 && (
             <div className="flex items-center gap-2 text-sm text-red-400 bg-red-900/20 p-2 rounded-lg">
               <AlertCircle size={16} />
-              <span>Max ~{maxPixelsForCarrier.toLocaleString()} pixels for {CARRIER_INFO[selectedCarrier].name}</span>
+              <span>
+                Max ~{maxPixelsForCarrier.toLocaleString()} pixels for{' '}
+                {CARRIER_INFO[selectedCarrier].name}
+              </span>
             </div>
           )}
 
@@ -170,14 +181,16 @@ export function PaintPanel({
                     disabled={!available}
                     className={`w-full p-3 rounded-lg border text-left transition-all ${
                       selectedCarrier === carrier
-                        ? "border-primary bg-primary/10"
+                        ? 'border-primary bg-primary/10'
                         : available
-                        ? "border-gray-700 hover:border-gray-600 bg-gray-800/50"
-                        : "border-gray-800 bg-gray-900/50 opacity-50 cursor-not-allowed"
+                          ? 'border-gray-700 hover:border-gray-600 bg-gray-800/50'
+                          : 'border-gray-800 bg-gray-900/50 opacity-50 cursor-not-allowed'
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className={`font-medium ${selectedCarrier === carrier ? "text-primary" : ""}`}>
+                      <span
+                        className={`font-medium ${selectedCarrier === carrier ? 'text-primary' : ''}`}
+                      >
                         {info.name}
                         {carrier === recommendedCarrier && available && (
                           <span className="ml-2 text-xs bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded">
@@ -185,9 +198,7 @@ export function PaintPanel({
                           </span>
                         )}
                       </span>
-                      <span className="text-sm font-mono text-bitcoin">
-                        ~{fee} sats
-                      </span>
+                      <span className="text-sm font-mono text-bitcoin">~{fee} sats</span>
                     </div>
                     <div className="flex items-center justify-between mt-1">
                       <span className="text-xs text-gray-400">{info.description}</span>
@@ -215,9 +226,7 @@ export function PaintPanel({
                 Fee Rate
               </span>
               <span className="flex items-center gap-2">
-                <span className="text-primary font-medium font-mono">
-                  {feeRate} sat/vB
-                </span>
+                <span className="text-primary font-medium font-mono">{feeRate} sat/vB</span>
                 {showFeeSettings ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
               </span>
             </button>
@@ -249,8 +258,8 @@ export function PaintPanel({
                       onClick={() => onFeeRateChange(rate)}
                       className={`px-2 py-1 text-xs rounded transition-colors ${
                         feeRate === rate
-                          ? "bg-primary text-white"
-                          : "bg-gray-800 text-gray-400 hover:bg-gray-700"
+                          ? 'bg-primary text-white'
+                          : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                       }`}
                     >
                       {rate}
@@ -315,7 +324,7 @@ export function PaintPanel({
         ) : (
           <>
             <Bitcoin size={20} />
-            Paint {pixelCount} Pixel{pixelCount !== 1 ? "s" : ""}
+            Paint {pixelCount} Pixel{pixelCount !== 1 ? 's' : ''}
           </>
         )}
       </button>
@@ -342,9 +351,7 @@ export function PaintPanel({
         <div className="flex items-center gap-2 p-3 bg-red-900/20 border border-red-800 rounded-lg text-sm">
           <AlertCircle size={18} className="text-red-400" />
           <p className="text-red-400">
-            {paintMutation.error instanceof Error
-              ? paintMutation.error.message
-              : "Failed to paint"}
+            {paintMutation.error instanceof Error ? paintMutation.error.message : 'Failed to paint'}
           </p>
         </div>
       )}

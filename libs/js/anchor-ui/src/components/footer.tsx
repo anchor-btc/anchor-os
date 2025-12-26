@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { ExternalLink, Heart, type LucideIcon } from "lucide-react";
-import { cn } from "../utils/cn";
-import { Container } from "./container";
+import * as React from 'react';
+import { ExternalLink, Heart, type LucideIcon } from 'lucide-react';
+import { cn } from '../utils/cn';
+import { Container } from './container';
 
 // ============================================================================
 // APPLE-INSPIRED FOOTER DESIGN
@@ -11,50 +11,50 @@ import { Container } from "./container";
 // ============================================================================
 
 const accentGradients = {
-  orange: "bg-gradient-to-r from-orange-400 via-amber-400 to-yellow-400",
-  emerald: "bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-300",
-  blue: "bg-gradient-to-r from-blue-400 via-cyan-400 to-sky-400",
-  purple: "bg-gradient-to-r from-purple-400 via-violet-400 to-fuchsia-400",
-  amber: "bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-300",
-  rose: "bg-gradient-to-r from-rose-400 via-pink-400 to-red-400",
-  cyan: "bg-gradient-to-r from-cyan-400 via-sky-400 to-blue-400",
+  orange: 'bg-gradient-to-r from-orange-400 via-amber-400 to-yellow-400',
+  emerald: 'bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-300',
+  blue: 'bg-gradient-to-r from-blue-400 via-cyan-400 to-sky-400',
+  purple: 'bg-gradient-to-r from-purple-400 via-violet-400 to-fuchsia-400',
+  amber: 'bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-300',
+  rose: 'bg-gradient-to-r from-rose-400 via-pink-400 to-red-400',
+  cyan: 'bg-gradient-to-r from-cyan-400 via-sky-400 to-blue-400',
 } as const;
 
 const accentColors = {
   orange: {
-    gradient: "from-orange-500 to-orange-700",
-    text: "text-orange-400",
-    hover: "hover:text-orange-300",
+    gradient: 'from-orange-500 to-orange-700',
+    text: 'text-orange-400',
+    hover: 'hover:text-orange-300',
   },
   emerald: {
-    gradient: "from-emerald-500 to-emerald-700",
-    text: "text-emerald-400",
-    hover: "hover:text-emerald-300",
+    gradient: 'from-emerald-500 to-emerald-700',
+    text: 'text-emerald-400',
+    hover: 'hover:text-emerald-300',
   },
   blue: {
-    gradient: "from-blue-500 to-blue-700",
-    text: "text-blue-400",
-    hover: "hover:text-blue-300",
+    gradient: 'from-blue-500 to-blue-700',
+    text: 'text-blue-400',
+    hover: 'hover:text-blue-300',
   },
   purple: {
-    gradient: "from-purple-500 to-purple-700",
-    text: "text-purple-400",
-    hover: "hover:text-purple-300",
+    gradient: 'from-purple-500 to-purple-700',
+    text: 'text-purple-400',
+    hover: 'hover:text-purple-300',
   },
   amber: {
-    gradient: "from-amber-500 to-amber-700",
-    text: "text-amber-400",
-    hover: "hover:text-amber-300",
+    gradient: 'from-amber-500 to-amber-700',
+    text: 'text-amber-400',
+    hover: 'hover:text-amber-300',
   },
   rose: {
-    gradient: "from-rose-500 to-rose-700",
-    text: "text-rose-400",
-    hover: "hover:text-rose-300",
+    gradient: 'from-rose-500 to-rose-700',
+    text: 'text-rose-400',
+    hover: 'hover:text-rose-300',
   },
   cyan: {
-    gradient: "from-cyan-500 to-cyan-700",
-    text: "text-cyan-400",
-    hover: "hover:text-cyan-300",
+    gradient: 'from-cyan-500 to-cyan-700',
+    text: 'text-cyan-400',
+    hover: 'hover:text-cyan-300',
   },
 } as const;
 
@@ -92,7 +92,7 @@ export interface FooterProps {
 
 /**
  * Footer - Apple-inspired minimal footer component.
- * 
+ *
  * Features:
  * - Ultra-minimal design with generous spacing
  * - Gradient text on app name
@@ -117,8 +117,8 @@ export function Footer({
   appName,
   appIcon: Icon,
   accentColor,
-  docsUrl = "http://localhost:3900",
-  githubUrl = "https://github.com/AnchorProtocol/anchor",
+  docsUrl = 'http://localhost:3900',
+  githubUrl = 'https://github.com/AnchorProtocol/anchor',
   className,
   showGradientBar = false,
 }: FooterProps) {
@@ -127,35 +127,28 @@ export function Footer({
   const gradient = accentGradients[accentColor];
 
   return (
-    <footer 
-      className={cn(
-        "border-t border-white/[0.05] mt-20 bg-transparent",
-        className
-      )}
-    >
+    <footer className={cn('border-t border-white/[0.05] mt-20 bg-transparent', className)}>
       <Container className="py-10">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           {/* Left - Brand with gradient app name */}
-          <a 
-            href="/" 
+          <a
+            href="/"
             className="flex items-center gap-3 group transition-transform duration-300 hover:-translate-y-0.5"
           >
             <div
               className={cn(
-                "w-8 h-8 rounded-xl flex items-center justify-center",
-                "bg-gradient-to-br shadow-lg",
+                'w-8 h-8 rounded-xl flex items-center justify-center',
+                'bg-gradient-to-br shadow-lg',
                 colors.gradient,
-                "ring-1 ring-white/10",
-                "group-hover:shadow-xl group-hover:scale-105 transition-all duration-300"
+                'ring-1 ring-white/10',
+                'group-hover:shadow-xl group-hover:scale-105 transition-all duration-300'
               )}
             >
               <Icon className="w-4 h-4 text-white" />
             </div>
             <span className="text-lg font-semibold text-white">
               Anchor
-              <span className={cn("bg-clip-text text-transparent", gradient)}>
-                {appName}
-              </span>
+              <span className={cn('bg-clip-text text-transparent', gradient)}>{appName}</span>
             </span>
           </a>
 
@@ -165,9 +158,7 @@ export function Footer({
             <span className="text-slate-700">•</span>
             <span className="flex items-center gap-1.5 tracking-wide">
               Built with
-              <Heart 
-                className="h-3.5 w-3.5 text-red-500 fill-red-500 animate-pulse" 
-              />
+              <Heart className="h-3.5 w-3.5 text-red-500 fill-red-500 animate-pulse" />
               on Bitcoin
             </span>
           </div>
@@ -179,9 +170,9 @@ export function Footer({
               target="_blank"
               rel="noopener noreferrer"
               className={cn(
-                "text-sm flex items-center gap-1.5",
-                "transition-all duration-300",
-                "hover:-translate-y-0.5",
+                'text-sm flex items-center gap-1.5',
+                'transition-all duration-300',
+                'hover:-translate-y-0.5',
                 colors.text,
                 colors.hover
               )}
@@ -194,9 +185,9 @@ export function Footer({
               target="_blank"
               rel="noopener noreferrer"
               className={cn(
-                "text-sm flex items-center gap-1.5",
-                "transition-all duration-300",
-                "hover:-translate-y-0.5",
+                'text-sm flex items-center gap-1.5',
+                'transition-all duration-300',
+                'hover:-translate-y-0.5',
                 colors.text,
                 colors.hover
               )}

@@ -1,7 +1,7 @@
-import Link from "next/link";
-import { Users, Activity } from "lucide-react";
-import type { Token } from "@/lib/api";
-import { formatNumber, formatRelativeTime } from "@/lib/utils";
+import Link from 'next/link';
+import { Users, Activity } from 'lucide-react';
+import type { Token } from '@/lib/api';
+import { formatNumber, formatRelativeTime } from '@/lib/utils';
 
 interface TokenCardProps {
   token: Token;
@@ -21,9 +21,7 @@ export function TokenCard({ token }: TokenCardProps) {
       <div className="flex items-start justify-between mb-4">
         <div>
           <h3 className="text-xl font-bold text-orange-400">{token.ticker}</h3>
-          <p className="text-gray-500 text-sm">
-            {formatRelativeTime(token.createdAt)}
-          </p>
+          <p className="text-gray-500 text-sm">{formatRelativeTime(token.createdAt)}</p>
         </div>
         <div className="flex gap-1">
           {token.isOpenMint && (
@@ -58,9 +56,7 @@ export function TokenCard({ token }: TokenCardProps) {
           <Activity className="w-4 h-4" />
           <span>{formatNumber(token.txCount)}</span>
         </div>
-        <div className="text-gray-500">
-          {token.decimals} decimals
-        </div>
+        <div className="text-gray-500">{token.decimals} decimals</div>
       </div>
     </Link>
   );

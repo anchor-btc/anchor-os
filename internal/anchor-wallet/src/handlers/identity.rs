@@ -13,8 +13,8 @@ use std::sync::Arc;
 use utoipa::ToSchema;
 
 use crate::identity::{
-    DnsPublishInfo, Identity, IdentityMetadata, IdentityType,
-    NostrMetadata, PubkyMetadata, NOSTR_DEFAULT_RELAYS, PUBKY_HOMESERVERS,
+    DnsPublishInfo, Identity, IdentityMetadata, IdentityType, NostrMetadata, PubkyMetadata,
+    NOSTR_DEFAULT_RELAYS, PUBKY_HOMESERVERS,
 };
 use crate::AppState;
 
@@ -126,6 +126,7 @@ pub struct HomeserverInfo {
 
 /// Sign message request
 #[derive(Debug, Deserialize, ToSchema)]
+#[allow(dead_code)]
 pub struct SignMessageRequest {
     /// Message to sign (hex encoded)
     pub message: String,
@@ -198,12 +199,15 @@ fn identity_to_response(identity: &Identity) -> IdentityResponse {
         }),
     };
 
-    let dns_published = identity.dns_published.as_ref().map(|d| DnsPublishedResponse {
-        domain: d.domain.clone(),
-        subdomain: d.subdomain.clone(),
-        record_name: d.record_name.clone(),
-        published_at: d.published_at.to_rfc3339(),
-    });
+    let dns_published = identity
+        .dns_published
+        .as_ref()
+        .map(|d| DnsPublishedResponse {
+            domain: d.domain.clone(),
+            subdomain: d.subdomain.clone(),
+            record_name: d.record_name.clone(),
+            published_at: d.published_at.to_rfc3339(),
+        });
 
     IdentityResponse {
         id: identity.id.clone(),
@@ -226,7 +230,10 @@ fn parse_identity_type(s: &str) -> Result<IdentityType, (StatusCode, String)> {
     match s.to_lowercase().as_str() {
         "nostr" => Ok(IdentityType::Nostr),
         "pubky" => Ok(IdentityType::Pubky),
-        _ => Err((StatusCode::BAD_REQUEST, format!("Invalid identity type: {}", s))),
+        _ => Err((
+            StatusCode::BAD_REQUEST,
+            format!("Invalid identity type: {}", s),
+        )),
     }
 }
 
@@ -243,9 +250,7 @@ fn parse_identity_type(s: &str) -> Result<IdentityType, (StatusCode, String)> {
     ),
     tag = "Identities"
 )]
-pub async fn list_identities(
-    State(state): State<Arc<AppState>>,
-) -> impl IntoResponse {
+pub async fn list_identities(State(state): State<Arc<AppState>>) -> impl IntoResponse {
     let identities = state.identity_manager.list();
     let response: Vec<IdentityResponse> = identities.iter().map(identity_to_response).collect();
     let total = response.len();
@@ -298,20 +303,32 @@ pub async fn create_identity(
 
     // Validate public key
     if req.public_key.len() != 64 {
-        return Err((StatusCode::BAD_REQUEST, "Public key must be 64 hex characters (32 bytes)".to_string()));
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "Public key must be 64 hex characters (32 bytes)".to_string(),
+        ));
     }
     if hex::decode(&req.public_key).is_err() {
-        return Err((StatusCode::BAD_REQUEST, "Invalid hex in public key".to_string()));
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "Invalid hex in public key".to_string(),
+        ));
     }
 
     // Build metadata
     let metadata = match identity_type {
         IdentityType::Nostr => {
-            let mut nostr_meta = NostrMetadata::default();
-            // Use default relays if not provided
-            nostr_meta.relays = NOSTR_DEFAULT_RELAYS.iter().map(|s| s.to_string()).collect();
+            let mut nostr_meta = NostrMetadata {
+                relays: NOSTR_DEFAULT_RELAYS.iter().map(|s| s.to_string()).collect(),
+                ..Default::default()
+            };
 
-            if let Some(CreateIdentityMetadata::Nostr { relays, nip05, name }) = req.metadata {
+            if let Some(CreateIdentityMetadata::Nostr {
+                relays,
+                nip05,
+                name,
+            }) = req.metadata
+            {
                 if let Some(r) = relays {
                     nostr_meta.relays = r;
                 }
@@ -363,19 +380,32 @@ pub async fn update_identity(
     Json(req): Json<UpdateIdentityRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     // Get current identity to determine type
-    let current = state.identity_manager.get(&id)
+    let current = state
+        .identity_manager
+        .get(&id)
         .ok_or_else(|| (StatusCode::NOT_FOUND, "Identity not found".to_string()))?;
 
     let new_metadata = req.metadata.map(|m| match current.identity_type {
         IdentityType::Nostr => {
-            if let CreateIdentityMetadata::Nostr { relays, nip05, name } = m {
+            if let CreateIdentityMetadata::Nostr {
+                relays,
+                nip05,
+                name,
+            } = m
+            {
                 let mut meta = match current.metadata {
                     IdentityMetadata::Nostr(ref n) => n.clone(),
                     _ => NostrMetadata::default(),
                 };
-                if let Some(r) = relays { meta.relays = r; }
-                if nip05.is_some() { meta.nip05 = nip05; }
-                if name.is_some() { meta.name = name; }
+                if let Some(r) = relays {
+                    meta.relays = r;
+                }
+                if nip05.is_some() {
+                    meta.nip05 = nip05;
+                }
+                if name.is_some() {
+                    meta.name = name;
+                }
                 IdentityMetadata::Nostr(meta)
             } else {
                 current.metadata.clone()
@@ -387,7 +417,9 @@ pub async fn update_identity(
                     IdentityMetadata::Pubky(ref p) => p.clone(),
                     _ => PubkyMetadata::default(),
                 };
-                if homeserver.is_some() { meta.homeserver = homeserver; }
+                if homeserver.is_some() {
+                    meta.homeserver = homeserver;
+                }
                 IdentityMetadata::Pubky(meta)
             } else {
                 current.metadata.clone()
@@ -468,7 +500,9 @@ pub async fn set_identity_dns(
     Json(req): Json<SetDnsPublishedRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     // Get identity to build record name
-    let identity = state.identity_manager.get(&id)
+    let identity = state
+        .identity_manager
+        .get(&id)
         .ok_or_else(|| (StatusCode::NOT_FOUND, "Identity not found".to_string()))?;
 
     let dns_prefix = identity.identity_type.dns_prefix();
@@ -529,11 +563,14 @@ pub async fn get_identity_defaults() -> impl IntoResponse {
     };
 
     let pubky = PubkyDefaults {
-        homeservers: PUBKY_HOMESERVERS.iter().map(|h| HomeserverInfo {
-            name: h.name.to_string(),
-            url: h.url.to_string(),
-            requires_invite: h.requires_invite,
-        }).collect(),
+        homeservers: PUBKY_HOMESERVERS
+            .iter()
+            .map(|h| HomeserverInfo {
+                name: h.name.to_string(),
+                url: h.url.to_string(),
+                requires_invite: h.requires_invite,
+            })
+            .collect(),
     };
 
     Json(IdentityDefaultsResponse { nostr, pubky })
@@ -558,8 +595,8 @@ pub async fn generate_keypair(
     match identity_type {
         IdentityType::Nostr => {
             // Generate secp256k1 keypair
-            use rand::rngs::OsRng;
             use bitcoin::secp256k1::Secp256k1;
+            use rand::rngs::OsRng;
 
             let secp = Secp256k1::new();
             let (secret_key, public_key) = secp.generate_keypair(&mut OsRng);
@@ -597,7 +634,7 @@ pub async fn generate_keypair(
 }
 
 /// Export private key for backup
-/// 
+///
 /// Returns the private key in nsec format for Nostr identities.
 /// WARNING: This exposes the raw private key - use with caution!
 #[utoipa::path(
@@ -616,12 +653,14 @@ pub async fn export_private_key(
     State(state): State<Arc<AppState>>,
     Path(id): Path<String>,
 ) -> Result<Json<ExportKeyResponse>, (StatusCode, String)> {
-    let identity = state.identity_manager.get(&id)
+    let identity = state
+        .identity_manager
+        .get(&id)
         .ok_or_else(|| (StatusCode::NOT_FOUND, "Identity not found".to_string()))?;
 
     // Get the private key (currently stored as hex)
     let private_key_hex = identity.private_key_encrypted.clone();
-    
+
     // Format as nsec for Nostr (bech32 encoding)
     let formatted_key = if identity.identity_type == crate::identity::IdentityType::Nostr {
         // For now, just return hex - proper nsec encoding would require bech32
@@ -673,16 +712,21 @@ pub async fn sign_message(
     Path(id): Path<String>,
     Json(_req): Json<SignMessageRequest>,
 ) -> Result<Json<SignMessageResponse>, (StatusCode, String)> {
-    let _identity = state.identity_manager.get(&id)
+    let _identity = state
+        .identity_manager
+        .get(&id)
         .ok_or_else(|| (StatusCode::NOT_FOUND, "Identity not found".to_string()))?;
 
     // TODO: Decrypt private key and sign message
     // For now, return error
-    Err((StatusCode::NOT_IMPLEMENTED, "Signing requires private key decryption (not yet implemented)".to_string()))
+    Err((
+        StatusCode::NOT_IMPLEMENTED,
+        "Signing requires private key decryption (not yet implemented)".to_string(),
+    ))
 }
 
 /// Sync identities from DNS records
-/// 
+///
 /// This syncs DNS publication status by checking published identity records
 /// in the anchor-domains backend for all domains owned by the user.
 #[utoipa::path(
@@ -699,83 +743,107 @@ pub async fn sync_identities_from_dns(
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     let domains_api_url = std::env::var("DOMAINS_API_URL")
         .unwrap_or_else(|_| "http://anchor-app-domains-backend:3401".to_string());
-    
+
     let client = reqwest::Client::new();
-    
+
     // Step 1: Get all domains from anchor-domains
     let domains_response = client
         .get(format!("{}/domains", domains_api_url))
         .send()
         .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to fetch domains: {}", e)))?;
-    
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Failed to fetch domains: {}", e),
+            )
+        })?;
+
     if !domains_response.status().is_success() {
-        return Err((StatusCode::INTERNAL_SERVER_ERROR, "Failed to fetch domains".to_string()));
+        return Err((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Failed to fetch domains".to_string(),
+        ));
     }
-    
-    let domains: DomainsListResponse = domains_response
-        .json()
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to parse domains: {}", e)))?;
-    
+
+    let domains: DomainsListResponse = domains_response.json().await.map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Failed to parse domains: {}", e),
+        )
+    })?;
+
     let mut synced_count = 0;
     let mut checked_domains = 0;
-    
+
     // Step 2: For each domain, check for identity records
     for domain in domains.data {
         checked_domains += 1;
-        
+
         // Get identities published to this domain
         let identities_response = client
-            .get(format!("{}/domains/{}/identities", domains_api_url, domain.name))
+            .get(format!(
+                "{}/domains/{}/identities",
+                domains_api_url, domain.name
+            ))
             .send()
             .await;
-        
+
         if let Ok(response) = identities_response {
             if response.status().is_success() {
-                if let Ok(published_identities) = response.json::<DomainIdentitiesResponse>().await {
+                if let Ok(published_identities) = response.json::<DomainIdentitiesResponse>().await
+                {
                     // Step 3: Match with local identities
                     for pub_identity in published_identities.identities {
                         // Find local identity by public key
                         let local_identities = state.identity_manager.list();
-                        
+
                         for local in local_identities {
                             // Check if public keys match
                             let matches = if pub_identity.identity_type == "nostr" {
                                 // For Nostr, the public key might be in npub format
                                 let pub_key = pub_identity.public_key.trim_start_matches("npub1");
-                                local.identity_type == crate::identity::IdentityType::Nostr 
-                                    && (local.public_key == pub_identity.public_key || local.formatted_public_key().contains(pub_key))
+                                local.identity_type == crate::identity::IdentityType::Nostr
+                                    && (local.public_key == pub_identity.public_key
+                                        || local.formatted_public_key().contains(pub_key))
                             } else {
                                 // For Pubky, check pk: format
                                 let pub_key = pub_identity.public_key.trim_start_matches("pk:");
-                                local.identity_type == crate::identity::IdentityType::Pubky 
-                                    && (local.public_key == pub_identity.public_key || local.public_key == pub_key)
+                                local.identity_type == crate::identity::IdentityType::Pubky
+                                    && (local.public_key == pub_identity.public_key
+                                        || local.public_key == pub_key)
                             };
-                            
+
                             if matches {
                                 // Check if already synced
-                                let already_synced = local.dns_published.as_ref()
+                                let already_synced = local
+                                    .dns_published
+                                    .as_ref()
                                     .map(|d| d.domain == domain.name)
                                     .unwrap_or(false);
-                                
+
                                 if !already_synced {
                                     // Update local identity with DNS info
                                     let dns_prefix = local.identity_type.dns_prefix();
-                                    let record_name = if let Some(ref subdomain) = pub_identity.subdomain {
+                                    let record_name = if let Some(ref subdomain) =
+                                        pub_identity.subdomain
+                                    {
                                         format!("{}.user.{}.{}", subdomain, dns_prefix, domain.name)
                                     } else {
                                         format!("user.{}.{}", dns_prefix, domain.name)
                                     };
-                                    
+
                                     let info = crate::identity::DnsPublishInfo {
                                         domain: domain.name.clone(),
                                         subdomain: pub_identity.subdomain.clone(),
                                         published_at: chrono::Utc::now(),
                                         record_name,
                                     };
-                                    
-                                    if state.identity_manager.set_dns_published(&local.id, Some(info)).is_ok() {
+
+                                    if state
+                                        .identity_manager
+                                        .set_dns_published(&local.id, Some(info))
+                                        .is_ok()
+                                    {
                                         synced_count += 1;
                                         tracing::info!(
                                             "Synced identity {} with DNS record on {}",
@@ -791,7 +859,7 @@ pub async fn sync_identities_from_dns(
             }
         }
     }
-    
+
     Ok(Json(SyncDnsResponse {
         synced_count,
         checked_domains,
@@ -844,26 +912,44 @@ pub async fn verify_signature(
     Json(req): Json<VerifySignatureRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     // Parse inputs
-    let message = hex::decode(&req.message)
-        .map_err(|_| (StatusCode::BAD_REQUEST, "Invalid hex in message".to_string()))?;
-    let signature = hex::decode(&req.signature)
-        .map_err(|_| (StatusCode::BAD_REQUEST, "Invalid hex in signature".to_string()))?;
-    let public_key = hex::decode(&req.public_key)
-        .map_err(|_| (StatusCode::BAD_REQUEST, "Invalid hex in public key".to_string()))?;
+    let message = hex::decode(&req.message).map_err(|_| {
+        (
+            StatusCode::BAD_REQUEST,
+            "Invalid hex in message".to_string(),
+        )
+    })?;
+    let signature = hex::decode(&req.signature).map_err(|_| {
+        (
+            StatusCode::BAD_REQUEST,
+            "Invalid hex in signature".to_string(),
+        )
+    })?;
+    let public_key = hex::decode(&req.public_key).map_err(|_| {
+        (
+            StatusCode::BAD_REQUEST,
+            "Invalid hex in public key".to_string(),
+        )
+    })?;
 
     if signature.len() != 64 {
-        return Err((StatusCode::BAD_REQUEST, "Signature must be 64 bytes".to_string()));
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "Signature must be 64 bytes".to_string(),
+        ));
     }
     if public_key.len() != 32 {
-        return Err((StatusCode::BAD_REQUEST, "Public key must be 32 bytes".to_string()));
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "Public key must be 32 bytes".to_string(),
+        ));
     }
 
     // Try Ed25519 first (Pubky)
     let ed25519_valid = {
-        use ed25519_dalek::{Signature, VerifyingKey, Verifier};
+        use ed25519_dalek::{Signature, Verifier, VerifyingKey};
         let pk_bytes: [u8; 32] = public_key.clone().try_into().unwrap();
         let sig_bytes: [u8; 64] = signature.clone().try_into().unwrap();
-        
+
         if let Ok(verifying_key) = VerifyingKey::from_bytes(&pk_bytes) {
             let sig = Signature::from_bytes(&sig_bytes);
             verifying_key.verify(&message, &sig).is_ok()
@@ -874,14 +960,14 @@ pub async fn verify_signature(
 
     // Try secp256k1 Schnorr (Nostr)
     let schnorr_valid = {
-        use bitcoin::secp256k1::{Secp256k1, Message, schnorr::Signature, XOnlyPublicKey};
-        
+        use bitcoin::secp256k1::{schnorr::Signature, Message, Secp256k1, XOnlyPublicKey};
+
         if message.len() == 32 {
             let secp = Secp256k1::verification_only();
             let pk_bytes: [u8; 32] = public_key.clone().try_into().unwrap();
             let sig_bytes: [u8; 64] = signature.clone().try_into().unwrap();
             let msg_bytes: [u8; 32] = message.clone().try_into().unwrap();
-            
+
             let msg = Message::from_digest(msg_bytes);
             if let (Ok(xonly), Ok(sig)) = (
                 XOnlyPublicKey::from_slice(&pk_bytes),
@@ -900,4 +986,3 @@ pub async fn verify_signature(
         valid: ed25519_valid || schnorr_valid,
     }))
 }
-

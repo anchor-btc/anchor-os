@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useRouter } from "next/navigation";
-import { apps } from "@/lib/apps";
+import { useRouter } from 'next/navigation';
+import { apps } from '@/lib/apps';
 import {
   ExternalLink,
   X,
@@ -11,9 +11,9 @@ import {
   ChevronRight,
   Globe,
   Lock,
-} from "lucide-react";
-import { useState, useRef, useCallback, useEffect, KeyboardEvent } from "react";
-import { cn } from "@/lib/utils";
+} from 'lucide-react';
+import { useState, useRef, useCallback, useEffect, KeyboardEvent } from 'react';
+import { cn } from '@/lib/utils';
 
 interface IframeViewProps {
   appId: string;
@@ -26,8 +26,8 @@ export function IframeView({ appId, initialUrl }: IframeViewProps) {
 
   // Find the app by ID
   const app = apps.find((a) => a.id === appId);
-  const baseUrl = app?.url || "";
-  
+  const baseUrl = app?.url || '';
+
   // Use initialUrl if provided, otherwise use baseUrl
   const startUrl = initialUrl || baseUrl;
 
@@ -48,15 +48,15 @@ export function IframeView({ appId, initialUrl }: IframeViewProps) {
   // Reset state when appId or initialUrl changes
   useEffect(() => {
     const newApp = apps.find((a) => a.id === appId);
-    const newBaseUrl = newApp?.url || "";
+    const newBaseUrl = newApp?.url || '';
     const newStartUrl = initialUrl || newBaseUrl;
-    
+
     setCurrentUrl(newStartUrl);
     setInputUrl(newStartUrl);
     setHistory([newStartUrl]);
     setHistoryIndex(0);
     setIsLoading(true);
-    
+
     if (iframeRef.current) {
       iframeRef.current.src = newStartUrl;
     }
@@ -66,10 +66,10 @@ export function IframeView({ appId, initialUrl }: IframeViewProps) {
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       // Verify origin is from our apps (localhost with any port)
-      if (!event.origin.startsWith("http://localhost")) return;
+      if (!event.origin.startsWith('http://localhost')) return;
 
       // Handle URL update messages
-      if (event.data?.type === "anchor-url-change" && event.data?.url) {
+      if (event.data?.type === 'anchor-url-change' && event.data?.url) {
         const newUrl = event.data.url;
         if (newUrl !== currentUrl) {
           setCurrentUrl(newUrl);
@@ -83,93 +83,48 @@ export function IframeView({ appId, initialUrl }: IframeViewProps) {
       }
     };
 
-    window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
   }, [currentUrl, history, historyIndex]);
 
-  if (!app || !app.url) {
-    return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-5rem)]">
-        <p className="text-muted-foreground mb-4">App not found or has no external URL</p>
-        <button
-          onClick={() => router.push("/")}
-          className="px-4 py-2 bg-primary text-primary-foreground rounded-lg"
-        >
-          Back to Dashboard
-        </button>
-      </div>
-    );
-  }
-
-  // Handle apps that don't support iframe embedding
-  if (app.supportsIframe === false) {
-    return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-5rem)] gap-6">
-        <div className="flex flex-col items-center gap-3 text-center max-w-md">
-          <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center">
-            <ExternalLink className="w-8 h-8 text-muted-foreground" />
-          </div>
-          <h2 className="text-xl font-semibold text-foreground">{app.name}</h2>
-          <p className="text-muted-foreground">
-            This app doesn&apos;t support embedded viewing due to security restrictions.
-            Click below to open it in a new tab.
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <button
-            onClick={() => router.push("/")}
-            className="px-4 py-2 bg-muted text-muted-foreground hover:bg-muted/80 rounded-lg transition-colors"
-          >
-            Back to Dashboard
-          </button>
-          <a
-            href={app.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg flex items-center gap-2 transition-colors"
-          >
-            <ExternalLink className="w-4 h-4" />
-            Open {app.name}
-          </a>
-        </div>
-      </div>
-    );
-  }
-
-  const navigateTo = useCallback((url: string, addToHistory = true) => {
-    // Ensure URL has protocol
-    let finalUrl = url;
-    if (!url.startsWith("http://") && !url.startsWith("https://")) {
-      // If it's a relative path, append to base
-      if (url.startsWith("/")) {
-        const base = new URL(baseUrl);
-        finalUrl = `${base.origin}${url}`;
-      } else {
-        finalUrl = `http://${url}`;
+  // useCallback must be called unconditionally (before any returns)
+  const navigateTo = useCallback(
+    (url: string, addToHistory = true) => {
+      // Ensure URL has protocol
+      let finalUrl = url;
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        // If it's a relative path, append to base
+        if (url.startsWith('/')) {
+          const base = new URL(baseUrl);
+          finalUrl = `${base.origin}${url}`;
+        } else {
+          finalUrl = `http://${url}`;
+        }
       }
-    }
 
-    setCurrentUrl(finalUrl);
-    setInputUrl(finalUrl);
-    setIsLoading(true);
+      setCurrentUrl(finalUrl);
+      setInputUrl(finalUrl);
+      setIsLoading(true);
 
-    if (iframeRef.current) {
-      iframeRef.current.src = finalUrl;
-    }
+      if (iframeRef.current) {
+        iframeRef.current.src = finalUrl;
+      }
 
-    if (addToHistory) {
-      // Add to history, removing any forward history
-      setHistory((prev) => [...prev.slice(0, historyIndex + 1), finalUrl]);
-      setHistoryIndex((prev) => prev + 1);
-    }
-  }, [baseUrl, historyIndex]);
+      if (addToHistory) {
+        // Add to history, removing any forward history
+        setHistory((prev) => [...prev.slice(0, historyIndex + 1), finalUrl]);
+        setHistoryIndex((prev) => prev + 1);
+      }
+    },
+    [baseUrl, historyIndex]
+  );
 
   const handleClose = () => {
-    router.push("/");
+    router.push('/');
   };
 
   const handleOpenExternal = () => {
-    window.open(currentUrl, "_blank");
+    window.open(currentUrl, '_blank');
   };
 
   const handleRefresh = () => {
@@ -213,7 +168,7 @@ export function IframeView({ appId, initialUrl }: IframeViewProps) {
     try {
       if (iframeRef.current?.contentWindow?.location?.href) {
         const newUrl = iframeRef.current.contentWindow.location.href;
-        if (newUrl !== "about:blank" && newUrl !== currentUrl) {
+        if (newUrl !== 'about:blank' && newUrl !== currentUrl) {
           setCurrentUrl(newUrl);
           setInputUrl(newUrl);
           // Add to history if different
@@ -229,7 +184,7 @@ export function IframeView({ appId, initialUrl }: IframeViewProps) {
   };
 
   const handleUrlSubmit = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
+    if (e.key === 'Enter') {
       navigateTo(inputUrl);
       (e.target as HTMLInputElement).blur();
     }
@@ -252,22 +207,70 @@ export function IframeView({ appId, initialUrl }: IframeViewProps) {
         protocol: url.protocol,
         host: url.host,
         path: url.pathname + url.search + url.hash,
-        isSecure: url.protocol === "https:",
+        isSecure: url.protocol === 'https:',
       };
     } catch {
-      return { protocol: "http:", host: currentUrl, path: "", isSecure: false };
+      return { protocol: 'http:', host: currentUrl, path: '', isSecure: false };
     }
   };
 
   const urlParts = getUrlDisplay();
 
+  // Early returns (after all hooks are called)
+  if (!app || !app.url) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-5rem)]">
+        <p className="text-muted-foreground mb-4">App not found or has no external URL</p>
+        <button
+          onClick={() => router.push('/')}
+          className="px-4 py-2 bg-primary text-primary-foreground rounded-lg"
+        >
+          Back to Dashboard
+        </button>
+      </div>
+    );
+  }
+
+  // Handle apps that don't support iframe embedding
+  if (app.supportsIframe === false) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-5rem)] gap-6">
+        <div className="flex flex-col items-center gap-3 text-center max-w-md">
+          <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center">
+            <ExternalLink className="w-8 h-8 text-muted-foreground" />
+          </div>
+          <h2 className="text-xl font-semibold text-foreground">{app.name}</h2>
+          <p className="text-muted-foreground">
+            This app doesn&apos;t support embedded viewing due to security restrictions. Click below
+            to open it in a new tab.
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={() => router.push('/')}
+            className="px-4 py-2 bg-muted text-muted-foreground hover:bg-muted/80 rounded-lg transition-colors"
+          >
+            Back to Dashboard
+          </button>
+          <a
+            href={app.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg flex items-center gap-2 transition-colors"
+          >
+            <ExternalLink className="w-4 h-4" />
+            Open {app.name}
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className={cn(
-        "flex flex-col",
-        isFullscreen
-          ? "fixed inset-0 z-50 bg-background"
-          : "h-[calc(100vh-5rem)]"
+        'flex flex-col',
+        isFullscreen ? 'fixed inset-0 z-50 bg-background' : 'h-[calc(100vh-5rem)]'
       )}
     >
       {/* Browser-like header bar */}
@@ -278,10 +281,10 @@ export function IframeView({ appId, initialUrl }: IframeViewProps) {
             onClick={handleBack}
             disabled={!canGoBack}
             className={cn(
-              "p-1.5 rounded-lg transition-colors",
+              'p-1.5 rounded-lg transition-colors',
               canGoBack
-                ? "hover:bg-muted text-foreground"
-                : "text-muted-foreground/40 cursor-not-allowed"
+                ? 'hover:bg-muted text-foreground'
+                : 'text-muted-foreground/40 cursor-not-allowed'
             )}
             title="Back"
           >
@@ -291,10 +294,10 @@ export function IframeView({ appId, initialUrl }: IframeViewProps) {
             onClick={handleForward}
             disabled={!canGoForward}
             className={cn(
-              "p-1.5 rounded-lg transition-colors",
+              'p-1.5 rounded-lg transition-colors',
               canGoForward
-                ? "hover:bg-muted text-foreground"
-                : "text-muted-foreground/40 cursor-not-allowed"
+                ? 'hover:bg-muted text-foreground'
+                : 'text-muted-foreground/40 cursor-not-allowed'
             )}
             title="Forward"
           >
@@ -306,10 +309,7 @@ export function IframeView({ appId, initialUrl }: IframeViewProps) {
             title="Refresh"
           >
             <RefreshCw
-              className={cn(
-                "w-4 h-4 text-muted-foreground",
-                isLoading && "animate-spin"
-              )}
+              className={cn('w-4 h-4 text-muted-foreground', isLoading && 'animate-spin')}
             />
           </button>
         </div>
@@ -352,7 +352,7 @@ export function IframeView({ appId, initialUrl }: IframeViewProps) {
           <button
             onClick={() => setIsFullscreen(!isFullscreen)}
             className="p-1.5 hover:bg-muted rounded-lg transition-colors"
-            title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+            title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
           >
             <Maximize2 className="w-4 h-4 text-muted-foreground" />
           </button>

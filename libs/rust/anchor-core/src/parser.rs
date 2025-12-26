@@ -2,11 +2,11 @@
 
 use bitcoin::hashes::Hash;
 use bitcoin::script::Instruction;
-use bitcoin::{Script, Txid, Transaction};
+use bitcoin::{Script, Transaction, Txid};
 
 use crate::{
-    Anchor, AnchorError, AnchorKind, ParsedAnchorMessage,
-    ANCHOR_MAGIC, ANCHOR_SIZE, MIN_PAYLOAD_SIZE, TXID_PREFIX_SIZE,
+    Anchor, AnchorError, AnchorKind, ParsedAnchorMessage, ANCHOR_MAGIC, ANCHOR_SIZE,
+    MIN_PAYLOAD_SIZE, TXID_PREFIX_SIZE,
 };
 
 /// Parse an ANCHOR payload from raw bytes
@@ -62,7 +62,11 @@ pub fn parse_anchor_payload(data: &[u8]) -> Result<ParsedAnchorMessage, AnchorEr
     // Remaining bytes are the body
     let body = data[required_size..].to_vec();
 
-    Ok(ParsedAnchorMessage { kind, anchors, body })
+    Ok(ParsedAnchorMessage {
+        kind,
+        anchors,
+        body,
+    })
 }
 
 /// Check if raw bytes start with the ANCHOR magic
@@ -106,7 +110,7 @@ pub fn parse_output_script(script: &Script) -> Option<ParsedAnchorMessage> {
 /// Extract data bytes from an OP_RETURN script
 fn extract_op_return_data(script: &Script) -> Option<Vec<u8>> {
     let mut instructions = script.instructions();
-    
+
     // First instruction should be OP_RETURN
     match instructions.next() {
         Some(Ok(Instruction::Op(bitcoin::opcodes::all::OP_RETURN))) => {}
@@ -172,15 +176,15 @@ mod tests {
     #[test]
     fn test_parse_multiple_anchors() {
         let mut payload = vec![0xA1, 0x1C, 0x00, 0x01, 0x01, 0x02]; // kind=1, anchors=2
-        
+
         // First anchor
         payload.extend_from_slice(&[0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88]);
         payload.push(0x00);
-        
+
         // Second anchor
         payload.extend_from_slice(&[0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x00, 0x11]);
         payload.push(0x01);
-        
+
         let msg = parse_anchor_payload(&payload).unwrap();
         assert_eq!(msg.anchors.len(), 2);
         assert_eq!(msg.anchors[0].vout, 0);
@@ -191,15 +195,13 @@ mod tests {
     fn test_txid_prefix() {
         // Create a known txid
         let txid = Txid::from_byte_array([
-            0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00,
         ]);
-        
+
         let prefix = txid_to_prefix(&txid);
         assert_eq!(prefix, [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0]);
         assert!(txid_matches_prefix(&txid, &prefix));
     }
 }
-

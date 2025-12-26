@@ -36,7 +36,7 @@ describe('Dashboard Wallet', () => {
     // Mine a block and verify page still works
     cy.mineBlocks(1);
     cy.wait(2000);
-    
+
     // Page should still be functional after mining
     cy.get('body').should('be.visible');
     cy.url().should('include', '/wallet');
@@ -56,7 +56,7 @@ describe('Dashboard Wallet Tabs', () => {
   it('should click on second tab', () => {
     // Click second tab (after the first one which is active by default)
     cy.get('[role="tablist"] button, button').eq(1).click();
-    
+
     cy.wait(500);
     cy.get('body').should('be.visible');
   });
@@ -64,7 +64,7 @@ describe('Dashboard Wallet Tabs', () => {
   it('should click on third tab', () => {
     // Click third tab
     cy.get('[role="tablist"] button, button').eq(2).click();
-    
+
     cy.wait(500);
     cy.get('body').should('be.visible');
   });

@@ -128,7 +128,8 @@ impl BdkWalletService {
                 anyhow::bail!("Password required to load existing wallet");
             }
 
-            let mnemonic = Self::load_encrypted_mnemonic(&mnemonic_path, password.as_ref().unwrap())?;
+            let mnemonic =
+                Self::load_encrypted_mnemonic(&mnemonic_path, password.as_ref().unwrap())?;
             let wallet = Self::create_wallet_from_mnemonic(&mnemonic, network)?;
 
             // Load state if available
@@ -143,8 +144,10 @@ impl BdkWalletService {
                         for _ in 0..state.last_internal_index {
                             w.reveal_next_address(KeychainKind::Internal);
                         }
-                        info!("Restored wallet state: {} external, {} internal addresses",
-                            state.last_external_index, state.last_internal_index);
+                        info!(
+                            "Restored wallet state: {} external, {} internal addresses",
+                            state.last_external_index, state.last_internal_index
+                        );
                         (w, Some(mnemonic))
                     } else {
                         (wallet, Some(mnemonic))
@@ -191,49 +194,60 @@ impl BdkWalletService {
     /// Create Electrum client with retries and timeout
     fn create_electrum_client(url: &str) -> Result<electrum_client::Client> {
         info!("Connecting to Electrum server: {}", url);
-        
+
         // Retry connection up to 12 times (2 minutes total)
         let max_retries = 12;
         let retry_delay = std::time::Duration::from_secs(10);
         let connection_timeout = std::time::Duration::from_secs(5);
-        
+
         for attempt in 1..=max_retries {
             // Use a channel to implement connection timeout
             let url_clone = url.to_string();
             let (tx, rx) = std::sync::mpsc::channel();
-            
+
             std::thread::spawn(move || {
-                let result = electrum_client::Client::new(&url_clone)
-                    .map(|c| {
-                        // Also test the connection
-                        c.block_headers_subscribe().map(|h| (c, h))
-                    });
+                let result = electrum_client::Client::new(&url_clone).map(|c| {
+                    // Also test the connection
+                    c.block_headers_subscribe().map(|h| (c, h))
+                });
                 let _ = tx.send(result);
             });
-            
+
             match rx.recv_timeout(connection_timeout) {
                 Ok(Ok(Ok((client, header)))) => {
                     info!("Connected to Electrum, chain tip height: {}", header.height);
                     return Ok(client);
                 }
                 Ok(Ok(Err(e))) => {
-                    warn!("Electrum connection test failed (attempt {}/{}): {}", attempt, max_retries, e);
+                    warn!(
+                        "Electrum connection test failed (attempt {}/{}): {}",
+                        attempt, max_retries, e
+                    );
                 }
                 Ok(Err(e)) => {
-                    warn!("Failed to connect to Electrum (attempt {}/{}): {}", attempt, max_retries, e);
+                    warn!(
+                        "Failed to connect to Electrum (attempt {}/{}): {}",
+                        attempt, max_retries, e
+                    );
                 }
                 Err(_) => {
-                    warn!("Electrum connection timed out (attempt {}/{})", attempt, max_retries);
+                    warn!(
+                        "Electrum connection timed out (attempt {}/{})",
+                        attempt, max_retries
+                    );
                 }
             }
-            
+
             if attempt < max_retries {
                 info!("Retrying Electrum connection in 10s...");
                 std::thread::sleep(retry_delay);
             }
         }
-        
-        anyhow::bail!("Failed to connect to Electrum server after {} attempts", max_retries)
+
+        anyhow::bail!(
+            "Failed to connect to Electrum server after {} attempts",
+            max_retries
+        )
     }
 
     /// Create a new wallet from mnemonic
@@ -249,7 +263,7 @@ impl BdkWalletService {
             .ok_or_else(|| anyhow::anyhow!("Failed to get xprv from extended key"))?;
 
         // Create BIP84 descriptors (Native SegWit)
-        let external_desc = Bip84(xprv.clone(), KeychainKind::External);
+        let external_desc = Bip84(xprv, KeychainKind::External);
         let internal_desc = Bip84(xprv, KeychainKind::Internal);
 
         // Create wallet
@@ -264,7 +278,9 @@ impl BdkWalletService {
 
     /// Save wallet state to file
     fn save_state(&self) -> Result<()> {
-        let wallet = self.wallet.lock()
+        let wallet = self
+            .wallet
+            .lock()
             .map_err(|e| anyhow::anyhow!("Failed to lock wallet: {}", e))?;
 
         let state = WalletState {
@@ -321,9 +337,12 @@ impl BdkWalletService {
         // Create file content
         let file = EncryptedMnemonicFile {
             version: 1,
-            salt: base64::Engine::encode(&base64::engine::general_purpose::STANDARD, &salt),
-            nonce: base64::Engine::encode(&base64::engine::general_purpose::STANDARD, &nonce_bytes),
-            ciphertext: base64::Engine::encode(&base64::engine::general_purpose::STANDARD, &ciphertext),
+            salt: base64::Engine::encode(&base64::engine::general_purpose::STANDARD, salt),
+            nonce: base64::Engine::encode(&base64::engine::general_purpose::STANDARD, nonce_bytes),
+            ciphertext: base64::Engine::encode(
+                &base64::engine::general_purpose::STANDARD,
+                &ciphertext,
+            ),
             network: format!("{:?}", network).to_lowercase(),
             created_at: chrono::Utc::now().to_rfc3339(),
         };
@@ -351,8 +370,10 @@ impl BdkWalletService {
 
         // Decode base64 fields
         let salt = base64::Engine::decode(&base64::engine::general_purpose::STANDARD, &file.salt)?;
-        let nonce_bytes = base64::Engine::decode(&base64::engine::general_purpose::STANDARD, &file.nonce)?;
-        let ciphertext = base64::Engine::decode(&base64::engine::general_purpose::STANDARD, &file.ciphertext)?;
+        let nonce_bytes =
+            base64::Engine::decode(&base64::engine::general_purpose::STANDARD, &file.nonce)?;
+        let ciphertext =
+            base64::Engine::decode(&base64::engine::general_purpose::STANDARD, &file.ciphertext)?;
 
         // Derive key
         let mut key = [0u8; 32];
@@ -380,7 +401,9 @@ impl BdkWalletService {
     pub fn sync(&self) -> Result<()> {
         info!("Syncing wallet with Electrum...");
 
-        let mut wallet = self.wallet.lock()
+        let mut wallet = self
+            .wallet
+            .lock()
             .map_err(|e| anyhow::anyhow!("Failed to lock wallet: {}", e))?;
 
         // Full scan
@@ -389,7 +412,9 @@ impl BdkWalletService {
 
         // Update chain tip
         if let Some(tip) = update.chain_update.as_ref() {
-            let mut chain_tip = self.chain_tip.lock()
+            let mut chain_tip = self
+                .chain_tip
+                .lock()
                 .map_err(|e| anyhow::anyhow!("Failed to lock chain_tip: {}", e))?;
             *chain_tip = tip.height();
         }
@@ -406,21 +431,27 @@ impl BdkWalletService {
 
     /// Get wallet balance
     pub fn get_balance(&self) -> Result<Balance> {
-        let wallet = self.wallet.lock()
+        let wallet = self
+            .wallet
+            .lock()
             .map_err(|e| anyhow::anyhow!("Failed to lock wallet: {}", e))?;
 
         let balance = wallet.balance();
 
         Ok(Balance {
             confirmed: balance.confirmed.to_sat() as f64 / 100_000_000.0,
-            unconfirmed: (balance.untrusted_pending.to_sat() + balance.trusted_pending.to_sat()) as f64 / 100_000_000.0,
+            unconfirmed: (balance.untrusted_pending.to_sat() + balance.trusted_pending.to_sat())
+                as f64
+                / 100_000_000.0,
             total: balance.total().to_sat() as f64 / 100_000_000.0,
         })
     }
 
     /// Get a new receiving address
     pub fn get_new_address(&self) -> Result<String> {
-        let mut wallet = self.wallet.lock()
+        let mut wallet = self
+            .wallet
+            .lock()
             .map_err(|e| anyhow::anyhow!("Failed to lock wallet: {}", e))?;
 
         let address_info = wallet.reveal_next_address(KeychainKind::External);
@@ -434,7 +465,9 @@ impl BdkWalletService {
 
     /// Peek at the next address without revealing it
     pub fn peek_address(&self, index: u32) -> Result<String> {
-        let wallet = self.wallet.lock()
+        let wallet = self
+            .wallet
+            .lock()
             .map_err(|e| anyhow::anyhow!("Failed to lock wallet: {}", e))?;
 
         let address_info = wallet.peek_address(KeychainKind::External, index);
@@ -443,10 +476,14 @@ impl BdkWalletService {
 
     /// List all UTXOs
     pub fn list_utxos(&self) -> Result<Vec<Utxo>> {
-        let wallet = self.wallet.lock()
+        let wallet = self
+            .wallet
+            .lock()
             .map_err(|e| anyhow::anyhow!("Failed to lock wallet: {}", e))?;
 
-        let chain_tip = *self.chain_tip.lock()
+        let chain_tip = *self
+            .chain_tip
+            .lock()
             .map_err(|e| anyhow::anyhow!("Failed to lock chain_tip: {}", e))?;
 
         let utxos: Vec<Utxo> = wallet
@@ -475,7 +512,9 @@ impl BdkWalletService {
 
     /// List all addresses that have been used
     pub fn list_addresses(&self) -> Result<Vec<String>> {
-        let wallet = self.wallet.lock()
+        let wallet = self
+            .wallet
+            .lock()
             .map_err(|e| anyhow::anyhow!("Failed to lock wallet: {}", e))?;
 
         let mut addresses = Vec::new();
@@ -501,23 +540,21 @@ impl BdkWalletService {
     ///
     /// Returns None if the wallet was loaded without the mnemonic.
     pub fn get_mnemonic(&self) -> Option<Vec<String>> {
-        self.mnemonic.as_ref().map(|m| {
-            m.words().map(|w| w.to_string()).collect()
-        })
+        self.mnemonic
+            .as_ref()
+            .map(|m| m.words().map(|w| w.to_string()).collect())
     }
 
     /// Get wallet info for display
     pub fn get_wallet_info(&self) -> Result<WalletInfo> {
-        let wallet = self.wallet.lock()
+        let wallet = self
+            .wallet
+            .lock()
             .map_err(|e| anyhow::anyhow!("Failed to lock wallet: {}", e))?;
 
         // Get descriptors
-        let external_desc = wallet
-            .public_descriptor(KeychainKind::External)
-            .to_string();
-        let internal_desc = wallet
-            .public_descriptor(KeychainKind::Internal)
-            .to_string();
+        let external_desc = wallet.public_descriptor(KeychainKind::External).to_string();
+        let internal_desc = wallet.public_descriptor(KeychainKind::Internal).to_string();
 
         // Extract fingerprint from descriptor
         let fingerprint = external_desc
@@ -543,7 +580,9 @@ impl BdkWalletService {
 
     /// Get public descriptors for watch-only wallet
     pub fn get_descriptors(&self) -> Result<(String, String)> {
-        let wallet = self.wallet.lock()
+        let wallet = self
+            .wallet
+            .lock()
             .map_err(|e| anyhow::anyhow!("Failed to lock wallet: {}", e))?;
 
         let external = wallet.public_descriptor(KeychainKind::External).to_string();
@@ -564,7 +603,9 @@ impl BdkWalletService {
 
     /// Update password for mnemonic encryption
     pub fn update_password(&self, new_password: &str) -> Result<()> {
-        let mnemonic = self.mnemonic.as_ref()
+        let mnemonic = self
+            .mnemonic
+            .as_ref()
             .ok_or_else(|| anyhow::anyhow!("No mnemonic available to re-encrypt"))?;
 
         let mnemonic_path = self.data_dir.join("mnemonic.enc");
@@ -580,7 +621,7 @@ impl BdkWalletService {
     }
 
     /// Check if wallet file exists
-    pub fn wallet_exists(data_dir: &PathBuf) -> bool {
+    pub fn wallet_exists(data_dir: &std::path::Path) -> bool {
         data_dir.join("mnemonic.enc").exists()
     }
 
@@ -631,12 +672,8 @@ mod tests {
         let password = "test_password_123";
 
         // Save
-        BdkWalletService::save_encrypted_mnemonic(
-            &path,
-            &mnemonic,
-            password,
-            Network::Regtest,
-        ).unwrap();
+        BdkWalletService::save_encrypted_mnemonic(&path, &mnemonic, password, Network::Regtest)
+            .unwrap();
 
         // Load
         let loaded = BdkWalletService::load_encrypted_mnemonic(&path, password).unwrap();

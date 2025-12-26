@@ -75,4 +75,3 @@ pub struct CreateMarkerResponse {
 pub struct CreateReplyRequest {
     pub message: String,
 }
-

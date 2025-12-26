@@ -102,6 +102,7 @@ impl Database {
         Ok(row.as_ref().map(|r| self.row_to_market(r)))
     }
 
+    #[allow(dead_code)]
     pub async fn get_market_by_bytes(&self, market_id: &[u8]) -> Result<Option<Market>> {
         let row = sqlx::query(
             r#"
@@ -125,10 +126,10 @@ impl Database {
         let market_id_bytes = hex::decode(&market.market_id)?;
         let oracle_bytes = hex::decode(&market.oracle_pubkey).unwrap_or_default();
         let creator_bytes = hex::decode(&market.creator_pubkey).unwrap_or_default();
-        
+
         // Calculate k_constant as string (for NUMERIC)
         let k_constant = format!("{}", market.yes_pool as i128 * market.no_pool as i128);
-        
+
         let row = sqlx::query(
             r#"
             INSERT INTO markets (

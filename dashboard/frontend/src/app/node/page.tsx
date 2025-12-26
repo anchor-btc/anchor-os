@@ -1,27 +1,12 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useTranslation } from "react-i18next";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  fetchNodeStatus,
-  mineBlocks,
-  shortenHash,
-  fetchNodeConfig,
-  rebuildContainer,
-} from "@/lib/api";
+import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { fetchNodeStatus, fetchNodeConfig, rebuildContainer } from '@/lib/api';
 import {
   Bitcoin,
   Loader2,
-  Blocks,
-  Network,
-  HardDrive,
-  Pickaxe,
-  Database,
-  Zap,
-  Shield,
-  Plus,
-  Minus,
   ChevronDown,
   AlertTriangle,
   Check,
@@ -30,17 +15,13 @@ import {
   Settings,
   FileText,
   Clock,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 // Import DS components
 import {
   PageHeader,
   RefreshButton,
-  Section,
-  SectionHeader,
-  Grid,
-  StatCard,
   Modal,
   ModalHeader,
   ModalContent,
@@ -48,20 +29,20 @@ import {
   Tabs,
   Tab,
   ActionButton,
-} from "@/components/ds";
+} from '@/components/ds';
 
 // Tab components
-import { NodeOverviewTab } from "@/components/node/overview-tab";
-import { NodeSettingsTab } from "@/components/node/settings-tab";
-import { NodeLogsTab } from "@/components/node/logs-tab";
+import { NodeOverviewTab } from '@/components/node/overview-tab';
+import { NodeSettingsTab } from '@/components/node/settings-tab';
+import { NodeLogsTab } from '@/components/node/logs-tab';
 
 export default function NodePage() {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState('overview');
   const [showVersionDropdown, setShowVersionDropdown] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingVersion, setPendingVersion] = useState<string | null>(null);
-  const [rebuildProgress, setRebuildProgress] = useState<string>("");
+  const [rebuildProgress, setRebuildProgress] = useState<string>('');
   const queryClient = useQueryClient();
 
   const {
@@ -70,7 +51,7 @@ export default function NodePage() {
     refetch,
     isRefetching,
   } = useQuery({
-    queryKey: ["node-status"],
+    queryKey: ['node-status'],
     queryFn: fetchNodeStatus,
     refetchInterval: 3000,
   });
@@ -80,27 +61,27 @@ export default function NodePage() {
     isLoading: nodeConfigLoading,
     refetch: refetchConfig,
   } = useQuery({
-    queryKey: ["node-config"],
+    queryKey: ['node-config'],
     queryFn: fetchNodeConfig,
     refetchInterval: 5000,
   });
 
   const rebuildMutation = useMutation({
     mutationFn: ({ version }: { version: string }) =>
-      rebuildContainer("core-bitcoin", { BITCOIN_VERSION: version }),
+      rebuildContainer('core-bitcoin', { BITCOIN_VERSION: version }),
     onMutate: () => {
-      setRebuildProgress("Building new image...");
+      setRebuildProgress('Building new image...');
     },
     onSuccess: (data) => {
       if (data.success) {
-        setRebuildProgress("Successfully rebuilt!");
-        queryClient.invalidateQueries({ queryKey: ["node-config"] });
-        queryClient.invalidateQueries({ queryKey: ["node-status"] });
+        setRebuildProgress('Successfully rebuilt!');
+        queryClient.invalidateQueries({ queryKey: ['node-config'] });
+        queryClient.invalidateQueries({ queryKey: ['node-status'] });
         refetchConfig();
         refetch();
         setTimeout(() => {
           setShowConfirmModal(false);
-          setRebuildProgress("");
+          setRebuildProgress('');
           setPendingVersion(null);
         }, 2000);
       } else {
@@ -129,15 +110,15 @@ export default function NodePage() {
   const handleCancelSwitch = () => {
     setShowConfirmModal(false);
     setPendingVersion(null);
-    setRebuildProgress("");
+    setRebuildProgress('');
   };
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = () => setShowVersionDropdown(false);
     if (showVersionDropdown) {
-      document.addEventListener("click", handleClickOutside);
-      return () => document.removeEventListener("click", handleClickOutside);
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
     }
   }, [showVersionDropdown]);
 
@@ -152,7 +133,7 @@ export default function NodePage() {
   const nodeRunning = !!(nodeConfig?.is_running && status);
   const blockchain = status?.blockchain;
   const network = status?.network;
-  const currentVersion = nodeConfig?.current_version || "30.0";
+  const currentVersion = nodeConfig?.current_version || '30.0';
 
   return (
     <div className="space-y-6">
@@ -160,11 +141,11 @@ export default function NodePage() {
       <PageHeader
         icon={Bitcoin}
         iconColor="orange"
-        title={t("node.title")}
+        title={t('node.title')}
         subtitle={
           nodeRunning && network
-            ? `${network.subversion.replace(/\//g, "")} on ${blockchain?.chain}`
-            : t("node.nodeNotRunning")
+            ? `${network.subversion.replace(/\//g, '')} on ${blockchain?.chain}`
+            : t('node.nodeNotRunning')
         }
         actions={
           <div className="flex items-center gap-3">
@@ -180,23 +161,25 @@ export default function NodePage() {
                 >
                   <Bitcoin className="w-4 h-4" />
                   <span>v{currentVersion}</span>
-                  <ChevronDown className={cn(
-                    "w-4 h-4 transition-transform",
-                    showVersionDropdown && "rotate-180"
-                  )} />
+                  <ChevronDown
+                    className={cn(
+                      'w-4 h-4 transition-transform',
+                      showVersionDropdown && 'rotate-180'
+                    )}
+                  />
                 </button>
 
                 {showVersionDropdown && (
-                  <div 
+                  <div
                     className="absolute right-0 top-full mt-2 w-72 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <div className="p-3 border-b border-border bg-muted/50">
                       <p className="text-sm font-medium text-foreground">
-                        {t("node.selectVersion")}
+                        {t('node.selectVersion')}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {t("node.switchRequiresRebuild")}
+                        {t('node.switchRequiresRebuild')}
                       </p>
                     </div>
                     <div className="max-h-80 overflow-y-auto">
@@ -207,31 +190,35 @@ export default function NodePage() {
                             key={ver.version}
                             onClick={() => handleVersionSelect(ver.version)}
                             className={cn(
-                              "w-full px-4 py-3 text-left hover:bg-muted/50 transition-colors border-b border-border last:border-0",
-                              isActive && "bg-orange-500/5"
+                              'w-full px-4 py-3 text-left hover:bg-muted/50 transition-colors border-b border-border last:border-0',
+                              isActive && 'bg-orange-500/5'
                             )}
                           >
                             <div className="flex items-center justify-between mb-1">
                               <div className="flex items-center gap-2">
                                 <Bitcoin className="w-4 h-4 text-orange-500" />
-                                <span className="font-semibold text-foreground">v{ver.version}</span>
+                                <span className="font-semibold text-foreground">
+                                  v{ver.version}
+                                </span>
                                 {ver.is_default && (
                                   <span className="text-[10px] bg-orange-500/10 text-orange-500 px-1.5 py-0.5 rounded">
-                                    {t("node.default")}
+                                    {t('node.default')}
                                   </span>
                                 )}
                               </div>
                               {isActive && (
                                 <span className="flex items-center gap-1 text-xs text-success">
                                   <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-                                  {t("node.running")}
+                                  {t('node.running')}
                                 </span>
                               )}
                             </div>
                             <p className="text-xs text-muted-foreground mb-1">{ver.release_date}</p>
                             <ul className="text-[11px] text-muted-foreground">
                               {ver.features.slice(0, 2).map((f, i) => (
-                                <li key={i} className="truncate">• {f}</li>
+                                <li key={i} className="truncate">
+                                  • {f}
+                                </li>
                               ))}
                             </ul>
                           </button>
@@ -247,7 +234,7 @@ export default function NodePage() {
             {nodeRunning && (
               <span className="flex items-center gap-2 px-3 py-1.5 bg-success/10 text-success rounded-lg text-sm">
                 <Activity className="w-4 h-4 animate-pulse" />
-                {t("common.running")}
+                {t('common.running')}
               </span>
             )}
 
@@ -259,18 +246,18 @@ export default function NodePage() {
       {/* Tabs */}
       <Tabs value={activeTab} onChange={setActiveTab}>
         <Tab value="overview" icon={Activity}>
-          {t("node.overview", "Overview")}
+          {t('node.overview', 'Overview')}
         </Tab>
         <Tab value="settings" icon={Settings}>
-          {t("settings.title", "Settings")}
+          {t('settings.title', 'Settings')}
         </Tab>
         <Tab value="logs" icon={FileText}>
-          {t("node.logs", "Logs")}
+          {t('node.logs', 'Logs')}
         </Tab>
       </Tabs>
 
       {/* Tab Content */}
-      {activeTab === "overview" && (
+      {activeTab === 'overview' && (
         <NodeOverviewTab
           status={status}
           nodeConfig={nodeConfig}
@@ -279,13 +266,9 @@ export default function NodePage() {
         />
       )}
 
-      {activeTab === "settings" && (
-        <NodeSettingsTab nodeConfig={nodeConfig} />
-      )}
+      {activeTab === 'settings' && <NodeSettingsTab nodeConfig={nodeConfig} />}
 
-      {activeTab === "logs" && (
-        <NodeLogsTab />
-      )}
+      {activeTab === 'logs' && <NodeLogsTab />}
 
       {/* Version Switch Confirmation Modal */}
       {showConfirmModal && pendingVersion && (
@@ -297,7 +280,7 @@ export default function NodePage() {
               </div>
               <div>
                 <h2 className="text-lg font-semibold text-foreground">
-                  {t("node.switchVersion", "Switch Bitcoin Core Version")}
+                  {t('node.switchVersion', 'Switch Bitcoin Core Version')}
                 </h2>
                 <p className="text-sm text-muted-foreground">
                   v{currentVersion} → v{pendingVersion}
@@ -310,16 +293,24 @@ export default function NodePage() {
               {!rebuildMutation.isPending && !rebuildProgress && (
                 <>
                   <p className="text-sm text-foreground">
-                    {t("node.switchWarning", "This will stop the Bitcoin node, rebuild the Docker image with the new version, and restart it.")}
+                    {t(
+                      'node.switchWarning',
+                      'This will stop the Bitcoin node, rebuild the Docker image with the new version, and restart it.'
+                    )}
                   </p>
                   <div className="p-4 bg-muted/50 rounded-lg space-y-2">
                     <div className="flex items-center gap-2 text-sm">
                       <Clock className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">{t("node.estimatedTime", "Estimated time")}: ~1-2 {t("common.minutes", "minutes")}</span>
+                      <span className="text-muted-foreground">
+                        {t('node.estimatedTime', 'Estimated time')}: ~1-2{' '}
+                        {t('common.minutes', 'minutes')}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       <AlertTriangle className="w-4 h-4 text-warning" />
-                      <span className="text-warning">{t("node.nodeWillRestart", "Node will be temporarily unavailable")}</span>
+                      <span className="text-warning">
+                        {t('node.nodeWillRestart', 'Node will be temporarily unavailable')}
+                      </span>
                     </div>
                   </div>
                 </>
@@ -331,20 +322,18 @@ export default function NodePage() {
                     {rebuildMutation.isPending && (
                       <Loader2 className="w-5 h-5 animate-spin text-primary" />
                     )}
-                    {rebuildProgress.includes("Successfully") && (
+                    {rebuildProgress.includes('Successfully') && (
                       <Check className="w-5 h-5 text-success" />
                     )}
-                    {rebuildProgress.includes("Error") && (
+                    {rebuildProgress.includes('Error') && (
                       <X className="w-5 h-5 text-destructive" />
                     )}
-                    <span className="text-sm font-medium text-foreground">
-                      {rebuildProgress}
-                    </span>
+                    <span className="text-sm font-medium text-foreground">{rebuildProgress}</span>
                   </div>
 
                   {rebuildMutation.isPending && (
                     <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
-                      <div className="bg-primary h-full animate-pulse" style={{ width: "60%" }} />
+                      <div className="bg-primary h-full animate-pulse" style={{ width: '60%' }} />
                     </div>
                   )}
                 </div>
@@ -352,41 +341,41 @@ export default function NodePage() {
             </div>
           </ModalContent>
           <ModalFooter>
-            {!rebuildMutation.isPending && !rebuildProgress.includes("Successfully") && (
+            {!rebuildMutation.isPending && !rebuildProgress.includes('Successfully') && (
               <>
                 <ActionButton
                   variant="secondary"
                   onClick={handleCancelSwitch}
-                  label={t("common.cancel")}
+                  label={t('common.cancel')}
                 />
                 <ActionButton
                   variant="primary"
                   onClick={handleConfirmSwitch}
                   icon={Bitcoin}
-                  label={t("node.switchNow", "Switch Now")}
+                  label={t('node.switchNow', 'Switch Now')}
                 />
               </>
             )}
-            {rebuildProgress.includes("Successfully") && (
+            {rebuildProgress.includes('Successfully') && (
               <ActionButton
                 variant="primary"
                 onClick={handleCancelSwitch}
                 icon={Check}
-                label={t("common.done", "Done")}
+                label={t('common.done', 'Done')}
               />
             )}
-            {rebuildProgress.includes("Error") && (
+            {rebuildProgress.includes('Error') && (
               <>
                 <ActionButton
                   variant="secondary"
                   onClick={handleCancelSwitch}
-                  label={t("common.close")}
+                  label={t('common.close')}
                 />
                 <ActionButton
                   variant="primary"
                   onClick={handleConfirmSwitch}
                   icon={Bitcoin}
-                  label={t("common.retry", "Retry")}
+                  label={t('common.retry', 'Retry')}
                 />
               </>
             )}

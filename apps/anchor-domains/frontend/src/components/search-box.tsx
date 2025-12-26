@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Search, Loader2 } from "lucide-react";
+import { useState } from 'react';
+import { Search, Loader2 } from 'lucide-react';
 
 interface SearchBoxProps {
   onSearch: (query: string) => void;
@@ -12,9 +12,9 @@ interface SearchBoxProps {
 export function SearchBox({
   onSearch,
   isLoading,
-  placeholder = "Search for a domain (e.g., mysite.btc)...",
+  placeholder = 'Search for a domain (e.g., mysite.btc)...',
 }: SearchBoxProps) {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,11 +39,7 @@ export function SearchBox({
           disabled={isLoading || !query.trim()}
           className="absolute right-3 top-1/2 -translate-y-1/2 px-6 py-2 bg-bitcoin-orange text-white rounded-lg font-medium hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isLoading ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
-          ) : (
-            "Search"
-          )}
+          {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Search'}
         </button>
       </div>
       <p className="mt-2 text-sm text-slate-400 text-center">

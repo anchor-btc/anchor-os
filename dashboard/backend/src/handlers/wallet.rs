@@ -1,6 +1,11 @@
 //! Wallet proxy handlers - forwards requests to the wallet service
 
-use axum::{extract::{Query, State}, http::StatusCode, response::IntoResponse, Json};
+use axum::{
+    extract::{Query, State},
+    http::StatusCode,
+    response::IntoResponse,
+    Json,
+};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tracing::error;
@@ -493,15 +498,10 @@ pub async fn sync_locks(
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     let url = format!("{}/wallet/utxos/sync-locks", state.config.wallet_url);
 
-    let response = state
-        .http_client
-        .post(&url)
-        .send()
-        .await
-        .map_err(|e| {
-            error!("Failed to connect to wallet service: {}", e);
-            (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
-        })?;
+    let response = state.http_client.post(&url).send().await.map_err(|e| {
+        error!("Failed to connect to wallet service: {}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+    })?;
 
     let result: SyncLocksResponse = response.json().await.map_err(|e| {
         error!("Failed to parse sync response: {}", e);
@@ -977,7 +977,7 @@ pub async fn get_locked_assets(
     Query(query): Query<LockedAssetsQuery>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     let mut url = format!("{}/wallet/locked-assets", state.config.wallet_url);
-    
+
     // Pass the filter parameter to the wallet service
     if let Some(filter) = &query.filter {
         url = format!("{}?filter={}", url, filter);

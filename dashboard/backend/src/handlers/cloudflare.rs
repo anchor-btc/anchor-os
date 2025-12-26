@@ -1,11 +1,6 @@
 //! Cloudflare Tunnel management handlers
 
-use axum::{
-    extract::State,
-    http::StatusCode,
-    response::IntoResponse,
-    Json,
-};
+use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 use bollard::container::{
     Config, CreateContainerOptions, RemoveContainerOptions, StartContainerOptions,
     StopContainerOptions,
@@ -316,7 +311,8 @@ pub async fn get_exposable_services(
         },
         ExposableService {
             name: "Anchor Domains".to_string(),
-            description: "Decentralized DNS on Bitcoin - .btc, .sat, .anchor, .anc, .bit domains".to_string(),
+            description: "Decentralized DNS on Bitcoin - .btc, .sat, .anchor, .anc, .bit domains"
+                .to_string(),
             local_url: "http://app-domains-frontend:3400".to_string(),
             port: 3400,
         },

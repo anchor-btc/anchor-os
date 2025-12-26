@@ -23,4 +23,3 @@
   "include": ["src/**/*", "tailwind.config.ts"],
   "exclude": ["node_modules", "dist"]
 }
-

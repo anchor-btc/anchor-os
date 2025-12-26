@@ -9,13 +9,13 @@ use axum::{
 use serde_json::json;
 use tracing::error;
 
-use anchor_specs::KindSpec;
 use crate::db::Database;
 use crate::models::{
     BurnTokenRequest, CreateTxResponse, DeployTokenRequest, HealthResponse, ListParams,
-    MintTokenRequest, Token, TokenAllocation, TokenBalance, TokenHolder, TokenOperation, 
-    TokenOperationResponse, TokenSpec, TokenStats, TokenUtxo, TransferTokenRequest, PaginatedResponse,
+    MintTokenRequest, PaginatedResponse, Token, TokenAllocation, TokenBalance, TokenHolder,
+    TokenOperation, TokenOperationResponse, TokenSpec, TokenStats, TokenUtxo, TransferTokenRequest,
 };
+use anchor_specs::KindSpec;
 
 /// Application state
 #[derive(Clone)]
@@ -175,7 +175,7 @@ pub async fn get_wallet_tokens(
 ) -> Result<Json<WalletTokensResponse>, AppError> {
     // Get all unspent token UTXOs
     let all_token_utxos = state.db.get_all_unspent_token_utxos().await?;
-    
+
     if all_token_utxos.is_empty() {
         return Ok(Json(WalletTokensResponse {
             balances: vec![],
@@ -185,10 +185,13 @@ pub async fn get_wallet_tokens(
     }
 
     // Get the network from Bitcoin RPC
-    let bitcoin_rpc_url = std::env::var("BITCOIN_RPC_URL").unwrap_or_else(|_| "http://core-bitcoin:18443".to_string());
-    let bitcoin_rpc_user = std::env::var("BITCOIN_RPC_USER").unwrap_or_else(|_| "anchor".to_string());
-    let bitcoin_rpc_password = std::env::var("BITCOIN_RPC_PASSWORD").unwrap_or_else(|_| "anchor".to_string());
-    
+    let bitcoin_rpc_url = std::env::var("BITCOIN_RPC_URL")
+        .unwrap_or_else(|_| "http://core-bitcoin:18443".to_string());
+    let bitcoin_rpc_user =
+        std::env::var("BITCOIN_RPC_USER").unwrap_or_else(|_| "anchor".to_string());
+    let bitcoin_rpc_password =
+        std::env::var("BITCOIN_RPC_PASSWORD").unwrap_or_else(|_| "anchor".to_string());
+
     // Check if we're in regtest mode
     let client = reqwest::Client::new();
     let is_regtest = {
@@ -203,7 +206,7 @@ pub async fn get_wallet_tokens(
             }))
             .send()
             .await;
-        
+
         if let Ok(resp) = response {
             if let Ok(json) = resp.json::<serde_json::Value>().await {
                 json["result"]["chain"].as_str() == Some("regtest")
@@ -218,7 +221,10 @@ pub async fn get_wallet_tokens(
     // In regtest mode, assume all tokens belong to the user (single wallet environment)
     // In other networks, we would check address ownership via Bitcoin RPC
     let wallet_utxos: Vec<TokenUtxo> = if is_regtest {
-        tracing::info!("Regtest mode: returning all {} token UTXOs as wallet-owned", all_token_utxos.len());
+        tracing::info!(
+            "Regtest mode: returning all {} token UTXOs as wallet-owned",
+            all_token_utxos.len()
+        );
         all_token_utxos
     } else {
         // Get unique addresses
@@ -229,14 +235,18 @@ pub async fn get_wallet_tokens(
             .into_iter()
             .collect();
 
-        let mut wallet_addresses: std::collections::HashSet<String> = std::collections::HashSet::new();
-        
+        let mut wallet_addresses: std::collections::HashSet<String> =
+            std::collections::HashSet::new();
+
         // Use wallet-specific URL for getaddressinfo (required for multi-wallet Bitcoin Core)
         let wallet_rpc_url = format!("{}/wallet/anchor_wallet", bitcoin_rpc_url);
 
         let num_addresses = addresses.len();
-        tracing::info!("Checking {} unique addresses for wallet ownership", num_addresses);
-        
+        tracing::info!(
+            "Checking {} unique addresses for wallet ownership",
+            num_addresses
+        );
+
         for addr in addresses {
             // Call Bitcoin RPC getaddressinfo to check if address is ours
             let response = client
@@ -260,8 +270,12 @@ pub async fn get_wallet_tokens(
                 }
             }
         }
-        
-        tracing::info!("Found {} wallet-owned addresses out of {}", wallet_addresses.len(), num_addresses);
+
+        tracing::info!(
+            "Found {} wallet-owned addresses out of {}",
+            wallet_addresses.len(),
+            num_addresses
+        );
 
         // Filter token UTXOs to only those owned by wallet
         all_token_utxos
@@ -276,8 +290,9 @@ pub async fn get_wallet_tokens(
     };
 
     // Aggregate balances
-    let mut token_balances: std::collections::HashMap<i32, (String, i16, i128)> = std::collections::HashMap::new();
-    
+    let mut token_balances: std::collections::HashMap<i32, (String, i16, i128)> =
+        std::collections::HashMap::new();
+
     for utxo in &wallet_utxos {
         let amount: i128 = utxo.amount.parse().unwrap_or(0);
         let entry = token_balances
@@ -294,12 +309,15 @@ pub async fn get_wallet_tokens(
             ticker,
             balance: balance.to_string(),
             decimals,
-            utxo_count: wallet_utxos.iter().filter(|u| u.token_id == token_id).count() as i32,
+            utxo_count: wallet_utxos
+                .iter()
+                .filter(|u| u.token_id == token_id)
+                .count() as i32,
         })
         .collect();
 
     let total_utxos = wallet_utxos.len() as i32;
-    
+
     Ok(Json(WalletTokensResponse {
         balances,
         utxos: wallet_utxos,
@@ -351,12 +369,16 @@ pub async fn create_deploy_tx(
     let operation = TokenOperation::Deploy {
         ticker: request.ticker.to_uppercase(),
         decimals: request.decimals,
-        max_supply: request.max_supply.parse().map_err(|_| {
-            AppError::BadRequest("Invalid max_supply".to_string())
-        })?,
-        mint_limit: request.mint_limit.as_ref().map(|s| s.parse()).transpose().map_err(|_| {
-            AppError::BadRequest("Invalid mint_limit".to_string())
-        })?,
+        max_supply: request
+            .max_supply
+            .parse()
+            .map_err(|_| AppError::BadRequest("Invalid max_supply".to_string()))?,
+        mint_limit: request
+            .mint_limit
+            .as_ref()
+            .map(|s| s.parse())
+            .transpose()
+            .map_err(|_| AppError::BadRequest("Invalid mint_limit".to_string()))?,
         flags,
     };
 
@@ -393,9 +415,10 @@ pub async fn create_mint_tx(
     // Create the token operation
     let operation = TokenOperation::Mint {
         token_id: token.id as u64,
-        amount: request.amount.parse().map_err(|_| {
-            AppError::BadRequest("Invalid amount".to_string())
-        })?,
+        amount: request
+            .amount
+            .parse()
+            .map_err(|_| AppError::BadRequest("Invalid amount".to_string()))?,
         output_index: 0, // Mint to first output
     };
 
@@ -421,7 +444,7 @@ pub async fn create_mint_tx(
 fn reverse_txid_hex(txid: &str) -> String {
     let bytes: Vec<_> = (0..txid.len())
         .step_by(2)
-        .filter_map(|i| u8::from_str_radix(&txid[i..i+2], 16).ok())
+        .filter_map(|i| u8::from_str_radix(&txid[i..i + 2], 16).ok())
         .collect();
     bytes.iter().rev().map(|b| format!("{:02x}", b)).collect()
 }
@@ -429,10 +452,13 @@ fn reverse_txid_hex(txid: &str) -> String {
 /// Lock a UTXO to prevent it from being spent by other wallet transactions
 async fn lock_utxo(txid: &str, vout: u32) -> Result<(), AppError> {
     let client = reqwest::Client::new();
-    let bitcoin_rpc_url = std::env::var("BITCOIN_RPC_URL").unwrap_or_else(|_| "http://bitcoin:18443".to_string());
-    let bitcoin_rpc_user = std::env::var("BITCOIN_RPC_USER").unwrap_or_else(|_| "anchor".to_string());
-    let bitcoin_rpc_password = std::env::var("BITCOIN_RPC_PASSWORD").unwrap_or_else(|_| "anchor".to_string());
-    
+    let bitcoin_rpc_url =
+        std::env::var("BITCOIN_RPC_URL").unwrap_or_else(|_| "http://bitcoin:18443".to_string());
+    let bitcoin_rpc_user =
+        std::env::var("BITCOIN_RPC_USER").unwrap_or_else(|_| "anchor".to_string());
+    let bitcoin_rpc_password =
+        std::env::var("BITCOIN_RPC_PASSWORD").unwrap_or_else(|_| "anchor".to_string());
+
     // Use wallet-specific URL for lockunspent
     let wallet_rpc_url = format!("{}/wallet/anchor_wallet", bitcoin_rpc_url);
 
@@ -451,7 +477,10 @@ async fn lock_utxo(txid: &str, vout: u32) -> Result<(), AppError> {
 
     if !response.status().is_success() {
         let error_text = response.text().await.unwrap_or_default();
-        return Err(AppError::Internal(format!("Lock UTXO failed: {}", error_text)));
+        return Err(AppError::Internal(format!(
+            "Lock UTXO failed: {}",
+            error_text
+        )));
     }
 
     let result: serde_json::Value = response
@@ -463,17 +492,23 @@ async fn lock_utxo(txid: &str, vout: u32) -> Result<(), AppError> {
         tracing::info!("Locked UTXO: {}:{}", txid, vout);
         Ok(())
     } else {
-        Err(AppError::Internal(format!("Failed to lock UTXO: {}", result)))
+        Err(AppError::Internal(format!(
+            "Failed to lock UTXO: {}",
+            result
+        )))
     }
 }
 
 /// Unlock a UTXO so it can be spent
 async fn unlock_utxo(txid: &str, vout: u32) -> Result<(), AppError> {
     let client = reqwest::Client::new();
-    let bitcoin_rpc_url = std::env::var("BITCOIN_RPC_URL").unwrap_or_else(|_| "http://bitcoin:18443".to_string());
-    let bitcoin_rpc_user = std::env::var("BITCOIN_RPC_USER").unwrap_or_else(|_| "anchor".to_string());
-    let bitcoin_rpc_password = std::env::var("BITCOIN_RPC_PASSWORD").unwrap_or_else(|_| "anchor".to_string());
-    
+    let bitcoin_rpc_url =
+        std::env::var("BITCOIN_RPC_URL").unwrap_or_else(|_| "http://bitcoin:18443".to_string());
+    let bitcoin_rpc_user =
+        std::env::var("BITCOIN_RPC_USER").unwrap_or_else(|_| "anchor".to_string());
+    let bitcoin_rpc_password =
+        std::env::var("BITCOIN_RPC_PASSWORD").unwrap_or_else(|_| "anchor".to_string());
+
     // Use wallet-specific URL for lockunspent
     let wallet_rpc_url = format!("{}/wallet/anchor_wallet", bitcoin_rpc_url);
 
@@ -492,7 +527,10 @@ async fn unlock_utxo(txid: &str, vout: u32) -> Result<(), AppError> {
 
     if !response.status().is_success() {
         let error_text = response.text().await.unwrap_or_default();
-        return Err(AppError::Internal(format!("Unlock UTXO failed: {}", error_text)));
+        return Err(AppError::Internal(format!(
+            "Unlock UTXO failed: {}",
+            error_text
+        )));
     }
 
     Ok(())
@@ -518,12 +556,14 @@ pub async fn create_transfer_tx(
         .sum();
 
     if total_amount == 0 {
-        return Err(AppError::BadRequest("Total transfer amount must be greater than 0".to_string()));
+        return Err(AppError::BadRequest(
+            "Total transfer amount must be greater than 0".to_string(),
+        ));
     }
 
     // Get wallet's token UTXOs for this token
     let all_token_utxos = state.db.get_all_unspent_token_utxos().await?;
-    
+
     // Filter to only this token's UTXOs (we need to check wallet ownership)
     let token_utxos: Vec<_> = all_token_utxos
         .into_iter()
@@ -531,17 +571,22 @@ pub async fn create_transfer_tx(
         .collect();
 
     if token_utxos.is_empty() {
-        return Err(AppError::BadRequest("No token UTXOs available for transfer".to_string()));
+        return Err(AppError::BadRequest(
+            "No token UTXOs available for transfer".to_string(),
+        ));
     }
 
     // Check which UTXOs are owned by wallet using Bitcoin RPC
     let client = reqwest::Client::new();
-    let bitcoin_rpc_url = std::env::var("BITCOIN_RPC_URL").unwrap_or_else(|_| "http://bitcoin:18443".to_string());
-    let bitcoin_rpc_user = std::env::var("BITCOIN_RPC_USER").unwrap_or_else(|_| "anchor".to_string());
-    let bitcoin_rpc_password = std::env::var("BITCOIN_RPC_PASSWORD").unwrap_or_else(|_| "anchor".to_string());
+    let bitcoin_rpc_url =
+        std::env::var("BITCOIN_RPC_URL").unwrap_or_else(|_| "http://bitcoin:18443".to_string());
+    let bitcoin_rpc_user =
+        std::env::var("BITCOIN_RPC_USER").unwrap_or_else(|_| "anchor".to_string());
+    let bitcoin_rpc_password =
+        std::env::var("BITCOIN_RPC_PASSWORD").unwrap_or_else(|_| "anchor".to_string());
 
     let mut wallet_utxos: Vec<TokenUtxo> = Vec::new();
-    
+
     for utxo in token_utxos {
         if let Some(addr) = &utxo.owner_address {
             let response = client
@@ -608,7 +653,7 @@ pub async fn create_transfer_tx(
         let utxo_amount: u128 = utxo.amount.parse().unwrap_or(0);
         selected_utxos.push(utxo);
         selected_amount += utxo_amount;
-        
+
         if selected_amount >= total_amount {
             break;
         }
@@ -625,7 +670,7 @@ pub async fn create_transfer_tx(
     // Output 0 = change (if any), subsequent outputs = recipients
     let change_amount = selected_amount - total_amount;
     let mut allocations: Vec<TokenAllocation> = Vec::new();
-    
+
     // Add change allocation if there's any (goes to output 0)
     if change_amount > 0 {
         allocations.push(TokenAllocation {
@@ -661,7 +706,12 @@ pub async fn create_transfer_tx(
     for utxo in &selected_utxos {
         let display_txid = reverse_txid_hex(&utxo.txid);
         if let Err(e) = unlock_utxo(&display_txid, utxo.vout as u32).await {
-            tracing::debug!("Failed to unlock UTXO {}:{}: {:?}", display_txid, utxo.vout, e);
+            tracing::debug!(
+                "Failed to unlock UTXO {}:{}: {:?}",
+                display_txid,
+                utxo.vout,
+                e
+            );
         }
     }
 
@@ -669,10 +719,12 @@ pub async fn create_transfer_tx(
     // Use display format txid for wallet API
     let required_inputs: Vec<serde_json::Value> = selected_utxos
         .iter()
-        .map(|u| serde_json::json!({
-            "txid": reverse_txid_hex(&u.txid),
-            "vout": u.vout
-        }))
+        .map(|u| {
+            serde_json::json!({
+                "txid": reverse_txid_hex(&u.txid),
+                "vout": u.vout
+            })
+        })
         .collect();
 
     // Build additional anchors (same as required inputs for token protocol)
@@ -682,30 +734,38 @@ pub async fn create_transfer_tx(
     let custom_outputs: Vec<serde_json::Value> = request
         .allocations
         .iter()
-        .map(|a| serde_json::json!({
-            "address": a.address,
-            "value": 546  // Dust amount for token-bearing output
-        }))
+        .map(|a| {
+            serde_json::json!({
+                "address": a.address,
+                "value": 546  // Dust amount for token-bearing output
+            })
+        })
         .collect();
 
     // Create transaction with source UTXO inputs and recipient outputs
     let response = create_wallet_tx_with_inputs(
-        &state.wallet_url, 
-        &payload, 
-        carrier, 
-        fee_rate, 
+        &state.wallet_url,
+        &payload,
+        carrier,
+        fee_rate,
         20,
         &additional_anchors,
         &required_inputs,
         &custom_outputs,
-    ).await?;
+    )
+    .await?;
 
     // Lock the new token UTXOs created by this transfer
     // Output 0 is change (if any), outputs 1+ are recipients
     let num_outputs = custom_outputs.len() + if change_amount > 0 { 1 } else { 0 };
     for vout in 0..num_outputs {
         if let Err(e) = lock_utxo(&response.txid, vout as u32).await {
-            tracing::debug!("Failed to lock transfer output {}:{}: {:?}", response.txid, vout, e);
+            tracing::debug!(
+                "Failed to lock transfer output {}:{}: {:?}",
+                response.txid,
+                vout,
+                e
+            );
         }
     }
 
@@ -732,9 +792,10 @@ pub async fn create_burn_tx(
     // Create the token operation
     let operation = TokenOperation::Burn {
         token_id: token.id as u64,
-        amount: request.amount.parse().map_err(|_| {
-            AppError::BadRequest("Invalid amount".to_string())
-        })?,
+        amount: request
+            .amount
+            .parse()
+            .map_err(|_| AppError::BadRequest("Invalid amount".to_string()))?,
     };
 
     // Encode the payload using anchor-specs
@@ -836,8 +897,17 @@ async fn create_wallet_tx_with_inputs(
     parse_wallet_response(result, carrier)
 }
 
-fn parse_wallet_response(result: serde_json::Value, carrier: u8) -> Result<CreateTxResponse, AppError> {
-    let carrier_names = ["op_return", "inscription", "stamps", "taproot_annex", "witness_data"];
+fn parse_wallet_response(
+    result: serde_json::Value,
+    carrier: u8,
+) -> Result<CreateTxResponse, AppError> {
+    let carrier_names = [
+        "op_return",
+        "inscription",
+        "stamps",
+        "taproot_annex",
+        "witness_data",
+    ];
 
     Ok(CreateTxResponse {
         txid: result["txid"].as_str().unwrap_or_default().to_string(),

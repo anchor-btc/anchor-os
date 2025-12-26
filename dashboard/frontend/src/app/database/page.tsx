@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useQuery } from '@tanstack/react-query';
 import {
   Database,
   Loader2,
@@ -15,9 +15,8 @@ import {
   ExternalLink,
   Terminal,
   FileCode,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { fetchContainers } from "@/lib/api";
+} from 'lucide-react';
+import { fetchContainers } from '@/lib/api';
 
 // Import DS components
 import {
@@ -29,15 +28,15 @@ import {
   ConfigValue,
   IconBox,
   StatusDot,
-} from "@/components/ds";
+} from '@/components/ds';
 
 // Database connection details (from docker-compose.yml)
 const DB_CONFIG = {
-  host: "localhost",
-  port: "5432",
-  database: "anchor",
-  user: "anchor",
-  password: "anchor",
+  host: 'localhost',
+  port: '5432',
+  database: 'anchor',
+  user: 'anchor',
+  password: 'anchor',
 };
 
 export default function DatabasePage() {
@@ -50,16 +49,14 @@ export default function DatabasePage() {
     refetch,
     isRefetching,
   } = useQuery({
-    queryKey: ["containers"],
+    queryKey: ['containers'],
     queryFn: fetchContainers,
     refetchInterval: 5000,
   });
 
   const containers = containersData?.containers || [];
-  const dbContainer = containers.find(
-    (c) => c.name === "anchor-core-postgres"
-  );
-  const isRunning = dbContainer?.state === "running";
+  const dbContainer = containers.find((c) => c.name === 'anchor-core-postgres');
+  const isRunning = dbContainer?.state === 'running';
 
   const copyToClipboard = async (text: string, field: string) => {
     await navigator.clipboard.writeText(text);
@@ -83,32 +80,24 @@ export default function DatabasePage() {
       <PageHeader
         icon={Database}
         iconColor="blue"
-        title={t("database.title")}
-        subtitle={isRunning ? t("database.subtitle") : t("database.notRunning")}
-        actions={
-          <RefreshButton loading={isRefetching} onClick={() => refetch()} />
-        }
+        title={t('database.title')}
+        subtitle={isRunning ? t('database.subtitle') : t('database.notRunning')}
+        actions={<RefreshButton loading={isRefetching} onClick={() => refetch()} />}
       />
 
       {/* Status Card */}
       <Section>
         <div className="flex items-center gap-3 mb-6">
-          <IconBox
-            icon={Database}
-            color={isRunning ? "blue" : "muted"}
-            size="lg"
-          />
+          <IconBox icon={Database} color={isRunning ? 'blue' : 'muted'} size="lg" />
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="font-semibold text-foreground">{t("database.databaseStatus")}</h2>
+              <h2 className="font-semibold text-foreground">{t('database.databaseStatus')}</h2>
               <StatusDot
-                status={isRunning ? "running" : "stopped"}
-                label={isRunning ? t("node.running") : t("node.stopped")}
+                status={isRunning ? 'running' : 'stopped'}
+                label={isRunning ? t('node.running') : t('node.stopped')}
               />
             </div>
-            <p className="text-sm text-muted-foreground">
-              {t("database.storingData")}
-            </p>
+            <p className="text-sm text-muted-foreground">{t('database.storingData')}</p>
           </div>
         </div>
 
@@ -145,49 +134,49 @@ export default function DatabasePage() {
           <SectionHeader
             icon={Lock}
             iconColor="blue"
-            title={t("database.connectionCredentials")}
-            subtitle={t("database.useToConnect")}
+            title={t('database.connectionCredentials')}
+            subtitle={t('database.useToConnect')}
           />
 
           <div className="space-y-3">
             <CredentialRow
               icon={<Server className="w-4 h-4" />}
-              label={t("database.host")}
+              label={t('database.host')}
               value={DB_CONFIG.host}
-              onCopy={() => copyToClipboard(DB_CONFIG.host, "host")}
-              copied={copiedField === "host"}
+              onCopy={() => copyToClipboard(DB_CONFIG.host, 'host')}
+              copied={copiedField === 'host'}
               t={t}
             />
             <CredentialRow
               icon={<Key className="w-4 h-4" />}
-              label={t("database.port")}
+              label={t('database.port')}
               value={DB_CONFIG.port}
-              onCopy={() => copyToClipboard(DB_CONFIG.port, "port")}
-              copied={copiedField === "port"}
+              onCopy={() => copyToClipboard(DB_CONFIG.port, 'port')}
+              copied={copiedField === 'port'}
               t={t}
             />
             <CredentialRow
               icon={<Database className="w-4 h-4" />}
               label="Database"
               value={DB_CONFIG.database}
-              onCopy={() => copyToClipboard(DB_CONFIG.database, "database")}
-              copied={copiedField === "database"}
+              onCopy={() => copyToClipboard(DB_CONFIG.database, 'database')}
+              copied={copiedField === 'database'}
               t={t}
             />
             <CredentialRow
               icon={<User className="w-4 h-4" />}
-              label={t("database.user")}
+              label={t('database.user')}
               value={DB_CONFIG.user}
-              onCopy={() => copyToClipboard(DB_CONFIG.user, "user")}
-              copied={copiedField === "user"}
+              onCopy={() => copyToClipboard(DB_CONFIG.user, 'user')}
+              copied={copiedField === 'user'}
               t={t}
             />
             <CredentialRow
               icon={<Lock className="w-4 h-4" />}
-              label={t("database.password")}
+              label={t('database.password')}
               value={DB_CONFIG.password}
-              onCopy={() => copyToClipboard(DB_CONFIG.password, "password")}
-              copied={copiedField === "password"}
+              onCopy={() => copyToClipboard(DB_CONFIG.password, 'password')}
+              copied={copiedField === 'password'}
               isPassword
               t={t}
             />
@@ -195,11 +184,7 @@ export default function DatabasePage() {
 
           {/* Connection String */}
           <div className="mt-6">
-            <ConfigValue
-              label={t("database.connectionString")}
-              value={connectionString}
-              mono
-            />
+            <ConfigValue label={t('database.connectionString')} value={connectionString} mono />
           </div>
         </Section>
       )}
@@ -210,48 +195,48 @@ export default function DatabasePage() {
           <SectionHeader
             icon={Terminal}
             iconColor="muted"
-            title={t("database.quickCommands")}
-            subtitle={t("database.commonCommands")}
+            title={t('database.quickCommands')}
+            subtitle={t('database.commonCommands')}
           />
 
           <div className="space-y-4">
             <CommandCard
-              title={t("database.connectPsql")}
-              description={t("database.openShell")}
+              title={t('database.connectPsql')}
+              description={t('database.openShell')}
               command="docker exec -it anchor-core-postgres psql -U anchor -d anchor"
               onCopy={() =>
                 copyToClipboard(
-                  "docker exec -it anchor-core-postgres psql -U anchor -d anchor",
-                  "psql"
+                  'docker exec -it anchor-core-postgres psql -U anchor -d anchor',
+                  'psql'
                 )
               }
-              copied={copiedField === "psql"}
+              copied={copiedField === 'psql'}
               t={t}
             />
             <CommandCard
-              title={t("database.listTables")}
-              description={t("database.showAllTables")}
+              title={t('database.listTables')}
+              description={t('database.showAllTables')}
               command="docker exec -it anchor-core-postgres psql -U anchor -d anchor -c '\\dt'"
               onCopy={() =>
                 copyToClipboard(
                   "docker exec -it anchor-core-postgres psql -U anchor -d anchor -c '\\dt'",
-                  "tables"
+                  'tables'
                 )
               }
-              copied={copiedField === "tables"}
+              copied={copiedField === 'tables'}
               t={t}
             />
             <CommandCard
-              title={t("database.countMessages")}
-              description={t("database.countTotal")}
+              title={t('database.countMessages')}
+              description={t('database.countTotal')}
               command="docker exec -it anchor-core-postgres psql -U anchor -d anchor -c 'SELECT COUNT(*) FROM messages;'"
               onCopy={() =>
                 copyToClipboard(
                   "docker exec -it anchor-core-postgres psql -U anchor -d anchor -c 'SELECT COUNT(*) FROM messages;'",
-                  "count"
+                  'count'
                 )
               }
-              copied={copiedField === "count"}
+              copied={copiedField === 'count'}
               t={t}
             />
           </div>
@@ -264,8 +249,8 @@ export default function DatabasePage() {
           <SectionHeader
             icon={FileCode}
             iconColor="purple"
-            title={t("database.compatibleClients")}
-            subtitle={t("database.popularTools")}
+            title={t('database.compatibleClients')}
+            subtitle={t('database.popularTools')}
           />
 
           <Grid cols={{ default: 1, md: 2, lg: 3 }} gap="md">
@@ -308,13 +293,11 @@ export default function DatabasePage() {
         <Section className="text-center py-8">
           <Database className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-foreground mb-2">
-            {t("database.notRunningMsg")}
+            {t('database.notRunningMsg')}
           </h2>
           <p className="text-muted-foreground mb-4">
-            {t("database.startWith")}:{" "}
-            <code className="bg-muted px-2 py-1 rounded">
-              docker compose up -d core-postgres
-            </code>
+            {t('database.startWith')}:{' '}
+            <code className="bg-muted px-2 py-1 rounded">docker compose up -d core-postgres</code>
           </p>
         </Section>
       )}
@@ -347,21 +330,18 @@ function CredentialRow({
         <span className="text-muted-foreground">{icon}</span>
         <span className="text-sm text-muted-foreground w-20">{label}</span>
         <span className="text-sm font-mono font-medium text-foreground">
-          {isPassword && !showPassword ? "••••••" : value}
+          {isPassword && !showPassword ? '••••••' : value}
         </span>
         {isPassword && (
           <button
             onClick={() => setShowPassword(!showPassword)}
             className="text-xs text-muted-foreground hover:text-foreground"
           >
-            {showPassword ? t("database.hide") : t("database.show")}
+            {showPassword ? t('database.hide') : t('database.show')}
           </button>
         )}
       </div>
-      <button
-        onClick={onCopy}
-        className="p-1.5 hover:bg-muted rounded transition-colors"
-      >
+      <button onClick={onCopy} className="p-1.5 hover:bg-muted rounded transition-colors">
         {copied ? (
           <Check className="w-4 h-4 text-success" />
         ) : (
@@ -401,19 +381,17 @@ function CommandCard({
           {copied ? (
             <>
               <Check className="w-3 h-3 text-success" />
-              {t("common.copied")}
+              {t('common.copied')}
             </>
           ) : (
             <>
               <Copy className="w-3 h-3" />
-              {t("database.copy")}
+              {t('database.copy')}
             </>
           )}
         </button>
       </div>
-      <code className="text-xs font-mono text-muted-foreground break-all">
-        {command}
-      </code>
+      <code className="text-xs font-mono text-muted-foreground break-all">{command}</code>
     </div>
   );
 }

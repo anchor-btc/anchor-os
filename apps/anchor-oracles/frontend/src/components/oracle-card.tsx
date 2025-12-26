@@ -1,18 +1,19 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { Star, CheckCircle, AlertCircle, Coins } from "lucide-react";
-import { cn, shortenPubkey, formatSats } from "@/lib/utils";
-import type { Oracle } from "@/lib/api";
+import Link from 'next/link';
+import { Star, CheckCircle, AlertCircle, Coins } from 'lucide-react';
+import { cn, shortenPubkey, formatSats } from '@/lib/utils';
+import type { Oracle } from '@/lib/api';
 
 interface OracleCardProps {
   oracle: Oracle;
 }
 
 export function OracleCard({ oracle }: OracleCardProps) {
-  const successRate = oracle.total_attestations > 0
-    ? Math.round((oracle.successful_attestations / oracle.total_attestations) * 100)
-    : 100;
+  const successRate =
+    oracle.total_attestations > 0
+      ? Math.round((oracle.successful_attestations / oracle.total_attestations) * 100)
+      : 100;
 
   return (
     <Link href={`/oracles/${oracle.pubkey}`}>
@@ -20,14 +21,16 @@ export function OracleCard({ oracle }: OracleCardProps) {
         <div className="flex items-start justify-between">
           <div>
             <h3 className="font-semibold text-white">{oracle.name}</h3>
-            <p className="text-xs text-gray-500 font-mono mt-1">
-              {shortenPubkey(oracle.pubkey)}
-            </p>
+            <p className="text-xs text-gray-500 font-mono mt-1">{shortenPubkey(oracle.pubkey)}</p>
           </div>
-          <div className={cn(
-            "px-2 py-1 rounded text-xs font-medium",
-            oracle.status === "active" ? "bg-green-500/20 text-green-400" : "bg-gray-500/20 text-gray-400"
-          )}>
+          <div
+            className={cn(
+              'px-2 py-1 rounded text-xs font-medium',
+              oracle.status === 'active'
+                ? 'bg-green-500/20 text-green-400'
+                : 'bg-gray-500/20 text-gray-400'
+            )}
+          >
             {oracle.status}
           </div>
         </div>
@@ -81,4 +84,3 @@ export function OracleCard({ oracle }: OracleCardProps) {
     </Link>
   );
 }
-

@@ -188,15 +188,15 @@ impl KindSpec for StateSpec {
 
     fn to_bytes(&self) -> Vec<u8> {
         let mut bytes = Vec::with_capacity(4 + self.pixels.len() * 7);
-        
+
         // Number of pixels (u32 big-endian)
         bytes.extend_from_slice(&(self.pixels.len() as u32).to_be_bytes());
-        
+
         // Each pixel
         for pixel in &self.pixels {
             bytes.extend_from_slice(&pixel.to_bytes());
         }
-        
+
         bytes
     }
 
@@ -237,7 +237,7 @@ mod tests {
         let pixel = PixelData::new(1234, 5678, 128, 64, 32);
         let bytes = pixel.to_bytes();
         let decoded = PixelData::from_bytes(&bytes).unwrap();
-        
+
         assert_eq!(decoded.x, 1234);
         assert_eq!(decoded.y, 5678);
         assert_eq!(decoded.r, 128);
@@ -269,8 +269,9 @@ mod tests {
         let spec = StateSpec::empty();
         assert!(spec.validate().is_err());
 
-        let too_many: Vec<PixelData> = (0..15)
-            .map(|i| PixelData::new(i, 0, 0, 0, 0))
+        // MAX_PIXELS_PER_TX is 14000, so exceeding that should fail
+        let too_many: Vec<PixelData> = (0..MAX_PIXELS_PER_TX + 1)
+            .map(|i| PixelData::new((i % 1000) as u16, (i / 1000) as u16, 0, 0, 0))
             .collect();
         let spec = StateSpec::new(too_many);
         assert!(spec.validate().is_err());
@@ -288,4 +289,3 @@ mod tests {
         assert_eq!(StateSpec::KIND_NAME, "State");
     }
 }
-

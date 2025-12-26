@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { cn } from "../../utils/cn";
+import * as React from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { cn } from '../../utils/cn';
 
 export interface AppSidebarProps {
   /**
    * Position of the sidebar
    */
-  position?: "left" | "right";
+  position?: 'left' | 'right';
   /**
    * Whether the sidebar is collapsed
    */
@@ -37,7 +37,7 @@ export interface AppSidebarProps {
 
 /**
  * AppSidebar - Collapsible sidebar component for fullscreen apps.
- * 
+ *
  * Features:
  * - Configurable position (left/right)
  * - Collapsible with smooth animation
@@ -48,7 +48,7 @@ export interface AppSidebarProps {
  * @example
  * ```tsx
  * const [collapsed, setCollapsed] = useState(false);
- * 
+ *
  * <AppSidebar
  *   position="right"
  *   collapsed={collapsed}
@@ -60,32 +60,38 @@ export interface AppSidebarProps {
  * ```
  */
 export function AppSidebar({
-  position = "right",
+  position = 'right',
   collapsed = false,
   onToggle,
-  width = "w-80",
+  width = 'w-80',
   children,
   className,
   showToggle = true,
 }: AppSidebarProps) {
-  const isLeft = position === "left";
+  const isLeft = position === 'left';
 
   const toggleButton = showToggle && onToggle && (
     <button
       onClick={onToggle}
       className={cn(
-        "hidden lg:flex items-center justify-center w-5",
-        "bg-white/[0.02] hover:bg-white/[0.06]",
-        "transition-colors duration-200",
-        "text-white/30 hover:text-white/60",
-        isLeft ? "border-r border-white/[0.06]" : "border-l border-white/[0.06]"
+        'hidden lg:flex items-center justify-center w-5',
+        'bg-white/[0.02] hover:bg-white/[0.06]',
+        'transition-colors duration-200',
+        'text-white/30 hover:text-white/60',
+        isLeft ? 'border-r border-white/[0.06]' : 'border-l border-white/[0.06]'
       )}
-      aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+      aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
     >
       {isLeft ? (
-        collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />
+        collapsed ? (
+          <ChevronRight size={14} />
+        ) : (
+          <ChevronLeft size={14} />
+        )
+      ) : collapsed ? (
+        <ChevronLeft size={14} />
       ) : (
-        collapsed ? <ChevronLeft size={14} /> : <ChevronRight size={14} />
+        <ChevronRight size={14} />
       )}
     </button>
   );
@@ -100,16 +106,14 @@ export function AppSidebar({
         <aside
           className={cn(
             width,
-            "bg-white/[0.02] backdrop-blur-sm",
-            "overflow-y-auto hidden lg:block",
-            "transition-all duration-200",
-            isLeft ? "border-r border-white/[0.06]" : "border-l border-white/[0.06]",
+            'bg-white/[0.02] backdrop-blur-sm',
+            'overflow-y-auto hidden lg:block',
+            'transition-all duration-200',
+            isLeft ? 'border-r border-white/[0.06]' : 'border-l border-white/[0.06]',
             className
           )}
         >
-          <div className="p-4 space-y-4">
-            {children}
-          </div>
+          <div className="p-4 space-y-4">{children}</div>
         </aside>
       )}
 
@@ -128,20 +132,13 @@ export interface AppSidebarSectionProps {
   className?: string;
 }
 
-export function AppSidebarSection({
-  title,
-  children,
-  className,
-}: AppSidebarSectionProps) {
+export function AppSidebarSection({ title, children, className }: AppSidebarSectionProps) {
   return (
-    <div className={cn("space-y-3", className)}>
+    <div className={cn('space-y-3', className)}>
       {title && (
-        <h3 className="text-xs font-medium text-white/40 uppercase tracking-wider">
-          {title}
-        </h3>
+        <h3 className="text-xs font-medium text-white/40 uppercase tracking-wider">{title}</h3>
       )}
       {children}
     </div>
   );
 }
-

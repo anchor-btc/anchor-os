@@ -11,8 +11,8 @@ use std::sync::Arc;
 
 use crate::db::Database;
 use crate::models::{
-    Attestation, CategoryInfo, CreateEventRequest, Dispute, EventRequest,
-    Oracle, OracleStats, RegisterOracleRequest, SubmitAttestationRequest,
+    Attestation, CategoryInfo, CreateEventRequest, Dispute, EventRequest, Oracle, OracleStats,
+    RegisterOracleRequest, SubmitAttestationRequest,
 };
 
 pub type AppState = Arc<Database>;
@@ -139,7 +139,8 @@ pub async fn get_oracles_by_addresses(
     State(db): State<AppState>,
     Query(params): Query<AddressesQuery>,
 ) -> impl IntoResponse {
-    let addresses: Vec<String> = params.addresses
+    let addresses: Vec<String> = params
+        .addresses
         .unwrap_or_default()
         .split(',')
         .map(|s| s.trim().to_string())
@@ -350,23 +351,27 @@ pub async fn create_event_request(
     use rand::Rng;
     let mut event_id = [0u8; 32];
     rand::thread_rng().fill(&mut event_id);
-    
-    match db.insert_event_request(
-        &event_id,
-        req.category,
-        &req.description,
-        req.resolution_block,
-        req.bounty_sats,
-    ).await {
+
+    match db
+        .insert_event_request(
+            &event_id,
+            req.category,
+            &req.description,
+            req.resolution_block,
+            req.bounty_sats,
+        )
+        .await
+    {
         Ok(id) => Json(serde_json::json!({
             "status": "created",
             "id": id,
-            "event_id": hex::encode(&event_id),
+            "event_id": hex::encode(event_id),
             "category": req.category,
             "description": req.description,
             "resolution_block": req.resolution_block,
             "bounty_sats": req.bounty_sats,
-        })).into_response(),
+        }))
+        .into_response(),
         Err(e) => {
             tracing::error!("Failed to create event request: {}", e);
             (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response()
@@ -387,10 +392,7 @@ pub async fn create_event_request(
     ),
     tag = "events"
 )]
-pub async fn get_event(
-    State(db): State<AppState>,
-    Path(id): Path<i32>,
-) -> impl IntoResponse {
+pub async fn get_event(State(db): State<AppState>, Path(id): Path<i32>) -> impl IntoResponse {
     match db.get_event_by_id(id).await {
         Ok(Some(event)) => Json(event).into_response(),
         Ok(None) => (StatusCode::NOT_FOUND, "Event not found").into_response(),
@@ -473,4 +475,3 @@ pub async fn list_categories(State(db): State<AppState>) -> impl IntoResponse {
         }
     }
 }
-

@@ -1,15 +1,9 @@
-"use client";
+'use client';
 
-import { useTranslation } from "react-i18next";
-import { TFunction } from "i18next";
-import { useQuery } from "@tanstack/react-query";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-} from "recharts";
+import { useTranslation } from 'react-i18next';
+import { TFunction } from 'i18next';
+import { useQuery } from '@tanstack/react-query';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import {
   Search,
   Loader2,
@@ -30,9 +24,9 @@ import {
   Eye,
   TrendingUp,
   Zap,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { fetchContainers } from "@/lib/api";
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { fetchContainers } from '@/lib/api';
 import {
   MessageExplorer,
   TotalMessagesChart,
@@ -44,18 +38,12 @@ import {
   IndexerGridLayout,
   useIndexerLayout,
   type IndexerCardDefinition,
-} from "@/components/indexer";
+} from '@/components/indexer';
 
 // Import DS components
-import {
-  PageHeader,
-  RefreshButton,
-  Section,
-  SectionHeader,
-  StatCard,
-} from "@/components/ds";
+import { PageHeader, RefreshButton, Section, SectionHeader, StatCard } from '@/components/ds';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8010";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8010';
 
 interface MessageKindCount {
   kind: number;
@@ -80,7 +68,7 @@ interface IndexerStats {
 
 async function fetchIndexerStats(): Promise<IndexerStats> {
   const res = await fetch(`${API_URL}/indexer/stats`);
-  if (!res.ok) throw new Error("Failed to fetch indexer stats");
+  if (!res.ok) throw new Error('Failed to fetch indexer stats');
   return res.json();
 }
 
@@ -91,58 +79,52 @@ const kindIcons: Record<string, React.ElementType> = {
   Map: MapPin,
   DNS: Globe,
   Proof: FileCheck,
-  "Token Deploy": Coins,
-  "Token Mint": Coins,
-  "Token Transfer": Coins,
+  'Token Deploy': Coins,
+  'Token Mint': Coins,
+  'Token Transfer': Coins,
 };
 
 const kindColors: Record<string, string> = {
-  Text: "text-orange-500 bg-orange-500/10",
-  Canvas: "text-purple-500 bg-purple-500/10",
-  Image: "text-pink-500 bg-pink-500/10",
-  Map: "text-blue-500 bg-blue-500/10",
-  DNS: "text-cyan-500 bg-cyan-500/10",
-  Proof: "text-emerald-500 bg-emerald-500/10",
-  "Token Deploy": "text-amber-500 bg-amber-500/10",
-  "Token Mint": "text-amber-500 bg-amber-500/10",
-  "Token Transfer": "text-amber-500 bg-amber-500/10",
+  Text: 'text-orange-500 bg-orange-500/10',
+  Canvas: 'text-purple-500 bg-purple-500/10',
+  Image: 'text-pink-500 bg-pink-500/10',
+  Map: 'text-blue-500 bg-blue-500/10',
+  DNS: 'text-cyan-500 bg-cyan-500/10',
+  Proof: 'text-emerald-500 bg-emerald-500/10',
+  'Token Deploy': 'text-amber-500 bg-amber-500/10',
+  'Token Mint': 'text-amber-500 bg-amber-500/10',
+  'Token Transfer': 'text-amber-500 bg-amber-500/10',
 };
 
 const carrierIcons: Record<string, React.ElementType> = {
-  "OP_RETURN": Box,
-  "Inscription": FileCode,
-  "Stamps": Stamp,
-  "Taproot Annex": Leaf,
-  "Witness Data": Eye,
+  OP_RETURN: Box,
+  Inscription: FileCode,
+  Stamps: Stamp,
+  'Taproot Annex': Leaf,
+  'Witness Data': Eye,
 };
 
 const carrierColors: Record<string, string> = {
-  "OP_RETURN": "text-blue-500 bg-blue-500/10",
-  "Inscription": "text-orange-500 bg-orange-500/10",
-  "Stamps": "text-pink-500 bg-pink-500/10",
-  "Taproot Annex": "text-green-500 bg-green-500/10",
-  "Witness Data": "text-purple-500 bg-purple-500/10",
+  OP_RETURN: 'text-blue-500 bg-blue-500/10',
+  Inscription: 'text-orange-500 bg-orange-500/10',
+  Stamps: 'text-pink-500 bg-pink-500/10',
+  'Taproot Annex': 'text-green-500 bg-green-500/10',
+  'Witness Data': 'text-purple-500 bg-purple-500/10',
 };
 
 const carrierChartColors: Record<string, string> = {
-  "OP_RETURN": "#3b82f6",
-  "Inscription": "#f97316",
-  "Stamps": "#ec4899",
-  "Taproot Annex": "#22c55e",
-  "Witness Data": "#a855f7",
+  OP_RETURN: '#3b82f6',
+  Inscription: '#f97316',
+  Stamps: '#ec4899',
+  'Taproot Annex': '#22c55e',
+  'Witness Data': '#a855f7',
 };
 
 export default function IndexerPage() {
   const { t } = useTranslation();
 
-  const {
-    layout,
-    isEditMode,
-    reorderCards,
-    changeCardSize,
-    resetToDefaults,
-    toggleEditMode,
-  } = useIndexerLayout();
+  const { layout, isEditMode, reorderCards, changeCardSize, resetToDefaults, toggleEditMode } =
+    useIndexerLayout();
 
   const {
     data: containersData,
@@ -150,100 +132,98 @@ export default function IndexerPage() {
     refetch,
     isRefetching,
   } = useQuery({
-    queryKey: ["containers"],
+    queryKey: ['containers'],
     queryFn: fetchContainers,
     refetchInterval: 5000,
   });
 
   const { data: stats, isLoading: statsLoading } = useQuery({
-    queryKey: ["indexer-stats"],
+    queryKey: ['indexer-stats'],
     queryFn: fetchIndexerStats,
     refetchInterval: 5000,
   });
 
   const containers = containersData?.containers || [];
-  const indexerContainer = containers.find(
-    (c) => c.name === "anchor-core-indexer"
-  );
-  const isRunning = indexerContainer?.state === "running";
+  const indexerContainer = containers.find((c) => c.name === 'anchor-core-indexer');
+  const isRunning = indexerContainer?.state === 'running';
 
   // Define all card components
   const cardDefinitions: IndexerCardDefinition[] = [
     {
-      id: "stats",
-      name: t("indexer.overview", "Overview Stats"),
+      id: 'stats',
+      name: t('indexer.overview', 'Overview Stats'),
       defaultSize: 4,
       minSize: 2,
       maxSize: 4,
       render: () => <StatsCards stats={stats} statsLoading={statsLoading} t={t} />,
     },
     {
-      id: "message-types",
-      name: t("indexer.messageTypes", "Message Types"),
+      id: 'message-types',
+      name: t('indexer.messageTypes', 'Message Types'),
       defaultSize: 2,
       minSize: 1,
       maxSize: 4,
       render: () => <MessageTypesCard stats={stats} t={t} />,
     },
     {
-      id: "carrier-types",
-      name: t("indexer.carrierTypes", "Carrier Types"),
+      id: 'carrier-types',
+      name: t('indexer.carrierTypes', 'Carrier Types'),
       defaultSize: 2,
       minSize: 1,
       maxSize: 4,
       render: () => <CarrierTypesCard stats={stats} t={t} />,
     },
     {
-      id: "anchor-resolution",
-      name: t("indexer.anchorResolution", "Anchor Resolution"),
+      id: 'anchor-resolution',
+      name: t('indexer.anchorResolution', 'Anchor Resolution'),
       defaultSize: 2,
       minSize: 1,
       maxSize: 4,
       render: () => <AnchorStatsChart />,
     },
     {
-      id: "live-feed",
-      name: t("indexer.liveFeed", "Live Feed"),
+      id: 'live-feed',
+      name: t('indexer.liveFeed', 'Live Feed'),
       defaultSize: 2,
       minSize: 1,
       maxSize: 4,
       render: () => <LiveFeed />,
     },
     {
-      id: "total-messages",
-      name: t("indexer.totalMessagesChart", "Total Messages"),
+      id: 'total-messages',
+      name: t('indexer.totalMessagesChart', 'Total Messages'),
       defaultSize: 2,
       minSize: 1,
       maxSize: 4,
       render: () => <TotalMessagesChart />,
     },
     {
-      id: "messages-by-kind",
-      name: t("indexer.messagesByKind", "By Kind"),
+      id: 'messages-by-kind',
+      name: t('indexer.messagesByKind', 'By Kind'),
       defaultSize: 2,
       minSize: 1,
       maxSize: 4,
       render: () => <MessagesByKindChart />,
     },
     {
-      id: "messages-by-carrier",
-      name: t("indexer.messagesByCarrier", "By Carrier"),
+      id: 'messages-by-carrier',
+      name: t('indexer.messagesByCarrier', 'By Carrier'),
       defaultSize: 2,
       minSize: 1,
       maxSize: 4,
       render: () => <MessagesByCarrierChart />,
     },
     {
-      id: "performance",
-      name: t("indexer.performance", "Performance"),
+      id: 'performance',
+      name: t('indexer.performance', 'Performance'),
       defaultSize: 2,
       minSize: 1,
       maxSize: 4,
       render: () => <PerformanceMetrics />,
     },
     {
-      id: "message-explorer",
-      name: t("indexer.messageExplorer", "Message Explorer"),
+      id: 'message-explorer',
+      name: t('indexer.messageExplorer', 'Message Explorer'),
       defaultSize: 4,
       minSize: 2,
       maxSize: 4,
@@ -265,14 +245,14 @@ export default function IndexerPage() {
       <PageHeader
         icon={Search}
         iconColor="cyan"
-        title={t("indexer.title")}
-        subtitle={isRunning ? t("indexer.subtitle") : t("indexer.notRunning")}
+        title={t('indexer.title')}
+        subtitle={isRunning ? t('indexer.subtitle') : t('indexer.notRunning')}
         actions={
           <div className="flex items-center gap-3">
             {isRunning && (
               <span className="flex items-center gap-2 px-3 py-1.5 bg-success/10 text-success rounded-lg text-sm">
                 <Activity className="w-4 h-4 animate-pulse" />
-                {t("indexer.live")}
+                {t('indexer.live')}
               </span>
             )}
             <RefreshButton loading={isRefetching} onClick={() => refetch()} />
@@ -296,10 +276,10 @@ export default function IndexerPage() {
         <Section className="text-center py-8">
           <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-foreground mb-2">
-            {t("indexer.notRunningMsg")}
+            {t('indexer.notRunningMsg')}
           </h2>
           <p className="text-muted-foreground mb-4">
-            {t("indexer.startWith")}:{" "}
+            {t('indexer.startWith')}:{' '}
             <code className="bg-muted px-2 py-1 rounded">
               docker compose up -d anchor-core-indexer
             </code>
@@ -340,25 +320,25 @@ function StatsCards({
     <div className="grid grid-cols-4 gap-4">
       <StatCard
         icon={MessageSquare}
-        label={t("indexer.totalMessages")}
+        label={t('indexer.totalMessages')}
         value={stats.total_messages.toLocaleString()}
         color="cyan"
       />
       <StatCard
         icon={Blocks}
-        label={t("indexer.blocksWithMessages")}
+        label={t('indexer.blocksWithMessages')}
         value={stats.total_blocks_with_messages.toLocaleString()}
         color="orange"
       />
       <StatCard
         icon={Clock}
-        label={t("indexer.lastIndexedBlock")}
-        value={stats.last_indexed_block?.toLocaleString() || "-"}
+        label={t('indexer.lastIndexedBlock')}
+        value={stats.last_indexed_block?.toLocaleString() || '-'}
         color="purple"
       />
       <StatCard
         icon={Zap}
-        label={t("indexer.recentBlocks")}
+        label={t('indexer.recentBlocks')}
         value={stats.recent_messages_24h.toLocaleString()}
         color="emerald"
       />
@@ -369,13 +349,7 @@ function StatsCards({
 // ============================
 // Message Types Card Component
 // ============================
-function MessageTypesCard({
-  stats,
-  t,
-}: {
-  stats: IndexerStats | undefined;
-  t: TFunction;
-}) {
+function MessageTypesCard({ stats, t }: { stats: IndexerStats | undefined; t: TFunction }) {
   if (!stats) {
     return (
       <Section>
@@ -391,31 +365,40 @@ function MessageTypesCard({
       <SectionHeader
         icon={TrendingUp}
         iconColor="orange"
-        title={t("indexer.messageTypes")}
-        subtitle={t("indexer.distributionByKind")}
+        title={t('indexer.messageTypes')}
+        subtitle={t('indexer.distributionByKind')}
       />
 
       <div className="space-y-3">
         {stats.messages_by_kind.map((kind) => {
           const Icon = kindIcons[kind.kind_name] || MessageSquare;
-          const colorClass = kindColors[kind.kind_name] || "text-gray-500 bg-gray-500/10";
-          const percentage = stats.total_messages > 0 
-            ? ((kind.count / stats.total_messages) * 100).toFixed(1)
-            : "0";
-          
+          const colorClass = kindColors[kind.kind_name] || 'text-gray-500 bg-gray-500/10';
+          const percentage =
+            stats.total_messages > 0 ? ((kind.count / stats.total_messages) * 100).toFixed(1) : '0';
+
           return (
             <div key={kind.kind} className="flex items-center gap-3">
-              <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center shrink-0", colorClass)}>
+              <div
+                className={cn(
+                  'w-9 h-9 rounded-lg flex items-center justify-center shrink-0',
+                  colorClass
+                )}
+              >
                 <Icon className="w-4 h-4" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm font-medium text-foreground">{kind.kind_name}</span>
-                  <span className="text-sm font-tabular text-foreground">{kind.count.toLocaleString()}</span>
+                  <span className="text-sm font-tabular text-foreground">
+                    {kind.count.toLocaleString()}
+                  </span>
                 </div>
                 <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <div 
-                    className={cn("h-full rounded-full transition-all", colorClass.split(" ")[0].replace("text-", "bg-"))}
+                  <div
+                    className={cn(
+                      'h-full rounded-full transition-all',
+                      colorClass.split(' ')[0].replace('text-', 'bg-')
+                    )}
                     style={{ width: `${percentage}%` }}
                   />
                 </div>
@@ -432,13 +415,7 @@ function MessageTypesCard({
 // ============================
 // Carrier Types Card Component
 // ============================
-function CarrierTypesCard({
-  stats,
-  t,
-}: {
-  stats: IndexerStats | undefined;
-  t: TFunction;
-}) {
+function CarrierTypesCard({ stats, t }: { stats: IndexerStats | undefined; t: TFunction }) {
   if (!stats) {
     return (
       <Section>
@@ -454,8 +431,8 @@ function CarrierTypesCard({
       <SectionHeader
         icon={Box}
         iconColor="blue"
-        title={t("indexer.carrierTypes")}
-        subtitle={t("indexer.howEmbedded")}
+        title={t('indexer.carrierTypes')}
+        subtitle={t('indexer.howEmbedded')}
       />
 
       {/* Pie Chart - Centered and larger */}
@@ -478,19 +455,19 @@ function CarrierTypesCard({
                 {stats.messages_by_carrier.map((carrier, index) => (
                   <Cell
                     key={`cell-${index}`}
-                    fill={carrierChartColors[carrier.carrier_name] || "#6b7280"}
+                    fill={carrierChartColors[carrier.carrier_name] || '#6b7280'}
                     stroke="transparent"
                   />
                 ))}
               </Pie>
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: "8px",
-                  fontSize: "12px",
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px',
+                  fontSize: '12px',
                 }}
-                formatter={(value) => [(value as number).toLocaleString(), "Count"]}
+                formatter={(value) => [(value as number).toLocaleString(), 'Count']}
               />
             </PieChart>
           </ResponsiveContainer>
@@ -501,22 +478,30 @@ function CarrierTypesCard({
       <div className="space-y-2">
         {stats.messages_by_carrier.map((carrier) => {
           const Icon = carrierIcons[carrier.carrier_name] || Box;
-          const colorClass = carrierColors[carrier.carrier_name] || "text-gray-500 bg-gray-500/10";
-          const percentage = stats.total_messages > 0 
-            ? ((carrier.count / stats.total_messages) * 100).toFixed(1)
-            : "0";
-          
+          const colorClass = carrierColors[carrier.carrier_name] || 'text-gray-500 bg-gray-500/10';
+          const percentage =
+            stats.total_messages > 0
+              ? ((carrier.count / stats.total_messages) * 100).toFixed(1)
+              : '0';
+
           return (
             <div key={carrier.carrier} className="flex items-center gap-2">
-              <div 
+              <div
                 className="w-2.5 h-2.5 rounded-full shrink-0"
-                style={{ backgroundColor: carrierChartColors[carrier.carrier_name] || "#6b7280" }}
+                style={{ backgroundColor: carrierChartColors[carrier.carrier_name] || '#6b7280' }}
               />
-              <div className={cn("w-6 h-6 rounded flex items-center justify-center shrink-0", colorClass)}>
+              <div
+                className={cn(
+                  'w-6 h-6 rounded flex items-center justify-center shrink-0',
+                  colorClass
+                )}
+              >
                 <Icon className="w-3 h-3" />
               </div>
               <span className="text-sm text-foreground flex-1">{carrier.carrier_name}</span>
-              <span className="text-sm font-tabular text-foreground">{carrier.count.toLocaleString()}</span>
+              <span className="text-sm font-tabular text-foreground">
+                {carrier.count.toLocaleString()}
+              </span>
               <span className="text-xs text-muted-foreground w-14 text-right">{percentage}%</span>
             </div>
           );

@@ -12,7 +12,7 @@ mod storage;
 
 use anyhow::Result;
 use axum::{
-    routing::{get, post, put, delete},
+    routing::{delete, get, post, put},
     Router,
 };
 use bollard::Docker;
@@ -25,8 +25,8 @@ use tracing_subscriber::EnvFilter;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
-use crate::config::Config;
 use crate::backup_config::BackupConfig;
+use crate::config::Config;
 use crate::handlers::backup::BackupState;
 
 /// Application state shared across handlers
@@ -280,7 +280,10 @@ async fn main() -> Result<()> {
                 Some(pool)
             }
             Err(e) => {
-                info!("PostgreSQL not available (settings features disabled): {}", e);
+                info!(
+                    "PostgreSQL not available (settings features disabled): {}",
+                    e
+                );
                 None
             }
         }
@@ -312,7 +315,7 @@ async fn main() -> Result<()> {
     // Create backup state
     let backup_config = BackupConfig::from_env();
     let backup_state = Arc::new(BackupState::new(backup_config).await);
-    
+
     // Start backup scheduler in background
     if let Err(e) = backup_state.start_scheduler().await {
         info!("Backup scheduler not started: {}", e);
@@ -351,102 +354,237 @@ async fn main() -> Result<()> {
         .route("/docker/rebuild", post(handlers::docker::rebuild_container))
         // Bitcoin
         .route("/bitcoin/info", get(handlers::bitcoin::get_blockchain_info))
-        .route(
-            "/bitcoin/mempool",
-            get(handlers::bitcoin::get_mempool_info),
-        )
-        .route(
-            "/bitcoin/network",
-            get(handlers::bitcoin::get_network_info),
-        )
+        .route("/bitcoin/mempool", get(handlers::bitcoin::get_mempool_info))
+        .route("/bitcoin/network", get(handlers::bitcoin::get_network_info))
         .route("/bitcoin/status", get(handlers::bitcoin::get_node_status))
         // Wallet
         .route("/wallet/balance", get(handlers::wallet::get_balance))
         .route("/wallet/address", get(handlers::wallet::get_new_address))
         .route("/wallet/utxos", get(handlers::wallet::list_utxos))
-        .route("/wallet/utxos/locked", get(handlers::wallet::list_locked_utxos))
-        .route("/wallet/utxos/unlocked", get(handlers::wallet::list_unlocked_utxos))
+        .route(
+            "/wallet/utxos/locked",
+            get(handlers::wallet::list_locked_utxos),
+        )
+        .route(
+            "/wallet/utxos/unlocked",
+            get(handlers::wallet::list_unlocked_utxos),
+        )
         .route("/wallet/utxos/lock", post(handlers::wallet::lock_utxos))
         .route("/wallet/utxos/unlock", post(handlers::wallet::unlock_utxos))
-        .route("/wallet/utxos/sync-locks", post(handlers::wallet::sync_locks))
-        .route("/wallet/locks/settings", get(handlers::wallet::get_lock_settings))
-        .route("/wallet/locks/auto-lock", post(handlers::wallet::set_auto_lock))
+        .route(
+            "/wallet/utxos/sync-locks",
+            post(handlers::wallet::sync_locks),
+        )
+        .route(
+            "/wallet/locks/settings",
+            get(handlers::wallet::get_lock_settings),
+        )
+        .route(
+            "/wallet/locks/auto-lock",
+            post(handlers::wallet::set_auto_lock),
+        )
         .route("/wallet/assets", get(handlers::wallet::get_assets))
-        .route("/wallet/assets/domains", get(handlers::wallet::get_assets_domains))
-        .route("/wallet/assets/tokens", get(handlers::wallet::get_assets_tokens))
+        .route(
+            "/wallet/assets/domains",
+            get(handlers::wallet::get_assets_domains),
+        )
+        .route(
+            "/wallet/assets/tokens",
+            get(handlers::wallet::get_assets_tokens),
+        )
         .route(
             "/wallet/transactions",
             get(handlers::wallet::get_transactions),
         )
         .route("/wallet/mine", post(handlers::wallet::mine_blocks))
         // Wallet Backup
-        .route("/wallet/backup/info", get(handlers::wallet::get_backup_info))
-        .route("/wallet/backup/mnemonic", get(handlers::wallet::get_backup_mnemonic))
-        .route("/wallet/backup/descriptors", get(handlers::wallet::get_backup_descriptors))
-        .route("/wallet/backup/export", post(handlers::wallet::export_backup))
-        .route("/wallet/backup/verify", post(handlers::wallet::verify_backup))
-        .route("/wallet/backup/migration-status", get(handlers::wallet::get_migration_status))
-        .route("/wallet/locked-assets", get(handlers::wallet::get_locked_assets))
+        .route(
+            "/wallet/backup/info",
+            get(handlers::wallet::get_backup_info),
+        )
+        .route(
+            "/wallet/backup/mnemonic",
+            get(handlers::wallet::get_backup_mnemonic),
+        )
+        .route(
+            "/wallet/backup/descriptors",
+            get(handlers::wallet::get_backup_descriptors),
+        )
+        .route(
+            "/wallet/backup/export",
+            post(handlers::wallet::export_backup),
+        )
+        .route(
+            "/wallet/backup/verify",
+            post(handlers::wallet::verify_backup),
+        )
+        .route(
+            "/wallet/backup/migration-status",
+            get(handlers::wallet::get_migration_status),
+        )
+        .route(
+            "/wallet/locked-assets",
+            get(handlers::wallet::get_locked_assets),
+        )
         // Node management
         .route("/node/config", get(handlers::node::get_node_config))
         .route("/node/switch", post(handlers::node::switch_node))
         .route("/node/versions", get(handlers::node::get_node_versions))
         .route("/node/settings", get(handlers::node::get_node_settings))
         .route("/node/settings", put(handlers::node::update_node_settings))
-        .route("/node/settings/reset", post(handlers::node::reset_node_settings))
+        .route(
+            "/node/settings/reset",
+            post(handlers::node::reset_node_settings),
+        )
         // Tailscale
-        .route("/tailscale/status", get(handlers::tailscale::get_tailscale_status))
-        .route("/tailscale/connect", post(handlers::tailscale::connect_tailscale))
-        .route("/tailscale/disconnect", post(handlers::tailscale::disconnect_tailscale))
+        .route(
+            "/tailscale/status",
+            get(handlers::tailscale::get_tailscale_status),
+        )
+        .route(
+            "/tailscale/connect",
+            post(handlers::tailscale::connect_tailscale),
+        )
+        .route(
+            "/tailscale/disconnect",
+            post(handlers::tailscale::disconnect_tailscale),
+        )
         // Cloudflare
-        .route("/cloudflare/status", get(handlers::cloudflare::get_cloudflare_status))
-        .route("/cloudflare/connect", post(handlers::cloudflare::connect_cloudflare))
-        .route("/cloudflare/disconnect", post(handlers::cloudflare::disconnect_cloudflare))
-        .route("/cloudflare/services", get(handlers::cloudflare::get_exposable_services))
+        .route(
+            "/cloudflare/status",
+            get(handlers::cloudflare::get_cloudflare_status),
+        )
+        .route(
+            "/cloudflare/connect",
+            post(handlers::cloudflare::connect_cloudflare),
+        )
+        .route(
+            "/cloudflare/disconnect",
+            post(handlers::cloudflare::disconnect_cloudflare),
+        )
+        .route(
+            "/cloudflare/services",
+            get(handlers::cloudflare::get_exposable_services),
+        )
         // Tor
         .route("/tor/status", get(handlers::tor::get_tor_status))
-        .route("/tor/onion-addresses", get(handlers::tor::get_onion_addresses_handler))
+        .route(
+            "/tor/onion-addresses",
+            get(handlers::tor::get_onion_addresses_handler),
+        )
         .route("/tor/new-circuit", post(handlers::tor::new_tor_circuit))
         .route("/tor/enable", post(handlers::tor::enable_tor))
         .route("/tor/disable", post(handlers::tor::disable_tor))
         // Electrum (Electrs/Fulcrum management)
-        .route("/electrum/status", get(handlers::electrum::get_electrum_status))
+        .route(
+            "/electrum/status",
+            get(handlers::electrum::get_electrum_status),
+        )
         .route("/electrum/info", get(handlers::electrum::get_electrum_info))
-        .route("/electrum/switch", post(handlers::electrum::switch_electrum_server))
-        .route("/electrum/set-default", post(handlers::electrum::set_default_electrum_server))
-        .route("/electrum/server-action", post(handlers::electrum::electrum_server_action))
+        .route(
+            "/electrum/switch",
+            post(handlers::electrum::switch_electrum_server),
+        )
+        .route(
+            "/electrum/set-default",
+            post(handlers::electrum::set_default_electrum_server),
+        )
+        .route(
+            "/electrum/server-action",
+            post(handlers::electrum::electrum_server_action),
+        )
         // Block Explorer settings
-        .route("/explorer/settings", get(handlers::explorer::get_explorer_settings))
-        .route("/explorer/default", get(handlers::explorer::get_default_explorer))
-        .route("/explorer/set-default", post(handlers::explorer::set_default_explorer))
+        .route(
+            "/explorer/settings",
+            get(handlers::explorer::get_explorer_settings),
+        )
+        .route(
+            "/explorer/default",
+            get(handlers::explorer::get_default_explorer),
+        )
+        .route(
+            "/explorer/set-default",
+            post(handlers::explorer::set_default_explorer),
+        )
         // Indexer
         .route("/indexer/stats", get(handlers::indexer::get_indexer_stats))
         .route("/indexer/messages", get(handlers::indexer::get_messages))
-        .route("/indexer/messages/:txid/:vout", get(handlers::indexer::get_message_detail))
-        .route("/indexer/utxo-protocol-info", post(handlers::indexer::get_utxo_protocol_info))
-        .route("/indexer/stats/timeseries", get(handlers::indexer::get_timeseries))
-        .route("/indexer/stats/performance", get(handlers::indexer::get_performance))
-        .route("/indexer/anchors/stats", get(handlers::indexer::get_anchor_stats))
-        .route("/indexer/anchors/orphans", get(handlers::indexer::get_orphan_anchors))
+        .route(
+            "/indexer/messages/:txid/:vout",
+            get(handlers::indexer::get_message_detail),
+        )
+        .route(
+            "/indexer/utxo-protocol-info",
+            post(handlers::indexer::get_utxo_protocol_info),
+        )
+        .route(
+            "/indexer/stats/timeseries",
+            get(handlers::indexer::get_timeseries),
+        )
+        .route(
+            "/indexer/stats/performance",
+            get(handlers::indexer::get_performance),
+        )
+        .route(
+            "/indexer/anchors/stats",
+            get(handlers::indexer::get_anchor_stats),
+        )
+        .route(
+            "/indexer/anchors/orphans",
+            get(handlers::indexer::get_orphan_anchors),
+        )
         .route("/indexer/ws/live", get(handlers::indexer::ws_live_feed))
         // Installation
-        .route("/installation/status", get(handlers::installation::get_installation_status))
-        .route("/installation/services", get(handlers::installation::get_services))
-        .route("/installation/preset", post(handlers::installation::apply_preset))
-        .route("/installation/custom", post(handlers::installation::apply_custom))
-        .route("/installation/complete", post(handlers::installation::complete_setup))
-        .route("/installation/service/install", post(handlers::installation::install_service))
-        .route("/installation/service/uninstall", post(handlers::installation::uninstall_service))
-        .route("/installation/profiles", get(handlers::installation::get_profiles))
-        .route("/installation/reset", post(handlers::installation::reset_installation))
-        .route("/installation/stream", get(handlers::installation::stream_installation))
+        .route(
+            "/installation/status",
+            get(handlers::installation::get_installation_status),
+        )
+        .route(
+            "/installation/services",
+            get(handlers::installation::get_services),
+        )
+        .route(
+            "/installation/preset",
+            post(handlers::installation::apply_preset),
+        )
+        .route(
+            "/installation/custom",
+            post(handlers::installation::apply_custom),
+        )
+        .route(
+            "/installation/complete",
+            post(handlers::installation::complete_setup),
+        )
+        .route(
+            "/installation/service/install",
+            post(handlers::installation::install_service),
+        )
+        .route(
+            "/installation/service/uninstall",
+            post(handlers::installation::uninstall_service),
+        )
+        .route(
+            "/installation/profiles",
+            get(handlers::installation::get_profiles),
+        )
+        .route(
+            "/installation/reset",
+            post(handlers::installation::reset_installation),
+        )
+        .route(
+            "/installation/stream",
+            get(handlers::installation::stream_installation),
+        )
         // Profile
         .route("/profile", get(handlers::profile::get_profile))
         .route("/profile", put(handlers::profile::update_profile))
         // Settings
         .route("/settings", get(handlers::settings::get_all_settings))
         .route("/settings/export", get(handlers::settings::export_settings))
-        .route("/settings/import", post(handlers::settings::import_settings))
+        .route(
+            "/settings/import",
+            post(handlers::settings::import_settings),
+        )
         .route("/settings/:key", get(handlers::settings::get_setting))
         .route("/settings/:key", put(handlers::settings::update_setting))
         // Auth
@@ -454,16 +592,40 @@ async fn main() -> Result<()> {
         .route("/auth/setup", post(handlers::auth::setup_password))
         .route("/auth/login", post(handlers::auth::login))
         .route("/auth/verify", post(handlers::auth::verify_token))
-        .route("/auth/change-password", post(handlers::auth::change_password))
+        .route(
+            "/auth/change-password",
+            post(handlers::auth::change_password),
+        )
         .route("/auth/disable", delete(handlers::auth::disable_auth))
         // Notifications
-        .route("/notifications", get(handlers::notifications::list_notifications))
-        .route("/notifications", post(handlers::notifications::create_notification))
-        .route("/notifications/unread-count", get(handlers::notifications::get_unread_count))
-        .route("/notifications/read-all", put(handlers::notifications::mark_all_as_read))
-        .route("/notifications/clear-read", delete(handlers::notifications::clear_read_notifications))
-        .route("/notifications/:id/read", put(handlers::notifications::mark_as_read))
-        .route("/notifications/:id", delete(handlers::notifications::delete_notification))
+        .route(
+            "/notifications",
+            get(handlers::notifications::list_notifications),
+        )
+        .route(
+            "/notifications",
+            post(handlers::notifications::create_notification),
+        )
+        .route(
+            "/notifications/unread-count",
+            get(handlers::notifications::get_unread_count),
+        )
+        .route(
+            "/notifications/read-all",
+            put(handlers::notifications::mark_all_as_read),
+        )
+        .route(
+            "/notifications/clear-read",
+            delete(handlers::notifications::clear_read_notifications),
+        )
+        .route(
+            "/notifications/:id/read",
+            put(handlers::notifications::mark_as_read),
+        )
+        .route(
+            "/notifications/:id",
+            delete(handlers::notifications::delete_notification),
+        )
         .with_state(state)
         // Backup routes (separate state)
         .route("/backup/status", get(handlers::backup::get_status))
@@ -471,10 +633,16 @@ async fn main() -> Result<()> {
         .route("/backup/history", get(handlers::backup::get_history))
         .route("/backup/targets", get(handlers::backup::get_targets))
         .route("/backup/restore", post(handlers::backup::restore))
-        .route("/backup/snapshots/:target", get(handlers::backup::list_snapshots))
+        .route(
+            "/backup/snapshots/:target",
+            get(handlers::backup::list_snapshots),
+        )
         .route("/backup/settings", get(handlers::backup::get_settings))
         .route("/backup/settings", put(handlers::backup::save_settings))
-        .route("/backup/local/files", get(handlers::backup::list_local_files))
+        .route(
+            "/backup/local/files",
+            get(handlers::backup::list_local_files),
+        )
         .with_state(backup_state)
         .layer(TraceLayer::new_for_http())
         .layer(
@@ -498,4 +666,3 @@ async fn main() -> Result<()> {
 
     Ok(())
 }
-

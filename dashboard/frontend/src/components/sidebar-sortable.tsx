@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { GripVertical } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { GripVertical } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface SortableItemProps {
   id: string;
@@ -12,20 +12,11 @@ interface SortableItemProps {
   className?: string;
 }
 
-export function SortableItem({
-  id,
-  children,
-  isEditMode,
-  className,
-}: SortableItemProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id, disabled: !isEditMode });
+export function SortableItem({ id, children, isEditMode, className }: SortableItemProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id,
+    disabled: !isEditMode,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -36,11 +27,7 @@ export function SortableItem({
     <div
       ref={setNodeRef}
       style={style}
-      className={cn(
-        "relative",
-        isDragging && "z-50 opacity-90",
-        className
-      )}
+      className={cn('relative', isDragging && 'z-50 opacity-90', className)}
     >
       {isEditMode && (
         <div
@@ -51,7 +38,7 @@ export function SortableItem({
           <GripVertical className="w-3 h-3" />
         </div>
       )}
-      <div className={cn(isEditMode && "ml-4")}>{children}</div>
+      <div className={cn(isEditMode && 'ml-4')}>{children}</div>
     </div>
   );
 }
@@ -62,19 +49,11 @@ interface SortableCategoryProps {
   isEditMode: boolean;
 }
 
-export function SortableCategory({
-  id,
-  children,
-  isEditMode,
-}: SortableCategoryProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id, disabled: !isEditMode });
+export function SortableCategory({ id, children, isEditMode }: SortableCategoryProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id,
+    disabled: !isEditMode,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -85,10 +64,7 @@ export function SortableCategory({
     <div
       ref={setNodeRef}
       style={style}
-      className={cn(
-        "relative",
-        isDragging && "z-50 opacity-90 bg-card rounded-lg shadow-lg"
-      )}
+      className={cn('relative', isDragging && 'z-50 opacity-90 bg-card rounded-lg shadow-lg')}
     >
       {isEditMode && (
         <div
@@ -103,4 +79,3 @@ export function SortableCategory({
     </div>
   );
 }
-

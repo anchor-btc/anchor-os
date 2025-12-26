@@ -15,7 +15,7 @@ use tracing::{info, warn};
 use crate::wallet::WalletService;
 
 /// Migration status
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default)]
 pub struct MigrationStatus {
     /// Whether migration has been completed
     pub completed: bool,
@@ -27,18 +27,6 @@ pub struct MigrationStatus {
     pub addresses_imported: usize,
     /// BDK wallet fingerprint
     pub bdk_fingerprint: Option<String>,
-}
-
-impl Default for MigrationStatus {
-    fn default() -> Self {
-        Self {
-            completed: false,
-            completed_at: None,
-            migrated_from: None,
-            addresses_imported: 0,
-            bdk_fingerprint: None,
-        }
-    }
 }
 
 /// Wallet migrator
@@ -102,7 +90,11 @@ impl WalletMigrator {
     ///
     /// This creates a new BDK wallet and imports addresses from Bitcoin Core
     /// as watch-only for reference.
-    pub fn migrate(&self, btc_wallet: &WalletService, wallet_name: &str) -> Result<MigrationStatus> {
+    pub fn migrate(
+        &self,
+        btc_wallet: &WalletService,
+        wallet_name: &str,
+    ) -> Result<MigrationStatus> {
         info!("Starting wallet migration...");
 
         let mut status = MigrationStatus::default();
@@ -111,7 +103,10 @@ impl WalletMigrator {
         let addresses = match btc_wallet.list_received_addresses() {
             Ok(addrs) => addrs,
             Err(e) => {
-                warn!("Failed to list Bitcoin Core addresses: {}. Continuing with empty list.", e);
+                warn!(
+                    "Failed to list Bitcoin Core addresses: {}. Continuing with empty list.",
+                    e
+                );
                 vec![]
             }
         };
@@ -125,8 +120,15 @@ impl WalletMigrator {
             "exported_at": chrono::Utc::now().to_rfc3339(),
             "addresses": addresses,
         });
-        fs::write(&addresses_backup_path, serde_json::to_string_pretty(&addresses_backup)?)?;
-        info!("Saved {} addresses to {:?}", addresses.len(), addresses_backup_path);
+        fs::write(
+            &addresses_backup_path,
+            serde_json::to_string_pretty(&addresses_backup)?,
+        )?;
+        info!(
+            "Saved {} addresses to {:?}",
+            addresses.len(),
+            addresses_backup_path
+        );
 
         // Update status
         status.completed = true;
@@ -187,4 +189,3 @@ impl MigrationNotification {
         }
     }
 }
-

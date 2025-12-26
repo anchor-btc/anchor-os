@@ -7,22 +7,22 @@ use crate::error::{Result, WalletError};
 pub struct WalletConfig {
     /// Bitcoin Core RPC URL (e.g., "http://127.0.0.1:18443")
     pub rpc_url: String,
-    
+
     /// RPC username
     pub rpc_user: String,
-    
+
     /// RPC password
     pub rpc_password: String,
-    
+
     /// Wallet name (optional, for multi-wallet setups)
     pub wallet_name: Option<String>,
-    
+
     /// Bitcoin network
     pub network: bitcoin::Network,
-    
+
     /// Default fee rate in sat/vB
     pub fee_rate: f64,
-    
+
     /// Minimum confirmations for UTXOs
     pub min_confirmations: u32,
 }
@@ -120,4 +120,3 @@ impl Default for WalletConfig {
         Self::regtest("http://127.0.0.1:18443", "bitcoin", "bitcoin")
     }
 }
-

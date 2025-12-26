@@ -529,7 +529,10 @@ impl KindSpec for DnsSpec {
 
 impl AnchorableSpec for DnsSpec {
     fn requires_anchor(&self) -> bool {
-        matches!(self.operation, DnsOperation::Update | DnsOperation::Transfer)
+        matches!(
+            self.operation,
+            DnsOperation::Update | DnsOperation::Transfer
+        )
     }
 }
 
@@ -680,4 +683,3 @@ mod tests {
         assert_eq!(parsed.records[2].record_type, RecordType::MX);
     }
 }
-

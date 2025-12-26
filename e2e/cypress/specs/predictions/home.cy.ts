@@ -35,4 +35,3 @@ describe('Anchor Predictions Home', () => {
     cy.contains(/how|work|step/i, { timeout: 10000 }).should('exist');
   });
 });
-

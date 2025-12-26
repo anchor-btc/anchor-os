@@ -127,7 +127,8 @@ mod tests {
         let short = TextSpec::new("Short");
         assert!(short.fits_op_return());
 
-        let long = TextSpec::new("A".repeat(100));
+        // MAX_OP_RETURN_TEXT is 99900, so text exceeding that should not fit
+        let long = TextSpec::new("A".repeat(MAX_OP_RETURN_TEXT + 1));
         assert!(!long.fits_op_return());
     }
 
@@ -137,4 +138,3 @@ mod tests {
         assert!(TextSpec::supported_carriers().contains(&CarrierType::WitnessData));
     }
 }
-

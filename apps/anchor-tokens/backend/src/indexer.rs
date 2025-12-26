@@ -38,7 +38,10 @@ impl Indexer {
         // Connect to Bitcoin Core
         let rpc = Client::new(
             &config.bitcoin_rpc_url,
-            Auth::UserPass(config.bitcoin_rpc_user.clone(), config.bitcoin_rpc_password.clone()),
+            Auth::UserPass(
+                config.bitcoin_rpc_user.clone(),
+                config.bitcoin_rpc_password.clone(),
+            ),
         )
         .context("Failed to connect to Bitcoin RPC")?;
 
@@ -264,8 +267,11 @@ impl Indexer {
                         .output
                         .get(*output_index as usize)
                         .and_then(|o| {
-                            bitcoin::Address::from_script(&o.script_pubkey, bitcoin::Network::Regtest)
-                                .ok()
+                            bitcoin::Address::from_script(
+                                &o.script_pubkey,
+                                bitcoin::Network::Regtest,
+                            )
+                            .ok()
                         })
                         .map(|a| a.to_string());
 

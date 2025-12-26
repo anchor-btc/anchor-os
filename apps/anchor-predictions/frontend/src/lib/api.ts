@@ -1,4 +1,4 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3801";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3801';
 
 // ==================== Types ====================
 
@@ -86,9 +86,9 @@ async function fetchApi<T>(endpoint: string): Promise<T> {
 
 async function postApi<T>(endpoint: string, data: unknown): Promise<T> {
   const res = await fetch(`${API_BASE}${endpoint}`, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify(data),
   });
@@ -101,13 +101,13 @@ async function postApi<T>(endpoint: string, data: unknown): Promise<T> {
 
 // Stats
 export async function fetchStats(): Promise<MarketStats> {
-  return fetchApi("/api/stats");
+  return fetchApi('/api/stats');
 }
 
 // Markets
 export async function fetchMarkets(status?: string, limit = 50): Promise<Market[]> {
   const params = new URLSearchParams({ limit: String(limit) });
-  if (status) params.set("status", status);
+  if (status) params.set('status', status);
   return fetchApi(`/api/markets?${params}`);
 }
 
@@ -196,7 +196,7 @@ export interface ClaimWinningsResponse {
 }
 
 export async function createMarket(data: CreateMarketRequest): Promise<CreateMarketResponse> {
-  return postApi("/api/markets/create", data);
+  return postApi('/api/markets/create', data);
 }
 
 export async function getBetQuote(marketId: string, data: PlaceBetRequest): Promise<BetQuote> {
@@ -207,13 +207,16 @@ export async function placeBet(marketId: string, data: PlaceBetRequest): Promise
   return postApi(`/api/markets/${marketId}/bet`, data);
 }
 
-export async function claimWinnings(marketId: string, data: ClaimWinningsRequest): Promise<ClaimWinningsResponse> {
+export async function claimWinnings(
+  marketId: string,
+  data: ClaimWinningsRequest
+): Promise<ClaimWinningsResponse> {
   return postApi(`/api/markets/${marketId}/claim`, data);
 }
 
 // ==================== Oracle API ====================
 
-const ORACLE_API_BASE = process.env.NEXT_PUBLIC_ORACLE_API_URL || "http://localhost:3701";
+const ORACLE_API_BASE = process.env.NEXT_PUBLIC_ORACLE_API_URL || 'http://localhost:3701';
 
 export interface Oracle {
   id: number;
@@ -240,22 +243,24 @@ export function formatOdds(price: number): string {
 }
 
 export function formatImpliedOdds(price: number): string {
-  if (price <= 0 || price >= 1) return "N/A";
+  if (price <= 0 || price >= 1) return 'N/A';
   const decimal = 1 / price;
   return decimal.toFixed(2);
 }
 
 export function outcomeColor(outcome: number): string {
-  return outcome === 1 
-    ? "text-green-400 bg-green-500/20" 
-    : "text-red-400 bg-red-500/20";
+  return outcome === 1 ? 'text-green-400 bg-green-500/20' : 'text-red-400 bg-red-500/20';
 }
 
 export function statusColor(status: string): string {
   switch (status) {
-    case "open": return "bg-green-500/20 text-green-400";
-    case "resolved": return "bg-blue-500/20 text-blue-400";
-    case "cancelled": return "bg-red-500/20 text-red-400";
-    default: return "bg-gray-500/20 text-gray-400";
+    case 'open':
+      return 'bg-green-500/20 text-green-400';
+    case 'resolved':
+      return 'bg-blue-500/20 text-blue-400';
+    case 'cancelled':
+      return 'bg-red-500/20 text-red-400';
+    default:
+      return 'bg-gray-500/20 text-gray-400';
   }
 }

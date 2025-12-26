@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { Coins, Loader2, AlertCircle, Check, Zap, Info } from "lucide-react";
-import { createMintTx, broadcastTx, mineBlocks } from "@/lib/api";
-import { formatTokenAmount } from "@/lib/utils";
-import type { Token } from "@/lib/api";
+import { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { Coins, Loader2, AlertCircle, Check, Zap, Info } from 'lucide-react';
+import { createMintTx, broadcastTx, mineBlocks } from '@/lib/api';
+import { formatTokenAmount } from '@/lib/utils';
+import type { Token } from '@/lib/api';
 
 interface MintFormProps {
   token: Token;
@@ -13,7 +13,7 @@ interface MintFormProps {
 }
 
 export function MintForm({ token, onSuccess }: MintFormProps) {
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [txid, setTxid] = useState<string | null>(null);
 
@@ -50,13 +50,13 @@ export function MintForm({ token, onSuccess }: MintFormProps) {
     setError(null);
 
     if (!amount) {
-      setError("Please enter an amount");
+      setError('Please enter an amount');
       return;
     }
 
-    const amountBigInt = BigInt(amount || "0");
+    const amountBigInt = BigInt(amount || '0');
     if (amountBigInt <= 0n) {
-      setError("Amount must be greater than 0");
+      setError('Amount must be greater than 0');
       return;
     }
 
@@ -64,7 +64,9 @@ export function MintForm({ token, onSuccess }: MintFormProps) {
     if (token.mintLimit) {
       const limit = BigInt(token.mintLimit);
       if (amountBigInt > limit) {
-        setError(`Amount exceeds mint limit of ${formatTokenAmount(token.mintLimit, token.decimals)}`);
+        setError(
+          `Amount exceeds mint limit of ${formatTokenAmount(token.mintLimit, token.decimals)}`
+        );
         return;
       }
     }
@@ -74,7 +76,9 @@ export function MintForm({ token, onSuccess }: MintFormProps) {
     const max = BigInt(token.maxSupply);
     if (minted + amountBigInt > max) {
       const remaining = max - minted;
-      setError(`Cannot mint more than remaining: ${formatTokenAmount(remaining.toString(), token.decimals)}`);
+      setError(
+        `Cannot mint more than remaining: ${formatTokenAmount(remaining.toString(), token.decimals)}`
+      );
       return;
     }
 
@@ -105,7 +109,7 @@ export function MintForm({ token, onSuccess }: MintFormProps) {
         <button
           onClick={() => {
             setTxid(null);
-            setAmount("");
+            setAmount('');
           }}
           className="px-6 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-xl transition-colors"
         >
@@ -123,9 +127,7 @@ export function MintForm({ token, onSuccess }: MintFormProps) {
           <AlertCircle className="w-8 h-8 text-yellow-400" />
         </div>
         <p className="text-xl font-semibold mb-2">Minting Disabled</p>
-        <p className="text-gray-400">
-          This token does not have open minting enabled.
-        </p>
+        <p className="text-gray-400">This token does not have open minting enabled.</p>
       </div>
     );
   }
@@ -173,14 +175,12 @@ export function MintForm({ token, onSuccess }: MintFormProps) {
 
       {/* Amount Input */}
       <div>
-        <label className="block text-sm font-medium mb-2 text-gray-300">
-          Amount to Mint
-        </label>
+        <label className="block text-sm font-medium mb-2 text-gray-300">Amount to Mint</label>
         <div className="relative">
           <input
             type="text"
             value={amount}
-            onChange={(e) => setAmount(e.target.value.replace(/[^0-9]/g, ""))}
+            onChange={(e) => setAmount(e.target.value.replace(/[^0-9]/g, ''))}
             placeholder="0"
             className="w-full px-4 py-4 bg-gray-900 border border-gray-700 rounded-xl focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500/50 transition-all font-mono text-lg pr-24"
           />
@@ -188,7 +188,7 @@ export function MintForm({ token, onSuccess }: MintFormProps) {
             {token.ticker}
           </span>
         </div>
-        
+
         {/* Quick Amount Buttons */}
         <div className="flex gap-2 mt-3">
           {mintLimit && (
@@ -223,7 +223,9 @@ export function MintForm({ token, onSuccess }: MintFormProps) {
         <div className="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/30 rounded-xl">
           <Info className="w-4 h-4 text-green-400" />
           <p className="text-sm text-green-400">
-            You will receive <span className="font-semibold">{formatTokenAmount(amount, token.decimals)}</span> {token.ticker}
+            You will receive{' '}
+            <span className="font-semibold">{formatTokenAmount(amount, token.decimals)}</span>{' '}
+            {token.ticker}
           </p>
         </div>
       )}

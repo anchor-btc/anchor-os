@@ -60,10 +60,7 @@ impl CarrierPreferences {
     /// Create preferences for large data (images, media)
     pub fn large_data() -> Self {
         Self {
-            preferred: vec![
-                CarrierType::Inscription,
-                CarrierType::WitnessData,
-            ],
+            preferred: vec![CarrierType::Inscription, CarrierType::WitnessData],
             ..Default::default()
         }
     }
@@ -315,7 +312,10 @@ mod tests {
 
         let op_return = selector.get_carrier(CarrierType::OpReturn);
         assert!(op_return.is_some());
-        assert_eq!(op_return.unwrap().info().carrier_type, CarrierType::OpReturn);
+        assert_eq!(
+            op_return.unwrap().info().carrier_type,
+            CarrierType::OpReturn
+        );
     }
 
     #[test]

@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   HardDrive,
   Cloud,
@@ -18,10 +18,9 @@ import {
   FolderArchive,
   Calendar,
   ArrowRight,
-  X,
   AlertTriangle,
-} from "lucide-react";
-import Link from "next/link";
+} from 'lucide-react';
+import Link from 'next/link';
 
 // Import DS components
 import {
@@ -35,17 +34,17 @@ import {
   ModalHeader,
   ModalContent,
   ModalFooter,
-} from "@/components/ds";
+} from '@/components/ds';
 
-const BACKUP_API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8010";
+const BACKUP_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8010';
 
 interface BackupJob {
   id: string;
   started_at: string;
   completed_at: string | null;
-  status: "running" | "completed" | "failed";
-  backup_type: "full" | "incremental";
-  target: "local" | "s3" | "smb";
+  status: 'running' | 'completed' | 'failed';
+  backup_type: 'full' | 'incremental';
+  target: 'local' | 's3' | 'smb';
   size_bytes: number | null;
   files_count: number | null;
   error_message: string | null;
@@ -60,7 +59,7 @@ interface BackupStatus {
 
 interface StorageTarget {
   name: string;
-  storage_type: "local" | "s3" | "smb";
+  storage_type: 'local' | 's3' | 'smb';
   configured: boolean;
   total_bytes: number | null;
   used_bytes: number | null;
@@ -98,11 +97,11 @@ interface RestoreResponse {
 }
 
 function formatBytes(bytes: number | null): string {
-  if (bytes === null || bytes === 0) return "0 B";
+  if (bytes === null || bytes === 0) return '0 B';
   const k = 1024;
-  const sizes = ["B", "KB", "MB", "GB", "TB"];
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
 function formatTimeAgo(dateStr: string, t: (key: string) => string): string {
@@ -113,7 +112,7 @@ function formatTimeAgo(dateStr: string, t: (key: string) => string): string {
   const diffHours = Math.floor(diffMins / 60);
   const diffDays = Math.floor(diffHours / 24);
 
-  if (diffMins < 1) return t("time.justNow");
+  if (diffMins < 1) return t('time.justNow');
   if (diffMins < 60) return `${diffMins}m`;
   if (diffHours < 24) return `${diffHours}h`;
   return `${diffDays}d`;
@@ -121,11 +120,11 @@ function formatTimeAgo(dateStr: string, t: (key: string) => string): string {
 
 function StatusIcon({ status }: { status: string }) {
   switch (status) {
-    case "running":
+    case 'running':
       return <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />;
-    case "completed":
+    case 'completed':
       return <CheckCircle className="w-4 h-4 text-green-500" />;
-    case "failed":
+    case 'failed':
       return <XCircle className="w-4 h-4 text-red-500" />;
     default:
       return <Clock className="w-4 h-4 text-muted-foreground" />;
@@ -134,11 +133,11 @@ function StatusIcon({ status }: { status: string }) {
 
 function TargetIcon({ type }: { type: string }) {
   switch (type) {
-    case "local":
+    case 'local':
       return <HardDrive className="w-5 h-5" />;
-    case "s3":
+    case 's3':
       return <Cloud className="w-5 h-5" />;
-    case "smb":
+    case 'smb':
       return <Server className="w-5 h-5" />;
     default:
       return <FolderArchive className="w-5 h-5" />;
@@ -155,40 +154,40 @@ export default function BackupPage() {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingSnapshot, setPendingSnapshot] = useState<Snapshot | null>(null);
 
-  const { data: status, isLoading: statusLoading } = useQuery<BackupStatus>({
-    queryKey: ["backup-status"],
+  const { data: status } = useQuery<BackupStatus>({
+    queryKey: ['backup-status'],
     queryFn: async () => {
       const res = await fetch(`${BACKUP_API_URL}/backup/status`);
-      if (!res.ok) throw new Error("Failed to fetch status");
+      if (!res.ok) throw new Error('Failed to fetch status');
       return res.json();
     },
     refetchInterval: 5000,
   });
 
   const { data: targets } = useQuery<{ targets: StorageTarget[] }>({
-    queryKey: ["backup-targets"],
+    queryKey: ['backup-targets'],
     queryFn: async () => {
       const res = await fetch(`${BACKUP_API_URL}/backup/targets`);
-      if (!res.ok) throw new Error("Failed to fetch targets");
+      if (!res.ok) throw new Error('Failed to fetch targets');
       return res.json();
     },
   });
 
   const { data: history } = useQuery<HistoryResponse>({
-    queryKey: ["backup-history"],
+    queryKey: ['backup-history'],
     queryFn: async () => {
       const res = await fetch(`${BACKUP_API_URL}/backup/history`);
-      if (!res.ok) throw new Error("Failed to fetch history");
+      if (!res.ok) throw new Error('Failed to fetch history');
       return res.json();
     },
     refetchInterval: 10000,
   });
 
   const { data: snapshots, refetch: refetchSnapshots } = useQuery<SnapshotsResponse>({
-    queryKey: ["backup-snapshots"],
+    queryKey: ['backup-snapshots'],
     queryFn: async () => {
       const res = await fetch(`${BACKUP_API_URL}/backup/snapshots/local`);
-      if (!res.ok) throw new Error("Failed to fetch snapshots");
+      if (!res.ok) throw new Error('Failed to fetch snapshots');
       return res.json();
     },
     refetchInterval: 30000,
@@ -197,20 +196,20 @@ export default function BackupPage() {
   const restoreBackup = useMutation({
     mutationFn: async (snapshotId: string) => {
       const res = await fetch(`${BACKUP_API_URL}/backup/restore`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           snapshot_id: snapshotId,
-          target: "local",
+          target: 'local',
         }),
       });
-      if (!res.ok) throw new Error("Failed to restore backup");
+      if (!res.ok) throw new Error('Failed to restore backup');
       return res.json() as Promise<RestoreResponse>;
     },
     onSuccess: (data) => {
       setRestoreResult(data);
       setIsRestoring(false);
-      queryClient.invalidateQueries({ queryKey: ["backup-status"] });
+      queryClient.invalidateQueries({ queryKey: ['backup-status'] });
     },
     onError: (error) => {
       setRestoreResult({ success: false, message: error.message, errors: [error.message] });
@@ -247,19 +246,19 @@ export default function BackupPage() {
   const startBackup = useMutation({
     mutationFn: async (target: string) => {
       const res = await fetch(`${BACKUP_API_URL}/backup/start`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           target,
           include_databases: true,
           include_volumes: true,
         }),
       });
-      if (!res.ok) throw new Error("Failed to start backup");
+      if (!res.ok) throw new Error('Failed to start backup');
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["backup-status"] });
+      queryClient.invalidateQueries({ queryKey: ['backup-status'] });
     },
   });
 
@@ -271,15 +270,15 @@ export default function BackupPage() {
       <PageHeader
         icon={FolderArchive}
         iconColor="blue"
-        title={t("backup.title")}
-        subtitle={t("backup.subtitle")}
+        title={t('backup.title')}
+        subtitle={t('backup.subtitle')}
         actions={
           <Link
             href="/backup/settings"
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
           >
             <Settings className="w-4 h-4" />
-            {t("nav.settings")}
+            {t('nav.settings')}
           </Link>
         }
       />
@@ -288,38 +287,31 @@ export default function BackupPage() {
       <Grid cols={{ default: 1, md: 3 }} gap="md">
         <StatCard
           icon={Clock}
-          label={t("backup.lastBackup")}
+          label={t('backup.lastBackup')}
           value={
             status?.last_backup
-              ? formatTimeAgo(
-                  status.last_backup.completed_at || status.last_backup.started_at,
-                  t
-                )
-              : t("backup.noBackupsYet")
+              ? formatTimeAgo(status.last_backup.completed_at || status.last_backup.started_at, t)
+              : t('backup.noBackupsYet')
           }
           color="blue"
         />
         <StatCard
           icon={Calendar}
-          label={t("backup.nextScheduled")}
+          label={t('backup.nextScheduled')}
           value={
             status?.next_scheduled
               ? new Date(status.next_scheduled).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
+                  hour: '2-digit',
+                  minute: '2-digit',
                 })
-              : t("backup.notScheduled")
+              : t('backup.notScheduled')
           }
           color="purple"
         />
         <StatCard
           icon={Database}
-          label={t("backup.storageUsed")}
-          value={
-            targets?.targets?.[0]
-              ? formatBytes(targets.targets[0].used_bytes)
-              : "--"
-          }
+          label={t('backup.storageUsed')}
+          value={targets?.targets?.[0] ? formatBytes(targets.targets[0].used_bytes) : '--'}
           color="emerald"
         />
       </Grid>
@@ -329,48 +321,45 @@ export default function BackupPage() {
         <ActionButton
           variant="primary"
           loading={isRunning || startBackup.isPending}
-          onClick={() => startBackup.mutate("local")}
+          onClick={() => startBackup.mutate('local')}
           disabled={isRunning || startBackup.isPending}
           icon={Play}
-          label={isRunning ? t("backup.backupInProgress") : t("backup.backupNow")}
+          label={isRunning ? t('backup.backupInProgress') : t('backup.backupNow')}
         />
         <ActionButton
           variant="secondary"
           onClick={openRestoreModal}
           disabled={isRunning}
           icon={RotateCcw}
-          label={t("backup.restore")}
+          label={t('backup.restore')}
         />
       </div>
 
       {/* Current Backup Progress */}
       {status?.current_job && (
-        <InfoBox variant="info" icon={Loader2} title={t("backup.backupProgress")}>
-          {t("backup.started")} {formatTimeAgo(status.current_job.started_at, t)} • {t("backup.target")}: {status.current_job.target}
+        <InfoBox variant="info" icon={Loader2} title={t('backup.backupProgress')}>
+          {t('backup.started')} {formatTimeAgo(status.current_job.started_at, t)} •{' '}
+          {t('backup.target')}: {status.current_job.target}
         </InfoBox>
       )}
 
       {/* Storage Targets */}
       <Section>
-        <h2 className="text-lg font-semibold text-foreground mb-4">
-          {t("backup.backupTargets")}
-        </h2>
+        <h2 className="text-lg font-semibold text-foreground mb-4">{t('backup.backupTargets')}</h2>
         <Grid cols={{ default: 1, md: 3 }} gap="md">
           {targets?.targets?.map((target) => (
             <div
               key={target.storage_type}
               className={`bg-card border rounded-xl p-4 ${
-                target.configured
-                  ? "border-border"
-                  : "border-dashed border-muted-foreground/30"
+                target.configured ? 'border-border' : 'border-dashed border-muted-foreground/30'
               }`}
             >
               <div className="flex items-center gap-3 mb-3">
                 <div
                   className={`p-2 rounded-lg ${
                     target.configured
-                      ? "bg-green-500/10 text-green-500"
-                      : "bg-muted text-muted-foreground"
+                      ? 'bg-green-500/10 text-green-500'
+                      : 'bg-muted text-muted-foreground'
                   }`}
                 >
                   <TargetIcon type={target.storage_type} />
@@ -378,14 +367,14 @@ export default function BackupPage() {
                 <div>
                   <p className="font-medium text-foreground">{target.name}</p>
                   <p className="text-sm text-muted-foreground">
-                    {target.configured ? t("backup.configured") : t("backup.notConfigured")}
+                    {target.configured ? t('backup.configured') : t('backup.notConfigured')}
                   </p>
                 </div>
               </div>
               {target.configured && target.used_bytes !== null && (
                 <div className="mt-2">
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="text-muted-foreground">{t("backup.used")}</span>
+                    <span className="text-muted-foreground">{t('backup.used')}</span>
                     <span className="text-foreground">{formatBytes(target.used_bytes)}</span>
                   </div>
                   {target.total_bytes && (
@@ -411,14 +400,12 @@ export default function BackupPage() {
       {/* Recent Backup Jobs */}
       <Section>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-foreground">
-            {t("backup.recentJobs")}
-          </h2>
+          <h2 className="text-lg font-semibold text-foreground">{t('backup.recentJobs')}</h2>
           <Link
             href="/backup/history"
             className="text-sm text-primary hover:underline flex items-center gap-1"
           >
-            {t("backup.viewAll")} <ArrowRight className="w-3 h-3" />
+            {t('backup.viewAll')} <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
         <div className="overflow-hidden rounded-lg border border-border">
@@ -426,33 +413,33 @@ export default function BackupPage() {
             <thead>
               <tr className="border-b border-border bg-muted/50">
                 <th className="text-left p-3 text-sm font-medium text-muted-foreground">
-                  {t("backup.date")}
+                  {t('backup.date')}
                 </th>
                 <th className="text-left p-3 text-sm font-medium text-muted-foreground">
-                  {t("backup.type")}
+                  {t('backup.type')}
                 </th>
                 <th className="text-left p-3 text-sm font-medium text-muted-foreground">
-                  {t("backup.target")}
+                  {t('backup.target')}
                 </th>
                 <th className="text-left p-3 text-sm font-medium text-muted-foreground">
-                  {t("backup.size")}
+                  {t('backup.size')}
                 </th>
                 <th className="text-left p-3 text-sm font-medium text-muted-foreground">
-                  {t("backup.status")}
+                  {t('backup.status')}
                 </th>
                 <th className="text-right p-3 text-sm font-medium text-muted-foreground">
-                  {t("backup.actions")}
+                  {t('backup.actions')}
                 </th>
               </tr>
             </thead>
             <tbody>
               {history?.backups?.slice(0, 5).map((backup) => {
                 const backupTime = new Date(backup.started_at).getTime();
-                const matchingSnapshot = snapshots?.snapshots?.find(s => {
+                const matchingSnapshot = snapshots?.snapshots?.find((s) => {
                   const snapshotTime = new Date(s.time).getTime();
                   return Math.abs(snapshotTime - backupTime) < 5 * 60 * 1000;
                 });
-                
+
                 return (
                   <tr
                     key={backup.id}
@@ -481,20 +468,18 @@ export default function BackupPage() {
                     <td className="p-3">
                       <div className="flex items-center gap-2">
                         <StatusIcon status={backup.status} />
-                        <span className="text-sm capitalize">
-                          {t(`backup.${backup.status}`)}
-                        </span>
+                        <span className="text-sm capitalize">{t(`backup.${backup.status}`)}</span>
                       </div>
                     </td>
                     <td className="p-3 text-right">
-                      {backup.status === "completed" && matchingSnapshot && (
+                      {backup.status === 'completed' && matchingSnapshot && (
                         <button
                           onClick={() => handleRestore(matchingSnapshot)}
                           disabled={isRestoring}
                           className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded text-xs font-medium hover:bg-primary/20 disabled:opacity-50"
                         >
                           <RotateCcw className="w-3 h-3" />
-                          {t("backup.restore")}
+                          {t('backup.restore')}
                         </button>
                       )}
                     </td>
@@ -504,7 +489,7 @@ export default function BackupPage() {
               {(!history?.backups || history.backups.length === 0) && (
                 <tr>
                   <td colSpan={6} className="p-8 text-center text-muted-foreground">
-                    {t("backup.noJobsYet")}
+                    {t('backup.noJobsYet')}
                   </td>
                 </tr>
               )}
@@ -517,10 +502,10 @@ export default function BackupPage() {
       <Section>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-foreground">
-            {t("backup.availableSnapshots")}
+            {t('backup.availableSnapshots')}
           </h2>
           <span className="text-sm text-muted-foreground">
-            {snapshots?.snapshots?.length || 0} {t("backup.snapshotsAvailable")}
+            {snapshots?.snapshots?.length || 0} {t('backup.snapshotsAvailable')}
           </span>
         </div>
         <div className="overflow-hidden rounded-lg border border-border">
@@ -528,19 +513,19 @@ export default function BackupPage() {
             <thead>
               <tr className="border-b border-border bg-muted/50">
                 <th className="text-left p-3 text-sm font-medium text-muted-foreground">
-                  {t("backup.snapshotId")}
+                  {t('backup.snapshotId')}
                 </th>
                 <th className="text-left p-3 text-sm font-medium text-muted-foreground">
-                  {t("backup.date")}
+                  {t('backup.date')}
                 </th>
                 <th className="text-left p-3 text-sm font-medium text-muted-foreground">
-                  {t("backup.hostname")}
+                  {t('backup.hostname')}
                 </th>
                 <th className="text-left p-3 text-sm font-medium text-muted-foreground">
-                  {t("backup.contents")}
+                  {t('backup.contents')}
                 </th>
                 <th className="text-right p-3 text-sm font-medium text-muted-foreground">
-                  {t("backup.actions")}
+                  {t('backup.actions')}
                 </th>
               </tr>
             </thead>
@@ -551,9 +536,7 @@ export default function BackupPage() {
                   className="border-b border-border last:border-0 hover:bg-muted/30"
                 >
                   <td className="p-3">
-                    <span className="text-sm font-mono text-primary">
-                      {snapshot.short_id}
-                    </span>
+                    <span className="text-sm font-mono text-primary">{snapshot.short_id}</span>
                   </td>
                   <td className="p-3">
                     <span className="text-sm text-foreground">
@@ -561,29 +544,27 @@ export default function BackupPage() {
                     </span>
                   </td>
                   <td className="p-3">
-                    <span className="text-sm text-muted-foreground">
-                      {snapshot.hostname}
-                    </span>
+                    <span className="text-sm text-muted-foreground">{snapshot.hostname}</span>
                   </td>
                   <td className="p-3">
                     <div className="flex flex-wrap gap-1">
-                      {snapshot.paths.some(p => p.includes('/databases/')) && (
+                      {snapshot.paths.some((p) => p.includes('/databases/')) && (
                         <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded">
                           Databases
                         </span>
                       )}
-                      {snapshot.paths.some(p => p.includes('/volumes/')) && (
+                      {snapshot.paths.some((p) => p.includes('/volumes/')) && (
                         <span className="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded">
                           Volumes
                         </span>
                       )}
                       <span className="text-xs text-muted-foreground">
-                        ({snapshot.paths.length} {t("backup.files")})
+                        ({snapshot.paths.length} {t('backup.files')})
                       </span>
                     </div>
                   </td>
                   <td className="p-3 text-right">
-                    <button 
+                    <button
                       onClick={() => handleRestore(snapshot)}
                       disabled={isRestoring}
                       className="flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary rounded-lg text-sm font-medium hover:bg-primary/20 disabled:opacity-50 ml-auto"
@@ -591,12 +572,12 @@ export default function BackupPage() {
                       {isRestoring && selectedSnapshot?.id === snapshot.id ? (
                         <>
                           <Loader2 className="w-3 h-3 animate-spin" />
-                          {t("backup.restoring")}
+                          {t('backup.restoring')}
                         </>
                       ) : (
                         <>
                           <RotateCcw className="w-3 h-3" />
-                          {t("backup.restore")}
+                          {t('backup.restore')}
                         </>
                       )}
                     </button>
@@ -606,7 +587,7 @@ export default function BackupPage() {
               {(!snapshots?.snapshots || snapshots.snapshots.length === 0) && (
                 <tr>
                   <td colSpan={5} className="p-8 text-center text-muted-foreground">
-                    {t("backup.noSnapshotsFound")}
+                    {t('backup.noSnapshotsFound')}
                   </td>
                 </tr>
               )}
@@ -616,33 +597,51 @@ export default function BackupPage() {
       </Section>
 
       {/* Restore Modal */}
-      <Modal open={showRestoreModal} onClose={() => setShowRestoreModal(false)} className="max-w-2xl">
+      <Modal
+        open={showRestoreModal}
+        onClose={() => setShowRestoreModal(false)}
+        className="max-w-2xl"
+      >
         <ModalHeader
           icon={RotateCcw}
           iconColor="blue"
-          title={t("backup.restoreFromBackup")}
+          title={t('backup.restoreFromBackup')}
           onClose={() => setShowRestoreModal(false)}
         />
         <ModalContent className="max-h-[60vh] overflow-y-auto">
-          <InfoBox variant="warning" icon={AlertTriangle} title={t("backup.restoreWarningTitle")} className="mb-4">
-            {t("backup.restoreWarningMessage")}
+          <InfoBox
+            variant="warning"
+            icon={AlertTriangle}
+            title={t('backup.restoreWarningTitle')}
+            className="mb-4"
+          >
+            {t('backup.restoreWarningMessage')}
           </InfoBox>
 
           {restoreResult && (
-            <InfoBox 
-              variant={restoreResult.success ? "success" : "error"} 
+            <InfoBox
+              variant={restoreResult.success ? 'success' : 'error'}
               className="mb-4"
               title={restoreResult.message}
             >
               {restoreResult.duration_ms && (
-                <p className="text-xs mt-1">Completed in {(restoreResult.duration_ms / 1000).toFixed(1)}s</p>
+                <p className="text-xs mt-1">
+                  Completed in {(restoreResult.duration_ms / 1000).toFixed(1)}s
+                </p>
               )}
               {restoreResult.databases_restored && restoreResult.databases_restored.length > 0 && (
                 <div className="mt-2">
-                  <p className="text-sm font-medium">Databases Restored ({restoreResult.databases_restored.length})</p>
+                  <p className="text-sm font-medium">
+                    Databases Restored ({restoreResult.databases_restored.length})
+                  </p>
                   <div className="flex flex-wrap gap-1 mt-1">
                     {restoreResult.databases_restored.map((db) => (
-                      <span key={db} className="text-xs bg-success/20 text-success px-2 py-0.5 rounded">{db}</span>
+                      <span
+                        key={db}
+                        className="text-xs bg-success/20 text-success px-2 py-0.5 rounded"
+                      >
+                        {db}
+                      </span>
                     ))}
                   </div>
                 </div>
@@ -652,7 +651,9 @@ export default function BackupPage() {
                   <p className="text-sm font-medium">Errors:</p>
                   <ul className="mt-1 space-y-1">
                     {restoreResult.errors.map((error, i) => (
-                      <li key={i} className="text-xs bg-error/10 px-2 py-1 rounded">{error}</li>
+                      <li key={i} className="text-xs bg-error/10 px-2 py-1 rounded">
+                        {error}
+                      </li>
                     ))}
                   </ul>
                 </div>
@@ -661,12 +662,12 @@ export default function BackupPage() {
           )}
 
           <p className="text-sm text-muted-foreground mb-2">
-            {t("backup.selectSnapshotToRestore")}
+            {t('backup.selectSnapshotToRestore')}
           </p>
-          
+
           {!snapshots?.snapshots?.length ? (
             <div className="text-center py-8 text-muted-foreground">
-              {t("backup.noSnapshotsFound")}
+              {t('backup.noSnapshotsFound')}
             </div>
           ) : (
             <div className="space-y-2">
@@ -675,8 +676,8 @@ export default function BackupPage() {
                   key={snapshot.id}
                   className={`border rounded-lg p-4 transition-colors ${
                     selectedSnapshot?.id === snapshot.id
-                      ? "border-primary bg-primary/5"
-                      : "border-border hover:border-primary/50"
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border hover:border-primary/50'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -688,7 +689,7 @@ export default function BackupPage() {
                         </span>
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {snapshot.paths.length} {t("backup.files")} • {snapshot.hostname}
+                        {snapshot.paths.length} {t('backup.files')} • {snapshot.hostname}
                       </p>
                     </div>
                     <ActionButton
@@ -697,7 +698,7 @@ export default function BackupPage() {
                       onClick={() => handleRestore(snapshot)}
                       disabled={isRestoring}
                       icon={RotateCcw}
-                      label={t("backup.restore")}
+                      label={t('backup.restore')}
                     />
                   </div>
                 </div>
@@ -706,7 +707,11 @@ export default function BackupPage() {
           )}
         </ModalContent>
         <ModalFooter>
-          <ActionButton variant="secondary" onClick={() => setShowRestoreModal(false)} label={t("backup.close")} />
+          <ActionButton
+            variant="secondary"
+            onClick={() => setShowRestoreModal(false)}
+            label={t('backup.close')}
+          />
         </ModalFooter>
       </Modal>
 
@@ -726,7 +731,7 @@ export default function BackupPage() {
               {pendingSnapshot && new Date(pendingSnapshot.time).toLocaleString()}
             </p>
           </div>
-          
+
           <InfoBox variant="error" title="Warning: This action will:" className="mb-4">
             <ul className="text-sm mt-2 space-y-1 list-disc list-inside">
               <li>Stop affected containers temporarily</li>
@@ -735,14 +740,19 @@ export default function BackupPage() {
               <li>Restart services after restore</li>
             </ul>
           </InfoBox>
-          
+
           <p className="text-sm text-muted-foreground">
             This operation may take several minutes. Do not close this page.
           </p>
         </ModalContent>
         <ModalFooter>
           <ActionButton variant="secondary" onClick={cancelRestore} label="Cancel" />
-          <ActionButton variant="destructive" onClick={confirmRestore} icon={RotateCcw} label="Yes, Restore Now" />
+          <ActionButton
+            variant="destructive"
+            onClick={confirmRestore}
+            icon={RotateCcw}
+            label="Yes, Restore Now"
+          />
         </ModalFooter>
       </Modal>
 

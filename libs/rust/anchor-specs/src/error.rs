@@ -8,7 +8,6 @@ pub enum SpecError {
     // ========================================================================
     // General Errors
     // ========================================================================
-    
     /// Payload is too short to parse
     #[error("Payload too short: expected at least {expected} bytes, got {actual}")]
     PayloadTooShort { expected: usize, actual: usize },
@@ -39,7 +38,6 @@ pub enum SpecError {
     // ========================================================================
     // DNS Errors
     // ========================================================================
-    
     /// Invalid domain name
     #[error("Invalid domain name: {0}")]
     InvalidDomainName(String),
@@ -67,7 +65,6 @@ pub enum SpecError {
     // ========================================================================
     // Token Errors
     // ========================================================================
-    
     /// Invalid ticker format
     #[error("Invalid ticker: {0}")]
     InvalidTicker(String),
@@ -87,7 +84,6 @@ pub enum SpecError {
     // ========================================================================
     // Proof Errors
     // ========================================================================
-    
     /// Invalid hash algorithm
     #[error("Invalid hash algorithm: {0}")]
     InvalidHashAlgorithm(u8),
@@ -107,7 +103,6 @@ pub enum SpecError {
     // ========================================================================
     // Text/Generic Errors
     // ========================================================================
-    
     /// Text too long
     #[error("Text too long: max {max} bytes, got {actual}")]
     TextTooLong { max: usize, actual: usize },
@@ -119,4 +114,3 @@ pub enum SpecError {
 
 /// Result type alias for spec operations
 pub type Result<T> = std::result::Result<T, SpecError>;
-

@@ -9,7 +9,6 @@ use axum::{
 use serde::Deserialize;
 use std::sync::Arc;
 
-use crate::amm::AmmState;
 use crate::db::Database;
 use crate::models::*;
 
@@ -107,7 +106,7 @@ pub async fn create_market(
 ) -> impl IntoResponse {
     use rand::Rng;
     use std::time::{SystemTime, UNIX_EPOCH};
-    
+
     // Generate a unique market_id
     let timestamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -118,12 +117,12 @@ pub async fn create_market(
     market_id_bytes.extend_from_slice(&timestamp.to_be_bytes()[..16]);
     market_id_bytes.extend_from_slice(&random_bytes);
     let market_id_hex = hex::encode(&market_id_bytes);
-    
+
     // Create market object matching the API model
     let initial_pool = req.initial_liquidity_sats.unwrap_or(1_000_000_000);
     let yes_price = 0.5;
     let no_price = 0.5;
-    
+
     let market = crate::models::Market {
         id: 0, // Will be assigned by DB
         market_id: market_id_hex.clone(),
@@ -145,27 +144,30 @@ pub async fn create_market(
         position_count: 0,
         created_at: chrono::Utc::now().to_rfc3339(),
     };
-    
+
     // Insert into database
     match db.create_market(&market).await {
-        Ok(_) => {
-            Json(serde_json::json!({
-                "status": "success",
-                "message": format!("Market created successfully! ID: {}", &market_id_hex[..16]),
-                "market_id": market_id_hex,
-                "question": req.question,
-                "description": req.description,
-                "resolution_block": req.resolution_block,
-                "oracle_pubkey": req.oracle_pubkey,
-                "initial_liquidity_sats": initial_pool,
-            })).into_response()
-        }
+        Ok(_) => Json(serde_json::json!({
+            "status": "success",
+            "message": format!("Market created successfully! ID: {}", &market_id_hex[..16]),
+            "market_id": market_id_hex,
+            "question": req.question,
+            "description": req.description,
+            "resolution_block": req.resolution_block,
+            "oracle_pubkey": req.oracle_pubkey,
+            "initial_liquidity_sats": initial_pool,
+        }))
+        .into_response(),
         Err(e) => {
             tracing::error!("Failed to create market: {}", e);
-            (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({
-                "status": "error",
-                "message": format!("Failed to create market: {}", e),
-            }))).into_response()
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({
+                    "status": "error",
+                    "message": format!("Failed to create market: {}", e),
+                })),
+            )
+                .into_response()
         }
     }
 }
@@ -264,7 +266,13 @@ pub async fn place_bet(
     // Decode user pubkey
     let user_pubkey_bytes = match hex::decode(&req.user_pubkey) {
         Ok(b) => b,
-        Err(e) => return (StatusCode::BAD_REQUEST, format!("Invalid user_pubkey: {}", e)).into_response(),
+        Err(e) => {
+            return (
+                StatusCode::BAD_REQUEST,
+                format!("Invalid user_pubkey: {}", e),
+            )
+                .into_response()
+        }
     };
 
     match db.get_market_amm_state(&market_id_bytes).await {
@@ -275,14 +283,17 @@ pub async fn place_bet(
             // Create real Bitcoin transaction if bet_address is provided
             let (txid_bytes, is_real_tx) = if let Some(ref bet_address) = req.bet_address {
                 // Create bet transaction via wallet API
-                let wallet_url = std::env::var("WALLET_SERVICE_URL").unwrap_or_else(|_| "http://core-wallet:8001".to_string());
+                let wallet_url = std::env::var("WALLET_SERVICE_URL")
+                    .unwrap_or_else(|_| "http://core-wallet:8001".to_string());
                 let client = reqwest::Client::new();
-                
+
                 // Build body: market_id (32 bytes) + outcome (1 byte) + user_pubkey (first 32 bytes)
                 let mut body_bytes = market_id_bytes.clone();
                 body_bytes.push(req.outcome as u8);
-                body_bytes.extend_from_slice(&user_pubkey_bytes[..std::cmp::min(32, user_pubkey_bytes.len())]);
-                
+                body_bytes.extend_from_slice(
+                    &user_pubkey_bytes[..std::cmp::min(32, user_pubkey_bytes.len())],
+                );
+
                 let bet_request = serde_json::json!({
                     "kind": 41, // PlaceBet
                     "body": hex::encode(&body_bytes),
@@ -302,32 +313,50 @@ pub async fn place_bet(
                 {
                     Ok(resp) => resp,
                     Err(e) => {
-                        return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({
-                            "status": "error",
-                            "message": format!("Failed to create bet transaction: {}", e)
-                        }))).into_response();
+                        return (
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                            Json(serde_json::json!({
+                                "status": "error",
+                                "message": format!("Failed to create bet transaction: {}", e)
+                            })),
+                        )
+                            .into_response();
                     }
                 };
 
                 if !response.status().is_success() {
-                    let error_text = response.text().await.unwrap_or_else(|_| "Unknown error".to_string());
-                    return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({
-                        "status": "error",
-                        "message": format!("Wallet error: {}", error_text)
-                    }))).into_response();
+                    let error_text = response
+                        .text()
+                        .await
+                        .unwrap_or_else(|_| "Unknown error".to_string());
+                    return (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        Json(serde_json::json!({
+                            "status": "error",
+                            "message": format!("Wallet error: {}", error_text)
+                        })),
+                    )
+                        .into_response();
                 }
 
                 let wallet_response: serde_json::Value = match response.json().await {
                     Ok(v) => v,
                     Err(e) => {
-                        return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({
-                            "status": "error",
-                            "message": format!("Failed to parse wallet response: {}", e)
-                        }))).into_response();
+                        return (
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                            Json(serde_json::json!({
+                                "status": "error",
+                                "message": format!("Failed to parse wallet response: {}", e)
+                            })),
+                        )
+                            .into_response();
                     }
                 };
 
-                let txid = wallet_response["txid"].as_str().unwrap_or("unknown").to_string();
+                let txid = wallet_response["txid"]
+                    .as_str()
+                    .unwrap_or("unknown")
+                    .to_string();
                 let txid_bytes = hex::decode(&txid).unwrap_or_else(|_| txid.as_bytes().to_vec());
                 (txid_bytes, true)
             } else {
@@ -335,19 +364,22 @@ pub async fn place_bet(
                 let demo_txid = format!("demo_{}_{}", id, chrono::Utc::now().timestamp_millis());
                 (demo_txid.as_bytes().to_vec(), false)
             };
-            
+
             // Insert position into database
-            match db.insert_position(
-                &market_id_bytes,
-                &txid_bytes,
-                0, // vout
-                0, // block_height (will be updated by indexer for real tx)
-                &user_pubkey_bytes,
-                req.outcome,
-                req.amount_sats,
-                result.shares_out,
-                result.avg_price as f32,
-            ).await {
+            match db
+                .insert_position(
+                    &market_id_bytes,
+                    &txid_bytes,
+                    0, // vout
+                    0, // block_height (will be updated by indexer for real tx)
+                    &user_pubkey_bytes,
+                    req.outcome,
+                    req.amount_sats,
+                    result.shares_out,
+                    result.avg_price as f32,
+                )
+                .await
+            {
                 Ok(_) => {
                     // Update market AMM pools
                     let new_yes_pool = if req.outcome == 1 {
@@ -360,14 +392,16 @@ pub async fn place_bet(
                     } else {
                         amm.no_pool + req.amount_sats
                     };
-                    
-                    let _ = db.update_market_after_bet(
-                        &market_id_bytes,
-                        new_yes_pool,
-                        new_no_pool,
-                        req.amount_sats,
-                        req.outcome,
-                    ).await;
+
+                    let _ = db
+                        .update_market_after_bet(
+                            &market_id_bytes,
+                            new_yes_pool,
+                            new_no_pool,
+                            req.amount_sats,
+                            req.outcome,
+                        )
+                        .await;
 
                     let txid_hex = if is_real_tx {
                         hex::encode(&txid_bytes)
@@ -389,7 +423,11 @@ pub async fn place_bet(
                     }))
                     .into_response()
                 }
-                Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to save bet: {}", e)).into_response(),
+                Err(e) => (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    format!("Failed to save bet: {}", e),
+                )
+                    .into_response(),
             }
         }
         Ok(None) => (StatusCode::NOT_FOUND, "Market not found").into_response(),
@@ -468,10 +506,14 @@ pub async fn claim_winnings(
     let position = match db.get_position_by_id(req.position_id).await {
         Ok(Some(p)) => p,
         Ok(None) => {
-            return (StatusCode::NOT_FOUND, Json(serde_json::json!({
-                "status": "error",
-                "message": "Position not found"
-            }))).into_response();
+            return (
+                StatusCode::NOT_FOUND,
+                Json(serde_json::json!({
+                    "status": "error",
+                    "message": "Position not found"
+                })),
+            )
+                .into_response();
         }
         Err(e) => {
             return (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response();
@@ -480,24 +522,33 @@ pub async fn claim_winnings(
 
     // Check if position is eligible for claiming
     if !position.is_winner {
-        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({
-            "status": "error",
-            "message": "Position is not a winner"
-        }))).into_response();
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({
+                "status": "error",
+                "message": "Position is not a winner"
+            })),
+        )
+            .into_response();
     }
     if position.claimed {
-        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({
-            "status": "error",
-            "message": "Position already claimed"
-        }))).into_response();
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({
+                "status": "error",
+                "message": "Position already claimed"
+            })),
+        )
+            .into_response();
     }
 
     let payout_sats = position.payout_sats;
-    
+
     // Create payout transaction via wallet API
-    let wallet_url = std::env::var("WALLET_SERVICE_URL").unwrap_or_else(|_| "http://core-wallet:8001".to_string());
+    let wallet_url = std::env::var("WALLET_SERVICE_URL")
+        .unwrap_or_else(|_| "http://core-wallet:8001".to_string());
     let client = reqwest::Client::new();
-    
+
     // Create a payout message with outputs
     let payout_request = serde_json::json!({
         "kind": 0,
@@ -517,35 +568,54 @@ pub async fn claim_winnings(
     {
         Ok(resp) => resp,
         Err(e) => {
-            return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({
-                "status": "error",
-                "message": format!("Failed to create payout transaction: {}", e)
-            }))).into_response();
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({
+                    "status": "error",
+                    "message": format!("Failed to create payout transaction: {}", e)
+                })),
+            )
+                .into_response();
         }
     };
 
     if !response.status().is_success() {
-        let error_text = response.text().await.unwrap_or_else(|_| "Unknown error".to_string());
-        return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({
-            "status": "error",
-            "message": format!("Wallet error: {}", error_text)
-        }))).into_response();
+        let error_text = response
+            .text()
+            .await
+            .unwrap_or_else(|_| "Unknown error".to_string());
+        return (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(serde_json::json!({
+                "status": "error",
+                "message": format!("Wallet error: {}", error_text)
+            })),
+        )
+            .into_response();
     }
 
     // Parse the response to get the txid
     let wallet_response: serde_json::Value = match response.json().await {
         Ok(v) => v,
         Err(e) => {
-            return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({
-                "status": "error",
-                "message": format!("Failed to parse wallet response: {}", e)
-            }))).into_response();
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({
+                    "status": "error",
+                    "message": format!("Failed to parse wallet response: {}", e)
+                })),
+            )
+                .into_response();
         }
     };
 
-    let claim_txid = wallet_response["txid"].as_str().unwrap_or("unknown").to_string();
-    let claim_txid_bytes = hex::decode(&claim_txid).unwrap_or_else(|_| claim_txid.as_bytes().to_vec());
-    
+    let claim_txid = wallet_response["txid"]
+        .as_str()
+        .unwrap_or("unknown")
+        .to_string();
+    let claim_txid_bytes =
+        hex::decode(&claim_txid).unwrap_or_else(|_| claim_txid.as_bytes().to_vec());
+
     // Mark position as claimed in database
     match db.claim_winnings(req.position_id, &claim_txid_bytes).await {
         Ok(claimed) => {
@@ -560,10 +630,14 @@ pub async fn claim_winnings(
                     "claim_txid": claim_txid,
                 })).into_response()
             } else {
-                (StatusCode::BAD_REQUEST, Json(serde_json::json!({
-                    "status": "error",
-                    "message": "Failed to mark position as claimed"
-                }))).into_response()
+                (
+                    StatusCode::BAD_REQUEST,
+                    Json(serde_json::json!({
+                        "status": "error",
+                        "message": "Failed to mark position as claimed"
+                    })),
+                )
+                    .into_response()
             }
         }
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),

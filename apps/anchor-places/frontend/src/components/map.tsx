@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useEffect, useState, useCallback, useMemo, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
-import { fetchMarkersInBounds, type Marker, type Category } from "@/lib/api";
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Plus } from 'lucide-react';
+import { fetchMarkersInBounds, type Marker, type Category } from '@/lib/api';
 
 export interface PendingMarker {
   txid: string;
@@ -22,12 +22,12 @@ interface MapComponentProps {
 
 // Category colors map
 const CATEGORY_COLORS: Record<number, string> = {
-  0: "#f97316", // General - Orange
-  1: "#3b82f6", // Tourism - Blue
-  2: "#22c55e", // Commerce - Green
-  3: "#a855f7", // Event - Purple
-  4: "#ef4444", // Warning - Red
-  5: "#eab308", // Historic - Yellow
+  0: '#f97316', // General - Orange
+  1: '#3b82f6', // Tourism - Blue
+  2: '#22c55e', // Commerce - Green
+  3: '#a855f7', // Event - Purple
+  4: '#ef4444', // Warning - Red
+  5: '#eab308', // Historic - Yellow
 };
 
 // This component only renders on the client
@@ -38,29 +38,27 @@ function MapInner({
   flyToMarker,
   pendingMarkers = [],
 }: MapComponentProps) {
-  const [L, setL] = useState<typeof import("leaflet") | null>(null);
-  const [ReactLeaflet, setReactLeaflet] = useState<typeof import("react-leaflet") | null>(null);
+  const [L, setL] = useState<typeof import('leaflet') | null>(null);
+  const [ReactLeaflet, setReactLeaflet] = useState<typeof import('react-leaflet') | null>(null);
   const [bounds, setBounds] = useState({
     lat_min: -85,
     lat_max: 85,
     lng_min: -180,
     lng_max: 180,
   });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
 
   // Load Leaflet dynamically
   useEffect(() => {
-    Promise.all([
-      import("leaflet"),
-      import("react-leaflet"),
-    ]).then(([leaflet, reactLeaflet]) => {
+    Promise.all([import('leaflet'), import('react-leaflet')]).then(([leaflet, reactLeaflet]) => {
       setL(leaflet.default);
       setReactLeaflet(reactLeaflet);
     });
   }, []);
 
   const { data: markers } = useQuery({
-    queryKey: ["markers", bounds, categoryFilter],
+    queryKey: ['markers', bounds, categoryFilter],
     queryFn: () =>
       fetchMarkersInBounds({
         ...bounds,
@@ -96,7 +94,7 @@ function MapInner({
 
       return L.divIcon({
         html: iconHtml,
-        className: "",
+        className: '',
         iconSize: [32, 32],
         iconAnchor: [16, 16],
         popupAnchor: [0, -16],
@@ -110,7 +108,7 @@ function MapInner({
     (categoryId: number) => {
       if (!L) return null;
 
-      const color = CATEGORY_COLORS[categoryId] || "#f97316";
+      const color = CATEGORY_COLORS[categoryId] || '#f97316';
       const iconHtml = `
         <div class="pending-marker" style="position: relative;">
           <div style="position: absolute; top: -8px; left: -8px; width: 48px; height: 48px; border-radius: 50%; background-color: ${color}; opacity: 0.3; animation: pulse-ring 1.5s ease-out infinite;"></div>
@@ -135,7 +133,7 @@ function MapInner({
 
       return L.divIcon({
         html: iconHtml,
-        className: "",
+        className: '',
         iconSize: [32, 32],
         iconAnchor: [16, 16],
         popupAnchor: [0, -16],
@@ -165,7 +163,7 @@ function MapInner({
     );
   }
 
-  const { MapContainer, TileLayer, Marker: LeafletMarker, Popup, useMapEvents, useMap } = ReactLeaflet;
+  const { MapContainer, TileLayer, Marker: LeafletMarker, Popup, useMapEvents } = ReactLeaflet;
 
   // Map event handler component
   function MapEventHandler() {
@@ -179,6 +177,7 @@ function MapInner({
           lng_max: mapBounds.getEast(),
         });
       },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       dblclick: (e: any) => {
         onCreateMarker(e.latlng.lat, e.latlng.lng);
       },
@@ -193,10 +192,7 @@ function MapInner({
   }
 
   // Define world bounds to prevent white space
-  const worldBounds = L.latLngBounds(
-    L.latLng(-85, -180),
-    L.latLng(85, 180)
-  );
+  const worldBounds = L.latLngBounds(L.latLng(-85, -180), L.latLng(85, 180));
 
   return (
     <MapContainer
@@ -253,7 +249,9 @@ function MapInner({
           >
             <Popup>
               <div className="min-w-48">
-                <p className="text-sm font-medium mb-1 text-yellow-600">⏳ Pending confirmation...</p>
+                <p className="text-sm font-medium mb-1 text-yellow-600">
+                  ⏳ Pending confirmation...
+                </p>
                 <p className="text-xs opacity-70 font-mono">{pending.txid.slice(0, 16)}...</p>
               </div>
             </Popup>

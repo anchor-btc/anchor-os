@@ -82,11 +82,17 @@ impl IntoResponse for AppError {
         let (status, message) = match &self {
             AppError::Database(e) => {
                 tracing::error!("Database error: {}", e);
-                (StatusCode::INTERNAL_SERVER_ERROR, "Database error".to_string())
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "Database error".to_string(),
+                )
             }
             AppError::Wallet(e) => {
                 tracing::error!("Wallet service error: {}", e);
-                (StatusCode::BAD_GATEWAY, format!("Wallet service error: {}", e))
+                (
+                    StatusCode::BAD_GATEWAY,
+                    format!("Wallet service error: {}", e),
+                )
             }
             AppError::Validation(msg) => (StatusCode::BAD_REQUEST, msg.clone()),
             AppError::NotFound(msg) => (StatusCode::NOT_FOUND, msg.clone()),
@@ -117,4 +123,3 @@ impl From<anyhow::Error> for AppError {
         AppError::Internal(err.to_string())
     }
 }
-

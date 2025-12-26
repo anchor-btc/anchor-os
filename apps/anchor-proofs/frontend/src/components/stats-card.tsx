@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import { useQuery } from "@tanstack/react-query";
-import { FileCheck, Shield, XCircle, Hash, Database } from "lucide-react";
-import { getStats } from "@/lib/api";
-import { formatFileSize } from "@/lib/hash";
+import { useQuery } from '@tanstack/react-query';
+import { FileCheck, Shield, XCircle, Hash, Database } from 'lucide-react';
+import { getStats } from '@/lib/api';
+import { formatFileSize } from '@/lib/hash';
 
 export function StatsCard() {
   const { data: stats, isLoading } = useQuery({
-    queryKey: ["stats"],
+    queryKey: ['stats'],
     queryFn: getStats,
     refetchInterval: 30000,
   });
@@ -37,7 +37,7 @@ export function StatsCard() {
           <FileCheck className="w-4 h-4 text-emerald-500" />
         </div>
         <div className="text-2xl font-bold text-white">
-          {stats?.total_proofs.toLocaleString() || "0"}
+          {stats?.total_proofs.toLocaleString() || '0'}
         </div>
         <div className="text-sm text-slate-400">Total Proofs</div>
       </div>
@@ -48,7 +48,7 @@ export function StatsCard() {
           <Shield className="w-4 h-4 text-green-500" />
         </div>
         <div className="text-2xl font-bold text-white">
-          {stats?.active_proofs.toLocaleString() || "0"}
+          {stats?.active_proofs.toLocaleString() || '0'}
         </div>
         <div className="text-sm text-slate-400">Active Proofs</div>
       </div>
@@ -59,7 +59,7 @@ export function StatsCard() {
           <XCircle className="w-4 h-4 text-red-500" />
         </div>
         <div className="text-2xl font-bold text-white">
-          {stats?.revoked_proofs.toLocaleString() || "0"}
+          {stats?.revoked_proofs.toLocaleString() || '0'}
         </div>
         <div className="text-sm text-slate-400">Revoked</div>
       </div>
@@ -70,7 +70,7 @@ export function StatsCard() {
           <Hash className="w-4 h-4 text-blue-500" />
         </div>
         <div className="text-2xl font-bold text-white">
-          {stats?.sha256_proofs.toLocaleString() || "0"}
+          {stats?.sha256_proofs.toLocaleString() || '0'}
         </div>
         <div className="text-sm text-slate-400">SHA-256</div>
       </div>
@@ -81,7 +81,7 @@ export function StatsCard() {
           <Hash className="w-4 h-4 text-purple-500" />
         </div>
         <div className="text-2xl font-bold text-white">
-          {stats?.sha512_proofs.toLocaleString() || "0"}
+          {stats?.sha512_proofs.toLocaleString() || '0'}
         </div>
         <div className="text-sm text-slate-400">SHA-512</div>
       </div>
@@ -92,7 +92,7 @@ export function StatsCard() {
           <Database className="w-4 h-4 text-orange-500" />
         </div>
         <div className="text-2xl font-bold text-white">
-          {stats ? formatFileSize(stats.total_file_size) : "0 B"}
+          {stats ? formatFileSize(stats.total_file_size) : '0 B'}
         </div>
         <div className="text-sm text-slate-400">Total Size</div>
       </div>

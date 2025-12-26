@@ -1,8 +1,8 @@
 //! Automated Market Maker (AMM) for Binary Prediction Markets
-//! 
+//!
 //! Uses Constant Product Market Maker (CPMM) formula:
 //! k = yes_pool * no_pool (constant)
-//! 
+//!
 //! Prices:
 //! - price_yes = no_pool / (yes_pool + no_pool)
 //! - price_no = yes_pool / (yes_pool + no_pool)
@@ -16,6 +16,7 @@
 pub const INITIAL_LIQUIDITY: i64 = 1_000_000_000; // 1 billion units
 
 /// Minimum bet amount in sats
+#[allow(dead_code)]
 pub const MIN_BET_SATS: i64 = 1_000; // 1000 sats minimum
 
 /// AMM state for a market
@@ -28,6 +29,7 @@ pub struct AmmState {
 
 impl AmmState {
     /// Create new AMM state with initial liquidity
+    #[allow(dead_code)]
     pub fn new(initial_liquidity: i64) -> Self {
         let k = (initial_liquidity as i128) * (initial_liquidity as i128);
         Self {
@@ -40,7 +42,11 @@ impl AmmState {
     /// Create AMM state from existing pool values
     pub fn from_pools(yes_pool: i64, no_pool: i64) -> Self {
         let k = (yes_pool as i128) * (no_pool as i128);
-        Self { yes_pool, no_pool, k }
+        Self {
+            yes_pool,
+            no_pool,
+            k,
+        }
     }
 
     /// Get current YES price (0.0 to 1.0)
@@ -66,18 +72,18 @@ impl AmmState {
     pub fn buy_yes(&self, amount_sats: i64) -> BuyResult {
         // Convert sats to pool units (1:1 for simplicity)
         let amount = amount_sats;
-        
+
         // New NO pool after adding liquidity
         let new_no_pool = self.no_pool + amount;
-        
+
         // Calculate new YES pool to maintain k
         // k = yes_pool * no_pool
         // new_yes_pool = k / new_no_pool
         let new_yes_pool = (self.k / new_no_pool as i128) as i64;
-        
+
         // Shares out = decrease in YES pool
         let shares_out = self.yes_pool - new_yes_pool;
-        
+
         // Average price = amount_paid / shares_received
         let avg_price = if shares_out > 0 {
             amount as f64 / shares_out as f64
@@ -111,16 +117,16 @@ impl AmmState {
     pub fn buy_no(&self, amount_sats: i64) -> BuyResult {
         // Convert sats to pool units (1:1 for simplicity)
         let amount = amount_sats;
-        
+
         // New YES pool after adding liquidity
         let new_yes_pool = self.yes_pool + amount;
-        
+
         // Calculate new NO pool to maintain k
         let new_no_pool = (self.k / new_yes_pool as i128) as i64;
-        
+
         // Shares out = decrease in NO pool
         let shares_out = self.no_pool - new_no_pool;
-        
+
         // Average price = amount_paid / shares_received
         let avg_price = if shares_out > 0 {
             amount as f64 / shares_out as f64
@@ -200,28 +206,33 @@ mod tests {
     fn test_buy_yes() {
         let amm = AmmState::new(1_000_000);
         let result = amm.buy_yes(100_000);
-        
+
         // After buying YES, YES price should increase
         assert!(result.new_yes_price > 0.5);
         assert!(result.new_no_price < 0.5);
-        
+
         // Should receive positive shares
         assert!(result.shares_out > 0);
-        
-        // k should remain constant
+
+        // k should remain approximately constant (may differ slightly due to integer division)
         let new_k = (result.new_yes_pool as i128) * (result.new_no_pool as i128);
-        assert_eq!(amm.k, new_k);
+        let k_diff_pct = ((amm.k - new_k).abs() as f64 / amm.k as f64) * 100.0;
+        assert!(
+            k_diff_pct < 0.01,
+            "k deviated by more than 0.01%: {}",
+            k_diff_pct
+        );
     }
 
     #[test]
     fn test_buy_no() {
         let amm = AmmState::new(1_000_000);
         let result = amm.buy_no(100_000);
-        
+
         // After buying NO, NO price should increase
         assert!(result.new_no_price > 0.5);
         assert!(result.new_yes_price < 0.5);
-        
+
         // Should receive positive shares
         assert!(result.shares_out > 0);
     }
@@ -229,11 +240,11 @@ mod tests {
     #[test]
     fn test_large_bet_price_impact() {
         let amm = AmmState::new(1_000_000);
-        
+
         // Small bet = small impact
         let small = amm.buy_yes(1_000);
         assert!(small.price_impact < 0.01);
-        
+
         // Large bet = larger impact
         let large = amm.buy_yes(500_000);
         assert!(large.price_impact > small.price_impact);

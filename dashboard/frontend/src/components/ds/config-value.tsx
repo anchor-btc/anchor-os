@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useState } from "react";
-import { Copy, Check, Star } from "lucide-react";
-import { cn } from "@/lib/utils";
+import * as React from 'react';
+import { useState } from 'react';
+import { Copy, Check, Star } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export interface ConfigValueProps {
   /** Label for the value */
@@ -61,17 +61,15 @@ export function ConfigValue({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error("Failed to copy:", err);
+      console.error('Failed to copy:', err);
     }
   };
 
   return (
     <div
       className={cn(
-        "p-4 rounded-lg",
-        isDefault || highlighted
-          ? "bg-primary/5 border border-primary/20"
-          : "bg-muted/50",
+        'p-4 rounded-lg',
+        isDefault || highlighted ? 'bg-primary/5 border border-primary/20' : 'bg-muted/50',
         className
       )}
     >
@@ -80,12 +78,7 @@ export function ConfigValue({
         {isDefault && <Star className="w-3 h-3 text-primary" />}
       </p>
       <div className="flex items-center gap-2">
-        <p
-          className={cn(
-            "text-foreground text-sm flex-1",
-            mono && "font-mono font-medium"
-          )}
-        >
+        <p className={cn('text-foreground text-sm flex-1', mono && 'font-mono font-medium')}>
           {value}
         </p>
         {copyable && (
@@ -105,4 +98,3 @@ export function ConfigValue({
     </div>
   );
 }
-

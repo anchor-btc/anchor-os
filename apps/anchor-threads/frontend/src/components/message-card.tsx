@@ -1,10 +1,17 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { formatDistanceToNow } from "date-fns";
-import { Card } from "@AnchorProtocol/ui";
-import { Message, truncateTxid, formatBlockHeight, hexToImageDataUrl, isImageMessage, CARRIER_INFO } from "@/lib/api";
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { formatDistanceToNow } from 'date-fns';
+import { Card } from '@AnchorProtocol/ui';
+import {
+  Message,
+  truncateTxid,
+  formatBlockHeight,
+  hexToImageDataUrl,
+  isImageMessage,
+  CARRIER_INFO,
+} from '@/lib/api';
 import {
   MessageSquare,
   Link2,
@@ -13,7 +20,7 @@ import {
   AlertTriangle,
   ChevronRight,
   Image as ImageIcon,
-} from "lucide-react";
+} from 'lucide-react';
 
 interface MessageCardProps {
   message: Message;
@@ -21,15 +28,11 @@ interface MessageCardProps {
   isReply?: boolean;
 }
 
-export function MessageCard({
-  message,
-  showParent = false,
-  isReply = false,
-}: MessageCardProps) {
+export function MessageCard({ message, showParent = false, isReply = false }: MessageCardProps) {
   const router = useRouter();
   const hasText = message.body_text && message.body_text.trim().length > 0;
   const parentAnchor = message.anchors.find((a) => a.index === 0);
-  
+
   // Check if this is an image message (by kind or magic bytes)
   const isImage = isImageMessage(message);
   const imageDataUrl = isImage ? hexToImageDataUrl(message.body_hex) : null;
@@ -46,7 +49,7 @@ export function MessageCard({
     <Card
       onClick={handleCardClick}
       className={`p-4 hover:border-primary/50 hover:shadow-md transition-all cursor-pointer group ${
-        isReply ? "ml-6 border-l-2 border-l-primary/30" : ""
+        isReply ? 'ml-6 border-l-2 border-l-primary/30' : ''
       }`}
     >
       {/* Header */}
@@ -58,11 +61,13 @@ export function MessageCard({
           {message.carrier !== undefined && (
             <span
               className={`px-2 py-0.5 rounded text-xs font-medium ${
-                CARRIER_INFO[message.carrier]?.bgColor || "bg-muted"
-              } ${CARRIER_INFO[message.carrier]?.textColor || "text-muted-foreground"}`}
-              title={CARRIER_INFO[message.carrier]?.description || `Carrier: ${message.carrier_name}`}
+                CARRIER_INFO[message.carrier]?.bgColor || 'bg-muted'
+              } ${CARRIER_INFO[message.carrier]?.textColor || 'text-muted-foreground'}`}
+              title={
+                CARRIER_INFO[message.carrier]?.description || `Carrier: ${message.carrier_name}`
+              }
             >
-              {CARRIER_INFO[message.carrier]?.icon}{" "}
+              {CARRIER_INFO[message.carrier]?.icon}{' '}
               {CARRIER_INFO[message.carrier]?.label || message.carrier_name}
             </span>
           )}
@@ -117,7 +122,7 @@ export function MessageCard({
                   src={imageDataUrl}
                   alt="ANCHOR Image"
                   className="object-cover w-full h-full"
-                  style={{ imageRendering: "pixelated" }}
+                  style={{ imageRendering: 'pixelated' }}
                 />
               ) : (
                 <ImageIcon className="h-6 w-6 text-muted-foreground" />
@@ -129,9 +134,7 @@ export function MessageCard({
             </div>
           </div>
         ) : hasText ? (
-          <p className="text-foreground whitespace-pre-wrap break-words">
-            {message.body_text}
-          </p>
+          <p className="text-foreground whitespace-pre-wrap break-words">{message.body_text}</p>
         ) : (
           <p className="text-muted-foreground font-mono text-sm">
             {truncateTxid(message.body_hex, 32)}
@@ -147,7 +150,7 @@ export function MessageCard({
           className="flex items-center gap-1 hover:text-primary transition-colors hover:bg-primary/10 px-2 py-1 -ml-2 rounded"
         >
           <MessageSquare className="h-4 w-4" />
-          {message.reply_count} {message.reply_count === 1 ? "reply" : "replies"}
+          {message.reply_count} {message.reply_count === 1 ? 'reply' : 'replies'}
         </Link>
 
         <span className="font-mono text-xs">
@@ -160,7 +163,7 @@ export function MessageCard({
         <div className="mt-3 pt-3 border-t border-border">
           <span className="text-xs text-muted-foreground">
             References {message.anchors.length - 1} other message
-            {message.anchors.length > 2 ? "s" : ""}
+            {message.anchors.length > 2 ? 's' : ''}
           </span>
         </div>
       )}

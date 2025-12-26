@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback } from 'react';
 
 interface UseInactivityOptions {
   timeout: number; // in seconds
@@ -8,11 +8,7 @@ interface UseInactivityOptions {
   enabled?: boolean;
 }
 
-export function useInactivity({
-  timeout,
-  onTimeout,
-  enabled = true,
-}: UseInactivityOptions) {
+export function useInactivity({ timeout, onTimeout, enabled = true }: UseInactivityOptions) {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastActivityRef = useRef<number>(Date.now());
 
@@ -39,14 +35,7 @@ export function useInactivity({
     }
 
     // Activity events to track
-    const events = [
-      "mousemove",
-      "mousedown",
-      "keydown",
-      "touchstart",
-      "scroll",
-      "click",
-    ];
+    const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click'];
 
     const handleActivity = () => {
       resetTimer();
@@ -82,9 +71,3 @@ export function useInactivity({
     },
   };
 }
-
-
-
-
-
-

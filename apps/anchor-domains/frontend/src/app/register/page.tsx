@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   checkAvailability,
   registerDomain,
@@ -10,9 +10,8 @@ import {
   getWalletIdentities,
   formatIdentityAsTxt,
   type DnsRecordInput,
-  type WalletIdentity,
-} from "@/lib/api";
-import { SUPPORTED_TLDS, type SupportedTLD } from "@/lib/dns-encoder";
+} from '@/lib/api';
+import { SUPPORTED_TLDS, type SupportedTLD } from '@/lib/dns-encoder';
 import {
   Plus,
   Trash2,
@@ -24,16 +23,16 @@ import {
   Fingerprint,
   Zap,
   Key,
-} from "lucide-react";
+} from 'lucide-react';
 
-const RECORD_TYPES = ["A", "AAAA", "CNAME", "TXT", "MX", "NS", "SRV"];
+const RECORD_TYPES = ['A', 'AAAA', 'CNAME', 'TXT', 'MX', 'NS', 'SRV'];
 
 // DNS carriers that create spendable UTXOs for ownership tracking
 // OP_RETURN (0) is NOT allowed as it doesn't create spendable outputs
 const DNS_CARRIERS = [
-  { value: 1, name: "Inscription", description: "Commit/reveal with taproot (recommended)" },
-  { value: 2, name: "Witness Data", description: "Data stored in witness" },
-  { value: 3, name: "Annex", description: "Data stored in transaction annex" },
+  { value: 1, name: 'Inscription', description: 'Commit/reveal with taproot (recommended)' },
+  { value: 2, name: 'Witness Data', description: 'Data stored in witness' },
+  { value: 3, name: 'Annex', description: 'Data stored in transaction annex' },
 ];
 
 interface RecordFormData {
@@ -49,11 +48,13 @@ interface RecordFormData {
 // Wrapper component for Suspense boundary
 export default function RegisterPage() {
   return (
-    <Suspense fallback={
-      <div className="max-w-3xl mx-auto flex items-center justify-center py-24">
-        <Loader2 className="h-8 w-8 animate-spin text-bitcoin-orange" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="max-w-3xl mx-auto flex items-center justify-center py-24">
+          <Loader2 className="h-8 w-8 animate-spin text-bitcoin-orange" />
+        </div>
+      }
+    >
       <RegisterPageContent />
     </Suspense>
   );
@@ -62,13 +63,13 @@ export default function RegisterPage() {
 function RegisterPageContent() {
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
-  const [domainName, setDomainName] = useState("");
-  const [selectedTld, setSelectedTld] = useState<SupportedTLD>(".btc");
+  const [domainName, setDomainName] = useState('');
+  const [selectedTld, setSelectedTld] = useState<SupportedTLD>('.btc');
   const [selectedCarrier, setSelectedCarrier] = useState(1); // Default to Inscription
   const [availability, setAvailability] = useState<boolean | null>(null);
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
   const [records, setRecords] = useState<RecordFormData[]>([
-    { id: 1, record_type: "A", value: "", ttl: 300 },
+    { id: 1, record_type: 'A', value: '', ttl: 300 },
   ]);
   const [nextId, setNextId] = useState(2);
   const [success, setSuccess] = useState<{ txid: string } | null>(null);
@@ -77,7 +78,7 @@ function RegisterPageContent() {
 
   // Fetch wallet identities
   const { data: identitiesData, isLoading: isLoadingIdentities } = useQuery({
-    queryKey: ["walletIdentities"],
+    queryKey: ['walletIdentities'],
     queryFn: getWalletIdentities,
     staleTime: 30000,
   });
@@ -88,7 +89,7 @@ function RegisterPageContent() {
 
   // Auto-fill from URL query params (e.g., /register?domain=miguel.sat)
   useEffect(() => {
-    const domainParam = searchParams.get("domain");
+    const domainParam = searchParams.get('domain');
     if (domainParam) {
       // Parse the domain to extract name and TLD
       const tld = SUPPORTED_TLDS.find((t) => domainParam.endsWith(t));
@@ -96,7 +97,7 @@ function RegisterPageContent() {
         const name = domainParam.slice(0, -tld.length);
         setDomainName(name);
         setSelectedTld(tld);
-        
+
         // Auto-check availability
         const checkDomain = async () => {
           setIsCheckingAvailability(true);
@@ -146,7 +147,7 @@ function RegisterPageContent() {
         .filter((id) => selectedIdentities.has(id.id))
         .forEach((identity) => {
           dnsRecords.push({
-            record_type: "TXT",
+            record_type: 'TXT',
             value: formatIdentityAsTxt(identity),
             ttl: 300,
           });
@@ -163,11 +164,11 @@ function RegisterPageContent() {
       } catch {
         // Ignore mining errors (might be on mainnet)
       }
-      queryClient.invalidateQueries({ queryKey: ["stats"] });
-      queryClient.invalidateQueries({ queryKey: ["recent-domains"] });
+      queryClient.invalidateQueries({ queryKey: ['stats'] });
+      queryClient.invalidateQueries({ queryKey: ['recent-domains'] });
     },
     onError: (err) => {
-      setError(err instanceof Error ? err.message : "Registration failed");
+      setError(err instanceof Error ? err.message : 'Registration failed');
       setSuccess(null);
     },
   });
@@ -189,10 +190,7 @@ function RegisterPageContent() {
   };
 
   const addRecord = () => {
-    setRecords([
-      ...records,
-      { id: nextId, record_type: "A", value: "", ttl: 300 },
-    ]);
+    setRecords([...records, { id: nextId, record_type: 'A', value: '', ttl: 300 }]);
     setNextId(nextId + 1);
   };
 
@@ -203,9 +201,7 @@ function RegisterPageContent() {
   };
 
   const updateRecord = (id: number, field: string, value: string | number) => {
-    setRecords(
-      records.map((r) => (r.id === id ? { ...r, [field]: value } : r))
-    );
+    setRecords(records.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -217,24 +213,18 @@ function RegisterPageContent() {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-white mb-2">
-          Register a Domain
-        </h1>
+        <h1 className="text-3xl font-bold text-white mb-2">Register a Domain</h1>
         <p className="text-slate-400 mb-8">
-          Secure your domain on the Bitcoin blockchain. Supports {SUPPORTED_TLDS.join(", ")} TLDs.
+          Secure your domain on the Bitcoin blockchain. Supports {SUPPORTED_TLDS.join(', ')} TLDs.
         </p>
 
         {success ? (
           <div className="bg-green-500/20 border border-green-500/50 rounded-xl p-6">
             <div className="flex items-center gap-2 mb-4">
               <CheckCircle className="h-6 w-6 text-green-400" />
-              <h2 className="text-xl font-bold text-white">
-                Domain Registered!
-              </h2>
+              <h2 className="text-xl font-bold text-white">Domain Registered!</h2>
             </div>
-            <p className="text-slate-300 mb-4">
-              Your domain has been registered successfully.
-            </p>
+            <p className="text-slate-300 mb-4">Your domain has been registered successfully.</p>
             <div className="bg-slate-800/50 rounded-lg p-4">
               <p className="text-sm text-slate-400">Transaction ID:</p>
               <p className="font-mono text-white break-all">{success.txid}</p>
@@ -242,9 +232,9 @@ function RegisterPageContent() {
             <button
               onClick={() => {
                 setSuccess(null);
-                setDomainName("");
-                setSelectedTld(".btc");
-                setRecords([{ id: 1, record_type: "A", value: "", ttl: 300 }]);
+                setDomainName('');
+                setSelectedTld('.btc');
+                setRecords([{ id: 1, record_type: 'A', value: '', ttl: 300 }]);
                 setAvailability(null);
                 setSelectedIdentities(new Set());
               }}
@@ -257,16 +247,14 @@ function RegisterPageContent() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Domain Name */}
             <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-6">
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Domain Name
-              </label>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Domain Name</label>
               <div className="flex gap-2">
                 <div className="flex-1">
                   <input
                     type="text"
                     value={domainName}
                     onChange={(e) => {
-                      setDomainName(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""));
+                      setDomainName(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''));
                       setAvailability(null);
                     }}
                     placeholder="mysite"
@@ -293,11 +281,7 @@ function RegisterPageContent() {
                   disabled={!domainName.trim() || isCheckingAvailability}
                   className="px-4 py-3 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors disabled:opacity-50"
                 >
-                  {isCheckingAvailability ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  ) : (
-                    "Check"
-                  )}
+                  {isCheckingAvailability ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Check'}
                 </button>
               </div>
 
@@ -305,7 +289,7 @@ function RegisterPageContent() {
               {availability !== null && (
                 <div
                   className={`mt-3 flex items-center gap-2 ${
-                    availability ? "text-green-400" : "text-red-400"
+                    availability ? 'text-green-400' : 'text-red-400'
                   }`}
                 >
                   {availability ? (
@@ -326,9 +310,7 @@ function RegisterPageContent() {
             {/* DNS Records */}
             <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-6">
               <div className="flex items-center justify-between mb-4">
-                <label className="text-sm font-medium text-slate-300">
-                  DNS Records
-                </label>
+                <label className="text-sm font-medium text-slate-300">DNS Records</label>
                 <button
                   type="button"
                   onClick={addRecord}
@@ -348,9 +330,7 @@ function RegisterPageContent() {
                     {/* Record Type */}
                     <select
                       value={record.record_type}
-                      onChange={(e) =>
-                        updateRecord(record.id, "record_type", e.target.value)
-                      }
+                      onChange={(e) => updateRecord(record.id, 'record_type', e.target.value)}
                       className="px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-bitcoin-orange"
                     >
                       {RECORD_TYPES.map((type) => (
@@ -364,15 +344,13 @@ function RegisterPageContent() {
                     <input
                       type="text"
                       value={record.value}
-                      onChange={(e) =>
-                        updateRecord(record.id, "value", e.target.value)
-                      }
+                      onChange={(e) => updateRecord(record.id, 'value', e.target.value)}
                       placeholder={
-                        record.record_type === "A"
-                          ? "93.184.216.34"
-                          : record.record_type === "AAAA"
-                          ? "2001:db8::1"
-                          : "value"
+                        record.record_type === 'A'
+                          ? '93.184.216.34'
+                          : record.record_type === 'AAAA'
+                            ? '2001:db8::1'
+                            : 'value'
                       }
                       className="flex-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-bitcoin-orange"
                     />
@@ -381,25 +359,18 @@ function RegisterPageContent() {
                     <input
                       type="number"
                       value={record.ttl}
-                      onChange={(e) =>
-                        updateRecord(record.id, "ttl", parseInt(e.target.value))
-                      }
+                      onChange={(e) => updateRecord(record.id, 'ttl', parseInt(e.target.value))}
                       className="w-24 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-bitcoin-orange"
                       placeholder="TTL"
                     />
 
                     {/* Priority (for MX/SRV) */}
-                    {(record.record_type === "MX" ||
-                      record.record_type === "SRV") && (
+                    {(record.record_type === 'MX' || record.record_type === 'SRV') && (
                       <input
                         type="number"
-                        value={record.priority || ""}
+                        value={record.priority || ''}
                         onChange={(e) =>
-                          updateRecord(
-                            record.id,
-                            "priority",
-                            parseInt(e.target.value)
-                          )
+                          updateRecord(record.id, 'priority', parseInt(e.target.value))
                         }
                         className="w-20 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-bitcoin-orange"
                         placeholder="Pri"
@@ -445,17 +416,17 @@ function RegisterPageContent() {
                   ) : (
                     identities.map((identity) => {
                       const isSelected = selectedIdentities.has(identity.id);
-                      const isNostr = identity.identity_type === "nostr";
-                      
+                      const isNostr = identity.identity_type === 'nostr';
+
                       return (
                         <label
                           key={identity.id}
                           className={`flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all ${
                             isSelected
                               ? isNostr
-                                ? "bg-purple-500/10 border-purple-500"
-                                : "bg-cyan-500/10 border-cyan-500"
-                              : "bg-slate-700/30 border-slate-600 hover:border-slate-500"
+                                ? 'bg-purple-500/10 border-purple-500'
+                                : 'bg-cyan-500/10 border-cyan-500'
+                              : 'bg-slate-700/30 border-slate-600 hover:border-slate-500'
                           }`}
                         >
                           <input
@@ -464,20 +435,22 @@ function RegisterPageContent() {
                             onChange={() => toggleIdentity(identity.id)}
                             className="sr-only"
                           />
-                          <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                            isSelected
-                              ? isNostr
-                                ? "border-purple-500 bg-purple-500"
-                                : "border-cyan-500 bg-cyan-500"
-                              : "border-slate-500"
-                          }`}>
-                            {isSelected && (
-                              <CheckCircle className="h-3.5 w-3.5 text-white" />
-                            )}
+                          <div
+                            className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                              isSelected
+                                ? isNostr
+                                  ? 'border-purple-500 bg-purple-500'
+                                  : 'border-cyan-500 bg-cyan-500'
+                                : 'border-slate-500'
+                            }`}
+                          >
+                            {isSelected && <CheckCircle className="h-3.5 w-3.5 text-white" />}
                           </div>
-                          <div className={`p-2 rounded-lg ${
-                            isNostr ? "bg-purple-500/20" : "bg-cyan-500/20"
-                          }`}>
+                          <div
+                            className={`p-2 rounded-lg ${
+                              isNostr ? 'bg-purple-500/20' : 'bg-cyan-500/20'
+                            }`}
+                          >
                             {isNostr ? (
                               <Zap className="h-4 w-4 text-purple-400" />
                             ) : (
@@ -486,14 +459,14 @@ function RegisterPageContent() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <span className="font-medium text-white">
-                                {identity.label}
-                              </span>
-                              <span className={`text-xs px-2 py-0.5 rounded ${
-                                isNostr
-                                  ? "bg-purple-500/20 text-purple-300"
-                                  : "bg-cyan-500/20 text-cyan-300"
-                              }`}>
+                              <span className="font-medium text-white">{identity.label}</span>
+                              <span
+                                className={`text-xs px-2 py-0.5 rounded ${
+                                  isNostr
+                                    ? 'bg-purple-500/20 text-purple-300'
+                                    : 'bg-cyan-500/20 text-cyan-300'
+                                }`}
+                              >
                                 {identity.identity_type}
                               </span>
                               {identity.is_primary && (
@@ -517,7 +490,8 @@ function RegisterPageContent() {
                     <div className="flex items-center gap-2 text-green-400 text-sm">
                       <CheckCircle className="h-4 w-4" />
                       <span>
-                        {selectedIdentities.size} identit{selectedIdentities.size > 1 ? "ies" : "y"} will be linked as TXT records
+                        {selectedIdentities.size} identit{selectedIdentities.size > 1 ? 'ies' : 'y'}{' '}
+                        will be linked as TXT records
                       </span>
                     </div>
                   </div>
@@ -528,9 +502,7 @@ function RegisterPageContent() {
             {/* Carrier Selection */}
             <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-6">
               <div className="flex items-center gap-2 mb-4">
-                <label className="block text-sm font-medium text-slate-300">
-                  Data Carrier
-                </label>
+                <label className="block text-sm font-medium text-slate-300">Data Carrier</label>
                 <div className="group relative">
                   <Info className="h-4 w-4 text-slate-400 cursor-help" />
                   <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-slate-700 text-xs text-slate-300 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
@@ -544,8 +516,8 @@ function RegisterPageContent() {
                     key={carrier.value}
                     className={`flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all ${
                       selectedCarrier === carrier.value
-                        ? "bg-bitcoin-orange/10 border-bitcoin-orange"
-                        : "bg-slate-700/30 border-slate-600 hover:border-slate-500"
+                        ? 'bg-bitcoin-orange/10 border-bitcoin-orange'
+                        : 'bg-slate-700/30 border-slate-600 hover:border-slate-500'
                     }`}
                   >
                     <input
@@ -556,11 +528,13 @@ function RegisterPageContent() {
                       onChange={() => setSelectedCarrier(carrier.value)}
                       className="sr-only"
                     />
-                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                      selectedCarrier === carrier.value
-                        ? "border-bitcoin-orange"
-                        : "border-slate-500"
-                    }`}>
+                    <div
+                      className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                        selectedCarrier === carrier.value
+                          ? 'border-bitcoin-orange'
+                          : 'border-slate-500'
+                      }`}
+                    >
                       {selectedCarrier === carrier.value && (
                         <div className="w-2 h-2 rounded-full bg-bitcoin-orange" />
                       )}
@@ -585,11 +559,7 @@ function RegisterPageContent() {
             {/* Submit */}
             <button
               type="submit"
-              disabled={
-                !domainName.trim() ||
-                !availability ||
-                registerMutation.isPending
-              }
+              disabled={!domainName.trim() || !availability || registerMutation.isPending}
               className="w-full py-4 bg-bitcoin-orange text-white font-bold rounded-xl hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {registerMutation.isPending ? (
@@ -598,7 +568,7 @@ function RegisterPageContent() {
                   Registering...
                 </>
               ) : (
-                "Register Domain"
+                'Register Domain'
               )}
             </button>
           </form>

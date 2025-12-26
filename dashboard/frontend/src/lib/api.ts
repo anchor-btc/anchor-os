@@ -1,6 +1,6 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8010";
-const TESTNET_URL = process.env.NEXT_PUBLIC_TESTNET_URL || "http://localhost:8002";
-const WALLET_URL = process.env.NEXT_PUBLIC_WALLET_URL || "http://localhost:8001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8010';
+const TESTNET_URL = process.env.NEXT_PUBLIC_TESTNET_URL || 'http://localhost:8002';
+const WALLET_URL = process.env.NEXT_PUBLIC_WALLET_URL || 'http://localhost:8001';
 
 // Types
 export interface Container {
@@ -90,29 +90,29 @@ export interface Transaction {
 
 export async function fetchContainers(): Promise<ContainersResponse> {
   const res = await fetch(`${API_URL}/docker/containers`);
-  if (!res.ok) throw new Error("Failed to fetch containers");
+  if (!res.ok) throw new Error('Failed to fetch containers');
   return res.json();
 }
 
 export async function startContainer(id: string): Promise<void> {
   const res = await fetch(`${API_URL}/docker/containers/${id}/start`, {
-    method: "POST",
+    method: 'POST',
   });
-  if (!res.ok) throw new Error("Failed to start container");
+  if (!res.ok) throw new Error('Failed to start container');
 }
 
 export async function stopContainer(id: string): Promise<void> {
   const res = await fetch(`${API_URL}/docker/containers/${id}/stop`, {
-    method: "POST",
+    method: 'POST',
   });
-  if (!res.ok) throw new Error("Failed to stop container");
+  if (!res.ok) throw new Error('Failed to stop container');
 }
 
 export async function restartContainer(id: string): Promise<void> {
   const res = await fetch(`${API_URL}/docker/containers/${id}/restart`, {
-    method: "POST",
+    method: 'POST',
   });
-  if (!res.ok) throw new Error("Failed to restart container");
+  if (!res.ok) throw new Error('Failed to restart container');
 }
 
 export interface BulkActionResponse {
@@ -124,17 +124,17 @@ export interface BulkActionResponse {
 
 export async function shutdownAll(): Promise<BulkActionResponse> {
   const res = await fetch(`${API_URL}/docker/shutdown`, {
-    method: "POST",
+    method: 'POST',
   });
-  if (!res.ok) throw new Error("Failed to shutdown");
+  if (!res.ok) throw new Error('Failed to shutdown');
   return res.json();
 }
 
 export async function restartAll(): Promise<BulkActionResponse> {
   const res = await fetch(`${API_URL}/docker/restart-all`, {
-    method: "POST",
+    method: 'POST',
   });
-  if (!res.ok) throw new Error("Failed to restart all");
+  if (!res.ok) throw new Error('Failed to restart all');
   return res.json();
 }
 
@@ -143,7 +143,7 @@ export async function fetchContainerLogs(
   tail: number = 100
 ): Promise<{ container_id: string; logs: string[] }> {
   const res = await fetch(`${API_URL}/docker/containers/${id}/logs?tail=${tail}`);
-  if (!res.ok) throw new Error("Failed to fetch logs");
+  if (!res.ok) throw new Error('Failed to fetch logs');
   return res.json();
 }
 
@@ -153,16 +153,13 @@ export interface ExecResponse {
   exit_code: number | null;
 }
 
-export async function execContainer(
-  id: string,
-  command: string
-): Promise<ExecResponse> {
+export async function execContainer(id: string, command: string): Promise<ExecResponse> {
   const res = await fetch(`${API_URL}/docker/containers/${id}/exec`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ command }),
   });
-  if (!res.ok) throw new Error("Failed to execute command");
+  if (!res.ok) throw new Error('Failed to execute command');
   return res.json();
 }
 
@@ -178,69 +175,69 @@ export async function rebuildContainer(
   buildArgs: Record<string, string> = {}
 ): Promise<RebuildContainerResponse> {
   const res = await fetch(`${API_URL}/docker/rebuild`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ service, build_args: buildArgs }),
   });
-  if (!res.ok) throw new Error("Failed to rebuild container");
+  if (!res.ok) throw new Error('Failed to rebuild container');
   return res.json();
 }
 
 export async function fetchNodeStatus(): Promise<NodeStatus> {
   const res = await fetch(`${API_URL}/bitcoin/status`);
-  if (!res.ok) throw new Error("Failed to fetch node status");
+  if (!res.ok) throw new Error('Failed to fetch node status');
   return res.json();
 }
 
 export async function fetchBlockchainInfo(): Promise<BlockchainInfo> {
   const res = await fetch(`${API_URL}/bitcoin/info`);
-  if (!res.ok) throw new Error("Failed to fetch blockchain info");
+  if (!res.ok) throw new Error('Failed to fetch blockchain info');
   return res.json();
 }
 
 export async function fetchMempoolInfo(): Promise<MempoolInfo> {
   const res = await fetch(`${API_URL}/bitcoin/mempool`);
-  if (!res.ok) throw new Error("Failed to fetch mempool info");
+  if (!res.ok) throw new Error('Failed to fetch mempool info');
   return res.json();
 }
 
 export async function fetchNetworkInfo(): Promise<NetworkInfo> {
   const res = await fetch(`${API_URL}/bitcoin/network`);
-  if (!res.ok) throw new Error("Failed to fetch network info");
+  if (!res.ok) throw new Error('Failed to fetch network info');
   return res.json();
 }
 
 export async function fetchWalletBalance(): Promise<WalletBalance> {
   const res = await fetch(`${API_URL}/wallet/balance`);
-  if (!res.ok) throw new Error("Failed to fetch wallet balance");
+  if (!res.ok) throw new Error('Failed to fetch wallet balance');
   return res.json();
 }
 
 export async function fetchNewAddress(): Promise<AddressResponse> {
   const res = await fetch(`${API_URL}/wallet/address`);
-  if (!res.ok) throw new Error("Failed to fetch new address");
+  if (!res.ok) throw new Error('Failed to fetch new address');
   return res.json();
 }
 
 export async function fetchUtxos(): Promise<Utxo[]> {
   const res = await fetch(`${API_URL}/wallet/utxos`);
-  if (!res.ok) throw new Error("Failed to fetch UTXOs");
+  if (!res.ok) throw new Error('Failed to fetch UTXOs');
   return res.json();
 }
 
 export async function fetchTransactions(): Promise<Transaction[]> {
   const res = await fetch(`${API_URL}/wallet/transactions`);
-  if (!res.ok) throw new Error("Failed to fetch transactions");
+  if (!res.ok) throw new Error('Failed to fetch transactions');
   return res.json();
 }
 
 export async function mineBlocks(count: number = 1): Promise<{ blocks: string[] }> {
   const res = await fetch(`${API_URL}/wallet/mine`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ count }),
   });
-  if (!res.ok) throw new Error("Failed to mine blocks");
+  if (!res.ok) throw new Error('Failed to mine blocks');
   return res.json();
 }
 
@@ -272,23 +269,26 @@ export interface SwitchVersionResponse {
 
 export async function fetchNodeConfig(): Promise<NodeConfig> {
   const res = await fetch(`${API_URL}/node/config`);
-  if (!res.ok) throw new Error("Failed to fetch node config");
+  if (!res.ok) throw new Error('Failed to fetch node config');
   return res.json();
 }
 
-export async function switchNodeVersion(version: string, network: string): Promise<SwitchVersionResponse> {
+export async function switchNodeVersion(
+  version: string,
+  network: string
+): Promise<SwitchVersionResponse> {
   const res = await fetch(`${API_URL}/node/switch`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ version, network }),
   });
-  if (!res.ok) throw new Error("Failed to switch node version");
+  if (!res.ok) throw new Error('Failed to switch node version');
   return res.json();
 }
 
 export async function fetchNodeVersions(): Promise<VersionInfo[]> {
   const res = await fetch(`${API_URL}/node/versions`);
-  if (!res.ok) throw new Error("Failed to fetch node versions");
+  if (!res.ok) throw new Error('Failed to fetch node versions');
   return res.json();
 }
 
@@ -333,25 +333,27 @@ export interface UpdateNodeSettingsResponse {
 
 export async function fetchNodeSettings(): Promise<NodeSettingsResponse> {
   const res = await fetch(`${API_URL}/node/settings`);
-  if (!res.ok) throw new Error("Failed to fetch node settings");
+  if (!res.ok) throw new Error('Failed to fetch node settings');
   return res.json();
 }
 
-export async function updateNodeSettings(settings: NodeSettings): Promise<UpdateNodeSettingsResponse> {
+export async function updateNodeSettings(
+  settings: NodeSettings
+): Promise<UpdateNodeSettingsResponse> {
   const res = await fetch(`${API_URL}/node/settings`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ settings }),
   });
-  if (!res.ok) throw new Error("Failed to update node settings");
+  if (!res.ok) throw new Error('Failed to update node settings');
   return res.json();
 }
 
 export async function resetNodeSettings(): Promise<NodeSettingsResponse> {
   const res = await fetch(`${API_URL}/node/settings/reset`, {
-    method: "POST",
+    method: 'POST',
   });
-  if (!res.ok) throw new Error("Failed to reset node settings");
+  if (!res.ok) throw new Error('Failed to reset node settings');
   return res.json();
 }
 
@@ -453,7 +455,7 @@ export interface StepResult {
 export interface ScenarioRun {
   run_id: number;
   scenario_id: number;
-  status: "pending" | "running" | "completed" | "failed" | "cancelled";
+  status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
   step_results: StepResult[];
   total_messages: number;
   total_blocks: number;
@@ -502,39 +504,39 @@ export interface TestnetLogEntry {
 
 export async function fetchTestnetConfig(): Promise<TestnetConfig> {
   const res = await fetch(`${TESTNET_URL}/config`);
-  if (!res.ok) throw new Error("Failed to fetch testnet config");
+  if (!res.ok) throw new Error('Failed to fetch testnet config');
   return res.json();
 }
 
 export async function updateTestnetConfig(config: Partial<TestnetConfig>): Promise<TestnetConfig> {
   const res = await fetch(`${TESTNET_URL}/config`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(config),
   });
-  if (!res.ok) throw new Error("Failed to update testnet config");
+  if (!res.ok) throw new Error('Failed to update testnet config');
   return res.json();
 }
 
 export async function fetchTestnetStats(): Promise<TestnetStats> {
   const res = await fetch(`${TESTNET_URL}/stats`);
-  if (!res.ok) throw new Error("Failed to fetch testnet stats");
+  if (!res.ok) throw new Error('Failed to fetch testnet stats');
   return res.json();
 }
 
 export async function pauseTestnet(): Promise<{ paused: boolean }> {
   const res = await fetch(`${TESTNET_URL}/pause`, {
-    method: "POST",
+    method: 'POST',
   });
-  if (!res.ok) throw new Error("Failed to pause testnet");
+  if (!res.ok) throw new Error('Failed to pause testnet');
   return res.json();
 }
 
 export async function resumeTestnet(): Promise<{ paused: boolean }> {
   const res = await fetch(`${TESTNET_URL}/resume`, {
-    method: "POST",
+    method: 'POST',
   });
-  if (!res.ok) throw new Error("Failed to resume testnet");
+  if (!res.ok) throw new Error('Failed to resume testnet');
   return res.json();
 }
 
@@ -542,69 +544,79 @@ export async function resumeTestnet(): Promise<{ paused: boolean }> {
 
 export async function fetchScenarios(): Promise<{ success: boolean; scenarios: Scenario[] }> {
   const res = await fetch(`${TESTNET_URL}/scenarios`);
-  if (!res.ok) throw new Error("Failed to fetch scenarios");
+  if (!res.ok) throw new Error('Failed to fetch scenarios');
   return res.json();
 }
 
 export async function fetchScenario(id: number): Promise<{ success: boolean; scenario: Scenario }> {
   const res = await fetch(`${TESTNET_URL}/scenarios/${id}`);
-  if (!res.ok) throw new Error("Failed to fetch scenario");
+  if (!res.ok) throw new Error('Failed to fetch scenario');
   return res.json();
 }
 
-export async function createScenario(scenario: Omit<Scenario, "id" | "is_builtin" | "created_at" | "updated_at">): Promise<{ success: boolean; id: number }> {
+export async function createScenario(
+  scenario: Omit<Scenario, 'id' | 'is_builtin' | 'created_at' | 'updated_at'>
+): Promise<{ success: boolean; id: number }> {
   const res = await fetch(`${TESTNET_URL}/scenarios`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(scenario),
   });
-  if (!res.ok) throw new Error("Failed to create scenario");
+  if (!res.ok) throw new Error('Failed to create scenario');
   return res.json();
 }
 
-export async function updateScenario(id: number, updates: Partial<Scenario>): Promise<{ success: boolean }> {
+export async function updateScenario(
+  id: number,
+  updates: Partial<Scenario>
+): Promise<{ success: boolean }> {
   const res = await fetch(`${TESTNET_URL}/scenarios/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(updates),
   });
-  if (!res.ok) throw new Error("Failed to update scenario");
+  if (!res.ok) throw new Error('Failed to update scenario');
   return res.json();
 }
 
 export async function deleteScenario(id: number): Promise<{ success: boolean }> {
   const res = await fetch(`${TESTNET_URL}/scenarios/${id}`, {
-    method: "DELETE",
+    method: 'DELETE',
   });
-  if (!res.ok) throw new Error("Failed to delete scenario");
+  if (!res.ok) throw new Error('Failed to delete scenario');
   return res.json();
 }
 
 export async function runScenario(id: number): Promise<{ success: boolean; run_id: number }> {
   const res = await fetch(`${TESTNET_URL}/scenarios/${id}/run`, {
-    method: "POST",
+    method: 'POST',
   });
-  if (!res.ok) throw new Error("Failed to run scenario");
+  if (!res.ok) throw new Error('Failed to run scenario');
   return res.json();
 }
 
 export async function fetchScenarioRuns(): Promise<{ success: boolean; runs: ScenarioRun[] }> {
   const res = await fetch(`${TESTNET_URL}/runs`);
-  if (!res.ok) throw new Error("Failed to fetch runs");
+  if (!res.ok) throw new Error('Failed to fetch runs');
   return res.json();
 }
 
-export async function fetchStatsHistory(minutes: number = 60): Promise<{ success: boolean; history: StatsHistoryEntry[] }> {
+export async function fetchStatsHistory(
+  minutes: number = 60
+): Promise<{ success: boolean; history: StatsHistoryEntry[] }> {
   const res = await fetch(`${TESTNET_URL}/stats/history?minutes=${minutes}`);
-  if (!res.ok) throw new Error("Failed to fetch stats history");
+  if (!res.ok) throw new Error('Failed to fetch stats history');
   return res.json();
 }
 
-export async function fetchTestnetLogs(limit: number = 100, level?: string): Promise<{ success: boolean; logs: TestnetLogEntry[] }> {
+export async function fetchTestnetLogs(
+  limit: number = 100,
+  level?: string
+): Promise<{ success: boolean; logs: TestnetLogEntry[] }> {
   let url = `${TESTNET_URL}/logs?limit=${limit}`;
   if (level) url += `&level=${level}`;
   const res = await fetch(url);
-  if (!res.ok) throw new Error("Failed to fetch logs");
+  if (!res.ok) throw new Error('Failed to fetch logs');
   return res.json();
 }
 
@@ -635,25 +647,27 @@ export interface TailscaleActionResponse {
 
 export async function fetchTailscaleStatus(): Promise<TailscaleStatus> {
   const res = await fetch(`${API_URL}/tailscale/status`);
-  if (!res.ok) throw new Error("Failed to fetch Tailscale status");
+  if (!res.ok) throw new Error('Failed to fetch Tailscale status');
   return res.json();
 }
 
-export async function connectTailscale(req: TailscaleAuthRequest): Promise<TailscaleActionResponse> {
+export async function connectTailscale(
+  req: TailscaleAuthRequest
+): Promise<TailscaleActionResponse> {
   const res = await fetch(`${API_URL}/tailscale/connect`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(req),
   });
-  if (!res.ok) throw new Error("Failed to connect to Tailscale");
+  if (!res.ok) throw new Error('Failed to connect to Tailscale');
   return res.json();
 }
 
 export async function disconnectTailscale(): Promise<TailscaleActionResponse> {
   const res = await fetch(`${API_URL}/tailscale/disconnect`, {
-    method: "POST",
+    method: 'POST',
   });
-  if (!res.ok) throw new Error("Failed to disconnect from Tailscale");
+  if (!res.ok) throw new Error('Failed to disconnect from Tailscale');
   return res.json();
 }
 
@@ -690,31 +704,33 @@ export interface ExposableServicesResponse {
 
 export async function fetchCloudflareStatus(): Promise<CloudflareStatus> {
   const res = await fetch(`${API_URL}/cloudflare/status`);
-  if (!res.ok) throw new Error("Failed to fetch Cloudflare status");
+  if (!res.ok) throw new Error('Failed to fetch Cloudflare status');
   return res.json();
 }
 
-export async function connectCloudflare(req: CloudflareConnectRequest): Promise<CloudflareActionResponse> {
+export async function connectCloudflare(
+  req: CloudflareConnectRequest
+): Promise<CloudflareActionResponse> {
   const res = await fetch(`${API_URL}/cloudflare/connect`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(req),
   });
-  if (!res.ok) throw new Error("Failed to connect to Cloudflare");
+  if (!res.ok) throw new Error('Failed to connect to Cloudflare');
   return res.json();
 }
 
 export async function disconnectCloudflare(): Promise<CloudflareActionResponse> {
   const res = await fetch(`${API_URL}/cloudflare/disconnect`, {
-    method: "POST",
+    method: 'POST',
   });
-  if (!res.ok) throw new Error("Failed to disconnect from Cloudflare");
+  if (!res.ok) throw new Error('Failed to disconnect from Cloudflare');
   return res.json();
 }
 
 export async function fetchExposableServices(): Promise<ExposableServicesResponse> {
   const res = await fetch(`${API_URL}/cloudflare/services`);
-  if (!res.ok) throw new Error("Failed to fetch services");
+  if (!res.ok) throw new Error('Failed to fetch services');
   return res.json();
 }
 
@@ -745,44 +761,44 @@ export interface TorActionResponse {
 
 export async function fetchTorStatus(): Promise<TorStatus> {
   const res = await fetch(`${API_URL}/tor/status`);
-  if (!res.ok) throw new Error("Failed to fetch Tor status");
+  if (!res.ok) throw new Error('Failed to fetch Tor status');
   return res.json();
 }
 
 export async function fetchOnionAddresses(): Promise<OnionAddresses> {
   const res = await fetch(`${API_URL}/tor/onion-addresses`);
-  if (!res.ok) throw new Error("Failed to fetch onion addresses");
+  if (!res.ok) throw new Error('Failed to fetch onion addresses');
   return res.json();
 }
 
 export async function enableTor(): Promise<TorActionResponse> {
   const res = await fetch(`${API_URL}/tor/enable`, {
-    method: "POST",
+    method: 'POST',
   });
-  if (!res.ok) throw new Error("Failed to enable Tor");
+  if (!res.ok) throw new Error('Failed to enable Tor');
   return res.json();
 }
 
 export async function disableTor(): Promise<TorActionResponse> {
   const res = await fetch(`${API_URL}/tor/disable`, {
-    method: "POST",
+    method: 'POST',
   });
-  if (!res.ok) throw new Error("Failed to disable Tor");
+  if (!res.ok) throw new Error('Failed to disable Tor');
   return res.json();
 }
 
 export async function newTorCircuit(): Promise<TorActionResponse> {
   const res = await fetch(`${API_URL}/tor/new-circuit`, {
-    method: "POST",
+    method: 'POST',
   });
-  if (!res.ok) throw new Error("Failed to create new Tor circuit");
+  if (!res.ok) throw new Error('Failed to create new Tor circuit');
   return res.json();
 }
 
 // Electrum Types (Electrs/Fulcrum dual-server management)
 
-export type ElectrumServer = "electrs" | "fulcrum";
-export type ServerAction = "start" | "stop";
+export type ElectrumServer = 'electrs' | 'fulcrum';
+export type ServerAction = 'start' | 'stop';
 
 export interface ServerInfo {
   server: ElectrumServer;
@@ -807,7 +823,7 @@ export interface ElectrumActionResponse {
 
 export async function fetchElectrumStatus(): Promise<ElectrumStatus> {
   const res = await fetch(`${API_URL}/electrum/status`);
-  if (!res.ok) throw new Error("Failed to fetch Electrum status");
+  if (!res.ok) throw new Error('Failed to fetch Electrum status');
   return res.json();
 }
 
@@ -815,11 +831,11 @@ export async function setDefaultElectrumServer(
   server: ElectrumServer
 ): Promise<ElectrumActionResponse> {
   const res = await fetch(`${API_URL}/electrum/set-default`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ server }),
   });
-  if (!res.ok) throw new Error("Failed to set default Electrum server");
+  if (!res.ok) throw new Error('Failed to set default Electrum server');
   return res.json();
 }
 
@@ -828,8 +844,8 @@ export async function electrumServerAction(
   action: ServerAction
 ): Promise<ElectrumActionResponse> {
   const res = await fetch(`${API_URL}/electrum/server-action`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ server, action }),
   });
   if (!res.ok) throw new Error(`Failed to ${action} ${server}`);
@@ -845,13 +861,13 @@ export async function switchElectrumServer(
 
 export async function fetchElectrumInfo(): Promise<ElectrumStatus> {
   const res = await fetch(`${API_URL}/electrum/info`);
-  if (!res.ok) throw new Error("Failed to fetch Electrum info");
+  if (!res.ok) throw new Error('Failed to fetch Electrum info');
   return res.json();
 }
 
 // Block Explorer Types
 
-export type BlockExplorer = "mempool" | "btc-rpc-explorer" | "bitfeed";
+export type BlockExplorer = 'mempool' | 'btc-rpc-explorer' | 'bitfeed';
 
 export interface ExplorerInfo {
   explorer: BlockExplorer;
@@ -878,25 +894,23 @@ export interface ExplorerActionResponse {
 
 export async function fetchExplorerSettings(): Promise<ExplorerSettings> {
   const res = await fetch(`${API_URL}/explorer/settings`);
-  if (!res.ok) throw new Error("Failed to fetch explorer settings");
+  if (!res.ok) throw new Error('Failed to fetch explorer settings');
   return res.json();
 }
 
 export async function fetchDefaultExplorer(): Promise<ExplorerInfo> {
   const res = await fetch(`${API_URL}/explorer/default`);
-  if (!res.ok) throw new Error("Failed to fetch default explorer");
+  if (!res.ok) throw new Error('Failed to fetch default explorer');
   return res.json();
 }
 
-export async function setDefaultExplorer(
-  explorer: BlockExplorer
-): Promise<ExplorerActionResponse> {
+export async function setDefaultExplorer(explorer: BlockExplorer): Promise<ExplorerActionResponse> {
   const res = await fetch(`${API_URL}/explorer/set-default`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ explorer }),
   });
-  if (!res.ok) throw new Error("Failed to set default explorer");
+  if (!res.ok) throw new Error('Failed to set default explorer');
   return res.json();
 }
 
@@ -911,21 +925,17 @@ export function getExplorerAddressUrl(baseUrl: string, address: string): string 
 
 // Installation Types
 
-export type InstallationPreset = "minimum" | "default" | "full" | "custom";
+export type InstallationPreset = 'minimum' | 'default' | 'full' | 'custom';
 
-export type ServiceInstallStatus =
-  | "not_installed"
-  | "installed"
-  | "installing"
-  | "failed";
+export type ServiceInstallStatus = 'not_installed' | 'installed' | 'installing' | 'failed';
 
 export type ServiceCategory =
-  | "core"
-  | "explorer"
-  | "networking"
-  | "monitoring"
-  | "app"
-  | "dashboard";
+  | 'core'
+  | 'explorer'
+  | 'networking'
+  | 'monitoring'
+  | 'app'
+  | 'dashboard';
 
 export interface ServiceDefinition {
   id: string;
@@ -971,13 +981,13 @@ export interface InstallationActionResponse {
 
 export async function fetchInstallationStatus(): Promise<InstallationStatus> {
   const res = await fetch(`${API_URL}/installation/status`);
-  if (!res.ok) throw new Error("Failed to fetch installation status");
+  if (!res.ok) throw new Error('Failed to fetch installation status');
   return res.json();
 }
 
 export async function fetchAvailableServices(): Promise<ServicesListResponse> {
   const res = await fetch(`${API_URL}/installation/services`);
-  if (!res.ok) throw new Error("Failed to fetch available services");
+  if (!res.ok) throw new Error('Failed to fetch available services');
   return res.json();
 }
 
@@ -985,11 +995,11 @@ export async function applyInstallationPreset(
   preset: InstallationPreset
 ): Promise<InstallationActionResponse> {
   const res = await fetch(`${API_URL}/installation/preset`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ preset }),
   });
-  if (!res.ok) throw new Error("Failed to apply installation preset");
+  if (!res.ok) throw new Error('Failed to apply installation preset');
   return res.json();
 }
 
@@ -997,36 +1007,34 @@ export async function applyCustomInstallation(
   services: string[]
 ): Promise<InstallationActionResponse> {
   const res = await fetch(`${API_URL}/installation/custom`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ services }),
   });
   if (!res.ok) {
     const error = await res.text();
-    throw new Error(error || "Failed to apply custom installation");
+    throw new Error(error || 'Failed to apply custom installation');
   }
   return res.json();
 }
 
 export async function completeSetup(): Promise<InstallationActionResponse> {
   const res = await fetch(`${API_URL}/installation/complete`, {
-    method: "POST",
+    method: 'POST',
   });
-  if (!res.ok) throw new Error("Failed to complete setup");
+  if (!res.ok) throw new Error('Failed to complete setup');
   return res.json();
 }
 
-export async function installService(
-  serviceId: string
-): Promise<InstallationActionResponse> {
+export async function installService(serviceId: string): Promise<InstallationActionResponse> {
   const res = await fetch(`${API_URL}/installation/service/install`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ service_id: serviceId }),
   });
   if (!res.ok) {
     const error = await res.text();
-    throw new Error(error || "Failed to install service");
+    throw new Error(error || 'Failed to install service');
   }
   return res.json();
 }
@@ -1036,20 +1044,20 @@ export async function uninstallService(
   removeContainers: boolean = false
 ): Promise<InstallationActionResponse> {
   const res = await fetch(`${API_URL}/installation/service/uninstall`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ service_id: serviceId, remove_containers: removeContainers }),
   });
   if (!res.ok) {
     const error = await res.text();
-    throw new Error(error || "Failed to uninstall service");
+    throw new Error(error || 'Failed to uninstall service');
   }
   return res.json();
 }
 
 export async function fetchActiveProfiles(): Promise<string[]> {
   const res = await fetch(`${API_URL}/installation/profiles`);
-  if (!res.ok) throw new Error("Failed to fetch active profiles");
+  if (!res.ok) throw new Error('Failed to fetch active profiles');
   return res.json();
 }
 
@@ -1064,13 +1072,13 @@ export async function resetInstallation(
   options: ResetInstallationRequest
 ): Promise<InstallationActionResponse> {
   const res = await fetch(`${API_URL}/installation/reset`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(options),
   });
   if (!res.ok) {
     const error = await res.text();
-    throw new Error(error || "Failed to reset installation");
+    throw new Error(error || 'Failed to reset installation');
   }
   return res.json();
 }
@@ -1089,9 +1097,9 @@ export interface ProfileResponse {
 
 export async function fetchUserProfile(): Promise<UserProfile> {
   const res = await fetch(`${API_URL}/profile`);
-  if (!res.ok) throw new Error("Failed to fetch user profile");
+  if (!res.ok) throw new Error('Failed to fetch user profile');
   const data: ProfileResponse = await res.json();
-  return data.profile || { name: "Bitcoiner" };
+  return data.profile || { name: 'Bitcoiner' };
 }
 
 export async function updateUserProfile(
@@ -1099,13 +1107,13 @@ export async function updateUserProfile(
   avatar_url?: string
 ): Promise<ProfileResponse> {
   const res = await fetch(`${API_URL}/profile`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name, avatar_url }),
   });
   if (!res.ok) {
     const error = await res.text();
-    throw new Error(error || "Failed to update profile");
+    throw new Error(error || 'Failed to update profile');
   }
   return res.json();
 }
@@ -1130,7 +1138,7 @@ export interface Notification {
   notification_type: string;
   title: string;
   message?: string;
-  severity: "info" | "success" | "warning" | "error";
+  severity: 'info' | 'success' | 'warning' | 'error';
   read: boolean;
   created_at: string;
 }
@@ -1151,45 +1159,45 @@ export interface NotificationActionResponse {
 
 export async function fetchNotifications(): Promise<NotificationsListResponse> {
   const res = await fetch(`${API_URL}/notifications`);
-  if (!res.ok) throw new Error("Failed to fetch notifications");
+  if (!res.ok) throw new Error('Failed to fetch notifications');
   return res.json();
 }
 
 export async function fetchUnreadCount(): Promise<UnreadCountResponse> {
   const res = await fetch(`${API_URL}/notifications/unread-count`);
-  if (!res.ok) throw new Error("Failed to fetch unread count");
+  if (!res.ok) throw new Error('Failed to fetch unread count');
   return res.json();
 }
 
 export async function markNotificationAsRead(id: number): Promise<NotificationActionResponse> {
   const res = await fetch(`${API_URL}/notifications/${id}/read`, {
-    method: "PUT",
+    method: 'PUT',
   });
-  if (!res.ok) throw new Error("Failed to mark notification as read");
+  if (!res.ok) throw new Error('Failed to mark notification as read');
   return res.json();
 }
 
 export async function markAllNotificationsAsRead(): Promise<NotificationActionResponse> {
   const res = await fetch(`${API_URL}/notifications/read-all`, {
-    method: "PUT",
+    method: 'PUT',
   });
-  if (!res.ok) throw new Error("Failed to mark all notifications as read");
+  if (!res.ok) throw new Error('Failed to mark all notifications as read');
   return res.json();
 }
 
 export async function deleteNotification(id: number): Promise<NotificationActionResponse> {
   const res = await fetch(`${API_URL}/notifications/${id}`, {
-    method: "DELETE",
+    method: 'DELETE',
   });
-  if (!res.ok) throw new Error("Failed to delete notification");
+  if (!res.ok) throw new Error('Failed to delete notification');
   return res.json();
 }
 
 export async function clearReadNotifications(): Promise<NotificationActionResponse> {
   const res = await fetch(`${API_URL}/notifications/clear-read`, {
-    method: "DELETE",
+    method: 'DELETE',
   });
-  if (!res.ok) throw new Error("Failed to clear read notifications");
+  if (!res.ok) throw new Error('Failed to clear read notifications');
   return res.json();
 }
 
@@ -1254,41 +1262,41 @@ export interface AssetsOverview {
 
 export async function fetchLockedUtxos(): Promise<LockedUtxo[]> {
   const res = await fetch(`${API_URL}/wallet/utxos/locked`);
-  if (!res.ok) throw new Error("Failed to fetch locked UTXOs");
+  if (!res.ok) throw new Error('Failed to fetch locked UTXOs');
   return res.json();
 }
 
 export async function fetchUnlockedUtxos(): Promise<Utxo[]> {
   const res = await fetch(`${API_URL}/wallet/utxos/unlocked`);
-  if (!res.ok) throw new Error("Failed to fetch unlocked UTXOs");
+  if (!res.ok) throw new Error('Failed to fetch unlocked UTXOs');
   return res.json();
 }
 
 export async function lockUtxos(utxos: { txid: string; vout: number }[]): Promise<LockResponse> {
   const res = await fetch(`${API_URL}/wallet/utxos/lock`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ utxos }),
   });
-  if (!res.ok) throw new Error("Failed to lock UTXOs");
+  if (!res.ok) throw new Error('Failed to lock UTXOs');
   return res.json();
 }
 
 export async function unlockUtxos(utxos: { txid: string; vout: number }[]): Promise<LockResponse> {
   const res = await fetch(`${API_URL}/wallet/utxos/unlock`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ utxos }),
   });
-  if (!res.ok) throw new Error("Failed to unlock UTXOs");
+  if (!res.ok) throw new Error('Failed to unlock UTXOs');
   return res.json();
 }
 
 export async function syncLocks(): Promise<SyncLocksResponse> {
   const res = await fetch(`${API_URL}/wallet/utxos/sync-locks`, {
-    method: "POST",
+    method: 'POST',
   });
-  if (!res.ok) throw new Error("Failed to sync locks");
+  if (!res.ok) throw new Error('Failed to sync locks');
   return res.json();
 }
 
@@ -1320,45 +1328,46 @@ export interface LockedAssetsOverview {
 }
 
 export async function fetchLockedAssets(filter?: string): Promise<LockedAssetsOverview> {
-  const url = filter && filter !== "all"
-    ? `${API_URL}/wallet/locked-assets?filter=${filter}`
-    : `${API_URL}/wallet/locked-assets`;
+  const url =
+    filter && filter !== 'all'
+      ? `${API_URL}/wallet/locked-assets?filter=${filter}`
+      : `${API_URL}/wallet/locked-assets`;
   const res = await fetch(url);
-  if (!res.ok) throw new Error("Failed to fetch locked assets");
+  if (!res.ok) throw new Error('Failed to fetch locked assets');
   return res.json();
 }
 
 export async function fetchLockSettings(): Promise<LockSettings> {
   const res = await fetch(`${API_URL}/wallet/locks/settings`);
-  if (!res.ok) throw new Error("Failed to fetch lock settings");
+  if (!res.ok) throw new Error('Failed to fetch lock settings');
   return res.json();
 }
 
 export async function setAutoLock(enabled: boolean): Promise<LockResponse> {
   const res = await fetch(`${API_URL}/wallet/locks/auto-lock`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ enabled }),
   });
-  if (!res.ok) throw new Error("Failed to set auto-lock");
+  if (!res.ok) throw new Error('Failed to set auto-lock');
   return res.json();
 }
 
 export async function fetchAssets(): Promise<AssetsOverview> {
   const res = await fetch(`${API_URL}/wallet/assets`);
-  if (!res.ok) throw new Error("Failed to fetch assets");
+  if (!res.ok) throw new Error('Failed to fetch assets');
   return res.json();
 }
 
 export async function fetchAssetsDomains(): Promise<DomainAsset[]> {
   const res = await fetch(`${API_URL}/wallet/assets/domains`);
-  if (!res.ok) throw new Error("Failed to fetch domain assets");
+  if (!res.ok) throw new Error('Failed to fetch domain assets');
   return res.json();
 }
 
 export async function fetchAssetsTokens(): Promise<TokenAsset[]> {
   const res = await fetch(`${API_URL}/wallet/assets/tokens`);
-  if (!res.ok) throw new Error("Failed to fetch token assets");
+  if (!res.ok) throw new Error('Failed to fetch token assets');
   return res.json();
 }
 
@@ -1434,47 +1443,47 @@ export interface VerifyBackupResponse {
 
 export async function fetchMnemonic(): Promise<MnemonicResponse> {
   const res = await fetch(`${API_URL}/wallet/backup/mnemonic`);
-  if (!res.ok) throw new Error("Failed to fetch mnemonic");
+  if (!res.ok) throw new Error('Failed to fetch mnemonic');
   return res.json();
 }
 
 export async function fetchWalletInfo(): Promise<WalletInfoResponse> {
   const res = await fetch(`${API_URL}/wallet/backup/info`);
-  if (!res.ok) throw new Error("Failed to fetch wallet info");
+  if (!res.ok) throw new Error('Failed to fetch wallet info');
   return res.json();
 }
 
 export async function fetchDescriptors(): Promise<DescriptorsResponse> {
   const res = await fetch(`${API_URL}/wallet/backup/descriptors`);
-  if (!res.ok) throw new Error("Failed to fetch descriptors");
+  if (!res.ok) throw new Error('Failed to fetch descriptors');
   return res.json();
 }
 
 export async function verifyMnemonic(words: string[]): Promise<VerifyMnemonicResponse> {
   const res = await fetch(`${API_URL}/wallet/backup/verify`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ words }),
   });
-  if (!res.ok) throw new Error("Failed to verify mnemonic");
+  if (!res.ok) throw new Error('Failed to verify mnemonic');
   return res.json();
 }
 
 export async function syncBdkWallet(): Promise<{ success: boolean; message: string }> {
   const res = await fetch(`${API_URL}/wallet/backup/sync`, {
-    method: "POST",
+    method: 'POST',
   });
-  if (!res.ok) throw new Error("Failed to sync BDK wallet");
+  if (!res.ok) throw new Error('Failed to sync BDK wallet');
   return res.json();
 }
 
 export async function exportBackup(password: string): Promise<ExportBackupResponse> {
   const res = await fetch(`${API_URL}/wallet/backup/export`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ password }),
   });
-  if (!res.ok) throw new Error("Failed to export backup");
+  if (!res.ok) throw new Error('Failed to export backup');
   return res.json();
 }
 
@@ -1483,11 +1492,11 @@ export async function verifyBackup(
   password: string
 ): Promise<VerifyBackupResponse> {
   const res = await fetch(`${API_URL}/wallet/backup/verify`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ backup, password }),
   });
-  if (!res.ok) throw new Error("Failed to verify backup");
+  if (!res.ok) throw new Error('Failed to verify backup');
   return res.json();
 }
 
@@ -1504,7 +1513,7 @@ export interface MessageQuery {
   search?: string;
   limit?: number;
   offset?: number;
-  order?: "asc" | "desc";
+  order?: 'asc' | 'desc';
 }
 
 export interface MessageListItem {
@@ -1560,24 +1569,24 @@ export interface MessageDetail {
 
 export async function fetchIndexerMessages(query: MessageQuery = {}): Promise<PaginatedMessages> {
   const params = new URLSearchParams();
-  if (query.kind !== undefined) params.set("kind", String(query.kind));
-  if (query.carrier !== undefined) params.set("carrier", String(query.carrier));
-  if (query.block !== undefined) params.set("block", String(query.block));
-  if (query.block_from !== undefined) params.set("block_from", String(query.block_from));
-  if (query.block_to !== undefined) params.set("block_to", String(query.block_to));
-  if (query.search) params.set("search", query.search);
-  if (query.limit !== undefined) params.set("limit", String(query.limit));
-  if (query.offset !== undefined) params.set("offset", String(query.offset));
-  if (query.order) params.set("order", query.order);
+  if (query.kind !== undefined) params.set('kind', String(query.kind));
+  if (query.carrier !== undefined) params.set('carrier', String(query.carrier));
+  if (query.block !== undefined) params.set('block', String(query.block));
+  if (query.block_from !== undefined) params.set('block_from', String(query.block_from));
+  if (query.block_to !== undefined) params.set('block_to', String(query.block_to));
+  if (query.search) params.set('search', query.search);
+  if (query.limit !== undefined) params.set('limit', String(query.limit));
+  if (query.offset !== undefined) params.set('offset', String(query.offset));
+  if (query.order) params.set('order', query.order);
 
   const res = await fetch(`${API_URL}/indexer/messages?${params.toString()}`);
-  if (!res.ok) throw new Error("Failed to fetch messages");
+  if (!res.ok) throw new Error('Failed to fetch messages');
   return res.json();
 }
 
 export async function fetchMessageDetail(txid: string, vout: number): Promise<MessageDetail> {
   const res = await fetch(`${API_URL}/indexer/messages/${txid}/${vout}`);
-  if (!res.ok) throw new Error("Failed to fetch message detail");
+  if (!res.ok) throw new Error('Failed to fetch message detail');
   return res.json();
 }
 
@@ -1609,9 +1618,12 @@ export interface TimeseriesData {
   points: TimeseriesPoint[];
 }
 
-export async function fetchIndexerTimeseries(period: "hour" | "day" | "week" = "day", count: number = 30): Promise<TimeseriesData> {
+export async function fetchIndexerTimeseries(
+  period: 'hour' | 'day' | 'week' = 'day',
+  count: number = 30
+): Promise<TimeseriesData> {
   const res = await fetch(`${API_URL}/indexer/stats/timeseries?period=${period}&count=${count}`);
-  if (!res.ok) throw new Error("Failed to fetch timeseries data");
+  if (!res.ok) throw new Error('Failed to fetch timeseries data');
   return res.json();
 }
 
@@ -1639,13 +1651,13 @@ export interface OrphanAnchor {
 
 export async function fetchAnchorStats(): Promise<IndexerAnchorStats> {
   const res = await fetch(`${API_URL}/indexer/anchors/stats`);
-  if (!res.ok) throw new Error("Failed to fetch anchor stats");
+  if (!res.ok) throw new Error('Failed to fetch anchor stats');
   return res.json();
 }
 
 export async function fetchOrphanAnchors(limit: number = 20): Promise<OrphanAnchor[]> {
   const res = await fetch(`${API_URL}/indexer/anchors/orphans?limit=${limit}`);
-  if (!res.ok) throw new Error("Failed to fetch orphan anchors");
+  if (!res.ok) throw new Error('Failed to fetch orphan anchors');
   return res.json();
 }
 
@@ -1666,7 +1678,7 @@ export interface PerformanceStats {
 
 export async function fetchPerformanceStats(): Promise<PerformanceStats> {
   const res = await fetch(`${API_URL}/indexer/stats/performance`);
-  if (!res.ok) throw new Error("Failed to fetch performance stats");
+  if (!res.ok) throw new Error('Failed to fetch performance stats');
   return res.json();
 }
 
@@ -1692,15 +1704,16 @@ export interface LiveStats {
 }
 
 export interface LiveMessageEvent {
-  event_type: "new_message" | "stats" | "error";
+  event_type: 'new_message' | 'stats' | 'error';
   message: LiveMessage | null;
   stats: LiveStats | null;
   timestamp: string;
 }
 
 export function getIndexerWebSocketUrl(): string {
-  const wsProtocol = typeof window !== "undefined" && window.location.protocol === "https:" ? "wss:" : "ws:";
-  const apiHost = API_URL.replace(/^https?:\/\//, "").replace(/\/$/, "");
+  const wsProtocol =
+    typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const apiHost = API_URL.replace(/^https?:\/\//, '').replace(/\/$/, '');
   return `${wsProtocol}//${apiHost}/indexer/ws/live`;
 }
 
@@ -1738,11 +1751,11 @@ export interface UtxoProtocolInfoResponse {
 
 export async function fetchUtxoProtocolInfo(txids: string[]): Promise<UtxoProtocolInfoResponse> {
   const res = await fetch(`${API_URL}/indexer/utxo-protocol-info`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ txids }),
   });
-  if (!res.ok) throw new Error("Failed to fetch UTXO protocol info");
+  if (!res.ok) throw new Error('Failed to fetch UTXO protocol info');
   return res.json();
 }
 
@@ -1750,10 +1763,10 @@ export async function fetchUtxoProtocolInfo(txids: string[]): Promise<UtxoProtoc
 // Identity Management Types & API Functions
 // ============================================================================
 
-export type IdentityType = "nostr" | "pubky";
+export type IdentityType = 'nostr' | 'pubky';
 
 export interface NostrMetadata {
-  type: "nostr";
+  type: 'nostr';
   relays: string[];
   nip05?: string;
   name?: string;
@@ -1762,7 +1775,7 @@ export interface NostrMetadata {
 }
 
 export interface PubkyMetadata {
-  type: "pubky";
+  type: 'pubky';
   homeserver?: string;
   registered: boolean;
   profile_url?: string;
@@ -1839,67 +1852,70 @@ export interface UpdateIdentityRequest {
 
 export async function fetchIdentities(): Promise<IdentitiesResponse> {
   const res = await fetch(`${WALLET_URL}/wallet/identities`);
-  if (!res.ok) throw new Error("Failed to fetch identities");
+  if (!res.ok) throw new Error('Failed to fetch identities');
   return res.json();
 }
 
 export async function fetchIdentity(id: string): Promise<Identity> {
   const res = await fetch(`${WALLET_URL}/wallet/identities/${id}`);
-  if (!res.ok) throw new Error("Failed to fetch identity");
+  if (!res.ok) throw new Error('Failed to fetch identity');
   return res.json();
 }
 
 export async function fetchIdentityDefaults(): Promise<IdentityDefaults> {
   const res = await fetch(`${WALLET_URL}/wallet/identities/defaults`);
-  if (!res.ok) throw new Error("Failed to fetch identity defaults");
+  if (!res.ok) throw new Error('Failed to fetch identity defaults');
   return res.json();
 }
 
 export async function generateKeypair(identity_type: IdentityType): Promise<GeneratedKeypair> {
   const res = await fetch(`${WALLET_URL}/wallet/identities/generate`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ identity_type }),
   });
-  if (!res.ok) throw new Error("Failed to generate keypair");
+  if (!res.ok) throw new Error('Failed to generate keypair');
   return res.json();
 }
 
 export async function createIdentity(request: CreateIdentityRequest): Promise<Identity> {
   const res = await fetch(`${WALLET_URL}/wallet/identities`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(request),
   });
   if (!res.ok) {
     const error = await res.text();
-    throw new Error(error || "Failed to create identity");
+    throw new Error(error || 'Failed to create identity');
   }
   return res.json();
 }
 
-export async function updateIdentity(id: string, request: UpdateIdentityRequest): Promise<Identity> {
+export async function updateIdentity(
+  id: string,
+  request: UpdateIdentityRequest
+): Promise<Identity> {
   const res = await fetch(`${WALLET_URL}/wallet/identities/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(request),
   });
-  if (!res.ok) throw new Error("Failed to update identity");
+  if (!res.ok) throw new Error('Failed to update identity');
   return res.json();
 }
 
 export async function deleteIdentity(id: string): Promise<void> {
   const res = await fetch(`${WALLET_URL}/wallet/identities/${id}`, {
-    method: "DELETE",
+    method: 'DELETE',
   });
-  if (!res.ok) throw new Error("Failed to delete identity");
+  if (!res.ok) throw new Error('Failed to delete identity');
 }
 
 export async function setIdentityPrimary(id: string): Promise<Identity> {
   const res = await fetch(`${WALLET_URL}/wallet/identities/${id}/primary`, {
-    method: "POST",
+    method: 'POST',
   });
-  if (!res.ok) throw new Error("Failed to set identity as primary");
+  if (!res.ok) throw new Error('Failed to set identity as primary');
   return res.json();
 }
 
@@ -1909,19 +1925,19 @@ export async function publishIdentityToDns(
   subdomain?: string
 ): Promise<Identity> {
   const res = await fetch(`${WALLET_URL}/wallet/identities/${id}/dns`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ domain, subdomain }),
   });
-  if (!res.ok) throw new Error("Failed to publish identity to DNS");
+  if (!res.ok) throw new Error('Failed to publish identity to DNS');
   return res.json();
 }
 
 export async function removeIdentityFromDns(id: string): Promise<Identity> {
   const res = await fetch(`${WALLET_URL}/wallet/identities/${id}/dns`, {
-    method: "DELETE",
+    method: 'DELETE',
   });
-  if (!res.ok) throw new Error("Failed to remove identity from DNS");
+  if (!res.ok) throw new Error('Failed to remove identity from DNS');
   return res.json();
 }
 
@@ -1932,9 +1948,9 @@ export interface SyncDnsResult {
 
 export async function syncIdentitiesFromDns(): Promise<SyncDnsResult> {
   const res = await fetch(`${WALLET_URL}/wallet/identities/sync-dns`, {
-    method: "POST",
+    method: 'POST',
   });
-  if (!res.ok) throw new Error("Failed to sync identities from DNS");
+  if (!res.ok) throw new Error('Failed to sync identities from DNS');
   return res.json();
 }
 
@@ -1950,7 +1966,6 @@ export interface ExportKeyResult {
 
 export async function exportIdentityKey(id: string): Promise<ExportKeyResult> {
   const res = await fetch(`${WALLET_URL}/wallet/identities/${id}/export`);
-  if (!res.ok) throw new Error("Failed to export identity key");
+  if (!res.ok) throw new Error('Failed to export identity key');
   return res.json();
 }
-

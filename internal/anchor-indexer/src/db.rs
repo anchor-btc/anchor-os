@@ -24,12 +24,11 @@ impl Database {
 
     /// Get the last indexed block height
     pub async fn get_last_block_height(&self) -> Result<i32> {
-        let row: (i32,) = sqlx::query_as(
-            "SELECT last_block_height FROM indexer_state WHERE id = 1"
-        )
-        .fetch_one(&self.pool)
-        .await?;
-        
+        let row: (i32,) =
+            sqlx::query_as("SELECT last_block_height FROM indexer_state WHERE id = 1")
+                .fetch_one(&self.pool)
+                .await?;
+
         Ok(row.0)
     }
 
@@ -42,7 +41,7 @@ impl Database {
         .bind(block_height)
         .execute(&self.pool)
         .await?;
-        
+
         Ok(())
     }
 
@@ -132,7 +131,7 @@ impl Database {
             INSERT INTO anchors (message_id, anchor_index, txid_prefix, vout)
             VALUES ($1, $2, $3, $4)
             ON CONFLICT (message_id, anchor_index) DO NOTHING
-            "#
+            "#,
         )
         .bind(message_id)
         .bind(anchor_index)
@@ -152,7 +151,7 @@ impl Database {
             SELECT a.id, a.txid_prefix, a.vout
             FROM anchors a
             WHERE a.resolved_txid IS NULL AND a.is_orphan = FALSE
-            "#
+            "#,
         )
         .fetch_all(&self.pool)
         .await?;
@@ -165,7 +164,7 @@ impl Database {
                 r#"
                 SELECT txid, id FROM messages
                 WHERE substring(txid from 1 for $1) = $2
-                "#
+                "#,
             )
             .bind(TXID_PREFIX_SIZE as i32)
             .bind(&prefix)
@@ -209,36 +208,30 @@ impl Database {
     /// Check if a message already exists
     pub async fn message_exists(&self, txid: &Txid, vout: u32) -> Result<bool> {
         let txid_bytes = txid.to_byte_array().to_vec();
-        let row: (i64,) = sqlx::query_as(
-            "SELECT COUNT(*) FROM messages WHERE txid = $1 AND vout = $2"
-        )
-        .bind(&txid_bytes)
-        .bind(vout as i32)
-        .fetch_one(&self.pool)
-        .await?;
-        
+        let row: (i64,) =
+            sqlx::query_as("SELECT COUNT(*) FROM messages WHERE txid = $1 AND vout = $2")
+                .bind(&txid_bytes)
+                .bind(vout as i32)
+                .fetch_one(&self.pool)
+                .await?;
+
         Ok(row.0 > 0)
     }
 
     /// Handle a blockchain reorganization
     pub async fn handle_reorg(&self, from_height: i32) -> Result<u64> {
         // Delete messages from the reorged blocks
-        let result = sqlx::query(
-            "DELETE FROM messages WHERE block_height >= $1"
-        )
-        .bind(from_height)
-        .execute(&self.pool)
-        .await?;
+        let result = sqlx::query("DELETE FROM messages WHERE block_height >= $1")
+            .bind(from_height)
+            .execute(&self.pool)
+            .await?;
 
         // Update indexer state
-        sqlx::query(
-            "UPDATE indexer_state SET last_block_height = $1 - 1 WHERE id = 1"
-        )
-        .bind(from_height)
-        .execute(&self.pool)
-        .await?;
+        sqlx::query("UPDATE indexer_state SET last_block_height = $1 - 1 WHERE id = 1")
+            .bind(from_height)
+            .execute(&self.pool)
+            .await?;
 
         Ok(result.rows_affected())
     }
 }
-

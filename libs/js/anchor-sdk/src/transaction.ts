@@ -4,7 +4,7 @@
  * Build Bitcoin transactions with ANCHOR messages using bitcoinjs-lib.
  */
 
-import * as bitcoin from "bitcoinjs-lib";
+import * as bitcoin from 'bitcoinjs-lib';
 import {
   AnchorKind,
   AnchorError,
@@ -12,21 +12,21 @@ import {
   type Utxo,
   type CreateMessageOptions,
   type Network,
-} from "./types.js";
-import { encodeAnchorPayload, createMessage } from "./encoder.js";
+} from './types.js';
+import { encodeAnchorPayload, createMessage } from './encoder.js';
 
 /**
  * Get bitcoinjs-lib network from string
  */
 export function getNetwork(network: Network): bitcoin.Network {
   switch (network) {
-    case "mainnet":
+    case 'mainnet':
       return bitcoin.networks.bitcoin;
-    case "testnet":
+    case 'testnet':
       return bitcoin.networks.testnet;
-    case "regtest":
+    case 'regtest':
       return bitcoin.networks.regtest;
-    case "signet":
+    case 'signet':
       // Signet uses testnet network params
       return bitcoin.networks.testnet;
     default:
@@ -38,10 +38,7 @@ export function getNetwork(network: Network): bitcoin.Network {
  * Create an OP_RETURN script with ANCHOR payload
  */
 export function createOpReturnScript(payload: Uint8Array): Buffer {
-  return bitcoin.script.compile([
-    bitcoin.opcodes.OP_RETURN,
-    Buffer.from(payload),
-  ]);
+  return bitcoin.script.compile([bitcoin.opcodes.OP_RETURN, Buffer.from(payload)]);
 }
 
 /**
@@ -83,15 +80,13 @@ export interface BuiltTransaction {
  * - Output 0: OP_RETURN with ANCHOR payload
  * - Output 1: Change output
  */
-export function buildTransaction(
-  options: TransactionBuilderOptions,
-): BuiltTransaction {
-  const network = getNetwork(options.network ?? "regtest");
+export function buildTransaction(options: TransactionBuilderOptions): BuiltTransaction {
+  const network = getNetwork(options.network ?? 'regtest');
   const feeRate = options.feeRate ?? 1;
 
   // Validate inputs
   if (options.inputs.length === 0) {
-    throw new AnchorError(AnchorErrorCode.NoUtxos, "No inputs provided");
+    throw new AnchorError(AnchorErrorCode.NoUtxos, 'No inputs provided');
   }
 
   // Create ANCHOR payload
@@ -115,7 +110,7 @@ export function buildTransaction(
   if (change < 546) {
     throw new AnchorError(
       AnchorErrorCode.InsufficientFunds,
-      `Insufficient funds: need ${fee + 546} sats, have ${totalInput} sats`,
+      `Insufficient funds: need ${fee + 546} sats, have ${totalInput} sats`
     );
   }
 
@@ -128,7 +123,7 @@ export function buildTransaction(
       hash: utxo.txid,
       index: utxo.vout,
       witnessUtxo: {
-        script: Buffer.from(utxo.scriptPubKey, "hex"),
+        script: Buffer.from(utxo.scriptPubKey, 'hex'),
         value: utxo.value,
       },
     });
@@ -159,12 +154,12 @@ export function buildTransaction(
  * Fluent builder for ANCHOR transactions
  */
 export class AnchorTransactionBuilder {
-  private network: Network = "regtest";
+  private network: Network = 'regtest';
   private feeRate: number = 1;
   private inputs: Utxo[] = [];
-  private changeAddress: string = "";
+  private changeAddress: string = '';
   private kind: AnchorKind = AnchorKind.Text;
-  private body: string = "";
+  private body: string = '';
   private bodyBytes?: Uint8Array;
   private anchors: Array<{ txid: string; vout: number }> = [];
 
@@ -275,4 +270,3 @@ export class AnchorTransactionBuilder {
 export function createTransactionBuilder(): AnchorTransactionBuilder {
   return new AnchorTransactionBuilder();
 }
-

@@ -1,11 +1,7 @@
 //! HTTP API handlers for the testnet service
 
 use crate::config::{SharedConfig, SharedStats};
-use axum::{
-    extract::State,
-    response::IntoResponse,
-    Json,
-};
+use axum::{extract::State, response::IntoResponse, Json};
 use serde::Deserialize;
 use tracing::info;
 
@@ -191,4 +187,3 @@ pub async fn resume_handler(State(state): State<AppState>) -> impl IntoResponse 
     info!("Generator resumed via API");
     Json(serde_json::json!({ "paused": false }))
 }
-

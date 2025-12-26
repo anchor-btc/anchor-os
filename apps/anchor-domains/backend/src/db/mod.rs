@@ -12,8 +12,6 @@ mod indexer;
 mod pending;
 mod records;
 
-pub use identities::DomainIdentityRow;
-
 use anyhow::Result;
 use sqlx::postgres::PgPool;
 
@@ -38,4 +36,3 @@ impl Database {
 
 // The submodules implement methods on Database via impl blocks,
 // so we don't need explicit re-exports.
-

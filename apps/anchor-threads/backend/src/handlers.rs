@@ -11,7 +11,7 @@ use std::sync::Arc;
 use tracing::error;
 use utoipa::ToSchema;
 
-use crate::models::{ListParams, FilterParams, PaginatedResponse};
+use crate::models::{FilterParams, ListParams, PaginatedResponse};
 use crate::AppState;
 
 /// Health check response
@@ -208,9 +208,7 @@ pub async fn get_message(
     State(state): State<Arc<AppState>>,
     Path((txid, vout)): Path<(String, i32)>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
-    let txid_bytes = display_txid_to_internal(&txid).map_err(|e| {
-        (StatusCode::BAD_REQUEST, e)
-    })?;
+    let txid_bytes = display_txid_to_internal(&txid).map_err(|e| (StatusCode::BAD_REQUEST, e))?;
 
     match state.db.get_message(&txid_bytes, vout).await {
         Ok(Some(message)) => Ok(Json(message)),
@@ -240,9 +238,7 @@ pub async fn get_replies(
     State(state): State<Arc<AppState>>,
     Path((txid, vout)): Path<(String, i32)>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
-    let txid_bytes = display_txid_to_internal(&txid).map_err(|e| {
-        (StatusCode::BAD_REQUEST, e)
-    })?;
+    let txid_bytes = display_txid_to_internal(&txid).map_err(|e| (StatusCode::BAD_REQUEST, e))?;
 
     match state.db.get_replies(&txid_bytes, vout).await {
         Ok(replies) => Ok(Json(replies)),
@@ -299,9 +295,7 @@ pub async fn get_thread(
     State(state): State<Arc<AppState>>,
     Path((txid, vout)): Path<(String, i32)>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
-    let txid_bytes = display_txid_to_internal(&txid).map_err(|e| {
-        (StatusCode::BAD_REQUEST, e)
-    })?;
+    let txid_bytes = display_txid_to_internal(&txid).map_err(|e| (StatusCode::BAD_REQUEST, e))?;
 
     match state.db.get_thread(&txid_bytes, vout).await {
         Ok(Some(thread)) => Ok(Json(thread)),

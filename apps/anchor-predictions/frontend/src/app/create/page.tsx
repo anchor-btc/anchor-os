@@ -1,47 +1,39 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { 
-  Plus, 
-  Info, 
-  Loader2, 
-  CheckCircle, 
-  XCircle,
-  ChevronDown,
-  HelpCircle
-} from "lucide-react";
-import { createMarket, fetchOracles, type Oracle } from "@/lib/api";
-import { cn, shortenHash } from "@/lib/utils";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { Plus, Info, Loader2, CheckCircle, XCircle, ChevronDown, HelpCircle } from 'lucide-react';
+import { createMarket, fetchOracles, type Oracle } from '@/lib/api';
+import { cn, shortenHash } from '@/lib/utils';
 
 export default function CreateMarketPage() {
-  const router = useRouter();
-  
+  useRouter(); // Keep for future navigation
+
   // Form state
-  const [question, setQuestion] = useState("");
-  const [description, setDescription] = useState("");
-  const [resolutionBlock, setResolutionBlock] = useState("");
+  const [question, setQuestion] = useState('');
+  const [description, setDescription] = useState('');
+  const [resolutionBlock, setResolutionBlock] = useState('');
   const [selectedOracle, setSelectedOracle] = useState<Oracle | null>(null);
   const [showOracleSelect, setShowOracleSelect] = useState(false);
-  const [initialLiquidity, setInitialLiquidity] = useState("1000000000");
-  
+  const [initialLiquidity, setInitialLiquidity] = useState('1000000000');
+
   // Result state
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
 
   // Fetch oracles
   const { data: oracles, isLoading: oraclesLoading } = useQuery({
-    queryKey: ["oracles"],
+    queryKey: ['oracles'],
     queryFn: fetchOracles,
   });
 
   // Create market mutation
   const createMutation = useMutation({
     mutationFn: async () => {
-      if (!selectedOracle) throw new Error("Please select an oracle.");
-      if (!question.trim()) throw new Error("Please enter a question.");
-      if (!resolutionBlock) throw new Error("Please enter a resolution block.");
-      
+      if (!selectedOracle) throw new Error('Please select an oracle.');
+      if (!question.trim()) throw new Error('Please enter a question.');
+      if (!resolutionBlock) throw new Error('Please enter a resolution block.');
+
       return createMarket({
         question: question.trim(),
         description: description.trim() || undefined,
@@ -87,9 +79,7 @@ export default function CreateMarketPage() {
         {/* Question */}
         <div className="rounded-xl border border-white/10 bg-white/5 p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Question *
-            </label>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Question *</label>
             <input
               type="text"
               value={question}
@@ -142,9 +132,7 @@ export default function CreateMarketPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Oracle *
-            </label>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Oracle *</label>
             <div className="relative">
               <button
                 type="button"
@@ -161,10 +149,12 @@ export default function CreateMarketPage() {
                 ) : (
                   <span className="text-gray-500">Select an oracle...</span>
                 )}
-                <ChevronDown className={cn(
-                  "w-5 h-5 text-gray-400 transition-transform",
-                  showOracleSelect && "rotate-180"
-                )} />
+                <ChevronDown
+                  className={cn(
+                    'w-5 h-5 text-gray-400 transition-transform',
+                    showOracleSelect && 'rotate-180'
+                  )}
+                />
               </button>
 
               {showOracleSelect && (
@@ -191,9 +181,7 @@ export default function CreateMarketPage() {
                       </button>
                     ))
                   ) : (
-                    <div className="p-4 text-center text-gray-400">
-                      No oracles available
-                    </div>
+                    <div className="p-4 text-center text-gray-400">No oracles available</div>
                   )}
                 </div>
               )}
@@ -229,29 +217,31 @@ export default function CreateMarketPage() {
 
           <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
             <p className="text-blue-400 text-sm">
-              <strong>How AMM works:</strong> The market starts with 50/50 odds. 
-              As users bet, prices adjust based on demand. Betting on YES increases 
-              YES price and decreases NO price, and vice versa.
+              <strong>How AMM works:</strong> The market starts with 50/50 odds. As users bet,
+              prices adjust based on demand. Betting on YES increases YES price and decreases NO
+              price, and vice versa.
             </p>
           </div>
         </div>
 
         {/* Result Message */}
         {result && (
-          <div className={cn(
-            "rounded-xl p-4 flex items-start gap-3",
-            result.success 
-              ? "bg-green-500/20 border border-green-500/30" 
-              : "bg-red-500/20 border border-red-500/30"
-          )}>
+          <div
+            className={cn(
+              'rounded-xl p-4 flex items-start gap-3',
+              result.success
+                ? 'bg-green-500/20 border border-green-500/30'
+                : 'bg-red-500/20 border border-red-500/30'
+            )}
+          >
             {result.success ? (
               <CheckCircle className="w-5 h-5 text-green-400 shrink-0 mt-0.5" />
             ) : (
               <XCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
             )}
             <div>
-              <p className={result.success ? "text-green-400" : "text-red-400"}>
-                {result.success ? "Market created!" : "Error"}
+              <p className={result.success ? 'text-green-400' : 'text-red-400'}>
+                {result.success ? 'Market created!' : 'Error'}
               </p>
               <p className="text-gray-400 text-sm mt-1">{result.message}</p>
             </div>

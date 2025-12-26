@@ -40,7 +40,7 @@ describe('Anchor Tokens Token Page', () => {
 describe('Anchor Tokens Operations', () => {
   it('should display token operations content', () => {
     cy.visitApp('tokens', '/tokens');
-    
+
     cy.get('a[href*="/token/"]').then(($links) => {
       if ($links.length > 0) {
         cy.wrap($links.first()).click();
@@ -54,7 +54,7 @@ describe('Anchor Tokens Operations', () => {
 
   it('should show page elements', () => {
     cy.visitApp('tokens', '/tokens');
-    
+
     cy.get('a[href*="/token/"]').then(($links) => {
       if ($links.length > 0) {
         cy.wrap($links.first()).click();

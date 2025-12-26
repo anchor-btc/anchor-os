@@ -20,11 +20,10 @@ mod utils;
 pub mod carriers;
 
 // Re-export public types
+pub use bdk_service::BdkWalletService;
 pub use service::WalletService;
-pub use bdk_service::{BdkWalletService, WalletInfo};
 // Types are re-exported for external use
 #[allow(unused_imports)]
-pub use types::{Balance, CreatedTransaction, Utxo};
-#[allow(unused_imports)]
 pub use specs::AnchorRef;
-
+#[allow(unused_imports)]
+pub use types::{Balance, CreatedTransaction, Utxo};

@@ -34,12 +34,13 @@ impl CanvasManager {
         let y_max = y_min + pixels_per_tile as i32;
 
         // Get pixels from database
-        let pixels = self.db.get_region_pixels(x_min, y_min, x_max, y_max).await?;
+        let pixels = self
+            .db
+            .get_region_pixels(x_min, y_min, x_max, y_max)
+            .await?;
 
         // Create image
-        let mut img: RgbImage = ImageBuffer::from_fn(TILE_SIZE, TILE_SIZE, |_, _| {
-            Rgb(BG_COLOR)
-        });
+        let mut img: RgbImage = ImageBuffer::from_fn(TILE_SIZE, TILE_SIZE, |_, _| Rgb(BG_COLOR));
 
         // Scale factor (canvas pixels to tile pixels)
         let scale = TILE_SIZE as f32 / pixels_per_tile as f32;
@@ -92,9 +93,7 @@ impl CanvasManager {
         let pixels = self.db.get_region_pixels(x, y, x_max, y_max).await?;
 
         // Create image
-        let mut img: RgbImage = ImageBuffer::from_fn(width, height, |_, _| {
-            Rgb(BG_COLOR)
-        });
+        let mut img: RgbImage = ImageBuffer::from_fn(width, height, |_, _| Rgb(BG_COLOR));
 
         // Draw pixels
         for (px, py, r, g, b) in pixels {
@@ -108,12 +107,7 @@ impl CanvasManager {
         // Encode to PNG
         let mut buffer = Vec::new();
         let encoder = PngEncoder::new(&mut buffer);
-        encoder.write_image(
-            img.as_raw(),
-            width,
-            height,
-            image::ExtendedColorType::Rgb8,
-        )?;
+        encoder.write_image(img.as_raw(), width, height, image::ExtendedColorType::Rgb8)?;
 
         Ok(buffer)
     }
@@ -128,9 +122,7 @@ impl CanvasManager {
         let pixels = self.db.get_all_pixels().await?;
 
         // Create image
-        let mut img: RgbImage = ImageBuffer::from_fn(width, height, |_, _| {
-            Rgb(BG_COLOR)
-        });
+        let mut img: RgbImage = ImageBuffer::from_fn(width, height, |_, _| Rgb(BG_COLOR));
 
         // Draw scaled pixels
         for (px, py, r, g, b) in pixels {
@@ -144,12 +136,7 @@ impl CanvasManager {
         // Encode to PNG
         let mut buffer = Vec::new();
         let encoder = PngEncoder::new(&mut buffer);
-        encoder.write_image(
-            img.as_raw(),
-            width,
-            height,
-            image::ExtendedColorType::Rgb8,
-        )?;
+        encoder.write_image(img.as_raw(), width, height, image::ExtendedColorType::Rgb8)?;
 
         Ok(buffer)
     }
@@ -174,4 +161,3 @@ impl CanvasManager {
         Ok(data)
     }
 }
-

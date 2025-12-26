@@ -30,4 +30,3 @@ impl Anchor {
         self.txid_prefix == prefix
     }
 }
-

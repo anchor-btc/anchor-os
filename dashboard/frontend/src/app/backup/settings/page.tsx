@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
+import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import {
   HardDrive,
   Cloud,
@@ -19,16 +19,16 @@ import {
   RefreshCw,
   FolderOpen,
   Settings,
-} from "lucide-react";
+} from 'lucide-react';
 
 // Import DS components
-import { PageHeader, ActionButton } from "@/components/ds";
+import { PageHeader, ActionButton } from '@/components/ds';
 
-const BACKUP_API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8010";
+const BACKUP_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8010';
 
 interface StorageTarget {
   name: string;
-  storage_type: "local" | "s3" | "smb";
+  storage_type: 'local' | 's3' | 'smb';
   configured: boolean;
   total_bytes: number | null;
   used_bytes: number | null;
@@ -77,15 +77,15 @@ interface LocalFilesResponse {
 }
 
 function formatBytes(bytes: number | null): string {
-  if (bytes === null || bytes === 0) return "0 B";
+  if (bytes === null || bytes === 0) return '0 B';
   const k = 1024;
-  const sizes = ["B", "KB", "MB", "GB", "TB"];
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
 function formatDate(dateStr: string | null): string {
-  if (!dateStr) return "-";
+  if (!dateStr) return '-';
   return new Date(dateStr).toLocaleString();
 }
 
@@ -94,36 +94,40 @@ export default function BackupSettingsPage() {
   const queryClient = useQueryClient();
 
   const { data: settings, isLoading: settingsLoading } = useQuery<BackupSettings>({
-    queryKey: ["backup-settings"],
+    queryKey: ['backup-settings'],
     queryFn: async () => {
       const res = await fetch(`${BACKUP_API_URL}/backup/settings`);
-      if (!res.ok) throw new Error("Failed to fetch settings");
+      if (!res.ok) throw new Error('Failed to fetch settings');
       return res.json();
     },
   });
 
   const { data: targets } = useQuery<{ targets: StorageTarget[] }>({
-    queryKey: ["backup-targets"],
+    queryKey: ['backup-targets'],
     queryFn: async () => {
       const res = await fetch(`${BACKUP_API_URL}/backup/targets`);
-      if (!res.ok) throw new Error("Failed to fetch targets");
+      if (!res.ok) throw new Error('Failed to fetch targets');
       return res.json();
     },
   });
 
-  const { data: localFiles, isLoading: filesLoading, refetch: refetchFiles } = useQuery<LocalFilesResponse>({
-    queryKey: ["backup-local-files"],
+  const {
+    data: localFiles,
+    isLoading: filesLoading,
+    refetch: refetchFiles,
+  } = useQuery<LocalFilesResponse>({
+    queryKey: ['backup-local-files'],
     queryFn: async () => {
       const res = await fetch(`${BACKUP_API_URL}/backup/local/files`);
-      if (!res.ok) throw new Error("Failed to fetch files");
+      if (!res.ok) throw new Error('Failed to fetch files');
       return res.json();
     },
   });
 
   const [schedule, setSchedule] = useState({
     enabled: false,
-    cron_expression: "0 3 * * *",
-    target: "local",
+    cron_expression: '0 3 * * *',
+    target: 'local',
     include_databases: true,
     include_volumes: true,
     retention_days: 30,
@@ -131,19 +135,19 @@ export default function BackupSettingsPage() {
   });
 
   const [s3Config, setS3Config] = useState({
-    endpoint: "",
-    bucket: "",
-    access_key: "",
-    secret_key: "",
-    region: "us-east-1",
+    endpoint: '',
+    bucket: '',
+    access_key: '',
+    secret_key: '',
+    region: 'us-east-1',
   });
 
   const [smbConfig, setSmbConfig] = useState({
-    host: "",
-    share: "",
-    username: "",
-    password: "",
-    mount_point: "/mnt/nas",
+    host: '',
+    share: '',
+    username: '',
+    password: '',
+    mount_point: '/mnt/nas',
   });
 
   // Update state when settings are loaded
@@ -158,30 +162,30 @@ export default function BackupSettingsPage() {
   const saveSettings = useMutation({
     mutationFn: async () => {
       const res = await fetch(`${BACKUP_API_URL}/backup/settings`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           schedule,
           s3: s3Config,
           smb: smbConfig,
         }),
       });
-      if (!res.ok) throw new Error("Failed to save settings");
+      if (!res.ok) throw new Error('Failed to save settings');
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["backup-settings"] });
-      queryClient.invalidateQueries({ queryKey: ["backup-targets"] });
+      queryClient.invalidateQueries({ queryKey: ['backup-settings'] });
+      queryClient.invalidateQueries({ queryKey: ['backup-targets'] });
     },
   });
 
   const schedulePresets = [
-    { labelKey: "backupSettings.dailyAt3AM", value: "0 3 * * *" },
-    { labelKey: "backupSettings.dailyAtMidnight", value: "0 0 * * *" },
-    { labelKey: "backupSettings.every6Hours", value: "0 */6 * * *" },
-    { labelKey: "backupSettings.every12Hours", value: "0 */12 * * *" },
-    { labelKey: "backupSettings.weeklySunday", value: "0 3 * * 0" },
-    { labelKey: "backupSettings.monthlyFirst", value: "0 3 1 * *" },
+    { labelKey: 'backupSettings.dailyAt3AM', value: '0 3 * * *' },
+    { labelKey: 'backupSettings.dailyAtMidnight', value: '0 0 * * *' },
+    { labelKey: 'backupSettings.every6Hours', value: '0 */6 * * *' },
+    { labelKey: 'backupSettings.every12Hours', value: '0 */12 * * *' },
+    { labelKey: 'backupSettings.weeklySunday', value: '0 3 * * 0' },
+    { labelKey: 'backupSettings.monthlyFirst', value: '0 3 1 * *' },
   ];
 
   if (settingsLoading) {
@@ -198,8 +202,8 @@ export default function BackupSettingsPage() {
       <PageHeader
         icon={Settings}
         iconColor="blue"
-        title={t("backupSettings.title")}
-        subtitle={t("backupSettings.subtitle")}
+        title={t('backupSettings.title')}
+        subtitle={t('backupSettings.subtitle')}
         backHref="/backup"
       />
 
@@ -212,16 +216,16 @@ export default function BackupSettingsPage() {
             </div>
             <div>
               <h2 className="text-lg font-semibold text-foreground">
-                {t("backupSettings.localStorage")}
+                {t('backupSettings.localStorage')}
               </h2>
               <p className="text-sm text-muted-foreground font-mono">
-                {localFiles?.host_path || localFiles?.path || "/backups"}
+                {localFiles?.host_path || localFiles?.path || '/backups'}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">
-              {t("backupSettings.total")}: {formatBytes(localFiles?.total_size || 0)}
+              {t('backupSettings.total')}: {formatBytes(localFiles?.total_size || 0)}
             </span>
             {localFiles?.host_path && (
               <button
@@ -230,17 +234,19 @@ export default function BackupSettingsPage() {
                   window.open(`file://${localFiles.host_path}`, '_blank');
                 }}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary/20 rounded-lg text-sm font-medium transition-colors"
-                title={t("backupSettings.openFolder")}
+                title={t('backupSettings.openFolder')}
               >
                 <FolderOpen className="w-4 h-4" />
-                {t("backupSettings.openFolder")}
+                {t('backupSettings.openFolder')}
               </button>
             )}
             <button
               onClick={() => refetchFiles()}
               className="p-2 hover:bg-muted rounded-lg transition-colors"
             >
-              <RefreshCw className={`w-4 h-4 text-muted-foreground ${filesLoading ? 'animate-spin' : ''}`} />
+              <RefreshCw
+                className={`w-4 h-4 text-muted-foreground ${filesLoading ? 'animate-spin' : ''}`}
+              />
             </button>
           </div>
         </div>
@@ -249,9 +255,15 @@ export default function BackupSettingsPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-border bg-muted/50">
-                <th className="text-left p-3 text-sm font-medium text-muted-foreground">{t("backupSettings.name")}</th>
-                <th className="text-left p-3 text-sm font-medium text-muted-foreground">{t("backupSettings.size")}</th>
-                <th className="text-left p-3 text-sm font-medium text-muted-foreground">{t("backupSettings.modified")}</th>
+                <th className="text-left p-3 text-sm font-medium text-muted-foreground">
+                  {t('backupSettings.name')}
+                </th>
+                <th className="text-left p-3 text-sm font-medium text-muted-foreground">
+                  {t('backupSettings.size')}
+                </th>
+                <th className="text-left p-3 text-sm font-medium text-muted-foreground">
+                  {t('backupSettings.modified')}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -263,7 +275,10 @@ export default function BackupSettingsPage() {
                 </tr>
               ) : localFiles?.files && localFiles.files.length > 0 ? (
                 localFiles.files.map((file) => (
-                  <tr key={file.path} className="border-b border-border last:border-0 hover:bg-muted/30">
+                  <tr
+                    key={file.path}
+                    className="border-b border-border last:border-0 hover:bg-muted/30"
+                  >
                     <td className="p-3">
                       <div className="flex items-center gap-2">
                         {file.is_dir ? (
@@ -275,17 +290,21 @@ export default function BackupSettingsPage() {
                       </div>
                     </td>
                     <td className="p-3">
-                      <span className="text-sm text-muted-foreground">{formatBytes(file.size)}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {formatBytes(file.size)}
+                      </span>
                     </td>
                     <td className="p-3">
-                      <span className="text-sm text-muted-foreground">{formatDate(file.modified)}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {formatDate(file.modified)}
+                      </span>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
                   <td colSpan={3} className="p-8 text-center text-muted-foreground">
-                    {t("backupSettings.noBackupFiles")}
+                    {t('backupSettings.noBackupFiles')}
                   </td>
                 </tr>
               )}
@@ -302,11 +321,9 @@ export default function BackupSettingsPage() {
           </div>
           <div>
             <h2 className="text-lg font-semibold text-foreground">
-              {t("backupSettings.automaticBackups")}
+              {t('backupSettings.automaticBackups')}
             </h2>
-            <p className="text-sm text-muted-foreground">
-              {t("backupSettings.scheduleBackups")}
-            </p>
+            <p className="text-sm text-muted-foreground">{t('backupSettings.scheduleBackups')}</p>
           </div>
         </div>
 
@@ -314,19 +331,17 @@ export default function BackupSettingsPage() {
           {/* Enable toggle */}
           <div className="flex items-center justify-between">
             <label className="text-sm font-medium text-foreground">
-              {t("backupSettings.enableScheduled")}
+              {t('backupSettings.enableScheduled')}
             </label>
             <button
-              onClick={() =>
-                setSchedule((s) => ({ ...s, enabled: !s.enabled }))
-              }
+              onClick={() => setSchedule((s) => ({ ...s, enabled: !s.enabled }))}
               className={`relative w-11 h-6 rounded-full transition-colors ${
-                schedule.enabled ? "bg-primary" : "bg-muted"
+                schedule.enabled ? 'bg-primary' : 'bg-muted'
               }`}
             >
               <span
                 className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
-                  schedule.enabled ? "left-6" : "left-1"
+                  schedule.enabled ? 'left-6' : 'left-1'
                 }`}
               />
             </button>
@@ -335,13 +350,11 @@ export default function BackupSettingsPage() {
           {/* Schedule preset */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              {t("backupSettings.schedule")}
+              {t('backupSettings.schedule')}
             </label>
             <select
               value={schedule.cron_expression}
-              onChange={(e) =>
-                setSchedule((s) => ({ ...s, cron_expression: e.target.value }))
-              }
+              onChange={(e) => setSchedule((s) => ({ ...s, cron_expression: e.target.value }))}
               className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground"
             >
               {schedulePresets.map((preset) => (
@@ -355,18 +368,16 @@ export default function BackupSettingsPage() {
           {/* Target */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              {t("backupSettings.backupTarget")}
+              {t('backupSettings.backupTarget')}
             </label>
             <select
               value={schedule.target}
-              onChange={(e) =>
-                setSchedule((s) => ({ ...s, target: e.target.value }))
-              }
+              onChange={(e) => setSchedule((s) => ({ ...s, target: e.target.value }))}
               className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground"
             >
-              <option value="local">{t("backupSettings.localStorageOption")}</option>
-              <option value="s3">{t("backupSettings.amazonS3")}</option>
-              <option value="smb">{t("backupSettings.nasSMB")}</option>
+              <option value="local">{t('backupSettings.localStorageOption')}</option>
+              <option value="s3">{t('backupSettings.amazonS3')}</option>
+              <option value="smb">{t('backupSettings.nasSMB')}</option>
             </select>
           </div>
 
@@ -385,7 +396,7 @@ export default function BackupSettingsPage() {
                 className="w-4 h-4 rounded border-border"
               />
               <Database className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm text-foreground">{t("backupSettings.databases")}</span>
+              <span className="text-sm text-foreground">{t('backupSettings.databases')}</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input
@@ -400,7 +411,7 @@ export default function BackupSettingsPage() {
                 className="w-4 h-4 rounded border-border"
               />
               <FolderArchive className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm text-foreground">{t("backupSettings.dockerVolumes")}</span>
+              <span className="text-sm text-foreground">{t('backupSettings.dockerVolumes')}</span>
             </label>
           </div>
 
@@ -408,7 +419,7 @@ export default function BackupSettingsPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                {t("backupSettings.keepBackupsDays")}
+                {t('backupSettings.keepBackupsDays')}
               </label>
               <input
                 type="number"
@@ -424,7 +435,7 @@ export default function BackupSettingsPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                {t("backupSettings.keepLastN")}
+                {t('backupSettings.keepLastN')}
               </label>
               <input
                 type="number"
@@ -449,20 +460,16 @@ export default function BackupSettingsPage() {
             <Cloud className="w-5 h-5" />
           </div>
           <div className="flex-1">
-            <h2 className="text-lg font-semibold text-foreground">
-              {t("backupSettings.s3Title")}
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              {t("backupSettings.s3Subtitle")}
-            </p>
+            <h2 className="text-lg font-semibold text-foreground">{t('backupSettings.s3Title')}</h2>
+            <p className="text-sm text-muted-foreground">{t('backupSettings.s3Subtitle')}</p>
           </div>
-          {targets?.targets?.find((tgt) => tgt.storage_type === "s3")?.configured ? (
+          {targets?.targets?.find((tgt) => tgt.storage_type === 's3')?.configured ? (
             <span className="flex items-center gap-1 text-sm text-green-500">
-              <Check className="w-4 h-4" /> {t("backupSettings.configured")}
+              <Check className="w-4 h-4" /> {t('backupSettings.configured')}
             </span>
           ) : (
             <span className="flex items-center gap-1 text-sm text-muted-foreground">
-              <X className="w-4 h-4" /> {t("backupSettings.notConfigured")}
+              <X className="w-4 h-4" /> {t('backupSettings.notConfigured')}
             </span>
           )}
         </div>
@@ -470,56 +477,48 @@ export default function BackupSettingsPage() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              {t("backupSettings.endpointURL")}
+              {t('backupSettings.endpointURL')}
             </label>
             <input
               type="text"
               value={s3Config.endpoint}
-              onChange={(e) =>
-                setS3Config((s) => ({ ...s, endpoint: e.target.value }))
-              }
+              onChange={(e) => setS3Config((s) => ({ ...s, endpoint: e.target.value }))}
               placeholder="s3.amazonaws.com"
               className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground"
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              {t("backupSettings.bucketName")}
+              {t('backupSettings.bucketName')}
             </label>
             <input
               type="text"
               value={s3Config.bucket}
-              onChange={(e) =>
-                setS3Config((s) => ({ ...s, bucket: e.target.value }))
-              }
+              onChange={(e) => setS3Config((s) => ({ ...s, bucket: e.target.value }))}
               placeholder="my-backup-bucket"
               className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground"
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              {t("backupSettings.accessKeyID")}
+              {t('backupSettings.accessKeyID')}
             </label>
             <input
               type="text"
               value={s3Config.access_key}
-              onChange={(e) =>
-                setS3Config((s) => ({ ...s, access_key: e.target.value }))
-              }
+              onChange={(e) => setS3Config((s) => ({ ...s, access_key: e.target.value }))}
               placeholder="AKIA..."
               className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground"
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              {t("backupSettings.secretAccessKey")}
+              {t('backupSettings.secretAccessKey')}
             </label>
             <input
               type="password"
               value={s3Config.secret_key}
-              onChange={(e) =>
-                setS3Config((s) => ({ ...s, secret_key: e.target.value }))
-              }
+              onChange={(e) => setS3Config((s) => ({ ...s, secret_key: e.target.value }))}
               placeholder="••••••••"
               className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground"
             />
@@ -535,19 +534,17 @@ export default function BackupSettingsPage() {
           </div>
           <div className="flex-1">
             <h2 className="text-lg font-semibold text-foreground">
-              {t("backupSettings.smbTitle")}
+              {t('backupSettings.smbTitle')}
             </h2>
-            <p className="text-sm text-muted-foreground">
-              {t("backupSettings.smbSubtitle")}
-            </p>
+            <p className="text-sm text-muted-foreground">{t('backupSettings.smbSubtitle')}</p>
           </div>
-          {targets?.targets?.find((tgt) => tgt.storage_type === "smb")?.configured ? (
+          {targets?.targets?.find((tgt) => tgt.storage_type === 'smb')?.configured ? (
             <span className="flex items-center gap-1 text-sm text-green-500">
-              <Check className="w-4 h-4" /> {t("backupSettings.configured")}
+              <Check className="w-4 h-4" /> {t('backupSettings.configured')}
             </span>
           ) : (
             <span className="flex items-center gap-1 text-sm text-muted-foreground">
-              <X className="w-4 h-4" /> {t("backupSettings.notConfigured")}
+              <X className="w-4 h-4" /> {t('backupSettings.notConfigured')}
             </span>
           )}
         </div>
@@ -555,56 +552,48 @@ export default function BackupSettingsPage() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              {t("backupSettings.hostIP")}
+              {t('backupSettings.hostIP')}
             </label>
             <input
               type="text"
               value={smbConfig.host}
-              onChange={(e) =>
-                setSmbConfig((s) => ({ ...s, host: e.target.value }))
-              }
+              onChange={(e) => setSmbConfig((s) => ({ ...s, host: e.target.value }))}
               placeholder="192.168.1.100"
               className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground"
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              {t("backupSettings.shareName")}
+              {t('backupSettings.shareName')}
             </label>
             <input
               type="text"
               value={smbConfig.share}
-              onChange={(e) =>
-                setSmbConfig((s) => ({ ...s, share: e.target.value }))
-              }
+              onChange={(e) => setSmbConfig((s) => ({ ...s, share: e.target.value }))}
               placeholder="backups"
               className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground"
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              {t("backupSettings.username")}
+              {t('backupSettings.username')}
             </label>
             <input
               type="text"
               value={smbConfig.username}
-              onChange={(e) =>
-                setSmbConfig((s) => ({ ...s, username: e.target.value }))
-              }
+              onChange={(e) => setSmbConfig((s) => ({ ...s, username: e.target.value }))}
               placeholder="admin"
               className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground"
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
-              {t("backupSettings.password")}
+              {t('backupSettings.password')}
             </label>
             <input
               type="password"
               value={smbConfig.password}
-              onChange={(e) =>
-                setSmbConfig((s) => ({ ...s, password: e.target.value }))
-              }
+              onChange={(e) => setSmbConfig((s) => ({ ...s, password: e.target.value }))}
               placeholder="••••••••"
               className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground"
             />
@@ -617,7 +606,7 @@ export default function BackupSettingsPage() {
         {saveSettings.isSuccess && (
           <span className="flex items-center gap-2 text-sm text-green-500">
             <Check className="w-4 h-4" />
-            {t("backupSettings.settingsSaved")}
+            {t('backupSettings.settingsSaved')}
           </span>
         )}
         <ActionButton
@@ -625,7 +614,7 @@ export default function BackupSettingsPage() {
           loading={saveSettings.isPending}
           onClick={() => saveSettings.mutate()}
           icon={Save}
-          label={t("backupSettings.saveSettings")}
+          label={t('backupSettings.saveSettings')}
         />
       </div>
     </div>

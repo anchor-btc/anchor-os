@@ -1,16 +1,11 @@
-"use client";
+'use client';
 
-import { useState, useRef, useCallback } from "react";
-import ReactCrop, {
-  Crop,
-  PixelCrop,
-  centerCrop,
-  makeAspectCrop,
-} from "react-image-crop";
-import "react-image-crop/dist/ReactCrop.css";
-import { useTranslation } from "react-i18next";
-import { X, Check, RotateCcw, ZoomIn, ZoomOut } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useState, useRef, useCallback } from 'react';
+import ReactCrop, { Crop, PixelCrop, centerCrop, makeAspectCrop } from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
+import { useTranslation } from 'react-i18next';
+import { X, Check, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface ImageCropperProps {
   imageSrc: string;
@@ -18,15 +13,11 @@ interface ImageCropperProps {
   onCancel: () => void;
 }
 
-function centerAspectCrop(
-  mediaWidth: number,
-  mediaHeight: number,
-  aspect: number
-): Crop {
+function centerAspectCrop(mediaWidth: number, mediaHeight: number, aspect: number): Crop {
   return centerCrop(
     makeAspectCrop(
       {
-        unit: "%",
+        unit: '%',
         width: 90,
       },
       aspect,
@@ -38,31 +29,24 @@ function centerAspectCrop(
   );
 }
 
-export function ImageCropper({
-  imageSrc,
-  onCropComplete,
-  onCancel,
-}: ImageCropperProps) {
+export function ImageCropper({ imageSrc, onCropComplete, onCancel }: ImageCropperProps) {
   const { t } = useTranslation();
   const imgRef = useRef<HTMLImageElement>(null);
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
   const [scale, setScale] = useState(1);
 
-  const onImageLoad = useCallback(
-    (e: React.SyntheticEvent<HTMLImageElement>) => {
-      const { width, height } = e.currentTarget;
-      setCrop(centerAspectCrop(width, height, 1));
-    },
-    []
-  );
+  const onImageLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
+    const { width, height } = e.currentTarget;
+    setCrop(centerAspectCrop(width, height, 1));
+  }, []);
 
   const getCroppedImg = useCallback(async () => {
     if (!imgRef.current || !completedCrop) return;
 
     const image = imgRef.current;
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
     const scaleX = image.naturalWidth / image.width;
@@ -93,7 +77,7 @@ export function ImageCropper({
     );
 
     // Convert to base64
-    const base64 = canvas.toDataURL("image/png", 0.9);
+    const base64 = canvas.toDataURL('image/png', 0.9);
     onCropComplete(base64);
   }, [completedCrop, onCropComplete]);
 
@@ -110,18 +94,15 @@ export function ImageCropper({
       <div className="bg-card border border-border rounded-2xl p-6 max-w-lg w-full mx-4 shadow-2xl">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-foreground">
-            {t("profile.cropImage", "Crop your photo")}
+            {t('profile.cropImage', 'Crop your photo')}
           </h3>
-          <button
-            onClick={onCancel}
-            className="p-2 hover:bg-muted rounded-lg transition-colors"
-          >
+          <button onClick={onCancel} className="p-2 hover:bg-muted rounded-lg transition-colors">
             <X className="w-5 h-5 text-muted-foreground" />
           </button>
         </div>
 
         <p className="text-sm text-muted-foreground mb-4">
-          {t("profile.cropHint", "Drag to adjust the crop area for your profile picture")}
+          {t('profile.cropHint', 'Drag to adjust the crop area for your profile picture')}
         </p>
 
         {/* Crop Area */}
@@ -179,13 +160,13 @@ export function ImageCropper({
         {/* Preview */}
         <div className="flex items-center justify-center gap-4 mt-4 p-4 bg-muted/50 rounded-xl">
           <div className="text-center">
-            <p className="text-xs text-muted-foreground mb-2">{t("profile.preview", "Preview")}</p>
+            <p className="text-xs text-muted-foreground mb-2">{t('profile.preview', 'Preview')}</p>
             <div className="w-16 h-16 rounded-full overflow-hidden bg-gradient-to-br from-primary/20 to-orange-500/20 border-2 border-primary/20 mx-auto">
               {completedCrop && imgRef.current && (
                 <canvas
                   id="preview-canvas"
                   className="w-full h-full object-cover"
-                  style={{ display: "none" }}
+                  style={{ display: 'none' }}
                 />
               )}
               <img
@@ -195,10 +176,10 @@ export function ImageCropper({
                 style={{
                   objectPosition: completedCrop
                     ? `${-completedCrop.x * (64 / completedCrop.width)}px ${-completedCrop.y * (64 / completedCrop.height)}px`
-                    : "center",
+                    : 'center',
                   transform: completedCrop
-                    ? `scale(${(imgRef.current?.width || 64) / completedCrop.width * (64 / (imgRef.current?.width || 64))})`
-                    : "none",
+                    ? `scale(${((imgRef.current?.width || 64) / completedCrop.width) * (64 / (imgRef.current?.width || 64))})`
+                    : 'none',
                 }}
               />
             </div>
@@ -211,19 +192,19 @@ export function ImageCropper({
             onClick={onCancel}
             className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
           >
-            {t("common.cancel", "Cancel")}
+            {t('common.cancel', 'Cancel')}
           </button>
           <button
             onClick={getCroppedImg}
             disabled={!completedCrop}
             className={cn(
-              "px-4 py-2 text-sm font-medium rounded-lg flex items-center gap-2 transition-colors",
-              "bg-primary text-primary-foreground hover:opacity-90",
-              "disabled:opacity-50 disabled:cursor-not-allowed"
+              'px-4 py-2 text-sm font-medium rounded-lg flex items-center gap-2 transition-colors',
+              'bg-primary text-primary-foreground hover:opacity-90',
+              'disabled:opacity-50 disabled:cursor-not-allowed'
             )}
           >
             <Check className="w-4 h-4" />
-            {t("profile.applyCrop", "Apply")}
+            {t('profile.applyCrop', 'Apply')}
           </button>
         </div>
       </div>

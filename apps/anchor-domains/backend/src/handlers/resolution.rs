@@ -30,24 +30,31 @@ pub async fn resolve_domain(
     Path(name): Path<String>,
 ) -> AppResult<Json<ResolveResponse>> {
     // Check if it's a txid prefix lookup (16 hex chars, optionally with TLD suffix)
-    let clean_name = SUPPORTED_TLDS.iter()
+    let clean_name = SUPPORTED_TLDS
+        .iter()
         .find(|tld| name.ends_with(*tld))
         .map(|tld| &name[..name.len() - tld.len()])
         .unwrap_or(&name);
-    
+
     if is_txid_prefix(clean_name) {
         // Resolve by txid prefix
-        let response = state.db.resolve_by_txid_prefix(clean_name).await?
+        let response = state
+            .db
+            .resolve_by_txid_prefix(clean_name)
+            .await?
             .ok_or_else(|| AppError::not_found("Domain not found"))?;
         return Ok(Json(response));
     }
-    
+
     // Validate domain name - must already include a supported TLD
     validate_domain_name(&name)?;
 
-    let response = state.db.resolve_by_name(&name).await?
+    let response = state
+        .db
+        .resolve_by_name(&name)
+        .await?
         .ok_or_else(|| AppError::not_found("Domain not found"))?;
-    
+
     Ok(Json(response))
 }
 
@@ -71,9 +78,11 @@ pub async fn resolve_by_txid(
 ) -> AppResult<Json<ResolveResponse>> {
     validate_txid_prefix(&prefix)?;
 
-    let response = state.db.resolve_by_txid_prefix(&prefix).await?
+    let response = state
+        .db
+        .resolve_by_txid_prefix(&prefix)
+        .await?
         .ok_or_else(|| AppError::not_found("Domain not found"))?;
-    
+
     Ok(Json(response))
 }
-

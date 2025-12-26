@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   X,
   MapPin,
@@ -19,10 +19,18 @@ import {
   Zap,
   Gem,
   Stamp,
-} from "lucide-react";
-import { CATEGORIES, CARRIERS, createMarker, mineBlocks, truncateTxid, getExplorerTxUrl, type CreateMarkerResponse } from "@/lib/api";
-import { fitsInOpReturn, maxOpReturnMessageLength } from "@/lib/marker-encoder";
-import { clsx } from "clsx";
+} from 'lucide-react';
+import {
+  CATEGORIES,
+  CARRIERS,
+  createMarker,
+  mineBlocks,
+  truncateTxid,
+  getExplorerTxUrl,
+  type CreateMarkerResponse,
+} from '@/lib/api';
+import { fitsInOpReturn, maxOpReturnMessageLength } from '@/lib/marker-encoder';
+import { clsx } from 'clsx';
 
 interface CreateMarkerPanelProps {
   latitude: number;
@@ -33,18 +41,18 @@ interface CreateMarkerPanelProps {
 }
 
 const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  "map-pin": MapPin,
-  "camera": Camera,
-  "shopping-bag": ShoppingBag,
-  "calendar": Calendar,
-  "alert-triangle": AlertTriangle,
-  "landmark": Landmark,
+  'map-pin': MapPin,
+  camera: Camera,
+  'shopping-bag': ShoppingBag,
+  calendar: Calendar,
+  'alert-triangle': AlertTriangle,
+  landmark: Landmark,
 };
 
 const CARRIER_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  "zap": Zap,
-  "gem": Gem,
-  "stamp": Stamp,
+  zap: Zap,
+  gem: Gem,
+  stamp: Stamp,
 };
 
 export function CreateMarkerPanel({
@@ -56,7 +64,7 @@ export function CreateMarkerPanel({
 }: CreateMarkerPanelProps) {
   const [category, setCategory] = useState(0);
   const [carrier, setCarrier] = useState(0);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState('');
   const [pendingTx, setPendingTx] = useState<CreateMarkerResponse | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
   const queryClient = useQueryClient();
@@ -73,28 +81,28 @@ export function CreateMarkerPanel({
     onSuccess: async (data) => {
       // Show pending state immediately
       setPendingTx(data);
-      
+
       // Notify parent about pending marker
       if (onPending) {
         onPending(data.txid, latitude, longitude, category);
       }
-      
+
       setIsConfirming(true);
-      
+
       // Mine a block to confirm the transaction (regtest only)
       try {
         await mineBlocks(1);
       } catch {
         // Ignore mining errors in non-regtest environments
       }
-      
+
       // Wait for indexer to process
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+
       // Invalidate queries
-      queryClient.invalidateQueries({ queryKey: ["markers"] });
-      queryClient.invalidateQueries({ queryKey: ["stats"] });
-      
+      queryClient.invalidateQueries({ queryKey: ['markers'] });
+      queryClient.invalidateQueries({ queryKey: ['stats'] });
+
       setIsConfirming(false);
       onSuccess();
     },
@@ -111,24 +119,24 @@ export function CreateMarkerPanel({
 
   // Show pending state after transaction is broadcast
   if (pendingTx) {
-    const selectedCategory = CATEGORIES.find(c => c.id === category);
-    const CategoryIcon = CATEGORY_ICONS[selectedCategory?.icon || "map-pin"] || MapPin;
-    
+    const selectedCategory = CATEGORIES.find((c) => c.id === category);
+    const CategoryIcon = CATEGORY_ICONS[selectedCategory?.icon || 'map-pin'] || MapPin;
+
     return (
       <div className="fixed bottom-10 left-0 right-0 z-[1001] p-4 md:left-auto md:right-4 md:bottom-12 md:w-96">
         <div className="bg-secondary border border-map-border rounded-2xl shadow-2xl animate-slide-up overflow-hidden">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-map-border">
             <div className="flex items-center gap-2">
-              <div 
+              <div
                 className="w-8 h-8 rounded-full flex items-center justify-center animate-pulse"
-                style={{ backgroundColor: selectedCategory?.color || "#f97316" }}
+                style={{ backgroundColor: selectedCategory?.color || '#f97316' }}
               >
                 <CategoryIcon className="w-4 h-4 text-white" />
               </div>
               <div>
                 <h3 className="font-medium text-foreground">
-                  {isConfirming ? "Confirming..." : "Pending Marker"}
+                  {isConfirming ? 'Confirming...' : 'Pending Marker'}
                 </h3>
                 <p className="text-xs text-secondary-foreground">
                   {latitude.toFixed(6)}, {longitude.toFixed(6)}
@@ -167,7 +175,7 @@ export function CreateMarkerPanel({
                   <ExternalLink className="w-3 h-3" />
                 </a>
               </div>
-              
+
               <div className="flex items-center gap-2 text-sm">
                 <Clock className="w-4 h-4 text-yellow-500" />
                 <span className="text-secondary-foreground">Carrier:</span>
@@ -176,12 +184,14 @@ export function CreateMarkerPanel({
             </div>
 
             {/* Status */}
-            <div className={clsx(
-              "flex items-center gap-2 p-3 rounded-lg text-sm",
-              isConfirming 
-                ? "bg-yellow-500/10 border border-yellow-500/20 text-yellow-400"
-                : "bg-green-500/10 border border-green-500/20 text-green-400"
-            )}>
+            <div
+              className={clsx(
+                'flex items-center gap-2 p-3 rounded-lg text-sm',
+                isConfirming
+                  ? 'bg-yellow-500/10 border border-yellow-500/20 text-yellow-400'
+                  : 'bg-green-500/10 border border-green-500/20 text-green-400'
+              )}
+            >
               {isConfirming ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -228,9 +238,7 @@ export function CreateMarkerPanel({
         <div className="p-4 space-y-4">
           {/* Category selection */}
           <div>
-            <label className="text-sm text-secondary-foreground mb-2 block">
-              Category
-            </label>
+            <label className="text-sm text-secondary-foreground mb-2 block">Category</label>
             <div className="grid grid-cols-3 gap-2">
               {CATEGORIES.map((cat) => {
                 const Icon = CATEGORY_ICONS[cat.icon] || MapPin;
@@ -241,10 +249,10 @@ export function CreateMarkerPanel({
                     key={cat.id}
                     onClick={() => setCategory(cat.id)}
                     className={clsx(
-                      "flex flex-col items-center gap-1 p-2 rounded-lg border transition-all",
+                      'flex flex-col items-center gap-1 p-2 rounded-lg border transition-all',
                       isSelected
-                        ? "border-primary bg-primary/10"
-                        : "border-map-border bg-map-bg hover:border-primary/50"
+                        ? 'border-primary bg-primary/10'
+                        : 'border-map-border bg-map-bg hover:border-primary/50'
                     )}
                   >
                     <div
@@ -265,9 +273,7 @@ export function CreateMarkerPanel({
 
           {/* Message input */}
           <div>
-            <label className="text-sm text-secondary-foreground mb-2 block">
-              Message
-            </label>
+            <label className="text-sm text-secondary-foreground mb-2 block">Message</label>
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
@@ -279,21 +285,19 @@ export function CreateMarkerPanel({
             <div className="flex items-center justify-between mt-1">
               <span
                 className={clsx(
-                  "text-xs",
-                  isValidLength || carrier !== 0 ? "text-secondary-foreground" : "text-yellow-500"
+                  'text-xs',
+                  isValidLength || carrier !== 0 ? 'text-secondary-foreground' : 'text-yellow-500'
                 )}
               >
-                {message.length}/{carrier === 0 ? maxLength : "∞"}{" "}
-                {!isValidLength && carrier === 0 && "(exceeds OP_RETURN limit)"}
+                {message.length}/{carrier === 0 ? maxLength : '∞'}{' '}
+                {!isValidLength && carrier === 0 && '(exceeds OP_RETURN limit)'}
               </span>
             </div>
           </div>
 
           {/* Carrier selection */}
           <div>
-            <label className="text-sm text-secondary-foreground mb-2 block">
-              Carrier
-            </label>
+            <label className="text-sm text-secondary-foreground mb-2 block">Carrier</label>
             <div className="grid grid-cols-3 gap-2">
               {CARRIERS.map((car) => {
                 const Icon = CARRIER_ICONS[car.icon] || Zap;
@@ -306,18 +310,20 @@ export function CreateMarkerPanel({
                     onClick={() => !isDisabled && setCarrier(car.id)}
                     disabled={isDisabled}
                     className={clsx(
-                      "flex flex-col items-center gap-1 p-2 rounded-lg border transition-all",
+                      'flex flex-col items-center gap-1 p-2 rounded-lg border transition-all',
                       isSelected
-                        ? "border-primary bg-primary/10"
+                        ? 'border-primary bg-primary/10'
                         : isDisabled
-                        ? "border-map-border bg-map-bg opacity-50 cursor-not-allowed"
-                        : "border-map-border bg-map-bg hover:border-primary/50"
+                          ? 'border-map-border bg-map-bg opacity-50 cursor-not-allowed'
+                          : 'border-map-border bg-map-bg hover:border-primary/50'
                     )}
                   >
-                    <Icon className={clsx(
-                      "w-5 h-5",
-                      isSelected ? "text-primary" : "text-secondary-foreground"
-                    )} />
+                    <Icon
+                      className={clsx(
+                        'w-5 h-5',
+                        isSelected ? 'text-primary' : 'text-secondary-foreground'
+                      )}
+                    />
                     <span className="text-xs text-foreground">{car.name}</span>
                     <span className="text-[10px] text-secondary-foreground">{car.description}</span>
                   </button>
@@ -347,9 +353,7 @@ export function CreateMarkerPanel({
 
           {mutation.isError && (
             <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
-              {mutation.error instanceof Error
-                ? mutation.error.message
-                : "Failed to create marker"}
+              {mutation.error instanceof Error ? mutation.error.message : 'Failed to create marker'}
             </div>
           )}
         </div>
@@ -357,4 +361,3 @@ export function CreateMarkerPanel({
     </div>
   );
 }
-

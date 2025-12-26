@@ -96,9 +96,7 @@ shares_out = YES_pool - new_YES_pool`}</code>
 
         <section className="rounded-xl border border-white/10 bg-white/5 p-6">
           <h2 className="text-xl font-bold text-white mb-4">API Reference</h2>
-          <p className="text-gray-400 mb-4">
-            The Anchor Predictions API is available at:
-          </p>
+          <p className="text-gray-400 mb-4">The Anchor Predictions API is available at:</p>
           <code className="block p-3 rounded-lg bg-black/50 text-amber-300 font-mono text-sm">
             http://localhost:3801/swagger-ui
           </code>

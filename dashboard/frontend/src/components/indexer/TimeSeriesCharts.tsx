@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   LineChart,
   Line,
@@ -13,51 +13,51 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
-} from "recharts";
-import { Loader2, TrendingUp, BarChart3, Layers, Box } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { fetchIndexerTimeseries } from "@/lib/api";
+} from 'recharts';
+import { Loader2, TrendingUp, BarChart3, Layers, Box } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { fetchIndexerTimeseries } from '@/lib/api';
 
 // ============================
 // Shared Types and Constants
 // ============================
 
 const PERIODS = [
-  { id: "hour", label: "Hourly", count: 24 },
-  { id: "day", label: "Daily", count: 30 },
-  { id: "week", label: "Weekly", count: 12 },
+  { id: 'hour', label: 'Hourly', count: 24 },
+  { id: 'day', label: 'Daily', count: 30 },
+  { id: 'week', label: 'Weekly', count: 12 },
 ] as const;
 
-type PeriodType = "hour" | "day" | "week";
+type PeriodType = 'hour' | 'day' | 'week';
 
 const KIND_COLORS: Record<string, string> = {
-  "Text": "#f97316",
-  "Canvas": "#a855f7",
-  "Image": "#ec4899",
-  "Map": "#3b82f6",
-  "DNS": "#06b6d4",
-  "Proof": "#10b981",
-  "Token Deploy": "#f59e0b",
-  "Token Mint": "#f59e0b",
-  "Token Transfer": "#f59e0b",
+  Text: '#f97316',
+  Canvas: '#a855f7',
+  Image: '#ec4899',
+  Map: '#3b82f6',
+  DNS: '#06b6d4',
+  Proof: '#10b981',
+  'Token Deploy': '#f59e0b',
+  'Token Mint': '#f59e0b',
+  'Token Transfer': '#f59e0b',
 };
 
 const CARRIER_COLORS: Record<string, string> = {
-  "OP_RETURN": "#3b82f6",
-  "Inscription": "#f97316",
-  "Stamps": "#ec4899",
-  "Taproot Annex": "#22c55e",
-  "Witness Data": "#a855f7",
+  OP_RETURN: '#3b82f6',
+  Inscription: '#f97316',
+  Stamps: '#ec4899',
+  'Taproot Annex': '#22c55e',
+  'Witness Data': '#a855f7',
 };
 
 // ============================
 // Period Selector Component
 // ============================
-function PeriodSelector({ 
-  period, 
-  onChange 
-}: { 
-  period: PeriodType; 
+function PeriodSelector({
+  period,
+  onChange,
+}: {
+  period: PeriodType;
   onChange: (p: PeriodType) => void;
 }) {
   return (
@@ -67,10 +67,10 @@ function PeriodSelector({
           key={p.id}
           onClick={() => onChange(p.id)}
           className={cn(
-            "px-2.5 py-1 text-xs rounded-md transition-colors",
+            'px-2.5 py-1 text-xs rounded-md transition-colors',
             period === p.id
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted text-muted-foreground hover:bg-muted/80"
+              ? 'bg-primary text-primary-foreground'
+              : 'bg-muted text-muted-foreground hover:bg-muted/80'
           )}
         >
           {p.label}
@@ -84,26 +84,28 @@ function PeriodSelector({
 // 1. Total Messages Chart
 // ============================
 export function TotalMessagesChart() {
-  const [period, setPeriod] = useState<PeriodType>("hour");
+  const [period, setPeriod] = useState<PeriodType>('hour');
   const periodConfig = PERIODS.find((p) => p.id === period)!;
 
   const { data, isLoading } = useQuery({
-    queryKey: ["indexer-timeseries", period, periodConfig.count],
+    queryKey: ['indexer-timeseries', period, periodConfig.count],
     queryFn: () => fetchIndexerTimeseries(period, periodConfig.count),
     refetchInterval: 30000,
   });
 
-  const chartData = data?.points.map((point) => {
-    const date = new Date(point.timestamp);
-    const formattedDate = period === "hour"
-      ? date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-      : date.toLocaleDateString([], { month: "short", day: "numeric" });
+  const chartData =
+    data?.points.map((point) => {
+      const date = new Date(point.timestamp);
+      const formattedDate =
+        period === 'hour'
+          ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          : date.toLocaleDateString([], { month: 'short', day: 'numeric' });
 
-    return {
-      date: formattedDate,
-      total: point.total,
-    };
-  }) || [];
+      return {
+        date: formattedDate,
+        total: point.total,
+      };
+    }) || [];
 
   return (
     <div className="bg-card border border-border rounded-xl p-6">
@@ -144,7 +146,7 @@ export function TotalMessagesChart() {
                 stroke="#ffffff"
                 fontSize={10}
                 tickLine={false}
-                tick={{ fill: "#ffffff" }}
+                tick={{ fill: '#ffffff' }}
                 interval="preserveStartEnd"
               />
               <YAxis
@@ -152,17 +154,17 @@ export function TotalMessagesChart() {
                 fontSize={10}
                 tickLine={false}
                 axisLine={false}
-                tick={{ fill: "#ffffff" }}
+                tick={{ fill: '#ffffff' }}
                 width={40}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: "8px",
-                  fontSize: "12px",
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px',
+                  fontSize: '12px',
                 }}
-                formatter={(value) => [value as number, "Messages"]}
+                formatter={(value) => [value as number, 'Messages']}
               />
               <Area
                 type="monotone"
@@ -183,31 +185,33 @@ export function TotalMessagesChart() {
 // 2. Messages by Kind Chart
 // ============================
 export function MessagesByKindChart() {
-  const [period, setPeriod] = useState<PeriodType>("hour");
+  const [period, setPeriod] = useState<PeriodType>('hour');
   const periodConfig = PERIODS.find((p) => p.id === period)!;
 
   const { data, isLoading } = useQuery({
-    queryKey: ["indexer-timeseries", period, periodConfig.count],
+    queryKey: ['indexer-timeseries', period, periodConfig.count],
     queryFn: () => fetchIndexerTimeseries(period, periodConfig.count),
     refetchInterval: 30000,
   });
 
-  const chartData = data?.points.map((point) => {
-    const date = new Date(point.timestamp);
-    const formattedDate = period === "hour"
-      ? date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-      : date.toLocaleDateString([], { month: "short", day: "numeric" });
+  const chartData =
+    data?.points.map((point) => {
+      const date = new Date(point.timestamp);
+      const formattedDate =
+        period === 'hour'
+          ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          : date.toLocaleDateString([], { month: 'short', day: 'numeric' });
 
-    const result: Record<string, number | string> = {
-      date: formattedDate,
-    };
+      const result: Record<string, number | string> = {
+        date: formattedDate,
+      };
 
-    point.by_kind.forEach((k) => {
-      result[k.kind_name] = k.count;
-    });
+      point.by_kind.forEach((k) => {
+        result[k.kind_name] = k.count;
+      });
 
-    return result;
-  }) || [];
+      return result;
+    }) || [];
 
   // Get unique kinds from data
   const uniqueKinds = new Set<string>();
@@ -248,7 +252,7 @@ export function MessagesByKindChart() {
                 stroke="#ffffff"
                 fontSize={10}
                 tickLine={false}
-                tick={{ fill: "#ffffff" }}
+                tick={{ fill: '#ffffff' }}
                 interval="preserveStartEnd"
               />
               <YAxis
@@ -256,30 +260,26 @@ export function MessagesByKindChart() {
                 fontSize={10}
                 tickLine={false}
                 axisLine={false}
-                tick={{ fill: "#ffffff" }}
+                tick={{ fill: '#ffffff' }}
                 width={40}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: "8px",
-                  fontSize: "12px",
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px',
+                  fontSize: '12px',
                 }}
               />
-              <Legend 
-                wrapperStyle={{ fontSize: "11px" }}
-                iconType="circle"
-                iconSize={8}
-              />
+              <Legend wrapperStyle={{ fontSize: '11px' }} iconType="circle" iconSize={8} />
               {Array.from(uniqueKinds).map((kind) => (
                 <Area
                   key={kind}
                   type="monotone"
                   dataKey={kind}
                   stackId="1"
-                  stroke={KIND_COLORS[kind] || "#6b7280"}
-                  fill={KIND_COLORS[kind] || "#6b7280"}
+                  stroke={KIND_COLORS[kind] || '#6b7280'}
+                  fill={KIND_COLORS[kind] || '#6b7280'}
                   fillOpacity={0.6}
                 />
               ))}
@@ -295,31 +295,33 @@ export function MessagesByKindChart() {
 // 3. Messages by Carrier Chart
 // ============================
 export function MessagesByCarrierChart() {
-  const [period, setPeriod] = useState<PeriodType>("hour");
+  const [period, setPeriod] = useState<PeriodType>('hour');
   const periodConfig = PERIODS.find((p) => p.id === period)!;
 
   const { data, isLoading } = useQuery({
-    queryKey: ["indexer-timeseries", period, periodConfig.count],
+    queryKey: ['indexer-timeseries', period, periodConfig.count],
     queryFn: () => fetchIndexerTimeseries(period, periodConfig.count),
     refetchInterval: 30000,
   });
 
-  const chartData = data?.points.map((point) => {
-    const date = new Date(point.timestamp);
-    const formattedDate = period === "hour"
-      ? date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-      : date.toLocaleDateString([], { month: "short", day: "numeric" });
+  const chartData =
+    data?.points.map((point) => {
+      const date = new Date(point.timestamp);
+      const formattedDate =
+        period === 'hour'
+          ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          : date.toLocaleDateString([], { month: 'short', day: 'numeric' });
 
-    const result: Record<string, number | string> = {
-      date: formattedDate,
-    };
+      const result: Record<string, number | string> = {
+        date: formattedDate,
+      };
 
-    point.by_carrier.forEach((c) => {
-      result[c.carrier_name] = c.count;
-    });
+      point.by_carrier.forEach((c) => {
+        result[c.carrier_name] = c.count;
+      });
 
-    return result;
-  }) || [];
+      return result;
+    }) || [];
 
   // Get unique carriers from data
   const uniqueCarriers = new Set<string>();
@@ -360,7 +362,7 @@ export function MessagesByCarrierChart() {
                 stroke="#ffffff"
                 fontSize={10}
                 tickLine={false}
-                tick={{ fill: "#ffffff" }}
+                tick={{ fill: '#ffffff' }}
                 interval="preserveStartEnd"
               />
               <YAxis
@@ -368,28 +370,24 @@ export function MessagesByCarrierChart() {
                 fontSize={10}
                 tickLine={false}
                 axisLine={false}
-                tick={{ fill: "#ffffff" }}
+                tick={{ fill: '#ffffff' }}
                 width={40}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: "8px",
-                  fontSize: "12px",
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px',
+                  fontSize: '12px',
                 }}
               />
-              <Legend 
-                wrapperStyle={{ fontSize: "11px" }}
-                iconType="line"
-                iconSize={12}
-              />
+              <Legend wrapperStyle={{ fontSize: '11px' }} iconType="line" iconSize={12} />
               {Array.from(uniqueCarriers).map((carrier) => (
                 <Line
                   key={carrier}
                   type="monotone"
                   dataKey={carrier}
-                  stroke={CARRIER_COLORS[carrier] || "#6b7280"}
+                  stroke={CARRIER_COLORS[carrier] || '#6b7280'}
                   strokeWidth={2}
                   dot={false}
                 />
@@ -418,4 +416,3 @@ export function TimeSeriesCharts() {
     </div>
   );
 }
-

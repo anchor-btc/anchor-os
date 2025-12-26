@@ -5,7 +5,7 @@ use chrono::{DateTime, Utc};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tokio_cron_scheduler::{Job, JobScheduler};
-use tracing::{info, error};
+use tracing::{error, info};
 use uuid::Uuid;
 
 use crate::backup::engine::{BackupEngine, BackupJob, BackupStatus, BackupTarget, BackupType};
@@ -21,19 +21,19 @@ pub struct BackupScheduler {
 impl BackupScheduler {
     pub async fn new() -> Result<Self> {
         let scheduler = JobScheduler::new().await?;
-        
+
         Ok(Self {
             scheduler,
             current_job_uuid: RwLock::new(None),
         })
     }
-    
+
     pub async fn start(&self) -> Result<()> {
         self.scheduler.start().await?;
         info!("Backup scheduler started");
         Ok(())
     }
-    
+
     pub async fn update_schedule(
         &self,
         settings: &BackupSettings,
@@ -45,13 +45,13 @@ impl BackupScheduler {
         if let Some(uuid) = self.current_job_uuid.read().await.as_ref() {
             let _ = self.scheduler.remove(uuid).await;
         }
-        
+
         if !settings.schedule.enabled {
             info!("Scheduled backups disabled");
             *self.current_job_uuid.write().await = None;
             return Ok(());
         }
-        
+
         let cron_expr = &settings.schedule.cron_expression;
         let target = match settings.schedule.target.as_str() {
             "s3" => BackupTarget::S3,
@@ -60,20 +60,20 @@ impl BackupScheduler {
         };
         let include_dbs = settings.schedule.include_databases;
         let include_vols = settings.schedule.include_volumes;
-        
+
         let config_clone = config.clone();
         let history_clone = job_history.clone();
         let current_clone = current_job.clone();
-        
+
         let job = Job::new_async(cron_expr, move |_uuid, _lock| {
             let config = config_clone.clone();
             let target = target.clone();
             let history = history_clone.clone();
             let current = current_clone.clone();
-            
+
             Box::pin(async move {
                 info!("Scheduled backup triggered");
-                
+
                 // Check if backup is already running
                 {
                     let curr = current.read().await;
@@ -82,7 +82,7 @@ impl BackupScheduler {
                         return;
                     }
                 }
-                
+
                 // Run the backup
                 let job_id = Uuid::new_v4().to_string();
                 run_scheduled_backup(
@@ -93,20 +93,21 @@ impl BackupScheduler {
                     job_id,
                     history,
                     current,
-                ).await;
+                )
+                .await;
             })
         })?;
-        
+
         let uuid = self.scheduler.add(job).await?;
         *self.current_job_uuid.write().await = Some(uuid);
-        
+
         info!("Scheduled backup enabled with cron: {}", cron_expr);
         Ok(())
     }
-    
+
     pub fn get_next_run_time(cron_expr: &str) -> Option<DateTime<Utc>> {
         use croner::Cron;
-        
+
         // tokio-cron-scheduler uses 6-field format (with seconds)
         // croner also supports this format
         // Try parsing directly first
@@ -115,7 +116,7 @@ impl BackupScheduler {
                 return Some(next);
             }
         }
-        
+
         // If 6-field format fails, try removing seconds (first field) for 5-field
         let parts: Vec<&str> = cron_expr.split_whitespace().collect();
         if parts.len() == 6 {
@@ -126,7 +127,7 @@ impl BackupScheduler {
                 }
             }
         }
-        
+
         None
     }
 }
@@ -141,10 +142,10 @@ async fn run_scheduled_backup(
     current_job: Arc<RwLock<Option<BackupJob>>>,
 ) {
     info!("Starting scheduled backup job {}", job_id);
-    
+
     let started_at = Utc::now();
     let engine = BackupEngine::new(config.clone());
-    
+
     // Set current job
     {
         let mut current = current_job.write().await;
@@ -160,15 +161,15 @@ async fn run_scheduled_backup(
             error_message: None,
         });
     }
-    
+
     let temp_dir = format!("{}/temp-{}", config.backup_dir, job_id);
     let mut paths_to_backup: Vec<String> = Vec::new();
-    
+
     // Create temp directory
     if let Err(e) = tokio::fs::create_dir_all(&temp_dir).await {
         error!("Failed to create temp dir: {}", e);
     }
-    
+
     // Dump databases
     if include_dbs {
         let db_dir = format!("{}/databases", temp_dir);
@@ -187,7 +188,7 @@ async fn run_scheduled_backup(
             }
         }
     }
-    
+
     // Prepare volumes
     if include_vols {
         let vol_dir = format!("{}/volumes", temp_dir);
@@ -206,18 +207,20 @@ async fn run_scheduled_backup(
             }
         }
     }
-    
+
     // Run restic backup
     let result = if !paths_to_backup.is_empty() {
         let path_refs: Vec<&str> = paths_to_backup.iter().map(|s| s.as_str()).collect();
-        engine.backup(&target, &path_refs, &["scheduled-backup"]).await
+        engine
+            .backup(&target, &path_refs, &["scheduled-backup"])
+            .await
     } else {
         Err(anyhow::anyhow!("No paths to backup"))
     };
-    
+
     // Cleanup temp directory
     let _ = tokio::fs::remove_dir_all(&temp_dir).await;
-    
+
     // Update job status
     let completed_job = match result {
         Ok(mut job) => {
@@ -240,22 +243,25 @@ async fn run_scheduled_backup(
             }
         }
     };
-    
+
     // Save to history
     {
         let mut history = job_history.write().await;
         history.push(completed_job.clone());
-        
+
         if history.len() > 100 {
             history.remove(0);
         }
     }
-    
+
     // Clear current job
     {
         let mut current = current_job.write().await;
         *current = None;
     }
-    
-    info!("Scheduled backup job {} completed with status {:?}", job_id, completed_job.status);
+
+    info!(
+        "Scheduled backup job {} completed with status {:?}",
+        job_id, completed_job.status
+    );
 }

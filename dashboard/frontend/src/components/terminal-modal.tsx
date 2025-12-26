@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useState, useRef, useEffect } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { execContainer } from "@/lib/api";
-import { Loader2, Terminal, X, Send, Trash2 } from "lucide-react";
+import { useState, useRef, useEffect } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { execContainer } from '@/lib/api';
+import { Loader2, Terminal, X, Send, Trash2 } from 'lucide-react';
 
 interface TerminalModalProps {
   containerName: string | null;
@@ -18,7 +18,7 @@ interface HistoryEntry {
 }
 
 export function TerminalModal({ containerName, onClose }: TerminalModalProps) {
-  const [command, setCommand] = useState("");
+  const [command, setCommand] = useState('');
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
@@ -51,7 +51,7 @@ export function TerminalModal({ containerName, onClose }: TerminalModalProps) {
   // Auto-scroll to bottom
   useEffect(() => {
     if (outputEndRef.current) {
-      outputEndRef.current.scrollIntoView({ behavior: "smooth" });
+      outputEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [history]);
 
@@ -60,7 +60,7 @@ export function TerminalModal({ containerName, onClose }: TerminalModalProps) {
     if (containerName) {
       // Clear state when switching containers
       setHistory([]);
-      setCommand("");
+      setCommand('');
       setCommandHistory([]);
       setHistoryIndex(-1);
       // Focus input
@@ -72,26 +72,26 @@ export function TerminalModal({ containerName, onClose }: TerminalModalProps) {
     e.preventDefault();
     if (!command.trim() || execMutation.isPending) return;
     execMutation.mutate(command);
-    setCommand("");
+    setCommand('');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "ArrowUp") {
+    if (e.key === 'ArrowUp') {
       e.preventDefault();
       if (commandHistory.length > 0) {
         const newIndex = historyIndex < commandHistory.length - 1 ? historyIndex + 1 : historyIndex;
         setHistoryIndex(newIndex);
-        setCommand(commandHistory[commandHistory.length - 1 - newIndex] || "");
+        setCommand(commandHistory[commandHistory.length - 1 - newIndex] || '');
       }
-    } else if (e.key === "ArrowDown") {
+    } else if (e.key === 'ArrowDown') {
       e.preventDefault();
       if (historyIndex > 0) {
         const newIndex = historyIndex - 1;
         setHistoryIndex(newIndex);
-        setCommand(commandHistory[commandHistory.length - 1 - newIndex] || "");
+        setCommand(commandHistory[commandHistory.length - 1 - newIndex] || '');
       } else if (historyIndex === 0) {
         setHistoryIndex(-1);
-        setCommand("");
+        setCommand('');
       }
     }
   };
@@ -103,11 +103,11 @@ export function TerminalModal({ containerName, onClose }: TerminalModalProps) {
   if (!containerName) return null;
 
   return (
-    <div 
+    <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
       onClick={onClose}
     >
-      <div 
+      <div
         className="w-full max-w-5xl max-h-[85vh] bg-card border border-border rounded-2xl overflow-hidden shadow-2xl flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
@@ -130,17 +130,14 @@ export function TerminalModal({ containerName, onClose }: TerminalModalProps) {
             >
               <Trash2 className="w-4 h-4 text-muted-foreground" />
             </button>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-muted rounded-lg transition-colors"
-            >
+            <button onClick={onClose} className="p-2 hover:bg-muted rounded-lg transition-colors">
               <X className="w-4 h-4 text-muted-foreground" />
             </button>
           </div>
         </div>
 
         {/* Terminal output */}
-        <div 
+        <div
           className="flex-1 overflow-auto p-4 bg-slate-900 font-mono text-sm leading-relaxed min-h-[300px]"
           onClick={() => inputRef.current?.focus()}
         >
@@ -160,18 +157,18 @@ export function TerminalModal({ containerName, onClose }: TerminalModalProps) {
                     <span>{entry.command}</span>
                   </div>
                   {/* Output */}
-                  <div className={`mt-1 whitespace-pre-wrap break-all ${
-                    entry.exitCode !== 0 && entry.exitCode !== null 
-                      ? "text-red-400" 
-                      : "text-slate-300"
-                  }`}>
+                  <div
+                    className={`mt-1 whitespace-pre-wrap break-all ${
+                      entry.exitCode !== 0 && entry.exitCode !== null
+                        ? 'text-red-400'
+                        : 'text-slate-300'
+                    }`}
+                  >
                     {entry.output || <span className="text-slate-500">(no output)</span>}
                   </div>
                   {/* Exit code if non-zero */}
                   {entry.exitCode !== null && entry.exitCode !== 0 && (
-                    <div className="text-xs text-red-400 mt-1">
-                      Exit code: {entry.exitCode}
-                    </div>
+                    <div className="text-xs text-red-400 mt-1">Exit code: {entry.exitCode}</div>
                   )}
                 </div>
               ))}

@@ -1,21 +1,36 @@
-"use client";
+'use client';
 
-import { 
-  Eraser, Grid3X3, MousePointer2, Move, Pencil, Trash2, Minus, Plus,
-  Undo2, Redo2, PaintBucket, Slash, Square, Circle, Pipette, 
-  ZoomIn, ZoomOut, Maximize2
-} from "lucide-react";
+import {
+  Eraser,
+  Grid3X3,
+  MousePointer2,
+  Move,
+  Pencil,
+  Trash2,
+  Minus,
+  Plus,
+  Undo2,
+  Redo2,
+  PaintBucket,
+  Slash,
+  Square,
+  Circle,
+  Pipette,
+  ZoomIn,
+  ZoomOut,
+  Maximize2,
+} from 'lucide-react';
 
-export type Tool = 
-  | "select" 
-  | "paint" 
-  | "erase" 
-  | "pan" 
-  | "line" 
-  | "rectangle" 
-  | "circle" 
-  | "fill" 
-  | "eyedropper";
+export type Tool =
+  | 'select'
+  | 'paint'
+  | 'erase'
+  | 'pan'
+  | 'line'
+  | 'rectangle'
+  | 'circle'
+  | 'fill'
+  | 'eyedropper';
 
 interface ToolbarProps {
   activeTool: Tool;
@@ -59,37 +74,37 @@ export function Toolbar({
   zoomLevel,
   cursorPosition,
 }: ToolbarProps) {
-  
   // Group 1: Selection & Navigation
   const navTools: Array<{ id: Tool; icon: React.ReactNode; label: string; shortcut: string }> = [
-    { id: "select", icon: <MousePointer2 size={18} />, label: "Select", shortcut: "V" },
-    { id: "pan", icon: <Move size={18} />, label: "Pan", shortcut: "H" },
+    { id: 'select', icon: <MousePointer2 size={18} />, label: 'Select', shortcut: 'V' },
+    { id: 'pan', icon: <Move size={18} />, label: 'Pan', shortcut: 'H' },
   ];
 
   // Group 2: Drawing Tools
   const drawTools: Array<{ id: Tool; icon: React.ReactNode; label: string; shortcut: string }> = [
-    { id: "paint", icon: <Pencil size={18} />, label: "Brush", shortcut: "B" },
-    { id: "line", icon: <Slash size={18} />, label: "Line", shortcut: "L" },
-    { id: "rectangle", icon: <Square size={18} />, label: "Rectangle", shortcut: "R" },
-    { id: "circle", icon: <Circle size={18} />, label: "Circle", shortcut: "C" },
-    { id: "fill", icon: <PaintBucket size={18} />, label: "Fill", shortcut: "F" },
-    { id: "erase", icon: <Eraser size={18} />, label: "Erase", shortcut: "E" },
+    { id: 'paint', icon: <Pencil size={18} />, label: 'Brush', shortcut: 'B' },
+    { id: 'line', icon: <Slash size={18} />, label: 'Line', shortcut: 'L' },
+    { id: 'rectangle', icon: <Square size={18} />, label: 'Rectangle', shortcut: 'R' },
+    { id: 'circle', icon: <Circle size={18} />, label: 'Circle', shortcut: 'C' },
+    { id: 'fill', icon: <PaintBucket size={18} />, label: 'Fill', shortcut: 'F' },
+    { id: 'erase', icon: <Eraser size={18} />, label: 'Erase', shortcut: 'E' },
   ];
 
   // Group 3: Color Tools
   const colorTools: Array<{ id: Tool; icon: React.ReactNode; label: string; shortcut: string }> = [
-    { id: "eyedropper", icon: <Pipette size={18} />, label: "Eyedropper", shortcut: "I" },
+    { id: 'eyedropper', icon: <Pipette size={18} />, label: 'Eyedropper', shortcut: 'I' },
   ];
 
-  const showBrushControls = ["paint", "erase", "line", "rectangle", "circle"].includes(activeTool);
+  const showBrushControls = ['paint', 'erase', 'line', 'rectangle', 'circle'].includes(activeTool);
 
-  const ToolButton = ({ tool, isActive }: { tool: typeof navTools[0]; isActive: boolean }) => (
+  const ToolButton = ({ tool, isActive }: { tool: (typeof navTools)[0]; isActive: boolean }) => (
     <button
       onClick={() => onToolChange(tool.id)}
       className={`flex items-center justify-center w-9 h-9 rounded-lg transition-all
-        ${isActive
-          ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
-          : "text-white/50 hover:text-white hover:bg-white/[0.08]"
+        ${
+          isActive
+            ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30'
+            : 'text-white/50 hover:text-white hover:bg-white/[0.08]'
         }`}
       title={`${tool.label} (${tool.shortcut})`}
     >
@@ -105,9 +120,10 @@ export function Toolbar({
           onClick={onUndo}
           disabled={!canUndo}
           className={`flex items-center justify-center w-8 h-8 rounded-md transition-all
-            ${canUndo 
-              ? "text-white/60 hover:text-white hover:bg-white/[0.08]" 
-              : "text-white/20 cursor-not-allowed"
+            ${
+              canUndo
+                ? 'text-white/60 hover:text-white hover:bg-white/[0.08]'
+                : 'text-white/20 cursor-not-allowed'
             }`}
           title="Undo (Ctrl+Z)"
         >
@@ -117,9 +133,10 @@ export function Toolbar({
           onClick={onRedo}
           disabled={!canRedo}
           className={`flex items-center justify-center w-8 h-8 rounded-md transition-all
-            ${canRedo 
-              ? "text-white/60 hover:text-white hover:bg-white/[0.08]" 
-              : "text-white/20 cursor-not-allowed"
+            ${
+              canRedo
+                ? 'text-white/60 hover:text-white hover:bg-white/[0.08]'
+                : 'text-white/20 cursor-not-allowed'
             }`}
           title="Redo (Ctrl+Shift+Z)"
         >
@@ -153,9 +170,11 @@ export function Toolbar({
       {/* Color Preview + Eyedropper */}
       <div className="flex items-center gap-1 bg-white/[0.04] rounded-lg p-1 border border-white/[0.06]">
         {/* Current Color Preview */}
-        <div 
+        <div
           className="w-8 h-8 rounded-md border-2 border-white/20 shadow-inner"
-          style={{ backgroundColor: `rgb(${selectedColor.r}, ${selectedColor.g}, ${selectedColor.b})` }}
+          style={{
+            backgroundColor: `rgb(${selectedColor.r}, ${selectedColor.g}, ${selectedColor.b})`,
+          }}
           title={`Current Color: RGB(${selectedColor.r}, ${selectedColor.g}, ${selectedColor.b})`}
         />
         {colorTools.map((tool) => (
@@ -203,9 +222,10 @@ export function Toolbar({
       <button
         onClick={onToggleGrid}
         className={`flex items-center justify-center w-9 h-9 rounded-lg transition-all border
-          ${showGrid
-            ? "bg-cyan-500/20 text-cyan-400 border-cyan-500/30"
-            : "text-white/40 hover:text-white hover:bg-white/[0.06] border-transparent"
+          ${
+            showGrid
+              ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30'
+              : 'text-white/40 hover:text-white hover:bg-white/[0.06] border-transparent'
           }`}
         title="Toggle Grid (G)"
       >
@@ -250,25 +270,32 @@ export function Toolbar({
       <div className="flex items-center gap-2 px-3 py-1.5 bg-white/[0.04] rounded-lg border border-white/[0.06]">
         <span className="text-[10px] text-white/40 uppercase tracking-wide">XY</span>
         <span className="text-sm font-mono text-white font-medium tabular-nums min-w-[90px] text-right">
-          {cursorPosition 
+          {cursorPosition
             ? `${cursorPosition.x.toLocaleString()}, ${cursorPosition.y.toLocaleString()}`
-            : "—, —"
-          }
+            : '—, —'}
         </span>
       </div>
 
       {/* Selection Info */}
-      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all ${
-        selectedCount > 0 
-          ? "bg-orange-500/10 border-orange-500/30" 
-          : "bg-white/[0.04] border-white/[0.06]"
-      }`}>
-        <span className={`text-[10px] uppercase tracking-wide ${
-          selectedCount > 0 ? "text-orange-400" : "text-white/40"
-        }`}>Selected</span>
-        <span className={`text-sm font-mono font-semibold tabular-nums min-w-[50px] text-right ${
-          selectedCount > 0 ? "text-orange-500" : "text-white/50"
-        }`}>
+      <div
+        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all ${
+          selectedCount > 0
+            ? 'bg-orange-500/10 border-orange-500/30'
+            : 'bg-white/[0.04] border-white/[0.06]'
+        }`}
+      >
+        <span
+          className={`text-[10px] uppercase tracking-wide ${
+            selectedCount > 0 ? 'text-orange-400' : 'text-white/40'
+          }`}
+        >
+          Selected
+        </span>
+        <span
+          className={`text-sm font-mono font-semibold tabular-nums min-w-[50px] text-right ${
+            selectedCount > 0 ? 'text-orange-500' : 'text-white/50'
+          }`}
+        >
           {selectedCount.toLocaleString()}
         </span>
         {selectedCount > 0 && (

@@ -1,23 +1,34 @@
-"use client";
+'use client';
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Calendar, Clock, Coins, CheckCircle, Plus, Send, X, Loader2, ChevronRight } from "lucide-react";
-import { useState } from "react";
-import { fetchEvents, EventRequest } from "@/lib/api";
-import { formatDistanceToNow } from "date-fns";
-import { formatSats } from "@/lib/utils";
-import Link from "next/link";
+import { useQuery } from '@tanstack/react-query';
+// useQueryClient was removed - not currently used
+import {
+  Calendar,
+  Clock,
+  Coins,
+  CheckCircle,
+  Plus,
+  Send,
+  X,
+  Loader2,
+  ChevronRight,
+} from 'lucide-react';
+import { useState } from 'react';
+import { fetchEvents, EventRequest } from '@/lib/api';
+import { formatDistanceToNow } from 'date-fns';
+import { formatSats } from '@/lib/utils';
+import Link from 'next/link';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3701";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3701';
 
 // Categories
 const CATEGORIES = [
-  { id: 1, name: "Block", description: "Block height and mining" },
-  { id: 2, name: "Prices", description: "Asset prices and markets" },
-  { id: 4, name: "Sports", description: "Sports events and outcomes" },
-  { id: 8, name: "Weather", description: "Weather conditions" },
-  { id: 16, name: "Elections", description: "Political events" },
-  { id: 32, name: "Random", description: "Random number generation" },
+  { id: 1, name: 'Block', description: 'Block height and mining' },
+  { id: 2, name: 'Prices', description: 'Asset prices and markets' },
+  { id: 4, name: 'Sports', description: 'Sports events and outcomes' },
+  { id: 8, name: 'Weather', description: 'Weather conditions' },
+  { id: 16, name: 'Elections', description: 'Political events' },
+  { id: 32, name: 'Random', description: 'Random number generation' },
 ];
 
 interface CreateEventModalProps {
@@ -28,15 +39,15 @@ interface CreateEventModalProps {
 
 function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModalProps) {
   const [category, setCategory] = useState(2);
-  const [description, setDescription] = useState("");
-  const [resolutionBlock, setResolutionBlock] = useState("");
-  const [bounty, setBounty] = useState("10000");
+  const [description, setDescription] = useState('');
+  const [resolutionBlock, setResolutionBlock] = useState('');
+  const [bounty, setBounty] = useState('10000');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async () => {
     if (!description) {
-      setError("Please enter a description");
+      setError('Please enter a description');
       return;
     }
 
@@ -45,8 +56,8 @@ function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModalProps)
 
     try {
       const res = await fetch(`${API_BASE}/api/events/request`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           category,
           description,
@@ -56,16 +67,16 @@ function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModalProps)
       });
 
       if (!res.ok) {
-        throw new Error("Failed to create event");
+        throw new Error('Failed to create event');
       }
 
       onSuccess();
       onClose();
-      setDescription("");
-      setResolutionBlock("");
-      setBounty("10000");
-    } catch (e: any) {
-      setError(e.message);
+      setDescription('');
+      setResolutionBlock('');
+      setBounty('10000');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'An error occurred');
     } finally {
       setIsSubmitting(false);
     }
@@ -94,8 +105,8 @@ function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModalProps)
                   onClick={() => setCategory(cat.id)}
                   className={`px-3 py-2 rounded-lg text-sm transition-colors ${
                     category === cat.id
-                      ? "bg-purple-600 text-white"
-                      : "bg-white/5 text-gray-400 hover:text-white"
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-white/5 text-gray-400 hover:text-white'
                   }`}
                 >
                   {cat.name}
@@ -134,9 +145,7 @@ function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModalProps)
 
           {/* Bounty */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Bounty (sats)
-            </label>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Bounty (sats)</label>
             <input
               type="number"
               value={bounty}
@@ -189,14 +198,14 @@ interface AttestModalProps {
 }
 
 function AttestModal({ isOpen, onClose, event, onSuccess }: AttestModalProps) {
-  const [outcome, setOutcome] = useState("");
+  const [outcome, setOutcome] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
   const handleSubmit = async () => {
     if (!outcome || !event) {
-      setError("Please enter an outcome");
+      setError('Please enter an outcome');
       return;
     }
 
@@ -205,9 +214,9 @@ function AttestModal({ isOpen, onClose, event, onSuccess }: AttestModalProps) {
 
     try {
       // Call wallet API to create attestation message
-      const res = await fetch("http://localhost:8001/wallet/create-message", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('http://localhost:8001/wallet/create-message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           kind: 31, // OracleAttestation
           body: outcome,
@@ -218,18 +227,18 @@ function AttestModal({ isOpen, onClose, event, onSuccess }: AttestModalProps) {
 
       if (!res.ok) {
         const errorText = await res.text();
-        throw new Error(errorText || "Failed to create attestation");
+        throw new Error(errorText || 'Failed to create attestation');
       }
 
       setSuccess(true);
       setTimeout(() => {
         onSuccess();
         onClose();
-        setOutcome("");
+        setOutcome('');
         setSuccess(false);
       }, 2000);
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'An error occurred');
     } finally {
       setIsSubmitting(false);
     }
@@ -322,15 +331,17 @@ function AttestModal({ isOpen, onClose, event, onSuccess }: AttestModalProps) {
 }
 
 export default function EventsPage() {
-  const [statusFilter, setStatusFilter] = useState<string>("pending");
+  const [statusFilter, setStatusFilter] = useState<string>('pending');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showAttestModal, setShowAttestModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<EventRequest | null>(null);
-  const queryClient = useQueryClient();
-
-  const { data: events, isLoading, refetch } = useQuery({
-    queryKey: ["events", statusFilter],
-    queryFn: () => fetchEvents(statusFilter === "all" ? undefined : statusFilter, 50),
+  const {
+    data: events,
+    isLoading,
+    refetch,
+  } = useQuery({
+    queryKey: ['events', statusFilter],
+    queryFn: () => fetchEvents(statusFilter === 'all' ? undefined : statusFilter, 50),
   });
 
   const handleAttest = (event: EventRequest) => {
@@ -356,14 +367,14 @@ export default function EventsPage() {
 
       {/* Status Filter */}
       <div className="flex gap-2">
-        {["pending", "fulfilled", "all"].map((status) => (
+        {['pending', 'fulfilled', 'all'].map((status) => (
           <button
             key={status}
             onClick={() => setStatusFilter(status)}
             className={`px-4 py-2 rounded-lg text-sm capitalize transition-colors ${
               statusFilter === status
-                ? "bg-purple-600 text-white"
-                : "bg-white/5 text-gray-400 hover:text-white"
+                ? 'bg-purple-600 text-white'
+                : 'bg-white/5 text-gray-400 hover:text-white'
             }`}
           >
             {status}
@@ -388,11 +399,13 @@ export default function EventsPage() {
                     <span className="px-2 py-0.5 rounded text-xs bg-purple-500/20 text-purple-300">
                       {event.category_name}
                     </span>
-                    <span className={`px-2 py-0.5 rounded text-xs ${
-                      event.status === "pending"
-                        ? "bg-yellow-500/20 text-yellow-400"
-                        : "bg-green-500/20 text-green-400"
-                    }`}>
+                    <span
+                      className={`px-2 py-0.5 rounded text-xs ${
+                        event.status === 'pending'
+                          ? 'bg-yellow-500/20 text-yellow-400'
+                          : 'bg-green-500/20 text-green-400'
+                      }`}
+                    >
                       {event.status}
                     </span>
                   </div>
@@ -411,7 +424,7 @@ export default function EventsPage() {
                       <p className="text-xs text-gray-500">Bounty</p>
                     </div>
                   )}
-                  {event.status === "pending" && (
+                  {event.status === 'pending' && (
                     <button
                       onClick={(e) => {
                         e.preventDefault();
@@ -447,9 +460,7 @@ export default function EventsPage() {
             </Link>
           ))}
           {(!events || events.length === 0) && (
-            <div className="text-center py-12 text-gray-400">
-              No events found
-            </div>
+            <div className="text-center py-12 text-gray-400">No events found</div>
           )}
         </div>
       )}

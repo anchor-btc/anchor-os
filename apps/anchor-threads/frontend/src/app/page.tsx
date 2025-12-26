@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useEffect, useRef, useCallback } from "react";
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import Link from "next/link";
-import { fetchRoots, fetchStats, type Message } from "@/lib/api";
-import { MessageCard } from "@/components/message-card";
-import { Button, Card, Container, HeroSection, HowItWorks, StatsGrid } from "@AnchorProtocol/ui";
+import { useEffect, useRef, useCallback } from 'react';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
+import { fetchRoots, fetchStats, type Message } from '@/lib/api';
+import { MessageCard } from '@/components/message-card';
+import { Button, Card, Container, HeroSection, HowItWorks, StatsGrid } from '@AnchorProtocol/ui';
 import {
   Loader2,
   Anchor,
@@ -17,37 +17,30 @@ import {
   MessagesSquare,
   Reply,
   Blocks,
-} from "lucide-react";
+} from 'lucide-react';
 
 export default function Home() {
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
   const { data: stats, isLoading: statsLoading } = useQuery({
-    queryKey: ["stats"],
+    queryKey: ['stats'],
     queryFn: fetchStats,
     refetchInterval: 5000,
   });
 
-  const {
-    data,
-    isLoading,
-    isFetchingNextPage,
-    hasNextPage,
-    fetchNextPage,
-    refetch,
-    isRefetching,
-  } = useInfiniteQuery({
-    queryKey: ["roots-infinite"],
-    queryFn: ({ pageParam = 1 }) => fetchRoots(pageParam, 10),
-    getNextPageParam: (lastPage) => {
-      if (lastPage.page < lastPage.total_pages) {
-        return lastPage.page + 1;
-      }
-      return undefined;
-    },
-    initialPageParam: 1,
-    refetchInterval: 10000,
-  });
+  const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage, refetch, isRefetching } =
+    useInfiniteQuery({
+      queryKey: ['roots-infinite'],
+      queryFn: ({ pageParam = 1 }) => fetchRoots(pageParam, 10),
+      getNextPageParam: (lastPage) => {
+        if (lastPage.page < lastPage.total_pages) {
+          return lastPage.page + 1;
+        }
+        return undefined;
+      },
+      initialPageParam: 1,
+      refetchInterval: 10000,
+    });
 
   const allMessages = data?.pages.flatMap((page) => page.data) ?? [];
   const messages = allMessages.reduce<Message[]>((acc, msg) => {
@@ -80,7 +73,7 @@ export default function Home() {
   useEffect(() => {
     const observer = new IntersectionObserver(handleObserver, {
       root: null,
-      rootMargin: "100px",
+      rootMargin: '100px',
       threshold: 0,
     });
     if (loadMoreRef.current) {
@@ -93,48 +86,48 @@ export default function Home() {
     {
       icon: MessageSquare,
       value: stats?.total_messages ?? 0,
-      label: "Messages",
-      color: "text-cyan-500",
-      bgColor: "bg-cyan-500/20",
+      label: 'Messages',
+      color: 'text-cyan-500',
+      bgColor: 'bg-cyan-500/20',
     },
     {
       icon: MessagesSquare,
       value: stats?.total_roots ?? 0,
-      label: "Threads",
-      color: "text-blue-400",
-      bgColor: "bg-blue-400/20",
+      label: 'Threads',
+      color: 'text-blue-400',
+      bgColor: 'bg-blue-400/20',
     },
     {
       icon: Reply,
       value: stats?.total_replies ?? 0,
-      label: "Replies",
-      color: "text-green-400",
-      bgColor: "bg-green-400/20",
+      label: 'Replies',
+      color: 'text-green-400',
+      bgColor: 'bg-green-400/20',
     },
     {
       icon: Blocks,
       value: stats?.last_block_height ?? 0,
-      label: "Last Block",
-      color: "text-purple-400",
-      bgColor: "bg-purple-400/20",
+      label: 'Last Block',
+      color: 'text-purple-400',
+      bgColor: 'bg-purple-400/20',
     },
   ];
 
   const howItWorksSteps = [
     {
-      step: "1",
-      title: "Create Thread",
-      description: "Write your message and anchor it permanently to the Bitcoin blockchain.",
+      step: '1',
+      title: 'Create Thread',
+      description: 'Write your message and anchor it permanently to the Bitcoin blockchain.',
     },
     {
-      step: "2",
-      title: "Share & Discuss",
-      description: "Others can reply to your thread, creating a chain of immutable messages.",
+      step: '2',
+      title: 'Share & Discuss',
+      description: 'Others can reply to your thread, creating a chain of immutable messages.',
     },
     {
-      step: "3",
-      title: "Verified Forever",
-      description: "Every message is timestamped and cryptographically verified on Bitcoin.",
+      step: '3',
+      title: 'Verified Forever',
+      description: 'Every message is timestamped and cryptographically verified on Bitcoin.',
     },
   ];
 
@@ -147,8 +140,8 @@ export default function Home() {
         subtitle="Discover and create immutable, threaded messages anchored to the Bitcoin blockchain."
         accentColor="cyan"
         actions={[
-          { href: "/compose", label: "Create Thread", icon: PenLine, variant: "primary" },
-          { href: "/threads", label: "Browse Threads", icon: Search, variant: "secondary" },
+          { href: '/compose', label: 'Create Thread', icon: PenLine, variant: 'primary' },
+          { href: '/threads', label: 'Browse Threads', icon: Search, variant: 'secondary' },
         ]}
       />
 
@@ -163,11 +156,7 @@ export default function Home() {
       {/* Stats */}
       <div>
         <h2 className="text-xl font-bold text-white mb-4">Protocol Statistics</h2>
-        <StatsGrid
-          items={statsItems}
-          columns={{ default: 2, md: 4 }}
-          isLoading={statsLoading}
-        />
+        <StatsGrid items={statsItems} columns={{ default: 2, md: 4 }} isLoading={statsLoading} />
       </div>
 
       {/* Recent Threads */}
@@ -178,18 +167,13 @@ export default function Home() {
             <h2 className="text-xl font-semibold text-foreground">Recent Threads</h2>
           </div>
           <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => refetch()}
-              disabled={isRefetching}
-            >
-              <RefreshCw className={`h-4 w-4 ${isRefetching ? "animate-spin" : ""}`} />
+            <Button variant="ghost" size="icon" onClick={() => refetch()} disabled={isRefetching}>
+              <RefreshCw className={`h-4 w-4 ${isRefetching ? 'animate-spin' : ''}`} />
             </Button>
             <Button asChild variant="link">
               <Link href="/threads" className="flex items-center gap-1">
-              View all <ArrowRight className="h-4 w-4" />
-            </Link>
+                View all <ArrowRight className="h-4 w-4" />
+              </Link>
             </Button>
           </div>
         </div>
@@ -231,9 +215,9 @@ function EmptyState() {
       </p>
       <Button asChild variant="accent">
         <Link href="/compose" className="flex items-center gap-2">
-        <PenLine className="h-4 w-4" />
-        Create Thread
-      </Link>
+          <PenLine className="h-4 w-4" />
+          Create Thread
+        </Link>
       </Button>
     </Card>
   );

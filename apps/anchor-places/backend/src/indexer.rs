@@ -101,11 +101,7 @@ impl MarkerIndexer {
             return Ok(());
         }
 
-        info!(
-            "Indexing blocks {} to {}",
-            last_indexed + 1,
-            current_height
-        );
+        info!("Indexing blocks {} to {}", last_indexed + 1, current_height);
 
         for height in (last_indexed + 1)..=current_height {
             self.index_block(height).await?;
@@ -169,7 +165,7 @@ impl MarkerIndexer {
                 }
             }
         }
-        
+
         // Fallback: try to derive address from the first input's witness (P2WPKH)
         // For P2WPKH, the witness has [signature, pubkey]
         if let Some(input) = tx.input.first() {
@@ -185,7 +181,7 @@ impl MarkerIndexer {
                 }
             }
         }
-        
+
         None
     }
 
@@ -289,7 +285,10 @@ impl MarkerIndexer {
                         // Try to find the parent marker
                         match self
                             .db
-                            .resolve_anchor_to_marker(&parent_anchor.txid_prefix, parent_anchor.vout as i32)
+                            .resolve_anchor_to_marker(
+                                &parent_anchor.txid_prefix,
+                                parent_anchor.vout as i32,
+                            )
                             .await?
                         {
                             Some(parent_txid) => {

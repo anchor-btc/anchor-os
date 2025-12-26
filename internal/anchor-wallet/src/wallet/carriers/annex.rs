@@ -29,9 +29,11 @@ pub fn create_and_broadcast_annex_tx(
     locked_set: Option<&HashSet<(String, u32)>>,
 ) -> Result<CreatedTransaction> {
     // Acquire the transaction creation mutex to prevent race conditions
-    let _tx_guard = wallet.tx_creation_mutex.lock()
+    let _tx_guard = wallet
+        .tx_creation_mutex
+        .lock()
         .map_err(|e| anyhow::anyhow!("Transaction mutex poisoned: {}", e))?;
-    
+
     let secp = Secp256k1::new();
 
     // Generate a keypair for the Taproot key-path spend
@@ -161,10 +163,10 @@ pub fn create_and_broadcast_annex_tx(
         .context("No hex in signed commit")?;
 
     // Broadcast commit
-    let commit_txid: String =
-        wallet
-            .rpc
-            .call("sendrawtransaction", &[serde_json::json!(signed_commit_hex)])?;
+    let commit_txid: String = wallet.rpc.call(
+        "sendrawtransaction",
+        &[serde_json::json!(signed_commit_hex)],
+    )?;
     info!("Broadcast annex commit tx: {}", commit_txid);
 
     let commit_txid_parsed = Txid::from_str(&commit_txid)?;
@@ -229,8 +231,8 @@ pub fn create_and_broadcast_annex_tx(
 
     // Sign the sighash
     use bitcoin::secp256k1::Message;
-    let msg =
-        Message::from_digest_slice(sighash.as_ref()).map_err(|e| anyhow::anyhow!("Invalid sighash: {}", e))?;
+    let msg = Message::from_digest_slice(sighash.as_ref())
+        .map_err(|e| anyhow::anyhow!("Invalid sighash: {}", e))?;
     let signature = secp.sign_schnorr(&msg, &tweaked_keypair.to_keypair());
 
     // Build witness: [signature] [annex]
@@ -248,7 +250,9 @@ pub fn create_and_broadcast_annex_tx(
     let reveal_txid: String = wallet
         .rpc
         .call("sendrawtransaction", &[serde_json::json!(reveal_hex)])
-        .map_err(|e| anyhow::anyhow!("Failed to broadcast annex tx (may need libre relay): {}", e))?;
+        .map_err(|e| {
+            anyhow::anyhow!("Failed to broadcast annex tx (may need libre relay): {}", e)
+        })?;
 
     info!(
         "Broadcast annex reveal tx: {} (commit: {})",
@@ -263,4 +267,3 @@ pub fn create_and_broadcast_annex_tx(
         carrier_name: "taproot_annex".to_string(),
     })
 }
-

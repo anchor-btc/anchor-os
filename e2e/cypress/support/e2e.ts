@@ -35,4 +35,3 @@ Cypress.on('fail', (error, runnable) => {
   console.error('Error:', error.message);
   throw error;
 });
-

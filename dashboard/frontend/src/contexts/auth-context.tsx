@@ -1,19 +1,12 @@
-"use client";
+'use client';
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  useCallback,
-  ReactNode,
-} from "react";
+import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 
 const DASHBOARD_BACKEND_URL =
-  process.env.NEXT_PUBLIC_DASHBOARD_BACKEND_URL || "http://localhost:8010";
+  process.env.NEXT_PUBLIC_DASHBOARD_BACKEND_URL || 'http://localhost:8010';
 
-const TOKEN_KEY = "anchor-os-token";
-const LAST_ACTIVITY_KEY = "anchor-os-last-activity";
+const TOKEN_KEY = 'anchor-os-token';
+const LAST_ACTIVITY_KEY = 'anchor-os-last-activity';
 
 interface AuthStatus {
   enabled: boolean;
@@ -82,8 +75,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Verify token with backend
       const verifyRes = await fetch(`${DASHBOARD_BACKEND_URL}/auth/verify`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token }),
       });
 
@@ -103,13 +96,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [updateActivity]);
 
   const login = useCallback(
-    async (
-      password: string
-    ): Promise<{ success: boolean; message: string }> => {
+    async (password: string): Promise<{ success: boolean; message: string }> => {
       try {
         const res = await fetch(`${DASHBOARD_BACKEND_URL}/auth/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ password }),
         });
 
@@ -119,12 +110,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           localStorage.setItem(TOKEN_KEY, data.token);
           setIsAuthenticated(true);
           updateActivity();
-          return { success: true, message: "Login successful" };
+          return { success: true, message: 'Login successful' };
         }
 
-        return { success: false, message: data.message || "Login failed" };
+        return { success: false, message: data.message || 'Login failed' };
       } catch {
-        return { success: false, message: "Failed to connect to server" };
+        return { success: false, message: 'Failed to connect to server' };
       }
     },
     [updateActivity]
@@ -163,16 +154,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const handleActivity = () => updateActivity();
 
-    window.addEventListener("mousemove", handleActivity);
-    window.addEventListener("keydown", handleActivity);
-    window.addEventListener("click", handleActivity);
-    window.addEventListener("scroll", handleActivity);
+    window.addEventListener('mousemove', handleActivity);
+    window.addEventListener('keydown', handleActivity);
+    window.addEventListener('click', handleActivity);
+    window.addEventListener('scroll', handleActivity);
 
     return () => {
-      window.removeEventListener("mousemove", handleActivity);
-      window.removeEventListener("keydown", handleActivity);
-      window.removeEventListener("click", handleActivity);
-      window.removeEventListener("scroll", handleActivity);
+      window.removeEventListener('mousemove', handleActivity);
+      window.removeEventListener('keydown', handleActivity);
+      window.removeEventListener('click', handleActivity);
+      window.removeEventListener('scroll', handleActivity);
     };
   }, [isAuthEnabled, isAuthenticated, updateActivity]);
 
@@ -197,13 +188,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 }
-
-
-
-
-
-

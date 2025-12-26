@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState, useEffect, ReactNode } from "react";
+import { useState, useEffect, ReactNode } from 'react';
 import {
   DndContext,
   DragEndEvent,
@@ -11,18 +11,18 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-} from "@dnd-kit/core";
+} from '@dnd-kit/core';
 import {
   SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
   rectSortingStrategy,
   arrayMove,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Pencil, Check, RotateCcw, Maximize2, Minimize2 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useTranslation } from "react-i18next";
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { GripVertical, Pencil, Check, RotateCcw, Maximize2, Minimize2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 // ============================
 // Types
@@ -48,19 +48,19 @@ export interface IndexerCardDefinition {
 // Layout Hook
 // ============================
 
-const STORAGE_KEY = "indexer-layout";
+const STORAGE_KEY = 'indexer-layout';
 
 const DEFAULT_LAYOUT: IndexerCard[] = [
-  { id: "stats", size: 4 },
-  { id: "message-types", size: 2 },
-  { id: "carrier-types", size: 2 },
-  { id: "anchor-resolution", size: 2 },
-  { id: "live-feed", size: 2 },
-  { id: "total-messages", size: 2 },
-  { id: "messages-by-kind", size: 2 },
-  { id: "messages-by-carrier", size: 2 },
-  { id: "performance", size: 2 },
-  { id: "message-explorer", size: 4 },
+  { id: 'stats', size: 4 },
+  { id: 'message-types', size: 2 },
+  { id: 'carrier-types', size: 2 },
+  { id: 'anchor-resolution', size: 2 },
+  { id: 'live-feed', size: 2 },
+  { id: 'total-messages', size: 2 },
+  { id: 'messages-by-kind', size: 2 },
+  { id: 'messages-by-carrier', size: 2 },
+  { id: 'performance', size: 2 },
+  { id: 'message-explorer', size: 4 },
 ];
 
 export function useIndexerLayout() {
@@ -74,13 +74,13 @@ export function useIndexerLayout() {
       try {
         const parsed = JSON.parse(saved);
         // Validate and merge with defaults (in case new cards are added)
-        const defaultIds = new Set(DEFAULT_LAYOUT.map(c => c.id));
+        const defaultIds = new Set(DEFAULT_LAYOUT.map((c) => c.id));
         const savedIds = new Set(parsed.map((c: IndexerCard) => c.id));
-        
+
         // Keep saved order but add any missing cards
         const merged = [
           ...parsed.filter((c: IndexerCard) => defaultIds.has(c.id)),
-          ...DEFAULT_LAYOUT.filter(c => !savedIds.has(c.id)),
+          ...DEFAULT_LAYOUT.filter((c) => !savedIds.has(c.id)),
         ];
         setLayout(merged);
       } catch {
@@ -96,15 +96,15 @@ export function useIndexerLayout() {
   };
 
   const reorderCards = (activeId: string, overId: string) => {
-    const oldIndex = layout.findIndex(c => c.id === activeId);
-    const newIndex = layout.findIndex(c => c.id === overId);
+    const oldIndex = layout.findIndex((c) => c.id === activeId);
+    const newIndex = layout.findIndex((c) => c.id === overId);
     if (oldIndex !== -1 && newIndex !== -1) {
       saveLayout(arrayMove(layout, oldIndex, newIndex));
     }
   };
 
   const changeCardSize = (id: string, size: CardSize) => {
-    saveLayout(layout.map(c => c.id === id ? { ...c, size } : c));
+    saveLayout(layout.map((c) => (c.id === id ? { ...c, size } : c)));
   };
 
   const resetToDefaults = () => {
@@ -137,14 +137,10 @@ interface SortableCardProps {
 }
 
 function SortableCard({ card, definition, isEditMode, onChangeSize }: SortableCardProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: card.id, disabled: !isEditMode });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: card.id,
+    disabled: !isEditMode,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -153,10 +149,10 @@ function SortableCard({ card, definition, isEditMode, onChangeSize }: SortableCa
 
   // Column span classes
   const colSpanClasses: Record<CardSize, string> = {
-    1: "col-span-1",
-    2: "col-span-2",
-    3: "col-span-3",
-    4: "col-span-4",
+    1: 'col-span-1',
+    2: 'col-span-2',
+    3: 'col-span-3',
+    4: 'col-span-4',
   };
 
   const canGrow = card.size < definition.maxSize;
@@ -168,9 +164,9 @@ function SortableCard({ card, definition, isEditMode, onChangeSize }: SortableCa
       style={style}
       className={cn(
         colSpanClasses[card.size],
-        "relative transition-all duration-200",
-        isDragging && "z-50 opacity-50",
-        isEditMode && "animate-wiggle"
+        'relative transition-all duration-200',
+        isDragging && 'z-50 opacity-50',
+        isEditMode && 'animate-wiggle'
       )}
     >
       {/* Edit mode overlay and controls */}
@@ -216,9 +212,7 @@ function SortableCard({ card, definition, isEditMode, onChangeSize }: SortableCa
       )}
 
       {/* Card content */}
-      <div className={cn(isEditMode && "pointer-events-none")}>
-        {definition.render()}
-      </div>
+      <div className={cn(isEditMode && 'pointer-events-none')}>{definition.render()}</div>
     </div>
   );
 }
@@ -272,8 +266,8 @@ export function IndexerGridLayout({
     setActiveId(null);
   };
 
-  const activeCard = activeId ? layout.find(c => c.id === activeId) : null;
-  const activeDefinition = activeCard ? cardDefinitions.find(d => d.id === activeCard.id) : null;
+  const activeCard = activeId ? layout.find((c) => c.id === activeId) : null;
+  const activeDefinition = activeCard ? cardDefinitions.find((d) => d.id === activeCard.id) : null;
 
   return (
     <DndContext
@@ -282,10 +276,7 @@ export function IndexerGridLayout({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <SortableContext
-        items={layout.map(c => c.id)}
-        strategy={rectSortingStrategy}
-      >
+      <SortableContext items={layout.map((c) => c.id)} strategy={rectSortingStrategy}>
         {/* Edit Controls */}
         <div className="flex items-center justify-end gap-2 mb-4">
           {isEditMode && (
@@ -294,27 +285,27 @@ export function IndexerGridLayout({
               className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
             >
               <RotateCcw className="w-4 h-4" />
-              {t("dashboard.resetWidgets", "Reset Layout")}
+              {t('dashboard.resetWidgets', 'Reset Layout')}
             </button>
           )}
           <button
             onClick={onToggleEditMode}
             className={cn(
-              "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all",
+              'flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all',
               isEditMode
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80"
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80'
             )}
           >
             {isEditMode ? (
               <>
                 <Check className="w-4 h-4" />
-                {t("dashboard.doneEditing", "Done")}
+                {t('dashboard.doneEditing', 'Done')}
               </>
             ) : (
               <>
                 <Pencil className="w-4 h-4" />
-                {t("dashboard.editWidgets", "Edit Layout")}
+                {t('dashboard.editWidgets', 'Edit Layout')}
               </>
             )}
           </button>
@@ -323,7 +314,7 @@ export function IndexerGridLayout({
         {/* Grid */}
         <div className="grid grid-cols-4 gap-4">
           {layout.map((card) => {
-            const definition = cardDefinitions.find(d => d.id === card.id);
+            const definition = cardDefinitions.find((d) => d.id === card.id);
             if (!definition) return null;
 
             return (
@@ -341,13 +332,15 @@ export function IndexerGridLayout({
 
       <DragOverlay>
         {activeCard && activeDefinition ? (
-          <div className={cn(
-            "opacity-80 rotate-2",
-            activeCard.size === 1 && "w-[25%]",
-            activeCard.size === 2 && "w-[50%]",
-            activeCard.size === 3 && "w-[75%]",
-            activeCard.size === 4 && "w-full",
-          )}>
+          <div
+            className={cn(
+              'opacity-80 rotate-2',
+              activeCard.size === 1 && 'w-[25%]',
+              activeCard.size === 2 && 'w-[50%]',
+              activeCard.size === 3 && 'w-[75%]',
+              activeCard.size === 4 && 'w-full'
+            )}
+          >
             {activeDefinition.render()}
           </div>
         ) : null}
@@ -355,4 +348,3 @@ export function IndexerGridLayout({
     </DndContext>
   );
 }
-

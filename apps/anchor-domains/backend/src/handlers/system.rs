@@ -1,9 +1,6 @@
 //! System handlers: health check and statistics
 
-use axum::{
-    extract::State,
-    Json,
-};
+use axum::{extract::State, Json};
 use std::sync::Arc;
 
 use crate::error::AppResult;
@@ -36,10 +33,7 @@ pub async fn health() -> Json<HealthResponse> {
         (status = 500, description = "Internal server error")
     )
 )]
-pub async fn get_stats(
-    State(state): State<Arc<AppState>>,
-) -> AppResult<Json<DnsStats>> {
+pub async fn get_stats(State(state): State<Arc<AppState>>) -> AppResult<Json<DnsStats>> {
     let stats = state.db.get_stats().await?;
     Ok(Json(stats))
 }
-

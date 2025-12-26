@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { usePathname } from "next/navigation";
-import { ChevronDown, ExternalLink, type LucideIcon } from "lucide-react";
-import { cn } from "../../utils/cn";
-import { type AccentColor } from "./app-logo";
-import { accentActiveColors } from "./nav-link";
+import * as React from 'react';
+import { usePathname } from 'next/navigation';
+import { ChevronDown, ExternalLink, type LucideIcon } from 'lucide-react';
+import { cn } from '../../utils/cn';
+import { type AccentColor } from './app-logo';
+import { accentActiveColors } from './nav-link';
 
 export interface NavDropdownItem {
   /**
@@ -70,7 +70,7 @@ export function NavDropdown({
   label,
   icon: Icon,
   items,
-  accentColor = "orange",
+  accentColor = 'orange',
   className,
 }: NavDropdownProps) {
   const pathname = usePathname();
@@ -79,7 +79,7 @@ export function NavDropdown({
 
   // Check if any dropdown item is active
   const hasActiveItem = items.some((item) =>
-    item.href === "/" ? pathname === "/" : pathname?.startsWith(item.href)
+    item.href === '/' ? pathname === '/' : pathname?.startsWith(item.href)
   );
 
   const activeColor = accentActiveColors[accentColor];
@@ -87,28 +87,25 @@ export function NavDropdown({
   // Close dropdown when clicking outside
   React.useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     }
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   // Close on escape key
   React.useEffect(() => {
     function handleEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") {
+      if (event.key === 'Escape') {
         setIsOpen(false);
       }
     }
 
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
   }, []);
 
   return (
@@ -117,10 +114,10 @@ export function NavDropdown({
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200",
+          'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200',
           hasActiveItem
             ? activeColor
-            : "text-muted-foreground hover:text-foreground hover:bg-muted",
+            : 'text-muted-foreground hover:text-foreground hover:bg-muted',
           className
         )}
         aria-expanded={isOpen}
@@ -129,10 +126,7 @@ export function NavDropdown({
         {Icon && <Icon className="w-4 h-4" />}
         <span className="hidden sm:inline">{label}</span>
         <ChevronDown
-          className={cn(
-            "w-3 h-3 transition-transform duration-200",
-            isOpen && "rotate-180"
-          )}
+          className={cn('w-3 h-3 transition-transform duration-200', isOpen && 'rotate-180')}
         />
       </button>
 
@@ -144,25 +138,21 @@ export function NavDropdown({
           {items.map((item) => {
             const ItemIcon = item.icon;
             const isItemActive =
-              item.href === "/"
-                ? pathname === "/"
-                : pathname?.startsWith(item.href);
+              item.href === '/' ? pathname === '/' : pathname?.startsWith(item.href);
 
             const itemContent = (
               <>
                 {ItemIcon && <ItemIcon className="w-4 h-4" />}
                 <span>{item.label}</span>
-                {item.external && (
-                  <ExternalLink className="w-3 h-3 opacity-50 ml-auto" />
-                )}
+                {item.external && <ExternalLink className="w-3 h-3 opacity-50 ml-auto" />}
               </>
             );
 
             const itemClasses = cn(
-              "flex items-center gap-2 w-full px-3 py-2 text-sm transition-colors duration-200",
+              'flex items-center gap-2 w-full px-3 py-2 text-sm transition-colors duration-200',
               isItemActive
                 ? activeColor
-                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
             );
 
             if (item.external) {
@@ -198,4 +188,3 @@ export function NavDropdown({
     </div>
   );
 }
-

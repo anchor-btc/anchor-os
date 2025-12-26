@@ -1,6 +1,6 @@
 /* Anchor UI Design System */
-@import "@AnchorProtocol/ui/styles/globals.css";
-@import "@AnchorProtocol/ui/styles/themes/proofs.css";
+@import '@AnchorProtocol/ui/styles/globals.css';
+@import '@AnchorProtocol/ui/styles/themes/proofs.css';
 
 /* App-specific overrides for dark theme */
 :root {
@@ -18,39 +18,39 @@
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
-  
+
   #certificate-content {
     border: 2px solid #10b981 !important;
     box-shadow: none !important;
     margin: 0 !important;
     padding: 24px !important;
   }
-  
+
   #certificate-content * {
     color-adjust: exact !important;
     -webkit-print-color-adjust: exact !important;
   }
-  
+
   .bg-emerald-50 {
     background-color: #ecfdf5 !important;
   }
-  
+
   .bg-emerald-100 {
     background-color: #d1fae5 !important;
   }
-  
+
   .bg-slate-50 {
     background-color: #f8fafc !important;
   }
-  
+
   .bg-slate-100 {
     background-color: #f1f5f9 !important;
   }
-  
+
   .text-emerald-600 {
     color: #059669 !important;
   }
-  
+
   .border-emerald-500 {
     border-color: #10b981 !important;
   }

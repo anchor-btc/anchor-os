@@ -1,10 +1,10 @@
 //! Core backup engine using restic
 
-use anyhow::{Result};
+use anyhow::Result;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use tokio::process::Command;
-use tracing::{info, error};
+use tracing::{error, info};
 use uuid::Uuid;
 
 use crate::backup_config::BackupConfig as Config;
@@ -66,13 +66,15 @@ impl BackupEngine {
     pub fn new(config: Config) -> Self {
         Self { config }
     }
-    
+
     /// Get the restic repository path for a target
     fn get_repo_path(&self, target: &BackupTarget) -> String {
         match target {
             BackupTarget::Local => format!("{}/restic-repo", self.config.backup_dir),
             BackupTarget::S3 => {
-                if let (Some(endpoint), Some(bucket)) = (&self.config.s3_endpoint, &self.config.s3_bucket) {
+                if let (Some(endpoint), Some(bucket)) =
+                    (&self.config.s3_endpoint, &self.config.s3_bucket)
+                {
                     format!("s3:{}/{}", endpoint, bucket)
                 } else if let Some(bucket) = &self.config.s3_bucket {
                     format!("s3:s3.amazonaws.com/{}", bucket)
@@ -80,20 +82,24 @@ impl BackupEngine {
                     format!("{}/restic-repo", self.config.backup_dir)
                 }
             }
-            BackupTarget::Smb => {
-                self.config.smb_mount_point.clone()
-                    .unwrap_or_else(|| format!("{}/smb-backup", self.config.backup_dir))
-            }
+            BackupTarget::Smb => self
+                .config
+                .smb_mount_point
+                .clone()
+                .unwrap_or_else(|| format!("{}/smb-backup", self.config.backup_dir)),
         }
     }
-    
+
     /// Set up environment variables for restic
     fn get_restic_env(&self, target: &BackupTarget) -> Vec<(String, String)> {
         let mut env = vec![
-            ("RESTIC_PASSWORD".to_string(), self.config.restic_password.clone()),
+            (
+                "RESTIC_PASSWORD".to_string(),
+                self.config.restic_password.clone(),
+            ),
             ("RESTIC_REPOSITORY".to_string(), self.get_repo_path(target)),
         ];
-        
+
         if let BackupTarget::S3 = target {
             if let Some(key) = &self.config.s3_access_key {
                 env.push(("AWS_ACCESS_KEY_ID".to_string(), key.clone()));
@@ -102,26 +108,26 @@ impl BackupEngine {
                 env.push(("AWS_SECRET_ACCESS_KEY".to_string(), secret.clone()));
             }
         }
-        
+
         env
     }
-    
+
     /// Initialize restic repository if not exists
     pub async fn init_repo(&self, target: &BackupTarget) -> Result<()> {
         let repo_path = self.get_repo_path(target);
         info!("Initializing restic repository at: {}", repo_path);
-        
+
         let env = self.get_restic_env(target);
-        
+
         let mut cmd = Command::new("restic");
         cmd.arg("init");
-        
+
         for (key, value) in env {
             cmd.env(key, value);
         }
-        
+
         let output = cmd.output().await?;
-        
+
         if output.status.success() {
             info!("Repository initialized successfully");
             Ok(())
@@ -132,48 +138,56 @@ impl BackupEngine {
                 Ok(())
             } else {
                 error!("Failed to initialize repository: {}", stderr);
-                Err(anyhow::anyhow!("Failed to initialize repository: {}", stderr))
+                Err(anyhow::anyhow!(
+                    "Failed to initialize repository: {}",
+                    stderr
+                ))
             }
         }
     }
-    
+
     /// Run a backup of specified paths
-    pub async fn backup(&self, target: &BackupTarget, paths: &[&str], tags: &[&str]) -> Result<BackupJob> {
+    pub async fn backup(
+        &self,
+        target: &BackupTarget,
+        paths: &[&str],
+        tags: &[&str],
+    ) -> Result<BackupJob> {
         let job_id = Uuid::new_v4().to_string();
         let started_at = Utc::now();
-        
+
         info!("Starting backup job {} to {:?}", job_id, target);
-        
+
         // Ensure repo is initialized
         self.init_repo(target).await?;
-        
+
         let env = self.get_restic_env(target);
-        
+
         let mut cmd = Command::new("restic");
         cmd.arg("backup");
         cmd.arg("--json");
-        
+
         for tag in tags {
             cmd.arg("--tag").arg(tag);
         }
-        
+
         for path in paths {
             cmd.arg(path);
         }
-        
+
         for (key, value) in env {
             cmd.env(key, value);
         }
-        
+
         let output = cmd.output().await?;
-        
+
         if output.status.success() {
             let stdout = String::from_utf8_lossy(&output.stdout);
             info!("Backup completed successfully");
-            
+
             // Parse restic output to get stats
             let (size_bytes, files_count) = self.parse_backup_output(&stdout);
-            
+
             Ok(BackupJob {
                 id: job_id,
                 started_at,
@@ -188,7 +202,7 @@ impl BackupEngine {
         } else {
             let stderr = String::from_utf8_lossy(&output.stderr);
             error!("Backup failed: {}", stderr);
-            
+
             Ok(BackupJob {
                 id: job_id,
                 started_at,
@@ -202,25 +216,24 @@ impl BackupEngine {
             })
         }
     }
-    
+
     /// List snapshots in the repository
     pub async fn list_snapshots(&self, target: &BackupTarget) -> Result<Vec<ResticSnapshot>> {
         let env = self.get_restic_env(target);
-        
+
         let mut cmd = Command::new("restic");
         cmd.arg("snapshots");
         cmd.arg("--json");
-        
+
         for (key, value) in env {
             cmd.env(key, value);
         }
-        
+
         let output = cmd.output().await?;
-        
+
         if output.status.success() {
             let stdout = String::from_utf8_lossy(&output.stdout);
-            let snapshots: Vec<ResticSnapshot> = serde_json::from_str(&stdout)
-                .unwrap_or_default();
+            let snapshots: Vec<ResticSnapshot> = serde_json::from_str(&stdout).unwrap_or_default();
             Ok(snapshots)
         } else {
             let stderr = String::from_utf8_lossy(&output.stderr);
@@ -231,24 +244,29 @@ impl BackupEngine {
             }
         }
     }
-    
+
     /// Restore from a snapshot
-    pub async fn restore(&self, target: &BackupTarget, snapshot_id: &str, restore_path: &str) -> Result<()> {
+    pub async fn restore(
+        &self,
+        target: &BackupTarget,
+        snapshot_id: &str,
+        restore_path: &str,
+    ) -> Result<()> {
         info!("Restoring snapshot {} to {}", snapshot_id, restore_path);
-        
+
         let env = self.get_restic_env(target);
-        
+
         let mut cmd = Command::new("restic");
         cmd.arg("restore");
         cmd.arg(snapshot_id);
         cmd.arg("--target").arg(restore_path);
-        
+
         for (key, value) in env {
             cmd.env(key, value);
         }
-        
+
         let output = cmd.output().await?;
-        
+
         if output.status.success() {
             info!("Restore completed successfully");
             Ok(())
@@ -258,13 +276,13 @@ impl BackupEngine {
             Err(anyhow::anyhow!("Restore failed: {}", stderr))
         }
     }
-    
+
     /// Parse backup output to extract stats
     fn parse_backup_output(&self, output: &str) -> (Option<i64>, Option<i64>) {
         // Parse JSON lines from restic backup output
         let mut size_bytes = None;
         let mut files_count = None;
-        
+
         for line in output.lines() {
             if let Ok(json) = serde_json::from_str::<serde_json::Value>(line) {
                 if json.get("message_type").and_then(|v| v.as_str()) == Some("summary") {
@@ -273,7 +291,7 @@ impl BackupEngine {
                 }
             }
         }
-        
+
         (size_bytes, files_count)
     }
 }

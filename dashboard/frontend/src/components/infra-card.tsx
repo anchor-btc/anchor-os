@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { App, getAppStatus } from "@/lib/apps";
-import { Container, startContainer, stopContainer } from "@/lib/api";
-import { cn } from "@/lib/utils";
+import { useState } from 'react';
+import { App, getAppStatus } from '@/lib/apps';
+import { Container, startContainer, stopContainer } from '@/lib/api';
+import { cn } from '@/lib/utils';
 import {
   Search,
   Grid3X3,
@@ -12,14 +12,13 @@ import {
   Wallet,
   Database,
   Pickaxe,
-  Power,
   Terminal,
   Server,
   Loader2,
   Play,
   Square,
   Layers,
-} from "lucide-react";
+} from 'lucide-react';
 
 const iconMap: Record<string, React.ElementType> = {
   Search,
@@ -49,7 +48,7 @@ export function InfraCard({ app, containers, onToggle, onShowLogs }: InfraCardPr
     containers.map((c) => ({ name: c.name, state: c.state }))
   );
 
-  const isRunning = status === "running";
+  const isRunning = status === 'running';
 
   const handleToggle = async () => {
     setLoading(true);
@@ -63,7 +62,7 @@ export function InfraCard({ app, containers, onToggle, onShowLogs }: InfraCardPr
       }
       onToggle?.();
     } catch (error) {
-      console.error("Failed to toggle:", error);
+      console.error('Failed to toggle:', error);
     } finally {
       setLoading(false);
     }
@@ -72,16 +71,16 @@ export function InfraCard({ app, containers, onToggle, onShowLogs }: InfraCardPr
   return (
     <div
       className={cn(
-        "bg-card border rounded-xl p-4 transition-all",
-        isRunning ? "border-success/30" : "border-border"
+        'bg-card border rounded-xl p-4 transition-all',
+        isRunning ? 'border-success/30' : 'border-border'
       )}
     >
       {/* Header */}
       <div className="flex items-center gap-3 mb-3">
         <div
           className={cn(
-            "w-10 h-10 rounded-lg flex items-center justify-center shrink-0",
-            isRunning ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
+            'w-10 h-10 rounded-lg flex items-center justify-center shrink-0',
+            isRunning ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground'
           )}
         >
           <Icon className="w-5 h-5" />
@@ -91,13 +90,13 @@ export function InfraCard({ app, containers, onToggle, onShowLogs }: InfraCardPr
             <h3 className="font-medium text-sm text-foreground truncate">{app.name}</h3>
             <div
               className={cn(
-                "w-2 h-2 rounded-full shrink-0",
-                isRunning ? "bg-success" : "bg-muted-foreground/30"
+                'w-2 h-2 rounded-full shrink-0',
+                isRunning ? 'bg-success' : 'bg-muted-foreground/30'
               )}
             />
           </div>
           <p className="text-xs text-muted-foreground">
-            {app.port ? `Port ${app.port}` : isRunning ? "Running" : "Stopped"}
+            {app.port ? `Port ${app.port}` : isRunning ? 'Running' : 'Stopped'}
           </p>
         </div>
       </div>
@@ -111,15 +110,15 @@ export function InfraCard({ app, containers, onToggle, onShowLogs }: InfraCardPr
           <Terminal className="w-3.5 h-3.5" />
           Logs
         </button>
-        
+
         <button
           onClick={handleToggle}
           disabled={loading}
           className={cn(
-            "flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium transition-colors",
+            'flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium transition-colors',
             isRunning
-              ? "bg-muted/50 hover:bg-error/10 text-muted-foreground hover:text-error"
-              : "bg-success/10 text-success hover:bg-success/20"
+              ? 'bg-muted/50 hover:bg-error/10 text-muted-foreground hover:text-error'
+              : 'bg-success/10 text-success hover:bg-success/20'
           )}
         >
           {loading ? (
@@ -129,7 +128,7 @@ export function InfraCard({ app, containers, onToggle, onShowLogs }: InfraCardPr
           ) : (
             <Play className="w-3.5 h-3.5" />
           )}
-          {isRunning ? "Stop" : "Start"}
+          {isRunning ? 'Stop' : 'Start'}
         </button>
       </div>
     </div>

@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { LucideIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { IconBox } from "./icon-box";
-import { dsColors, type DSColor } from "./colors";
+import * as React from 'react';
+import { LucideIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { IconBox } from './icon-box';
+import { type DSColor } from './colors';
 
 export interface StatCardProps {
   /** The Lucide icon to display */
@@ -33,7 +33,7 @@ export function StatCard({
   icon,
   value,
   label,
-  color = "primary",
+  color = 'primary',
   isLoading = false,
   className,
 }: StatCardProps) {
@@ -41,7 +41,7 @@ export function StatCard({
     return (
       <div
         className={cn(
-          "bg-card border border-border rounded-xl p-5 relative overflow-hidden",
+          'bg-card border border-border rounded-xl p-5 relative overflow-hidden',
           className
         )}
       >
@@ -56,15 +56,15 @@ export function StatCard({
   return (
     <div
       className={cn(
-        "bg-card border border-border rounded-xl p-5",
-        "transition-colors duration-200",
-        "hover:border-border/80",
+        'bg-card border border-border rounded-xl p-5',
+        'transition-colors duration-200',
+        'hover:border-border/80',
         className
       )}
     >
       <IconBox icon={icon} color={color} size="md" className="mb-3" />
       <p className="text-3xl font-bold text-foreground tabular-nums tracking-tight">
-        {typeof value === "number" ? value.toLocaleString() : value}
+        {typeof value === 'number' ? value.toLocaleString() : value}
       </p>
       <p className="text-sm text-muted-foreground mt-1">{label}</p>
     </div>
@@ -93,11 +93,11 @@ export interface StatGridProps {
 }
 
 const columnClasses = {
-  1: "grid-cols-1",
-  2: "grid-cols-2",
-  3: "grid-cols-3",
-  4: "grid-cols-4",
-  6: "grid-cols-6",
+  1: 'grid-cols-1',
+  2: 'grid-cols-2',
+  3: 'grid-cols-3',
+  4: 'grid-cols-4',
+  6: 'grid-cols-6',
 } as const;
 
 /**
@@ -128,7 +128,7 @@ export function StatGrid({
   );
 
   return (
-    <div className={cn("grid gap-4", gridCols, className)}>
+    <div className={cn('grid gap-4', gridCols, className)}>
       {items.map((item, index) => (
         <StatCard
           key={index}
@@ -142,4 +142,3 @@ export function StatGrid({
     </div>
   );
 }
-

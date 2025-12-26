@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import {
   CheckCircle,
   XCircle,
@@ -21,20 +21,20 @@ import {
   Database,
   FolderArchive,
   History,
-} from "lucide-react";
+} from 'lucide-react';
 
 // Import DS components
-import { PageHeader } from "@/components/ds";
+import { PageHeader } from '@/components/ds';
 
-const BACKUP_API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8010";
+const BACKUP_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8010';
 
 interface BackupJob {
   id: string;
   started_at: string;
   completed_at: string | null;
-  status: "running" | "completed" | "failed";
-  backup_type: "full" | "incremental";
-  target: "local" | "s3" | "smb";
+  status: 'running' | 'completed' | 'failed';
+  backup_type: 'full' | 'incremental';
+  target: 'local' | 's3' | 'smb';
   size_bytes: number | null;
   files_count: number | null;
   error_message: string | null;
@@ -71,19 +71,23 @@ interface RestoreResponse {
 }
 
 function formatBytes(bytes: number | null): string {
-  if (bytes === null || bytes === 0) return "0 B";
+  if (bytes === null || bytes === 0) return '0 B';
   const k = 1024;
-  const sizes = ["B", "KB", "MB", "GB", "TB"];
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-function formatDuration(startStr: string, endStr: string | null, t: (key: string) => string): string {
-  if (!endStr) return t("backupHistory.inProgress");
+function formatDuration(
+  startStr: string,
+  endStr: string | null,
+  t: (key: string) => string
+): string {
+  if (!endStr) return t('backupHistory.inProgress');
   const start = new Date(startStr);
   const end = new Date(endStr);
   const diffMs = end.getTime() - start.getTime();
-  
+
   if (diffMs < 1000) return `${diffMs}ms`;
   if (diffMs < 60000) return `${Math.round(diffMs / 1000)}s`;
   if (diffMs < 3600000) return `${Math.round(diffMs / 60000)}m`;
@@ -92,11 +96,11 @@ function formatDuration(startStr: string, endStr: string | null, t: (key: string
 
 function StatusIcon({ status }: { status: string }) {
   switch (status) {
-    case "running":
+    case 'running':
       return <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />;
-    case "completed":
+    case 'completed':
       return <CheckCircle className="w-4 h-4 text-green-500" />;
-    case "failed":
+    case 'failed':
       return <XCircle className="w-4 h-4 text-red-500" />;
     default:
       return <Clock className="w-4 h-4 text-muted-foreground" />;
@@ -105,11 +109,11 @@ function StatusIcon({ status }: { status: string }) {
 
 function TargetIcon({ type }: { type: string }) {
   switch (type) {
-    case "local":
+    case 'local':
       return <HardDrive className="w-4 h-4" />;
-    case "s3":
+    case 's3':
       return <Cloud className="w-4 h-4" />;
-    case "smb":
+    case 'smb':
       return <Server className="w-4 h-4" />;
     default:
       return <HardDrive className="w-4 h-4" />;
@@ -119,8 +123,8 @@ function TargetIcon({ type }: { type: string }) {
 export default function BackupHistoryPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const [filter, setFilter] = useState<"all" | "completed" | "failed">("all");
-  const [searchTerm, setSearchTerm] = useState("");
+  const [filter, setFilter] = useState<'all' | 'completed' | 'failed'>('all');
+  const [searchTerm, setSearchTerm] = useState('');
   const [showRestoreModal, setShowRestoreModal] = useState(false);
   const [selectedSnapshot, setSelectedSnapshot] = useState<Snapshot | null>(null);
   const [isRestoring, setIsRestoring] = useState(false);
@@ -129,20 +133,20 @@ export default function BackupHistoryPage() {
   const [pendingSnapshot, setPendingSnapshot] = useState<Snapshot | null>(null);
 
   const { data: history, isLoading } = useQuery<HistoryResponse>({
-    queryKey: ["backup-history"],
+    queryKey: ['backup-history'],
     queryFn: async () => {
       const res = await fetch(`${BACKUP_API_URL}/backup/history`);
-      if (!res.ok) throw new Error("Failed to fetch history");
+      if (!res.ok) throw new Error('Failed to fetch history');
       return res.json();
     },
     refetchInterval: 10000,
   });
 
   const { data: snapshots } = useQuery<SnapshotsResponse>({
-    queryKey: ["backup-snapshots"],
+    queryKey: ['backup-snapshots'],
     queryFn: async () => {
       const res = await fetch(`${BACKUP_API_URL}/backup/snapshots/local`);
-      if (!res.ok) throw new Error("Failed to fetch snapshots");
+      if (!res.ok) throw new Error('Failed to fetch snapshots');
       return res.json();
     },
   });
@@ -150,20 +154,20 @@ export default function BackupHistoryPage() {
   const restoreBackup = useMutation({
     mutationFn: async (snapshotId: string) => {
       const res = await fetch(`${BACKUP_API_URL}/backup/restore`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           snapshot_id: snapshotId,
-          target: "local",
+          target: 'local',
         }),
       });
-      if (!res.ok) throw new Error("Failed to restore backup");
+      if (!res.ok) throw new Error('Failed to restore backup');
       return res.json() as Promise<RestoreResponse>;
     },
     onSuccess: (data) => {
       setRestoreResult(data);
       setIsRestoring(false);
-      queryClient.invalidateQueries({ queryKey: ["backup-status"] });
+      queryClient.invalidateQueries({ queryKey: ['backup-status'] });
     },
     onError: (error) => {
       setRestoreResult({ success: false, message: error.message, errors: [error.message] });
@@ -174,17 +178,17 @@ export default function BackupHistoryPage() {
   const handleRestoreClick = (backupId: string) => {
     // Find the corresponding snapshot by matching time (approximate)
     // Backup jobs and snapshots are created at roughly the same time
-    const backup = history?.backups?.find(b => b.id === backupId);
+    const backup = history?.backups?.find((b) => b.id === backupId);
     if (!backup) return;
-    
+
     // Try to find a snapshot that was created around the same time
     const backupTime = new Date(backup.started_at).getTime();
-    const matchingSnapshot = snapshots?.snapshots?.find(s => {
+    const matchingSnapshot = snapshots?.snapshots?.find((s) => {
       const snapshotTime = new Date(s.time).getTime();
       // Match if within 5 minutes
       return Math.abs(snapshotTime - backupTime) < 5 * 60 * 1000;
     });
-    
+
     if (matchingSnapshot) {
       setPendingSnapshot(matchingSnapshot);
       setShowConfirmDialog(true);
@@ -215,8 +219,8 @@ export default function BackupHistoryPage() {
   };
 
   const filteredBackups = history?.backups?.filter((backup) => {
-    if (filter === "completed" && backup.status !== "completed") return false;
-    if (filter === "failed" && backup.status !== "failed") return false;
+    if (filter === 'completed' && backup.status !== 'completed') return false;
+    if (filter === 'failed' && backup.status !== 'failed') return false;
     if (searchTerm && !backup.id.toLowerCase().includes(searchTerm.toLowerCase())) {
       return false;
     }
@@ -225,8 +229,8 @@ export default function BackupHistoryPage() {
 
   const stats = {
     total: history?.total || 0,
-    completed: history?.backups?.filter((b) => b.status === "completed").length || 0,
-    failed: history?.backups?.filter((b) => b.status === "failed").length || 0,
+    completed: history?.backups?.filter((b) => b.status === 'completed').length || 0,
+    failed: history?.backups?.filter((b) => b.status === 'failed').length || 0,
   };
 
   return (
@@ -235,8 +239,8 @@ export default function BackupHistoryPage() {
       <PageHeader
         icon={History}
         iconColor="purple"
-        title={t("backupHistory.title")}
-        subtitle={t("backupHistory.subtitle")}
+        title={t('backupHistory.title')}
+        subtitle={t('backupHistory.subtitle')}
         backHref="/backup"
       />
 
@@ -245,21 +249,21 @@ export default function BackupHistoryPage() {
         <div className="bg-card border border-border rounded-xl p-4">
           <div className="flex items-center gap-2 text-muted-foreground mb-1">
             <Calendar className="w-4 h-4" />
-            <span className="text-sm font-medium">{t("backupHistory.totalBackups")}</span>
+            <span className="text-sm font-medium">{t('backupHistory.totalBackups')}</span>
           </div>
           <p className="text-2xl font-bold text-foreground">{stats.total}</p>
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
           <div className="flex items-center gap-2 text-green-500 mb-1">
             <CheckCircle className="w-4 h-4" />
-            <span className="text-sm font-medium">{t("backupHistory.successful")}</span>
+            <span className="text-sm font-medium">{t('backupHistory.successful')}</span>
           </div>
           <p className="text-2xl font-bold text-foreground">{stats.completed}</p>
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
           <div className="flex items-center gap-2 text-red-500 mb-1">
             <XCircle className="w-4 h-4" />
-            <span className="text-sm font-medium">{t("backupHistory.failed")}</span>
+            <span className="text-sm font-medium">{t('backupHistory.failed')}</span>
           </div>
           <p className="text-2xl font-bold text-foreground">{stats.failed}</p>
         </div>
@@ -271,7 +275,7 @@ export default function BackupHistoryPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
             type="text"
-            placeholder={t("backupHistory.searchPlaceholder")}
+            placeholder={t('backupHistory.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground"
@@ -279,34 +283,34 @@ export default function BackupHistoryPage() {
         </div>
         <div className="flex items-center gap-2 bg-muted rounded-lg p-1">
           <button
-            onClick={() => setFilter("all")}
+            onClick={() => setFilter('all')}
             className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-              filter === "all"
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
+              filter === 'all'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            {t("backupHistory.all")}
+            {t('backupHistory.all')}
           </button>
           <button
-            onClick={() => setFilter("completed")}
+            onClick={() => setFilter('completed')}
             className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-              filter === "completed"
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
+              filter === 'completed'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            {t("backupHistory.completed")}
+            {t('backupHistory.completed')}
           </button>
           <button
-            onClick={() => setFilter("failed")}
+            onClick={() => setFilter('failed')}
             className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-              filter === "failed"
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
+              filter === 'failed'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            {t("backupHistory.failed")}
+            {t('backupHistory.failed')}
           </button>
         </div>
       </div>
@@ -317,28 +321,28 @@ export default function BackupHistoryPage() {
           <thead>
             <tr className="border-b border-border bg-muted/50">
               <th className="text-left p-3 text-sm font-medium text-muted-foreground">
-                {t("backupHistory.status")}
+                {t('backupHistory.status')}
               </th>
               <th className="text-left p-3 text-sm font-medium text-muted-foreground">
-                {t("backupHistory.dateTime")}
+                {t('backupHistory.dateTime')}
               </th>
               <th className="text-left p-3 text-sm font-medium text-muted-foreground">
-                {t("backupHistory.id")}
+                {t('backupHistory.id')}
               </th>
               <th className="text-left p-3 text-sm font-medium text-muted-foreground">
-                {t("backupHistory.type")}
+                {t('backupHistory.type')}
               </th>
               <th className="text-left p-3 text-sm font-medium text-muted-foreground">
-                {t("backupHistory.target")}
+                {t('backupHistory.target')}
               </th>
               <th className="text-left p-3 text-sm font-medium text-muted-foreground">
-                {t("backupHistory.size")}
+                {t('backupHistory.size')}
               </th>
               <th className="text-left p-3 text-sm font-medium text-muted-foreground">
-                {t("backupHistory.duration")}
+                {t('backupHistory.duration')}
               </th>
               <th className="text-right p-3 text-sm font-medium text-muted-foreground">
-                {t("backupHistory.actions")}
+                {t('backupHistory.actions')}
               </th>
             </tr>
           </thead>
@@ -394,13 +398,13 @@ export default function BackupHistoryPage() {
                   </td>
                   <td className="p-3">
                     <div className="flex items-center justify-end gap-1">
-                      {backup.status === "completed" && (
+                      {backup.status === 'completed' && (
                         <>
                           <button
                             onClick={() => handleRestoreClick(backup.id)}
                             disabled={isRestoring}
                             className="p-1.5 hover:bg-primary/10 rounded-md transition-colors disabled:opacity-50"
-                            title={t("backupHistory.restore")}
+                            title={t('backupHistory.restore')}
                           >
                             {isRestoring && selectedSnapshot ? (
                               <Loader2 className="w-4 h-4 text-primary animate-spin" />
@@ -410,7 +414,7 @@ export default function BackupHistoryPage() {
                           </button>
                           <button
                             className="p-1.5 hover:bg-muted rounded-md transition-colors"
-                            title={t("backupHistory.download")}
+                            title={t('backupHistory.download')}
                           >
                             <Download className="w-4 h-4 text-muted-foreground" />
                           </button>
@@ -418,7 +422,7 @@ export default function BackupHistoryPage() {
                       )}
                       <button
                         className="p-1.5 hover:bg-red-500/10 rounded-md transition-colors"
-                        title={t("backupHistory.delete")}
+                        title={t('backupHistory.delete')}
                       >
                         <Trash2 className="w-4 h-4 text-red-500" />
                       </button>
@@ -428,13 +432,10 @@ export default function BackupHistoryPage() {
               ))
             ) : (
               <tr>
-                <td
-                  colSpan={8}
-                  className="p-8 text-center text-muted-foreground"
-                >
-                  {filter !== "all"
-                    ? t("backupHistory.noFilteredBackups", { filter: t(`backupHistory.${filter}`) })
-                    : t("backupHistory.noBackupsYet")}
+                <td colSpan={8} className="p-8 text-center text-muted-foreground">
+                  {filter !== 'all'
+                    ? t('backupHistory.noFilteredBackups', { filter: t(`backupHistory.${filter}`) })
+                    : t('backupHistory.noBackupsYet')}
                 </td>
               </tr>
             )}
@@ -446,20 +447,17 @@ export default function BackupHistoryPage() {
       {filteredBackups && filteredBackups.length > 0 && (
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>
-            {t("backupHistory.showing", { count: filteredBackups.length, total: history?.total || 0 })}
+            {t('backupHistory.showing', {
+              count: filteredBackups.length,
+              total: history?.total || 0,
+            })}
           </span>
           <div className="flex items-center gap-2">
-            <button
-              disabled
-              className="px-3 py-1.5 bg-muted rounded-md disabled:opacity-50"
-            >
-              {t("backupHistory.previous")}
+            <button disabled className="px-3 py-1.5 bg-muted rounded-md disabled:opacity-50">
+              {t('backupHistory.previous')}
             </button>
-            <button
-              disabled
-              className="px-3 py-1.5 bg-muted rounded-md disabled:opacity-50"
-            >
-              {t("backupHistory.next")}
+            <button disabled className="px-3 py-1.5 bg-muted rounded-md disabled:opacity-50">
+              {t('backupHistory.next')}
             </button>
           </div>
         </div>
@@ -470,9 +468,7 @@ export default function BackupHistoryPage() {
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[70]">
           <div className="bg-card border border-border rounded-xl p-8 w-full max-w-md mx-4 text-center">
             <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
-            <h3 className="text-lg font-bold text-foreground mb-2">
-              Restoring from Backup
-            </h3>
+            <h3 className="text-lg font-bold text-foreground mb-2">Restoring from Backup</h3>
             <p className="text-muted-foreground mb-4">
               This may take several minutes. Please do not close this page.
             </p>
@@ -486,7 +482,7 @@ export default function BackupHistoryPage() {
           <div className="bg-card border border-border rounded-xl p-6 w-full max-w-lg mx-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-foreground">
-                Restore {restoreResult.success ? "Complete" : "Failed"}
+                Restore {restoreResult.success ? 'Complete' : 'Failed'}
               </h3>
               <button
                 onClick={() => setRestoreResult(null)}
@@ -495,12 +491,14 @@ export default function BackupHistoryPage() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
-            <div className={`rounded-lg p-4 ${
-              restoreResult.success 
-                ? "bg-green-500/10 border border-green-500/20" 
-                : "bg-red-500/10 border border-red-500/20"
-            }`}>
+
+            <div
+              className={`rounded-lg p-4 ${
+                restoreResult.success
+                  ? 'bg-green-500/10 border border-green-500/20'
+                  : 'bg-red-500/10 border border-red-500/20'
+              }`}
+            >
               <div className="flex items-start gap-3">
                 {restoreResult.success ? (
                   <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
@@ -508,32 +506,38 @@ export default function BackupHistoryPage() {
                   <XCircle className="w-5 h-5 text-red-500 mt-0.5" />
                 )}
                 <div className="flex-1">
-                  <p className={`font-medium ${restoreResult.success ? "text-green-500" : "text-red-500"}`}>
+                  <p
+                    className={`font-medium ${restoreResult.success ? 'text-green-500' : 'text-red-500'}`}
+                  >
                     {restoreResult.message}
                   </p>
-                  
+
                   {restoreResult.duration_ms && (
                     <p className="text-xs text-muted-foreground mt-1">
                       Completed in {(restoreResult.duration_ms / 1000).toFixed(1)}s
                     </p>
                   )}
-                  
-                  {restoreResult.databases_restored && restoreResult.databases_restored.length > 0 && (
-                    <div className="mt-3">
-                      <p className="text-sm font-medium text-foreground flex items-center gap-1">
-                        <Database className="w-4 h-4" />
-                        Databases Restored
-                      </p>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {restoreResult.databases_restored.map((db) => (
-                          <span key={db} className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded">
-                            {db}
-                          </span>
-                        ))}
+
+                  {restoreResult.databases_restored &&
+                    restoreResult.databases_restored.length > 0 && (
+                      <div className="mt-3">
+                        <p className="text-sm font-medium text-foreground flex items-center gap-1">
+                          <Database className="w-4 h-4" />
+                          Databases Restored
+                        </p>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {restoreResult.databases_restored.map((db) => (
+                            <span
+                              key={db}
+                              className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded"
+                            >
+                              {db}
+                            </span>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  
+                    )}
+
                   {restoreResult.volumes_restored && restoreResult.volumes_restored.length > 0 && (
                     <div className="mt-3">
                       <p className="text-sm font-medium text-foreground flex items-center gap-1">
@@ -542,20 +546,26 @@ export default function BackupHistoryPage() {
                       </p>
                       <div className="flex flex-wrap gap-1 mt-1">
                         {restoreResult.volumes_restored.map((vol) => (
-                          <span key={vol} className="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded">
+                          <span
+                            key={vol}
+                            className="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded"
+                          >
                             {vol}
                           </span>
                         ))}
                       </div>
                     </div>
                   )}
-                  
+
                   {restoreResult.errors && restoreResult.errors.length > 0 && (
                     <div className="mt-3">
                       <p className="text-sm font-medium text-red-400">Errors:</p>
                       <ul className="mt-1 space-y-1">
                         {restoreResult.errors.map((error, i) => (
-                          <li key={i} className="text-xs text-red-400 bg-red-500/10 px-2 py-1 rounded">
+                          <li
+                            key={i}
+                            className="text-xs text-red-400 bg-red-500/10 px-2 py-1 rounded"
+                          >
                             {error}
                           </li>
                         ))}
@@ -565,7 +575,7 @@ export default function BackupHistoryPage() {
                 </div>
               </div>
             </div>
-            
+
             <div className="flex justify-end mt-4">
               <button
                 onClick={() => setRestoreResult(null)}
@@ -586,22 +596,18 @@ export default function BackupHistoryPage() {
               <div className="p-3 bg-red-500/10 rounded-full">
                 <AlertTriangle className="w-6 h-6 text-red-500" />
               </div>
-              <h3 className="text-lg font-bold text-foreground">
-                Confirm Restore
-              </h3>
+              <h3 className="text-lg font-bold text-foreground">Confirm Restore</h3>
             </div>
-            
+
             <div className="space-y-3 mb-6">
-              <p className="text-muted-foreground">
-                You are about to restore from snapshot:
-              </p>
+              <p className="text-muted-foreground">You are about to restore from snapshot:</p>
               <div className="bg-muted/50 rounded-lg p-3">
                 <p className="font-mono text-sm text-primary">{pendingSnapshot.short_id}</p>
                 <p className="text-xs text-muted-foreground mt-1">
                   {new Date(pendingSnapshot.time).toLocaleString()}
                 </p>
               </div>
-              
+
               <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
                 <p className="text-sm text-red-400 font-medium">Warning: This action will:</p>
                 <ul className="text-sm text-red-400/80 mt-2 space-y-1 list-disc list-inside">
@@ -612,7 +618,7 @@ export default function BackupHistoryPage() {
                 </ul>
               </div>
             </div>
-            
+
             <div className="flex gap-3 justify-end">
               <button
                 onClick={cancelRestore}
@@ -637,9 +643,7 @@ export default function BackupHistoryPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-card border border-border rounded-xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto mx-4">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-foreground">
-                Select Snapshot to Restore
-              </h2>
+              <h2 className="text-xl font-bold text-foreground">Select Snapshot to Restore</h2>
               <button
                 onClick={() => setShowRestoreModal(false)}
                 className="p-2 hover:bg-muted rounded-lg transition-colors"
@@ -654,9 +658,7 @@ export default function BackupHistoryPage() {
 
             <div className="space-y-2">
               {!snapshots?.snapshots?.length ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  No snapshots available
-                </div>
+                <div className="text-center py-8 text-muted-foreground">No snapshots available</div>
               ) : (
                 snapshots.snapshots.map((snapshot) => (
                   <div

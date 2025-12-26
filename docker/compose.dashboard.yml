@@ -10,7 +10,7 @@ services:
       dockerfile: dashboard/backend/Dockerfile
     container_name: anchor-dashboard-backend
     ports:
-      - "8010:8010"
+      - '8010:8010'
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ..:/anchor-project
@@ -36,7 +36,7 @@ services:
     networks:
       - anchor-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8010/health"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:8010/health']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -58,7 +58,7 @@ services:
         NEXT_PUBLIC_BACKUP_URL: http://localhost:8003
     container_name: anchor-dashboard-frontend
     ports:
-      - "8000:8000"
+      - '8000:8000'
     depends_on:
       anchor-dashboard-backend:
         condition: service_healthy
@@ -70,4 +70,3 @@ services:
       - default
       - full
       - anchor-dashboard
-

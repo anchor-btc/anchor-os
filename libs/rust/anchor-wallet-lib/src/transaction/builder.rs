@@ -1,12 +1,13 @@
 //! Transaction builder for ANCHOR messages
 
-use bitcoin::{
-    absolute::LockTime,
-    transaction::Version,
-    Amount, OutPoint, ScriptBuf, Sequence, Transaction, TxIn, TxOut, Txid, Witness,
-};
 use anchor_core::carrier::{CarrierOutput, CarrierPreferences, CarrierSelector, CarrierType};
-use anchor_core::{Anchor, AnchorKind, ParsedAnchorMessage, create_anchor_script, encode_anchor_payload};
+use anchor_core::{
+    create_anchor_script, encode_anchor_payload, Anchor, AnchorKind, ParsedAnchorMessage,
+};
+use bitcoin::{
+    absolute::LockTime, transaction::Version, Amount, OutPoint, ScriptBuf, Sequence, Transaction,
+    TxIn, TxOut, Txid, Witness,
+};
 
 use super::anchor_tx::{AnchorTransaction, CarrierData};
 use crate::error::{Result, WalletError};
@@ -64,13 +65,15 @@ impl TransactionBuilder {
 
     /// Add an anchor to a parent message
     pub fn anchor(mut self, parent_txid: Txid, parent_vout: u8) -> Self {
-        self.anchors.push(Anchor::from_txid(&parent_txid, parent_vout));
+        self.anchors
+            .push(Anchor::from_txid(&parent_txid, parent_vout));
         self
     }
 
     /// Add an anchor from a txid string
     pub fn anchor_str(mut self, parent_txid: &str, parent_vout: u8) -> Result<Self> {
-        let txid: Txid = parent_txid.parse()
+        let txid: Txid = parent_txid
+            .parse()
             .map_err(|_| WalletError::InvalidTxid(parent_txid.to_string()))?;
         self.anchors.push(Anchor::from_txid(&txid, parent_vout));
         Ok(self)
@@ -85,7 +88,8 @@ impl TransactionBuilder {
 
     /// Add an input UTXO from strings
     pub fn input_str(mut self, txid: &str, vout: u32, value_sats: u64) -> Result<Self> {
-        let txid: Txid = txid.parse()
+        let txid: Txid = txid
+            .parse()
             .map_err(|_| WalletError::InvalidTxid(txid.to_string()))?;
         let outpoint = OutPoint { txid, vout };
         self.inputs.push((outpoint, value_sats));
@@ -135,14 +139,14 @@ impl TransactionBuilder {
     pub fn build_payload(&self) -> Result<Vec<u8>> {
         let message = self.build_message();
         let payload = encode_anchor_payload(&message);
-        
+
         if payload.len() > MAX_OP_RETURN_SIZE {
             return Err(WalletError::MessageTooLarge {
                 size: payload.len(),
                 max: MAX_OP_RETURN_SIZE,
             });
         }
-        
+
         Ok(payload)
     }
 
@@ -327,24 +331,22 @@ mod tests {
 
     #[test]
     fn test_build_payload() {
-        let builder = TransactionBuilder::new()
-            .body_text("Hello, ANCHOR!");
+        let builder = TransactionBuilder::new().body_text("Hello, ANCHOR!");
 
         let payload = builder.build_payload().unwrap();
         assert!(!payload.is_empty());
-        
+
         // Should start with magic bytes
         assert_eq!(&payload[0..4], &[0xA1, 0x1C, 0x00, 0x01]);
     }
 
     #[test]
     fn test_message_too_large() {
-        let large_body = "x".repeat(100);
-        let builder = TransactionBuilder::new()
-            .body_text(&large_body);
+        // MAX_OP_RETURN_SIZE is 100000, so exceeding that should fail
+        let large_body = "x".repeat(MAX_OP_RETURN_SIZE + 1);
+        let builder = TransactionBuilder::new().body_text(&large_body);
 
         let result = builder.build_payload();
         assert!(matches!(result, Err(WalletError::MessageTooLarge { .. })));
     }
 }
-

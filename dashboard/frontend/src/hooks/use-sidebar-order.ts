@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 // Category keys in default order
 export const DEFAULT_CATEGORY_ORDER = [
-  "protocol",
-  "apps",
-  "explorers",
-  "kernel",
-  "network",
+  'protocol',
+  'apps',
+  'explorers',
+  'kernel',
+  'network',
 ] as const;
 
 export type CategoryKey = (typeof DEFAULT_CATEGORY_ORDER)[number];
@@ -18,7 +18,7 @@ interface SidebarOrderState {
   itemOrder: Record<CategoryKey, string[]>; // appId[] per category
 }
 
-const STORAGE_KEY = "anchor-sidebar-order";
+const STORAGE_KEY = 'anchor-sidebar-order';
 
 const getDefaultState = (): SidebarOrderState => ({
   categoryOrder: [...DEFAULT_CATEGORY_ORDER],
@@ -35,7 +35,7 @@ export function useSidebarOrder() {
   const [state, setState] = useState<SidebarOrderState>(getDefaultState);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
-  
+
   // Snapshot of state before entering edit mode (for cancel functionality)
   const snapshotRef = useRef<SidebarOrderState | null>(null);
 
@@ -47,8 +47,8 @@ export function useSidebarOrder() {
         const parsed = JSON.parse(saved) as SidebarOrderState;
         // Merge with defaults to handle new categories
         setState({
-          categoryOrder: parsed.categoryOrder?.length 
-            ? parsed.categoryOrder 
+          categoryOrder: parsed.categoryOrder?.length
+            ? parsed.categoryOrder
             : [...DEFAULT_CATEGORY_ORDER],
           itemOrder: {
             ...getDefaultState().itemOrder,
@@ -72,19 +72,16 @@ export function useSidebarOrder() {
   }, []);
 
   // Set item order for a category directly (for dnd-kit)
-  const setItemOrder = useCallback(
-    (category: CategoryKey, newOrder: string[]) => {
-      setState((prev) => {
-        const newState = {
-          ...prev,
-          itemOrder: { ...prev.itemOrder, [category]: newOrder },
-        };
-        // Don't save to localStorage during edit - only on confirm
-        return newState;
-      });
-    },
-    []
-  );
+  const setItemOrder = useCallback((category: CategoryKey, newOrder: string[]) => {
+    setState((prev) => {
+      const newState = {
+        ...prev,
+        itemOrder: { ...prev.itemOrder, [category]: newOrder },
+      };
+      // Don't save to localStorage during edit - only on confirm
+      return newState;
+    });
+  }, []);
 
   // Get sorted items for a category
   const getSortedItems = useCallback(
@@ -96,7 +93,7 @@ export function useSidebarOrder() {
       return [...items].sort((a, b) => {
         const aIndex = order.indexOf(a.id);
         const bIndex = order.indexOf(b.id);
-        
+
         // If both are in order, sort by their position
         if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
         // If only a is in order, a comes first

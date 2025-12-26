@@ -1,17 +1,10 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import {
-  AppHeader,
-  AppLogo,
-  NavLink,
-  NavGroup,
-  Container,
-  Button,
-} from "@AnchorProtocol/ui";
-import { FileCheck, Home, Shield, List, User, BookOpen } from "lucide-react";
+import Link from 'next/link';
+import { AppHeader, AppLogo, NavLink, NavGroup, Container, Button } from '@AnchorProtocol/ui';
+import { FileCheck, Home, Shield, List, User, BookOpen } from 'lucide-react';
 
-const DOCS_URL = "http://localhost:3900/apps/proofs";
+const DOCS_URL = 'http://localhost:3900/apps/proofs';
 
 export function Header() {
   return (

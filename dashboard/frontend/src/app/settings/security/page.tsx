@@ -1,54 +1,54 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useTranslation } from "react-i18next";
-import { Shield, Lock, Clock, Eye, EyeOff, Loader2, Image, Check } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Shield, Lock, Clock, Eye, EyeOff, Loader2, Image, Check } from 'lucide-react';
 
 const DASHBOARD_BACKEND_URL =
-  process.env.NEXT_PUBLIC_DASHBOARD_BACKEND_URL || "http://localhost:8010";
+  process.env.NEXT_PUBLIC_DASHBOARD_BACKEND_URL || 'http://localhost:8010';
 
 // Lock screen background video options
 const BACKGROUND_VIDEOS = [
   {
-    id: "ocean-waves",
-    src: "/1918465-hd_1920_1080_24fps.mp4",
-    thumbnail: "/1918465-hd_1920_1080_24fps.mp4",
-    label: "Ocean Waves",
+    id: 'ocean-waves',
+    src: '/1918465-hd_1920_1080_24fps.mp4',
+    thumbnail: '/1918465-hd_1920_1080_24fps.mp4',
+    label: 'Ocean Waves',
   },
   {
-    id: "underwater",
-    src: "/10109224-hd_1920_1080_24fps.mp4",
-    thumbnail: "/10109224-hd_1920_1080_24fps.mp4",
-    label: "Underwater",
+    id: 'underwater',
+    src: '/10109224-hd_1920_1080_24fps.mp4',
+    thumbnail: '/10109224-hd_1920_1080_24fps.mp4',
+    label: 'Underwater',
   },
   {
-    id: "jellyfish",
-    src: "/12008759_1920_1080_30fps.mp4",
-    thumbnail: "/12008759_1920_1080_30fps.mp4",
-    label: "Jellyfish",
+    id: 'jellyfish',
+    src: '/12008759_1920_1080_30fps.mp4',
+    thumbnail: '/12008759_1920_1080_30fps.mp4',
+    label: 'Jellyfish',
   },
   {
-    id: "coral-reef",
-    src: "/5358852-hd_1920_1080_25fps.mp4",
-    thumbnail: "/5358852-hd_1920_1080_25fps.mp4",
-    label: "Coral Reef",
+    id: 'coral-reef',
+    src: '/5358852-hd_1920_1080_25fps.mp4',
+    thumbnail: '/5358852-hd_1920_1080_25fps.mp4',
+    label: 'Coral Reef',
   },
   {
-    id: "deep-blue",
-    src: "/19924824-hd_1920_1080_30fps.mp4",
-    thumbnail: "/19924824-hd_1920_1080_30fps.mp4",
-    label: "Deep Blue",
+    id: 'deep-blue',
+    src: '/19924824-hd_1920_1080_30fps.mp4',
+    thumbnail: '/19924824-hd_1920_1080_30fps.mp4',
+    label: 'Deep Blue',
   },
   {
-    id: "sea-turtle",
-    src: "/17799961-hd_1920_1080_25fps.mp4",
-    thumbnail: "/17799961-hd_1920_1080_25fps.mp4",
-    label: "Sea Turtle",
+    id: 'sea-turtle',
+    src: '/17799961-hd_1920_1080_25fps.mp4',
+    thumbnail: '/17799961-hd_1920_1080_25fps.mp4',
+    label: 'Sea Turtle',
   },
 ];
 
-const LOCK_SCREEN_BG_KEY = "anchor-lock-screen-bg";
-const DEFAULT_BG = "ocean-waves";
+const LOCK_SCREEN_BG_KEY = 'anchor-lock-screen-bg';
+const DEFAULT_BG = 'ocean-waves';
 
 interface AuthStatus {
   enabled: boolean;
@@ -60,12 +60,12 @@ export default function SecurityPage() {
   const { t } = useTranslation();
 
   const TIMEOUT_OPTIONS = [
-    { value: 60, label: t("security.timeouts.1min") },
-    { value: 300, label: t("security.timeouts.5min") },
-    { value: 900, label: t("security.timeouts.15min") },
-    { value: 1800, label: t("security.timeouts.30min") },
-    { value: 3600, label: t("security.timeouts.1hour") },
-    { value: -1, label: t("security.timeouts.never") },
+    { value: 60, label: t('security.timeouts.1min') },
+    { value: 300, label: t('security.timeouts.5min') },
+    { value: 900, label: t('security.timeouts.15min') },
+    { value: 1800, label: t('security.timeouts.30min') },
+    { value: 3600, label: t('security.timeouts.1hour') },
+    { value: -1, label: t('security.timeouts.never') },
   ];
 
   const [authStatus, setAuthStatus] = useState<AuthStatus | null>(null);
@@ -77,9 +77,9 @@ export default function SecurityPage() {
   // Password setup/change form
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [currentPassword, setCurrentPassword] = useState("");
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [selectedTimeout, setSelectedTimeout] = useState(300);
   const [selectedBackground, setSelectedBackground] = useState<string>(DEFAULT_BG);
@@ -88,7 +88,7 @@ export default function SecurityPage() {
     fetchAuthStatus();
     // Load saved background preference
     const savedBg = localStorage.getItem(LOCK_SCREEN_BG_KEY);
-    if (savedBg && BACKGROUND_VIDEOS.some(v => v.id === savedBg)) {
+    if (savedBg && BACKGROUND_VIDEOS.some((v) => v.id === savedBg)) {
       setSelectedBackground(savedBg);
     }
   }, []);
@@ -96,12 +96,12 @@ export default function SecurityPage() {
   const fetchAuthStatus = async () => {
     try {
       const res = await fetch(`${DASHBOARD_BACKEND_URL}/auth/status`);
-      if (!res.ok) throw new Error("Failed to fetch auth status");
+      if (!res.ok) throw new Error('Failed to fetch auth status');
       const data = await res.json();
       setAuthStatus(data);
       setSelectedTimeout(data.inactivity_timeout || 300);
     } catch {
-      setError(t("common.error"));
+      setError(t('common.error'));
     } finally {
       setLoading(false);
     }
@@ -110,11 +110,11 @@ export default function SecurityPage() {
   const handleSetupPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirmPassword) {
-      setError(t("security.passwordsDontMatch"));
+      setError(t('security.passwordsDontMatch'));
       return;
     }
     if (password.length < 4) {
-      setError(t("security.passwordTooShort"));
+      setError(t('security.passwordTooShort'));
       return;
     }
 
@@ -123,8 +123,8 @@ export default function SecurityPage() {
 
     try {
       const res = await fetch(`${DASHBOARD_BACKEND_URL}/auth/setup`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           password,
           inactivity_timeout: selectedTimeout === -1 ? null : selectedTimeout,
@@ -133,16 +133,16 @@ export default function SecurityPage() {
 
       const data = await res.json();
       if (data.success) {
-        setSuccess(t("security.passwordSet"));
+        setSuccess(t('security.passwordSet'));
         setShowPasswordForm(false);
-        setPassword("");
-        setConfirmPassword("");
+        setPassword('');
+        setConfirmPassword('');
         await fetchAuthStatus();
       } else {
-        setError(data.message || t("common.error"));
+        setError(data.message || t('common.error'));
       }
     } catch {
-      setError(t("common.error"));
+      setError(t('common.error'));
     } finally {
       setSaving(false);
     }
@@ -151,7 +151,7 @@ export default function SecurityPage() {
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirmPassword) {
-      setError(t("security.passwordsDontMatch"));
+      setError(t('security.passwordsDontMatch'));
       return;
     }
 
@@ -160,8 +160,8 @@ export default function SecurityPage() {
 
     try {
       const res = await fetch(`${DASHBOARD_BACKEND_URL}/auth/change-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           current_password: currentPassword,
           new_password: password,
@@ -170,42 +170,42 @@ export default function SecurityPage() {
 
       const data = await res.json();
       if (data.success) {
-        setSuccess(t("security.passwordChanged"));
+        setSuccess(t('security.passwordChanged'));
         setShowPasswordForm(false);
         setIsChangingPassword(false);
-        setPassword("");
-        setConfirmPassword("");
-        setCurrentPassword("");
+        setPassword('');
+        setConfirmPassword('');
+        setCurrentPassword('');
       } else {
-        setError(data.message || t("security.invalidPassword"));
+        setError(data.message || t('security.invalidPassword'));
       }
     } catch {
-      setError(t("common.error"));
+      setError(t('common.error'));
     } finally {
       setSaving(false);
     }
   };
 
   const handleDisableAuth = async () => {
-    if (!confirm(t("data.resetConfirm"))) return;
+    if (!confirm(t('data.resetConfirm'))) return;
 
     setSaving(true);
     setError(null);
 
     try {
       const res = await fetch(`${DASHBOARD_BACKEND_URL}/auth/disable`, {
-        method: "DELETE",
+        method: 'DELETE',
       });
 
       const data = await res.json();
       if (data.success) {
-        setSuccess(t("security.authDisabled"));
+        setSuccess(t('security.authDisabled'));
         await fetchAuthStatus();
       } else {
-        setError(data.message || t("common.error"));
+        setError(data.message || t('common.error'));
       }
     } catch {
-      setError(t("common.error"));
+      setError(t('common.error'));
     } finally {
       setSaving(false);
     }
@@ -219,8 +219,8 @@ export default function SecurityPage() {
 
     try {
       const res = await fetch(`${DASHBOARD_BACKEND_URL}/settings/auth`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           value: {
             enabled: authStatus.enabled,
@@ -231,11 +231,11 @@ export default function SecurityPage() {
       });
 
       if (res.ok) {
-        setSuccess(t("common.success"));
+        setSuccess(t('common.success'));
         await fetchAuthStatus();
       }
     } catch {
-      setError(t("common.error"));
+      setError(t('common.error'));
     } finally {
       setSaving(false);
     }
@@ -270,12 +270,8 @@ export default function SecurityPage() {
             <Shield className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-foreground">
-              {t("security.title")}
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              {t("security.description")}
-            </p>
+            <h2 className="text-lg font-semibold text-foreground">{t('security.title')}</h2>
+            <p className="text-sm text-muted-foreground">{t('security.description')}</p>
           </div>
         </div>
 
@@ -286,11 +282,9 @@ export default function SecurityPage() {
                 <div className="flex items-center gap-3">
                   <Lock className="w-5 h-5 text-muted-foreground" />
                   <div>
-                    <div className="font-medium text-foreground">
-                      {t("security.disabled")}
-                    </div>
+                    <div className="font-medium text-foreground">{t('security.disabled')}</div>
                     <div className="text-sm text-muted-foreground">
-                      {t("security.disabledDesc")}
+                      {t('security.disabledDesc')}
                     </div>
                   </div>
                 </div>
@@ -298,22 +292,22 @@ export default function SecurityPage() {
                   onClick={() => setShowPasswordForm(true)}
                   className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
                 >
-                  {t("security.enable")}
+                  {t('security.enable')}
                 </button>
               </div>
             ) : (
               <form onSubmit={handleSetupPassword} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">
-                    {t("security.newPassword")}
+                    {t('security.newPassword')}
                   </label>
                   <div className="relative">
                     <input
-                      type={showPassword ? "text" : "password"}
+                      type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className="w-full px-4 py-2 pr-10 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                      placeholder={t("lockScreen.placeholder")}
+                      placeholder={t('lockScreen.placeholder')}
                       required
                     />
                     <button
@@ -321,32 +315,28 @@ export default function SecurityPage() {
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                     >
-                      {showPassword ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">
-                    {t("security.confirmPassword")}
+                    {t('security.confirmPassword')}
                   </label>
                   <input
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                    placeholder={t("security.confirmPassword")}
+                    placeholder={t('security.confirmPassword')}
                     required
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">
-                    {t("security.autoLockDesc")}
+                    {t('security.autoLockDesc')}
                   </label>
                   <select
                     value={selectedTimeout}
@@ -367,7 +357,7 @@ export default function SecurityPage() {
                     onClick={() => setShowPasswordForm(false)}
                     className="px-4 py-2 border border-border rounded-lg text-sm font-medium hover:bg-secondary transition-colors"
                   >
-                    {t("common.cancel")}
+                    {t('common.cancel')}
                   </button>
                   <button
                     type="submit"
@@ -375,7 +365,7 @@ export default function SecurityPage() {
                     className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
                   >
                     {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-                    {t("security.setPassword")}
+                    {t('security.setPassword')}
                   </button>
                 </div>
               </form>
@@ -387,12 +377,8 @@ export default function SecurityPage() {
               <div className="flex items-center gap-3">
                 <Lock className="w-5 h-5 text-success" />
                 <div>
-                  <div className="font-medium text-foreground">
-                    {t("security.enabled")}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {t("security.enabledDesc")}
-                  </div>
+                  <div className="font-medium text-foreground">{t('security.enabled')}</div>
+                  <div className="text-sm text-muted-foreground">{t('security.enabledDesc')}</div>
                 </div>
               </div>
               <button
@@ -400,7 +386,7 @@ export default function SecurityPage() {
                 disabled={saving}
                 className="px-4 py-2 border border-error/30 text-error rounded-lg text-sm font-medium hover:bg-error/10 transition-colors"
               >
-                {t("security.disable")}
+                {t('security.disable')}
               </button>
             </div>
 
@@ -413,35 +399,35 @@ export default function SecurityPage() {
                 }}
                 className="text-sm text-primary hover:underline"
               >
-                {t("security.changePassword")}
+                {t('security.changePassword')}
               </button>
             ) : (
               <form onSubmit={handleChangePassword} className="space-y-4 pt-4">
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">
-                    {t("security.currentPassword")}
+                    {t('security.currentPassword')}
                   </label>
                   <input
                     type="password"
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
                     className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                    placeholder={t("security.currentPassword")}
+                    placeholder={t('security.currentPassword')}
                     required
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">
-                    {t("security.newPassword")}
+                    {t('security.newPassword')}
                   </label>
                   <div className="relative">
                     <input
-                      type={showPassword ? "text" : "password"}
+                      type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className="w-full px-4 py-2 pr-10 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                      placeholder={t("security.newPassword")}
+                      placeholder={t('security.newPassword')}
                       required
                     />
                     <button
@@ -449,25 +435,21 @@ export default function SecurityPage() {
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                     >
-                      {showPassword ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">
-                    {t("security.confirmPassword")}
+                    {t('security.confirmPassword')}
                   </label>
                   <input
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                    placeholder={t("security.confirmPassword")}
+                    placeholder={t('security.confirmPassword')}
                     required
                   />
                 </div>
@@ -478,13 +460,13 @@ export default function SecurityPage() {
                     onClick={() => {
                       setIsChangingPassword(false);
                       setShowPasswordForm(false);
-                      setPassword("");
-                      setConfirmPassword("");
-                      setCurrentPassword("");
+                      setPassword('');
+                      setConfirmPassword('');
+                      setCurrentPassword('');
                     }}
                     className="px-4 py-2 border border-border rounded-lg text-sm font-medium hover:bg-secondary transition-colors"
                   >
-                    {t("common.cancel")}
+                    {t('common.cancel')}
                   </button>
                   <button
                     type="submit"
@@ -492,7 +474,7 @@ export default function SecurityPage() {
                     className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
                   >
                     {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-                    {t("security.changePassword")}
+                    {t('security.changePassword')}
                   </button>
                 </div>
               </form>
@@ -509,12 +491,8 @@ export default function SecurityPage() {
               <Clock className="w-5 h-5 text-muted-foreground" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-foreground">
-                {t("security.autoLock")}
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                {t("security.autoLockDesc")}
-              </p>
+              <h2 className="text-lg font-semibold text-foreground">{t('security.autoLock')}</h2>
+              <p className="text-sm text-muted-foreground">{t('security.autoLockDesc')}</p>
             </div>
           </div>
 
@@ -527,8 +505,8 @@ export default function SecurityPage() {
                   px-4 py-3 rounded-lg border text-sm font-medium transition-colors
                   ${
                     selectedTimeout === opt.value
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border hover:bg-secondary text-foreground"
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-border hover:bg-secondary text-foreground'
                   }
                 `}
               >
@@ -544,22 +522,18 @@ export default function SecurityPage() {
         <div className="bg-card border border-border rounded-xl p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-medium text-foreground">
-                {t("security.lockNow")}
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                {t("security.lockNowDesc")}
-              </p>
+              <h3 className="font-medium text-foreground">{t('security.lockNow')}</h3>
+              <p className="text-sm text-muted-foreground">{t('security.lockNowDesc')}</p>
             </div>
             <button
               onClick={() => {
-                localStorage.removeItem("anchor-os-token");
+                localStorage.removeItem('anchor-os-token');
                 window.location.reload();
               }}
               className="px-4 py-2 border border-border rounded-lg text-sm font-medium hover:bg-secondary transition-colors flex items-center gap-2"
             >
               <Lock className="w-4 h-4" />
-              {t("security.lock")}
+              {t('security.lock')}
             </button>
           </div>
         </div>
@@ -573,10 +547,13 @@ export default function SecurityPage() {
           </div>
           <div>
             <h2 className="text-lg font-semibold text-foreground">
-              {t("security.lockScreenBackground", "Lock Screen Background")}
+              {t('security.lockScreenBackground', 'Lock Screen Background')}
             </h2>
             <p className="text-sm text-muted-foreground">
-              {t("security.lockScreenBackgroundDesc", "Choose the video background for your lock screen")}
+              {t(
+                'security.lockScreenBackgroundDesc',
+                'Choose the video background for your lock screen'
+              )}
             </p>
           </div>
         </div>
@@ -591,9 +568,10 @@ export default function SecurityPage() {
               }}
               className={`
                 relative group rounded-xl overflow-hidden aspect-video border-2 transition-all duration-300
-                ${selectedBackground === video.id 
-                  ? "border-primary ring-2 ring-primary/30 scale-[1.02]" 
-                  : "border-border hover:border-primary/50 hover:scale-[1.01]"
+                ${
+                  selectedBackground === video.id
+                    ? 'border-primary ring-2 ring-primary/30 scale-[1.02]'
+                    : 'border-border hover:border-primary/50 hover:scale-[1.01]'
                 }
               `}
             >
@@ -606,23 +584,26 @@ export default function SecurityPage() {
                 autoPlay
                 className="w-full h-full object-cover"
               />
-              
+
               {/* Overlay */}
-              <div className={`
+              <div
+                className={`
                 absolute inset-0 transition-all duration-300
-                ${selectedBackground === video.id 
-                  ? "bg-primary/20" 
-                  : "bg-black/30 group-hover:bg-black/20"
+                ${
+                  selectedBackground === video.id
+                    ? 'bg-primary/20'
+                    : 'bg-black/30 group-hover:bg-black/20'
                 }
-              `} />
-              
+              `}
+              />
+
               {/* Check Mark */}
               {selectedBackground === video.id && (
                 <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-primary flex items-center justify-center shadow-lg">
                   <Check className="w-4 h-4 text-primary-foreground" />
                 </div>
               )}
-              
+
               {/* Label */}
               <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent">
                 <p className="text-sm font-medium text-white">{video.label}</p>
@@ -634,9 +615,3 @@ export default function SecurityPage() {
     </div>
   );
 }
-
-
-
-
-
-

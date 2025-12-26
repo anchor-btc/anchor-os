@@ -1,15 +1,19 @@
-"use client";
+'use client';
 
-import { useQuery } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
-import { fetchWalletBalance, formatBtc } from "@/lib/api";
-import { Wallet, Loader2 } from "lucide-react";
-import Link from "next/link";
+import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
+import { fetchWalletBalance, formatBtc } from '@/lib/api';
+import { Wallet, Loader2 } from 'lucide-react';
+import Link from 'next/link';
 
 export function WalletWidget() {
   const { t } = useTranslation();
-  const { data: balance, isLoading, error } = useQuery({
-    queryKey: ["wallet-balance"],
+  const {
+    data: balance,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ['wallet-balance'],
     queryFn: fetchWalletBalance,
     refetchInterval: 10000,
   });
@@ -29,7 +33,7 @@ export function WalletWidget() {
       <div className="bg-card border border-border rounded-xl p-4">
         <div className="flex items-center gap-3 text-error">
           <Wallet className="w-4 h-4" />
-          <span className="text-sm">{t("walletWidget.unavailable")}</span>
+          <span className="text-sm">{t('walletWidget.unavailable')}</span>
         </div>
       </div>
     );
@@ -46,9 +50,10 @@ export function WalletWidget() {
               <Wallet className="w-4 h-4 text-primary" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">{t("walletWidget.balance")}</p>
+              <p className="text-xs text-muted-foreground">{t('walletWidget.balance')}</p>
               <p className="text-lg font-bold font-tabular text-foreground">
-                {totalBtc.toFixed(4)} <span className="text-sm font-normal text-muted-foreground">BTC</span>
+                {totalBtc.toFixed(4)}{' '}
+                <span className="text-sm font-normal text-muted-foreground">BTC</span>
               </p>
             </div>
           </div>
@@ -56,19 +61,19 @@ export function WalletWidget() {
 
         <div className="grid grid-cols-3 gap-3 mt-3 pt-3 border-t border-border">
           <div>
-            <p className="text-[10px] text-muted-foreground">{t("walletWidget.confirmed")}</p>
+            <p className="text-[10px] text-muted-foreground">{t('walletWidget.confirmed')}</p>
             <p className="text-xs font-medium font-tabular text-success">
               {formatBtc(balance.confirmed)}
             </p>
           </div>
           <div>
-            <p className="text-[10px] text-muted-foreground">{t("walletWidget.unconfirmed")}</p>
+            <p className="text-[10px] text-muted-foreground">{t('walletWidget.unconfirmed')}</p>
             <p className="text-xs font-medium font-tabular text-warning">
               {formatBtc(balance.unconfirmed)}
             </p>
           </div>
           <div>
-            <p className="text-[10px] text-muted-foreground">{t("walletWidget.immature")}</p>
+            <p className="text-[10px] text-muted-foreground">{t('walletWidget.immature')}</p>
             <p className="text-xs font-medium font-tabular text-muted-foreground">
               {formatBtc(balance.immature || 0)}
             </p>

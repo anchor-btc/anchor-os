@@ -1,21 +1,15 @@
-"use client";
+'use client';
 
-import { useQuery } from "@tanstack/react-query";
-import { fetchStats, formatNumber } from "@/lib/api";
-import {
-  AppHeader,
-  AppLogo,
-  NavLink,
-  NavGroup,
-  Container,
-} from "@AnchorProtocol/ui";
-import { MapPin, Activity, BookOpen, User, Home } from "lucide-react";
+import { useQuery } from '@tanstack/react-query';
+import { fetchStats, formatNumber } from '@/lib/api';
+import { AppHeader, AppLogo, NavLink, NavGroup, Container } from '@AnchorProtocol/ui';
+import { MapPin, Activity, BookOpen, User, Home } from 'lucide-react';
 
-const DOCS_URL = "http://localhost:3900/apps/places";
+const DOCS_URL = 'http://localhost:3900/apps/places';
 
 export function Header() {
   const { data: stats } = useQuery({
-    queryKey: ["stats"],
+    queryKey: ['stats'],
     queryFn: fetchStats,
     refetchInterval: 30000,
   });
@@ -54,9 +48,7 @@ export function Header() {
               {stats.last_block_height && (
                 <div className="flex items-center gap-2 text-sm">
                   <span className="text-muted-foreground">Block</span>
-                  <span className="text-foreground font-mono">
-                    #{stats.last_block_height}
-                  </span>
+                  <span className="text-foreground font-mono">#{stats.last_block_height}</span>
                 </div>
               )}
             </div>

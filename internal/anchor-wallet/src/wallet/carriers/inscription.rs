@@ -28,9 +28,11 @@ pub fn create_and_broadcast_inscription_tx(
 ) -> Result<CreatedTransaction> {
     // Acquire the transaction creation mutex to prevent race conditions
     // This serializes all two-stage transactions to avoid UTXO conflicts
-    let _tx_guard = wallet.tx_creation_mutex.lock()
+    let _tx_guard = wallet
+        .tx_creation_mutex
+        .lock()
         .map_err(|e| anyhow::anyhow!("Transaction mutex poisoned: {}", e))?;
-    
+
     let secp = Secp256k1::new();
 
     // Generate an internal key (could be from wallet, using random for simplicity)
@@ -166,10 +168,10 @@ pub fn create_and_broadcast_inscription_tx(
         .context("No hex in signed commit")?;
 
     // Broadcast commit
-    let commit_txid: String =
-        wallet
-            .rpc
-            .call("sendrawtransaction", &[serde_json::json!(signed_commit_hex)])?;
+    let commit_txid: String = wallet.rpc.call(
+        "sendrawtransaction",
+        &[serde_json::json!(signed_commit_hex)],
+    )?;
     info!("Broadcast inscription commit tx: {}", commit_txid);
 
     // Parse commit txid
@@ -229,10 +231,9 @@ pub fn create_and_broadcast_inscription_tx(
     let reveal_hex = serialize_hex(&reveal_tx);
 
     // Broadcast reveal transaction (no signing needed for script-path with no sig check)
-    let reveal_txid: String =
-        wallet
-            .rpc
-            .call("sendrawtransaction", &[serde_json::json!(reveal_hex)])?;
+    let reveal_txid: String = wallet
+        .rpc
+        .call("sendrawtransaction", &[serde_json::json!(reveal_hex)])?;
 
     info!(
         "Broadcast inscription reveal tx: {} (commit: {})",
@@ -247,4 +248,3 @@ pub fn create_and_broadcast_inscription_tx(
         carrier_name: "inscription".to_string(),
     })
 }
-

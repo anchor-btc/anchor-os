@@ -1,15 +1,15 @@
-"use client";
+'use client';
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Canvas } from "@/components/canvas";
-import { Header } from "@/components/header";
-import { PaintPanel } from "@/components/paint-panel";
-import { PixelInfo } from "@/components/pixel-info";
-import { RecentActivity } from "@/components/recent-activity";
-import { Toolbar, type Tool } from "@/components/toolbar";
-import { ImageUpload, type ImagePreview } from "@/components/image-upload";
-import type { Pixel } from "@/lib/api";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Canvas } from '@/components/canvas';
+import { Header } from '@/components/header';
+import { PaintPanel } from '@/components/paint-panel';
+import { PixelInfo } from '@/components/pixel-info';
+import { RecentActivity } from '@/components/recent-activity';
+import { Toolbar, type Tool } from '@/components/toolbar';
+import { ImageUpload, type ImagePreview } from '@/components/image-upload';
+import type { Pixel } from '@/lib/api';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 // Max pixels for Inscription carrier: ~557,142 (3.9MB / 7 bytes per pixel)
 const MAX_SELECTED_PIXELS = 600000;
@@ -19,24 +19,26 @@ type HistoryEntry = Map<string, Pixel>;
 
 export default function Home() {
   // State
-  const [activeTool, setActiveTool] = useState<Tool>("paint");
+  const [activeTool, setActiveTool] = useState<Tool>('paint');
   const [showGrid, setShowGrid] = useState(false);
   const [brushSize, setBrushSize] = useState(1);
   const [selectedPixels, setSelectedPixels] = useState<Map<string, Pixel>>(new Map());
   const [selectedColor, setSelectedColor] = useState({ r: 255, g: 107, b: 53 });
   const [hoveredPixel, setHoveredPixel] = useState<{ x: number; y: number } | null>(null);
-  const [selectedPixelForInfo, setSelectedPixelForInfo] = useState<{ x: number; y: number } | null>(null);
+  const [selectedPixelForInfo, setSelectedPixelForInfo] = useState<{ x: number; y: number } | null>(
+    null
+  );
   const [showSidebar, setShowSidebar] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [feeRate, setFeeRate] = useState(1);
   const [imagePreview, setImagePreview] = useState<ImagePreview | null>(null);
   const [pendingPixels, setPendingPixels] = useState<Map<string, Pixel>>(new Map());
-  
+
   // History for undo/redo
   const [history, setHistory] = useState<HistoryEntry[]>([new Map()]);
   const [historyIndex, setHistoryIndex] = useState(0);
   const isUndoRedoRef = useRef(false);
-  
+
   // Zoom state (controlled from canvas)
   const [zoomLevel, setZoomLevel] = useState(1);
   const canvasRef = useRef<{
@@ -54,34 +56,39 @@ export default function Home() {
       isUndoRedoRef.current = false;
       return;
     }
-    
+
     // Don't save empty states repeatedly
     if (selectedPixels.size === 0 && history[historyIndex]?.size === 0) {
       return;
     }
-    
+
     // Check if state actually changed
     const currentState = history[historyIndex];
     if (currentState && currentState.size === selectedPixels.size) {
       let same = true;
       selectedPixels.forEach((pixel, key) => {
         const existing = currentState.get(key);
-        if (!existing || existing.r !== pixel.r || existing.g !== pixel.g || existing.b !== pixel.b) {
+        if (
+          !existing ||
+          existing.r !== pixel.r ||
+          existing.g !== pixel.g ||
+          existing.b !== pixel.b
+        ) {
           same = false;
         }
       });
       if (same) return;
     }
-    
+
     // Add new state to history
     const newHistory = history.slice(0, historyIndex + 1);
     newHistory.push(new Map(selectedPixels));
-    
+
     // Limit history size
     if (newHistory.length > MAX_HISTORY) {
       newHistory.shift();
     }
-    
+
     setHistory(newHistory);
     setHistoryIndex(newHistory.length - 1);
   }, [selectedPixels, history, historyIndex]);
@@ -219,7 +226,7 @@ export default function Home() {
   // Color picker callback (from eyedropper)
   const handleColorPick = useCallback((color: { r: number; g: number; b: number }) => {
     setSelectedColor(color);
-    setActiveTool("paint"); // Switch back to paint after picking
+    setActiveTool('paint'); // Switch back to paint after picking
   }, []);
 
   // Zoom handlers
@@ -243,9 +250,9 @@ export default function Home() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      
+
       // Undo/Redo
-      if ((e.metaKey || e.ctrlKey) && e.key === "z") {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
         e.preventDefault();
         if (e.shiftKey) {
           handleRedo();
@@ -254,69 +261,69 @@ export default function Home() {
         }
         return;
       }
-      
+
       // Redo with Ctrl+Y
-      if ((e.metaKey || e.ctrlKey) && e.key === "y") {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'y') {
         e.preventDefault();
         handleRedo();
         return;
       }
-      
+
       switch (e.key.toLowerCase()) {
-        case "v":
-          setActiveTool("select");
+        case 'v':
+          setActiveTool('select');
           break;
-        case "b":
-          setActiveTool("paint");
+        case 'b':
+          setActiveTool('paint');
           break;
-        case "e":
-          setActiveTool("erase");
+        case 'e':
+          setActiveTool('erase');
           break;
-        case "h":
-          setActiveTool("pan");
+        case 'h':
+          setActiveTool('pan');
           break;
-        case "l":
-          setActiveTool("line");
+        case 'l':
+          setActiveTool('line');
           break;
-        case "r":
-          setActiveTool("rectangle");
+        case 'r':
+          setActiveTool('rectangle');
           break;
-        case "c":
-          setActiveTool("circle");
+        case 'c':
+          setActiveTool('circle');
           break;
-        case "f":
-          setActiveTool("fill");
+        case 'f':
+          setActiveTool('fill');
           break;
-        case "i":
-          setActiveTool("eyedropper");
+        case 'i':
+          setActiveTool('eyedropper');
           break;
-        case "g":
+        case 'g':
           setShowGrid((prev) => !prev);
           break;
-        case "escape":
+        case 'escape':
           handleClearSelection();
           break;
-        case "[":
+        case '[':
           setBrushSize((s) => Math.max(1, s - 1));
           break;
-        case "]":
+        case ']':
           setBrushSize((s) => Math.min(50, s + 1));
           break;
-        case "=":
-        case "+":
+        case '=':
+        case '+':
           handleZoomIn();
           break;
-        case "-":
+        case '-':
           handleZoomOut();
           break;
-        case "0":
+        case '0':
           handleZoomReset();
           break;
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleClearSelection, handleUndo, handleRedo, handleZoomIn, handleZoomOut, handleZoomReset]);
 
   return (

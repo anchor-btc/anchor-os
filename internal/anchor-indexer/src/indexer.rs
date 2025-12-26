@@ -29,7 +29,10 @@ impl Indexer {
         // Connect to Bitcoin Core
         let rpc = Client::new(
             &config.bitcoin_rpc_url,
-            Auth::UserPass(config.bitcoin_rpc_user.clone(), config.bitcoin_rpc_password.clone()),
+            Auth::UserPass(
+                config.bitcoin_rpc_user.clone(),
+                config.bitcoin_rpc_password.clone(),
+            ),
         )
         .context("Failed to connect to Bitcoin RPC")?;
 
@@ -68,7 +71,7 @@ impl Indexer {
                 Ok(indexed) => {
                     if indexed > 0 {
                         info!("Indexed {} new blocks", indexed);
-                        
+
                         // Resolve any pending anchors
                         match self.db.resolve_anchors().await {
                             Ok(resolved) => {
@@ -141,10 +144,13 @@ impl Indexer {
         let block_hash_bytes = block_hash.to_byte_array().to_vec();
 
         // Get raw block
-        let block_hex = self.rpc.call::<String>("getblock", &[
-            serde_json::json!(block_hash.to_string()),
-            serde_json::json!(0), // Raw hex format
-        ])?;
+        let block_hex = self.rpc.call::<String>(
+            "getblock",
+            &[
+                serde_json::json!(block_hash.to_string()),
+                serde_json::json!(0), // Raw hex format
+            ],
+        )?;
 
         let block_bytes = hex::decode(&block_hex)?;
         let block: Block = deserialize(&block_bytes)?;
@@ -153,7 +159,9 @@ impl Indexer {
 
         // Process each transaction
         for tx in &block.txdata {
-            let count = self.index_transaction(tx, Some(&block_hash_bytes), Some(height)).await?;
+            let count = self
+                .index_transaction(tx, Some(&block_hash_bytes), Some(height))
+                .await?;
             message_count += count;
         }
 
@@ -176,20 +184,19 @@ impl Indexer {
         let detected = self.carrier_selector.detect(tx);
 
         // Fall back to legacy OP_RETURN parsing if no messages detected
-        let messages: Vec<(u32, CarrierType, anchor_core::ParsedAnchorMessage)> = if detected
-            .is_empty()
-        {
-            // Use legacy parser for backwards compatibility
-            parse_transaction(tx)
-                .into_iter()
-                .map(|(vout, msg)| (vout, CarrierType::OpReturn, msg))
-                .collect()
-        } else {
-            detected
-                .into_iter()
-                .map(|d| (d.vout, d.carrier_type, d.message))
-                .collect()
-        };
+        let messages: Vec<(u32, CarrierType, anchor_core::ParsedAnchorMessage)> =
+            if detected.is_empty() {
+                // Use legacy parser for backwards compatibility
+                parse_transaction(tx)
+                    .into_iter()
+                    .map(|(vout, msg)| (vout, CarrierType::OpReturn, msg))
+                    .collect()
+            } else {
+                detected
+                    .into_iter()
+                    .map(|d| (d.vout, d.carrier_type, d.message))
+                    .collect()
+            };
 
         if messages.is_empty() {
             return Ok(0);
@@ -210,11 +217,17 @@ impl Indexer {
             }
 
             self.db
-                .insert_message_with_carrier(&txid, *vout, block_hash, block_height, message, *carrier_type)
+                .insert_message_with_carrier(
+                    &txid,
+                    *vout,
+                    block_hash,
+                    block_height,
+                    message,
+                    *carrier_type,
+                )
                 .await?;
         }
 
         Ok(messages.len() as u32)
     }
 }
-

@@ -17,8 +17,8 @@ use crate::handlers::{
     update_config_handler, AppState,
 };
 use crate::websocket::{
-    create_log_buffer, create_ws_broadcast, ws_handler, WsState,
-    LogEntry, LogLevel, broadcast_log, broadcast_stats,
+    broadcast_log, broadcast_stats, create_log_buffer, create_ws_broadcast, ws_handler, LogEntry,
+    LogLevel, WsState,
 };
 use anyhow::Result;
 use axum::{
@@ -55,7 +55,7 @@ async fn main() -> Result<()> {
     // Create shared state
     let config: SharedConfig = Arc::new(RwLock::new(TestnetConfig::from_env()));
     let stats: SharedStats = Arc::new(RwLock::new(GeneratorStats::default()));
-    
+
     // Create WebSocket broadcast and log buffer
     let log_buffer = create_log_buffer();
     let ws_broadcast = create_ws_broadcast();
@@ -84,7 +84,7 @@ async fn main() -> Result<()> {
         config: config.clone(),
         stats: stats.clone(),
     };
-    
+
     let ws_state = WsState {
         log_buffer: log_buffer.clone(),
         stats: stats.clone(),
@@ -94,7 +94,7 @@ async fn main() -> Result<()> {
     // Start API server in background
     let api_state = app_state.clone();
     let api_ws_state = ws_state.clone();
-    
+
     tokio::spawn(async move {
         start_api_server(api_state, api_ws_state, api_port).await;
     });
@@ -104,9 +104,10 @@ async fn main() -> Result<()> {
     broadcast_log(
         &ws_broadcast,
         &log_buffer,
-        LogEntry::new(LogLevel::Info, "Waiting for wallet service...")
-    ).await;
-    
+        LogEntry::new(LogLevel::Info, "Waiting for wallet service..."),
+    )
+    .await;
+
     loop {
         match generator.health_check().await {
             Ok(_) => {
@@ -114,8 +115,9 @@ async fn main() -> Result<()> {
                 broadcast_log(
                     &ws_broadcast,
                     &log_buffer,
-                    LogEntry::new(LogLevel::Info, "Wallet service is ready")
-                ).await;
+                    LogEntry::new(LogLevel::Info, "Wallet service is ready"),
+                )
+                .await;
                 break;
             }
             Err(e) => {
@@ -126,13 +128,20 @@ async fn main() -> Result<()> {
     }
 
     // Mine initial blocks for funding
-    info!("⛏️  Mining {} initial blocks for funding...", initial_blocks);
+    info!(
+        "⛏️  Mining {} initial blocks for funding...",
+        initial_blocks
+    );
     broadcast_log(
         &ws_broadcast,
         &log_buffer,
-        LogEntry::new(LogLevel::Info, format!("Mining {} initial blocks...", initial_blocks))
-    ).await;
-    
+        LogEntry::new(
+            LogLevel::Info,
+            format!("Mining {} initial blocks...", initial_blocks),
+        ),
+    )
+    .await;
+
     match generator.mine_blocks(initial_blocks).await {
         Ok(hashes) => {
             info!("✅ Mined {} blocks", hashes.len());
@@ -156,8 +165,9 @@ async fn main() -> Result<()> {
             broadcast_log(
                 &ws_broadcast,
                 &log_buffer,
-                LogEntry::new(LogLevel::Info, format!("Wallet balance: {} BTC", balance))
-            ).await;
+                LogEntry::new(LogLevel::Info, format!("Wallet balance: {} BTC", balance)),
+            )
+            .await;
         }
         Err(e) => warn!("Could not get balance: {}", e),
     }
@@ -189,7 +199,11 @@ async fn main() -> Result<()> {
             Ok(Some(result)) => {
                 let type_icon = match result.message_type {
                     config::MessageType::Text => {
-                        if result.is_reply { "↩️" } else { "📝" }
+                        if result.is_reply {
+                            "↩️"
+                        } else {
+                            "📝"
+                        }
                     }
                     config::MessageType::Pixel => "🎨",
                     config::MessageType::Image => "🖼️",
@@ -215,7 +229,7 @@ async fn main() -> Result<()> {
                     CarrierType::TaprootAnnex => "🌿",
                     CarrierType::WitnessData => "👁️",
                 };
-                
+
                 let msg = format!(
                     "{} Created {} via {} {}: {}:{}",
                     type_icon,
@@ -226,7 +240,7 @@ async fn main() -> Result<()> {
                     result.vout
                 );
                 info!("{}", msg);
-                
+
                 // Broadcast log entry
                 let log_entry = LogEntry::new(LogLevel::Info, msg.clone())
                     .with_message_type(result.message_type.name().to_lowercase().as_str())
@@ -234,11 +248,11 @@ async fn main() -> Result<()> {
                     .with_txid(&result.txid)
                     .with_cycle(cycle);
                 broadcast_log(&ws_broadcast, &log_buffer, log_entry).await;
-                
+
                 // Broadcast updated stats
                 let current_stats = stats.read().await.clone();
                 broadcast_stats(&ws_broadcast, &current_stats).await;
-                
+
                 if let Some(parent) = &result.parent_txid {
                     info!(
                         "   ↳ Reply to: {}:{}",
@@ -254,13 +268,14 @@ async fn main() -> Result<()> {
                 error!("Failed to create message: {}", e);
                 let mut s = stats.write().await;
                 s.increment_error();
-                
+
                 broadcast_log(
                     &ws_broadcast,
                     &log_buffer,
                     LogEntry::new(LogLevel::Error, format!("Failed to create message: {}", e))
-                        .with_cycle(cycle)
-                ).await;
+                        .with_cycle(cycle),
+                )
+                .await;
             }
         }
 
@@ -282,11 +297,7 @@ async fn main() -> Result<()> {
 }
 
 /// Start the API server with all routes
-async fn start_api_server(
-    app_state: AppState,
-    ws_state: WsState,
-    port: u16,
-) {
+async fn start_api_server(app_state: AppState, ws_state: WsState, port: u16) {
     let cors = CorsLayer::new()
         .allow_origin(Any)
         .allow_methods(Any)

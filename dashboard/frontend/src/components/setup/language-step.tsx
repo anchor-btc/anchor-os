@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useTranslation } from "react-i18next";
-import { Button } from "@/components/ui/button";
-import { supportedLanguages } from "@/lib/i18n/config";
-import { ChevronLeft, Check, Languages } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useTranslation } from 'react-i18next';
+import { Button } from '@/components/ui/button';
+import { supportedLanguages } from '@/lib/i18n/config';
+import { ChevronLeft, Check, Languages } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface LanguageStepProps {
   selectedLanguage: string;
@@ -24,7 +24,7 @@ export function LanguageStep({
   const handleLanguageSelect = (code: string) => {
     onLanguageChange(code);
     i18n.changeLanguage(code);
-    localStorage.setItem("anchor-os-language", code);
+    localStorage.setItem('anchor-os-language', code);
   };
 
   return (
@@ -34,9 +34,9 @@ export function LanguageStep({
         <div className="mx-auto w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
           <Languages className="w-7 h-7 text-primary" />
         </div>
-        <h2 className="text-2xl font-bold">{t("setup.language.title", "Select Language")}</h2>
+        <h2 className="text-2xl font-bold">{t('setup.language.title', 'Select Language')}</h2>
         <p className="text-muted-foreground">
-          {t("setup.language.description", "Choose your preferred interface language")}
+          {t('setup.language.description', 'Choose your preferred interface language')}
         </p>
       </div>
 
@@ -47,10 +47,10 @@ export function LanguageStep({
             key={lang.code}
             onClick={() => handleLanguageSelect(lang.code)}
             className={cn(
-              "flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left",
+              'flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left',
               selectedLanguage === lang.code
-                ? "border-primary bg-primary/5"
-                : "border-border hover:border-primary/50"
+                ? 'border-primary bg-primary/5'
+                : 'border-border hover:border-primary/50'
             )}
           >
             <span className="text-2xl">{lang.flag}</span>
@@ -71,11 +71,9 @@ export function LanguageStep({
       <div className="flex justify-between pt-4">
         <Button variant="outline" onClick={onBack}>
           <ChevronLeft className="w-4 h-4 mr-2" />
-          {t("common.back", "Back")}
+          {t('common.back', 'Back')}
         </Button>
-        <Button onClick={onNext}>
-          {t("common.continue", "Continue")}
-        </Button>
+        <Button onClick={onNext}>{t('common.continue', 'Continue')}</Button>
       </div>
     </div>
   );

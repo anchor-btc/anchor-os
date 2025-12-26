@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useQuery } from "@tanstack/react-query";
-import { fetchContainerLogs } from "@/lib/api";
-import { Loader2, Terminal, X, RefreshCw } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useQuery } from '@tanstack/react-query';
+import { fetchContainerLogs } from '@/lib/api';
+import { Loader2, Terminal, X, RefreshCw } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 
 interface LogsModalProps {
   containerName: string | null;
@@ -13,8 +13,13 @@ interface LogsModalProps {
 export function LogsModal({ containerName, onClose }: LogsModalProps) {
   const logsEndRef = useRef<HTMLDivElement>(null);
 
-  const { data: logsData, isLoading, refetch, isRefetching } = useQuery({
-    queryKey: ["logs", containerName],
+  const {
+    data: logsData,
+    isLoading,
+    refetch,
+    isRefetching,
+  } = useQuery({
+    queryKey: ['logs', containerName],
     queryFn: () => fetchContainerLogs(containerName!, 500),
     enabled: !!containerName,
     refetchInterval: 3000,
@@ -23,18 +28,18 @@ export function LogsModal({ containerName, onClose }: LogsModalProps) {
   // Auto-scroll to bottom when logs update
   useEffect(() => {
     if (logsEndRef.current) {
-      logsEndRef.current.scrollIntoView({ behavior: "smooth" });
+      logsEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [logsData]);
 
   if (!containerName) return null;
 
   return (
-    <div 
+    <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
       onClick={onClose}
     >
-      <div 
+      <div
         className="w-full max-w-5xl max-h-[85vh] bg-card border border-border rounded-2xl overflow-hidden shadow-2xl flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
@@ -56,12 +61,11 @@ export function LogsModal({ containerName, onClose }: LogsModalProps) {
               className="p-2 hover:bg-muted rounded-lg transition-colors"
               title="Refresh logs"
             >
-              <RefreshCw className={`w-4 h-4 text-muted-foreground ${isRefetching ? "animate-spin" : ""}`} />
+              <RefreshCw
+                className={`w-4 h-4 text-muted-foreground ${isRefetching ? 'animate-spin' : ''}`}
+              />
             </button>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-muted rounded-lg transition-colors"
-            >
+            <button onClick={onClose} className="p-2 hover:bg-muted rounded-lg transition-colors">
               <X className="w-4 h-4 text-muted-foreground" />
             </button>
           </div>
@@ -103,21 +107,22 @@ function LogLine({ line }: { line: string }) {
   const isInfo = /info/i.test(line);
   const isDebug = /debug|trace/i.test(line);
 
-  let colorClass = "text-slate-300";
-  if (isError) colorClass = "text-red-400";
-  else if (isWarning) colorClass = "text-amber-400";
-  else if (isInfo) colorClass = "text-emerald-400";
-  else if (isDebug) colorClass = "text-sky-400";
+  let colorClass = 'text-slate-300';
+  if (isError) colorClass = 'text-red-400';
+  else if (isWarning) colorClass = 'text-amber-400';
+  else if (isInfo) colorClass = 'text-emerald-400';
+  else if (isDebug) colorClass = 'text-sky-400';
 
   // Clean up ANSI codes and format
   const cleanLine = line
-    .replace(/\x1b\[[0-9;]*m/g, "") // Remove ANSI color codes
-    .replace(/^\s+/, ""); // Trim leading whitespace
+    .replace(/\x1b\[[0-9;]*m/g, '') // Remove ANSI color codes
+    .replace(/^\s+/, ''); // Trim leading whitespace
 
   return (
-    <div className={`${colorClass} hover:bg-white/10 px-2 py-0.5 rounded whitespace-pre-wrap break-all`}>
-      {cleanLine || " "}
+    <div
+      className={`${colorClass} hover:bg-white/10 px-2 py-0.5 rounded whitespace-pre-wrap break-all`}
+    >
+      {cleanLine || ' '}
     </div>
   );
 }
-

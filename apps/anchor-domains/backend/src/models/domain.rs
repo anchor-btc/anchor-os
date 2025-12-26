@@ -8,12 +8,8 @@ use utoipa::ToSchema;
 
 // Re-export DNS types from anchor-specs
 pub use anchor_specs::dns::{
-    DnsSpec as DnsPayload,
-    DnsOperation,
-    DnsRecord,
-    RecordType,
+    is_valid_domain_name, DnsOperation, DnsRecord, DnsSpec as DnsPayload, RecordType,
     SUPPORTED_TLDS,
-    is_valid_domain_name,
 };
 
 // Re-export for tests
@@ -175,4 +171,3 @@ mod tests {
         assert_eq!(get_tld("test.com"), None); // unsupported
     }
 }
-

@@ -43,4 +43,3 @@ mod tests {
         assert!(!is_txid_prefix("g1b2c3d4e5f67890")); // invalid char
     }
 }
-

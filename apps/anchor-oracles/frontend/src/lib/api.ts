@@ -1,5 +1,5 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3701";
-const DASHBOARD_API = process.env.NEXT_PUBLIC_DASHBOARD_API_URL || "http://localhost:3100";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3701';
+const DASHBOARD_API = process.env.NEXT_PUBLIC_DASHBOARD_API_URL || 'http://localhost:3100';
 
 export interface Oracle {
   id: number;
@@ -91,7 +91,7 @@ async function fetchApi<T>(endpoint: string): Promise<T> {
 }
 
 export async function fetchStats(): Promise<OracleStats> {
-  return fetchApi("/api/stats");
+  return fetchApi('/api/stats');
 }
 
 export async function fetchOracles(limit = 50, offset = 0): Promise<Oracle[]> {
@@ -112,7 +112,7 @@ export async function fetchAttestations(limit = 50, offset = 0): Promise<Attesta
 
 export async function fetchEvents(status?: string, limit = 50): Promise<EventRequest[]> {
   const params = new URLSearchParams({ limit: String(limit) });
-  if (status) params.set("status", status);
+  if (status) params.set('status', status);
   return fetchApi(`/api/events?${params}`);
 }
 
@@ -126,24 +126,24 @@ export async function fetchEventAttestations(id: number): Promise<Attestation[]>
 
 export async function fetchDisputes(status?: string, limit = 50): Promise<Dispute[]> {
   const params = new URLSearchParams({ limit: String(limit) });
-  if (status) params.set("status", status);
+  if (status) params.set('status', status);
   return fetchApi(`/api/disputes?${params}`);
 }
 
 export async function fetchCategories(): Promise<CategoryInfo[]> {
-  return fetchApi("/api/categories");
+  return fetchApi('/api/categories');
 }
 
 export async function fetchOraclesByAddresses(addresses: string[]): Promise<Oracle[]> {
   if (addresses.length === 0) return [];
-  
+
   // Use POST to avoid URL length limits with many addresses
   const res = await fetch(`${API_BASE}/api/oracles/by-addresses`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ addresses }),
   });
-  
+
   if (!res.ok) {
     throw new Error(`API error: ${res.status}`);
   }
@@ -167,24 +167,23 @@ export async function fetchDefaultExplorer(): Promise<ExplorerInfo> {
   if (!res.ok) {
     // Fallback to mempool if dashboard is unavailable
     return {
-      explorer: "mempool",
-      name: "Mempool",
+      explorer: 'mempool',
+      name: 'Mempool',
       status: null,
       port: 4000,
       is_default: true,
-      base_url: "http://localhost:4000",
-      tx_url_template: "/tx/{txid}",
-      address_url_template: "/address/{address}",
+      base_url: 'http://localhost:4000',
+      tx_url_template: '/tx/{txid}',
+      address_url_template: '/address/{address}',
     };
   }
   return res.json();
 }
 
 export function buildExplorerTxUrl(explorer: ExplorerInfo, txid: string): string {
-  return explorer.base_url + explorer.tx_url_template.replace("{txid}", txid);
+  return explorer.base_url + explorer.tx_url_template.replace('{txid}', txid);
 }
 
 export function buildExplorerAddressUrl(explorer: ExplorerInfo, address: string): string {
-  return explorer.base_url + explorer.address_url_template.replace("{address}", address);
+  return explorer.base_url + explorer.address_url_template.replace('{address}', address);
 }
-

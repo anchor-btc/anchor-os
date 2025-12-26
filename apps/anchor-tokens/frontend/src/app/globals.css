@@ -1,6 +1,6 @@
 /* Anchor UI Design System */
-@import "@AnchorProtocol/ui/styles/globals.css";
-@import "@AnchorProtocol/ui/styles/themes/tokens.css";
+@import '@AnchorProtocol/ui/styles/globals.css';
+@import '@AnchorProtocol/ui/styles/themes/tokens.css';
 
 /* App-specific overrides for dark theme */
 :root {
@@ -12,11 +12,25 @@
 
 /* Apply Geist fonts */
 body {
-  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family:
+    var(--font-geist-sans),
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
 }
 
-code, pre, .font-mono {
-  font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+code,
+pre,
+.font-mono {
+  font-family:
+    var(--font-geist-mono), ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Monaco, Consolas,
+    'Liberation Mono', 'Courier New', monospace;
 }
 
 /* Custom scrollbar */

@@ -13,7 +13,7 @@ use super::types::CreatedTransaction;
 
 impl WalletService {
     /// Create and broadcast an ANCHOR message transaction
-    /// 
+    ///
     /// # Arguments
     /// * `locked_set` - Optional set of locked UTXOs to exclude from coin selection
     pub fn create_anchor_transaction(
@@ -39,7 +39,7 @@ impl WalletService {
     }
 
     /// Create and broadcast an ANCHOR message transaction with lock awareness
-    /// 
+    ///
     /// # Arguments
     /// * `locked_set` - Optional set of locked UTXOs to exclude from coin selection
     pub fn create_anchor_transaction_with_locks(
@@ -102,43 +102,73 @@ impl WalletService {
         // Get the carrier and encode
         if let Some(carrier_impl) = selector.get_carrier(carrier_type_enum) {
             match carrier_impl.encode(&message) {
-                Ok(output) => {
-                    match output {
-                        CarrierOutput::OpReturn(script) => {
-                            debug!("Created ANCHOR OP_RETURN script: {} bytes", script.len());
-                            super::carriers::op_return::create_and_broadcast_tx_with_script(self, script, 0, fee_rate)
-                        }
-                        CarrierOutput::Stamps(scripts) => {
-                            debug!("Creating Stamps transaction with {} multisig outputs", scripts.len());
-                            super::carriers::stamps::create_and_broadcast_stamps_tx(self, scripts, fee_rate, locked_set)
-                        }
-                        CarrierOutput::Inscription {
-                            reveal_script,
-                            content_type: _,
-                        } => {
-                            debug!("Creating Inscription transaction with reveal script");
-                            super::carriers::inscription::create_and_broadcast_inscription_tx(self, reveal_script, fee_rate, locked_set)
-                        }
-                        CarrierOutput::Annex(annex_data) => {
-                            debug!("Creating Taproot Annex transaction with {} bytes", annex_data.len());
-                            super::carriers::annex::create_and_broadcast_annex_tx(self, annex_data, fee_rate, locked_set)
-                        }
-                        CarrierOutput::WitnessData { chunks: _, script } => {
-                            debug!("Creating WitnessData transaction with script {} bytes", script.len());
-                            super::carriers::witness::create_and_broadcast_witness_data_tx(self, script, fee_rate, locked_set)
-                        }
+                Ok(output) => match output {
+                    CarrierOutput::OpReturn(script) => {
+                        debug!("Created ANCHOR OP_RETURN script: {} bytes", script.len());
+                        super::carriers::op_return::create_and_broadcast_tx_with_script(
+                            self, script, 0, fee_rate,
+                        )
                     }
-                }
+                    CarrierOutput::Stamps(scripts) => {
+                        debug!(
+                            "Creating Stamps transaction with {} multisig outputs",
+                            scripts.len()
+                        );
+                        super::carriers::stamps::create_and_broadcast_stamps_tx(
+                            self, scripts, fee_rate, locked_set,
+                        )
+                    }
+                    CarrierOutput::Inscription {
+                        reveal_script,
+                        content_type: _,
+                    } => {
+                        debug!("Creating Inscription transaction with reveal script");
+                        super::carriers::inscription::create_and_broadcast_inscription_tx(
+                            self,
+                            reveal_script,
+                            fee_rate,
+                            locked_set,
+                        )
+                    }
+                    CarrierOutput::Annex(annex_data) => {
+                        debug!(
+                            "Creating Taproot Annex transaction with {} bytes",
+                            annex_data.len()
+                        );
+                        super::carriers::annex::create_and_broadcast_annex_tx(
+                            self, annex_data, fee_rate, locked_set,
+                        )
+                    }
+                    CarrierOutput::WitnessData { chunks: _, script } => {
+                        debug!(
+                            "Creating WitnessData transaction with script {} bytes",
+                            script.len()
+                        );
+                        super::carriers::witness::create_and_broadcast_witness_data_tx(
+                            self, script, fee_rate, locked_set,
+                        )
+                    }
+                },
                 Err(e) => {
                     debug!("Carrier encode failed: {}, falling back to OP_RETURN", e);
                     let anchor_script = builder.to_script();
-                    super::carriers::op_return::create_and_broadcast_tx_with_script(self, anchor_script, 0, fee_rate)
+                    super::carriers::op_return::create_and_broadcast_tx_with_script(
+                        self,
+                        anchor_script,
+                        0,
+                        fee_rate,
+                    )
                 }
             }
         } else {
             // Carrier not available, use OP_RETURN
             let anchor_script = builder.to_script();
-            super::carriers::op_return::create_and_broadcast_tx_with_script(self, anchor_script, 0, fee_rate)
+            super::carriers::op_return::create_and_broadcast_tx_with_script(
+                self,
+                anchor_script,
+                0,
+                fee_rate,
+            )
         }
     }
 
@@ -160,4 +190,3 @@ impl WalletService {
         )
     }
 }
-

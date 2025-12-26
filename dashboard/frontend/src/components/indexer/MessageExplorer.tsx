@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Search,
   Loader2,
@@ -10,60 +10,57 @@ import {
   Filter,
   X,
   Copy,
-  ExternalLink,
   MessageSquare,
   Link2,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import {
-  fetchIndexerMessages,
-  fetchMessageDetail,
-  MessageListItem,
-  MessageDetail,
-  MessageQuery,
-} from "@/lib/api";
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { fetchIndexerMessages, fetchMessageDetail, MessageDetail, MessageQuery } from '@/lib/api';
 
 const KINDS = [
-  { id: 1, name: "Text" },
-  { id: 2, name: "Canvas" },
-  { id: 3, name: "Image" },
-  { id: 4, name: "Map" },
-  { id: 5, name: "DNS" },
-  { id: 6, name: "Proof" },
-  { id: 10, name: "Token Deploy" },
-  { id: 11, name: "Token Mint" },
-  { id: 20, name: "Token Transfer" },
+  { id: 1, name: 'Text' },
+  { id: 2, name: 'Canvas' },
+  { id: 3, name: 'Image' },
+  { id: 4, name: 'Map' },
+  { id: 5, name: 'DNS' },
+  { id: 6, name: 'Proof' },
+  { id: 10, name: 'Token Deploy' },
+  { id: 11, name: 'Token Mint' },
+  { id: 20, name: 'Token Transfer' },
 ];
 
 const CARRIERS = [
-  { id: 0, name: "OP_RETURN" },
-  { id: 1, name: "Inscription" },
-  { id: 2, name: "Stamps" },
-  { id: 3, name: "Taproot Annex" },
-  { id: 4, name: "Witness Data" },
+  { id: 0, name: 'OP_RETURN' },
+  { id: 1, name: 'Inscription' },
+  { id: 2, name: 'Stamps' },
+  { id: 3, name: 'Taproot Annex' },
+  { id: 4, name: 'Witness Data' },
 ];
 
 export function MessageExplorer() {
   const [query, setQuery] = useState<MessageQuery>({ limit: 20, offset: 0 });
-  const [selectedMessage, setSelectedMessage] = useState<{ txid: string; vout: number } | null>(null);
+  const [selectedMessage, setSelectedMessage] = useState<{ txid: string; vout: number } | null>(
+    null
+  );
   const [showFilters, setShowFilters] = useState(false);
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["indexer-messages", query],
+    queryKey: ['indexer-messages', query],
     queryFn: () => fetchIndexerMessages(query),
     refetchInterval: 10000,
   });
 
   const { data: messageDetail, isLoading: detailLoading } = useQuery({
-    queryKey: ["indexer-message-detail", selectedMessage],
-    queryFn: () => selectedMessage ? fetchMessageDetail(selectedMessage.txid, selectedMessage.vout) : null,
+    queryKey: ['indexer-message-detail', selectedMessage],
+    queryFn: () =>
+      selectedMessage ? fetchMessageDetail(selectedMessage.txid, selectedMessage.vout) : null,
     enabled: !!selectedMessage,
   });
 
-  const handlePageChange = (direction: "prev" | "next") => {
+  const handlePageChange = (direction: 'prev' | 'next') => {
     const limit = query.limit || 20;
     const currentOffset = query.offset || 0;
-    const newOffset = direction === "next" ? currentOffset + limit : Math.max(0, currentOffset - limit);
+    const newOffset =
+      direction === 'next' ? currentOffset + limit : Math.max(0, currentOffset - limit);
     setQuery({ ...query, offset: newOffset });
   };
 
@@ -71,7 +68,11 @@ export function MessageExplorer() {
     setQuery({ limit: 20, offset: 0 });
   };
 
-  const hasActiveFilters = query.kind !== undefined || query.carrier !== undefined || query.block !== undefined || query.search;
+  const hasActiveFilters =
+    query.kind !== undefined ||
+    query.carrier !== undefined ||
+    query.block !== undefined ||
+    query.search;
 
   return (
     <div className="space-y-4">
@@ -83,15 +84,17 @@ export function MessageExplorer() {
             type="text"
             placeholder="Search in body (hex)..."
             className="w-full pl-10 pr-4 py-2 bg-muted border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
-            value={query.search || ""}
+            value={query.search || ''}
             onChange={(e) => setQuery({ ...query, search: e.target.value || undefined, offset: 0 })}
           />
         </div>
         <button
           onClick={() => setShowFilters(!showFilters)}
           className={cn(
-            "p-2 rounded-lg transition-colors",
-            showFilters || hasActiveFilters ? "bg-cyan-500/20 text-cyan-400" : "bg-muted text-muted-foreground hover:bg-muted/80"
+            'p-2 rounded-lg transition-colors',
+            showFilters || hasActiveFilters
+              ? 'bg-cyan-500/20 text-cyan-400'
+              : 'bg-muted text-muted-foreground hover:bg-muted/80'
           )}
         >
           <Filter className="w-4 h-4" />
@@ -113,12 +116,20 @@ export function MessageExplorer() {
             <label className="text-xs text-muted-foreground mb-1 block">Kind</label>
             <select
               className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm text-foreground"
-              value={query.kind ?? ""}
-              onChange={(e) => setQuery({ ...query, kind: e.target.value ? Number(e.target.value) : undefined, offset: 0 })}
+              value={query.kind ?? ''}
+              onChange={(e) =>
+                setQuery({
+                  ...query,
+                  kind: e.target.value ? Number(e.target.value) : undefined,
+                  offset: 0,
+                })
+              }
             >
               <option value="">All</option>
               {KINDS.map((k) => (
-                <option key={k.id} value={k.id}>{k.name}</option>
+                <option key={k.id} value={k.id}>
+                  {k.name}
+                </option>
               ))}
             </select>
           </div>
@@ -126,12 +137,20 @@ export function MessageExplorer() {
             <label className="text-xs text-muted-foreground mb-1 block">Carrier</label>
             <select
               className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm text-foreground"
-              value={query.carrier ?? ""}
-              onChange={(e) => setQuery({ ...query, carrier: e.target.value ? Number(e.target.value) : undefined, offset: 0 })}
+              value={query.carrier ?? ''}
+              onChange={(e) =>
+                setQuery({
+                  ...query,
+                  carrier: e.target.value ? Number(e.target.value) : undefined,
+                  offset: 0,
+                })
+              }
             >
               <option value="">All</option>
               {CARRIERS.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
               ))}
             </select>
           </div>
@@ -141,16 +160,22 @@ export function MessageExplorer() {
               type="number"
               placeholder="Exact block"
               className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm text-foreground"
-              value={query.block ?? ""}
-              onChange={(e) => setQuery({ ...query, block: e.target.value ? Number(e.target.value) : undefined, offset: 0 })}
+              value={query.block ?? ''}
+              onChange={(e) =>
+                setQuery({
+                  ...query,
+                  block: e.target.value ? Number(e.target.value) : undefined,
+                  offset: 0,
+                })
+              }
             />
           </div>
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">Sort</label>
             <select
               className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm text-foreground"
-              value={query.order || "desc"}
-              onChange={(e) => setQuery({ ...query, order: e.target.value as "asc" | "desc" })}
+              value={query.order || 'desc'}
+              onChange={(e) => setQuery({ ...query, order: e.target.value as 'asc' | 'desc' })}
             >
               <option value="desc">Newest First</option>
               <option value="asc">Oldest First</option>
@@ -196,7 +221,7 @@ export function MessageExplorer() {
                       {msg.txid.slice(0, 8)}...{msg.txid.slice(-8)}:{msg.vout}
                     </td>
                     <td className="px-4 py-3 text-foreground font-tabular">
-                      {msg.block_height?.toLocaleString() ?? "-"}
+                      {msg.block_height?.toLocaleString() ?? '-'}
                     </td>
                     <td className="px-4 py-3">
                       <span className="px-2 py-0.5 bg-cyan-500/10 text-cyan-400 rounded text-xs">
@@ -223,18 +248,20 @@ export function MessageExplorer() {
           {/* Pagination */}
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
-              Showing {(query.offset || 0) + 1}-{Math.min((query.offset || 0) + (query.limit || 20), data?.total || 0)} of {data?.total.toLocaleString()} messages
+              Showing {(query.offset || 0) + 1}-
+              {Math.min((query.offset || 0) + (query.limit || 20), data?.total || 0)} of{' '}
+              {data?.total.toLocaleString()} messages
             </p>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => handlePageChange("prev")}
+                onClick={() => handlePageChange('prev')}
                 disabled={(query.offset || 0) === 0}
                 className="p-2 bg-muted rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-muted/80 transition-colors"
               >
                 <ChevronLeft className="w-4 h-4 text-foreground" />
               </button>
               <button
-                onClick={() => handlePageChange("next")}
+                onClick={() => handlePageChange('next')}
                 disabled={!data?.has_more}
                 className="p-2 bg-muted rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-muted/80 transition-colors"
               >
@@ -301,10 +328,15 @@ function MessageDetailModal({
                     {message.txid}:{message.vout}
                   </code>
                   <button
-                    onClick={() => copyToClipboard(message.txid, "txid")}
+                    onClick={() => copyToClipboard(message.txid, 'txid')}
                     className="p-2 bg-muted rounded hover:bg-muted/80 transition-colors"
                   >
-                    <Copy className={cn("w-4 h-4", copied === "txid" ? "text-green-400" : "text-muted-foreground")} />
+                    <Copy
+                      className={cn(
+                        'w-4 h-4',
+                        copied === 'txid' ? 'text-green-400' : 'text-muted-foreground'
+                      )}
+                    />
                   </button>
                 </div>
               </div>
@@ -313,7 +345,9 @@ function MessageDetailModal({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs text-muted-foreground">Block Height</label>
-                  <p className="text-foreground font-tabular">{message.block_height?.toLocaleString() ?? "Unconfirmed"}</p>
+                  <p className="text-foreground font-tabular">
+                    {message.block_height?.toLocaleString() ?? 'Unconfirmed'}
+                  </p>
                 </div>
                 <div>
                   <label className="text-xs text-muted-foreground">Created</label>
@@ -331,7 +365,9 @@ function MessageDetailModal({
 
               {/* Body */}
               <div>
-                <label className="text-xs text-muted-foreground">Body ({message.body_size} bytes)</label>
+                <label className="text-xs text-muted-foreground">
+                  Body ({message.body_size} bytes)
+                </label>
                 {message.body_text ? (
                   <div className="mt-1 p-3 bg-muted rounded text-sm text-foreground whitespace-pre-wrap break-words">
                     {message.body_text}
@@ -354,7 +390,9 @@ function MessageDetailModal({
                     {message.anchors.map((anchor, i) => (
                       <div key={i} className="p-3 bg-muted rounded text-xs">
                         <div className="flex items-center justify-between">
-                          <span className="text-muted-foreground">Prefix: <code className="text-foreground">{anchor.txid_prefix}</code></span>
+                          <span className="text-muted-foreground">
+                            Prefix: <code className="text-foreground">{anchor.txid_prefix}</code>
+                          </span>
                           <span className="text-muted-foreground">vout: {anchor.vout}</span>
                         </div>
                         {anchor.resolved_txid && (
@@ -373,7 +411,8 @@ function MessageDetailModal({
               {/* Replies */}
               {message.replies_count > 0 && (
                 <div className="text-sm text-muted-foreground">
-                  {message.replies_count} {message.replies_count === 1 ? "reply" : "replies"} to this message
+                  {message.replies_count} {message.replies_count === 1 ? 'reply' : 'replies'} to
+                  this message
                 </div>
               )}
             </div>
@@ -385,4 +424,3 @@ function MessageDetailModal({
     </div>
   );
 }
-

@@ -43,4 +43,3 @@ describe('Anchor Domains Home', () => {
     cy.contains(/recent|latest/i, { timeout: 10000 }).should('exist');
   });
 });
-

@@ -7,8 +7,8 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 use tracing::{info, warn};
 
-use crate::config::Config;
 use super::types::{Balance, Utxo};
+use crate::config::Config;
 
 /// The wallet service wrapping Bitcoin Core RPC
 pub struct WalletService {
@@ -26,7 +26,10 @@ impl WalletService {
     pub fn new(config: &Config) -> Result<Self> {
         let base_rpc = Client::new(
             &config.bitcoin_rpc_url,
-            Auth::UserPass(config.bitcoin_rpc_user.clone(), config.bitcoin_rpc_password.clone()),
+            Auth::UserPass(
+                config.bitcoin_rpc_user.clone(),
+                config.bitcoin_rpc_password.clone(),
+            ),
         )
         .context("Failed to connect to Bitcoin RPC")?;
 
@@ -39,14 +42,17 @@ impl WalletService {
 
         // Try to load or create wallet
         let wallet_name = config.wallet_name.clone();
-        
+
         // First, check if wallet is already loaded by trying to get wallet info
         let wallet_url = format!("{}/wallet/{}", config.bitcoin_rpc_url, wallet_name);
         let test_rpc = Client::new(
             &wallet_url,
-            Auth::UserPass(config.bitcoin_rpc_user.clone(), config.bitcoin_rpc_password.clone()),
+            Auth::UserPass(
+                config.bitcoin_rpc_user.clone(),
+                config.bitcoin_rpc_password.clone(),
+            ),
         )?;
-        
+
         match test_rpc.get_wallet_info() {
             Ok(_) => {
                 info!("Wallet already loaded: {}", wallet_name);
@@ -60,8 +66,13 @@ impl WalletService {
                     Err(e) => {
                         let error_str = e.to_string();
                         // Check if wallet already exists but just needs to be loaded differently
-                        if error_str.contains("already exists") || error_str.contains("already loaded") {
-                            info!("Wallet already exists, trying alternative load: {}", wallet_name);
+                        if error_str.contains("already exists")
+                            || error_str.contains("already loaded")
+                        {
+                            info!(
+                                "Wallet already exists, trying alternative load: {}",
+                                wallet_name
+                            );
                             // Try unloading and reloading
                             let _ = base_rpc.unload_wallet(Some(&wallet_name));
                             match base_rpc.load_wallet(&wallet_name) {
@@ -84,7 +95,10 @@ impl WalletService {
         let wallet_url = format!("{}/wallet/{}", config.bitcoin_rpc_url, wallet_name);
         let wallet_rpc = Client::new(
             &wallet_url,
-            Auth::UserPass(config.bitcoin_rpc_user.clone(), config.bitcoin_rpc_password.clone()),
+            Auth::UserPass(
+                config.bitcoin_rpc_user.clone(),
+                config.bitcoin_rpc_password.clone(),
+            ),
         )?;
 
         Ok(Self {
@@ -107,12 +121,15 @@ impl WalletService {
             }
             // Wallet is not responding, mark as not loaded
             self.wallet_loaded.store(false, Ordering::Relaxed);
-            warn!("Wallet {} became unresponsive, attempting recovery...", self.wallet_name);
+            warn!(
+                "Wallet {} became unresponsive, attempting recovery...",
+                self.wallet_name
+            );
         }
 
         // Attempt to reload the wallet
         info!("Attempting to reload wallet: {}", self.wallet_name);
-        
+
         // First try to load it directly
         match self.base_rpc.load_wallet(&self.wallet_name) {
             Ok(_) => {
@@ -129,8 +146,14 @@ impl WalletService {
                     return true;
                 } else if error_str.contains("not found") || error_str.contains("does not exist") {
                     // Wallet doesn't exist, try to create it
-                    warn!("Wallet not found, creating new wallet: {}", self.wallet_name);
-                    match self.base_rpc.create_wallet(&self.wallet_name, None, None, None, None) {
+                    warn!(
+                        "Wallet not found, creating new wallet: {}",
+                        self.wallet_name
+                    );
+                    match self
+                        .base_rpc
+                        .create_wallet(&self.wallet_name, None, None, None, None)
+                    {
                         Ok(_) => {
                             info!("Created new wallet: {}", self.wallet_name);
                             self.wallet_loaded.store(true, Ordering::Relaxed);
@@ -147,13 +170,19 @@ impl WalletService {
         }
 
         // Last resort: try unload + reload
-        info!("Attempting unload/reload cycle for wallet: {}", self.wallet_name);
+        info!(
+            "Attempting unload/reload cycle for wallet: {}",
+            self.wallet_name
+        );
         let _ = self.base_rpc.unload_wallet(Some(&self.wallet_name));
         std::thread::sleep(std::time::Duration::from_millis(500));
-        
+
         match self.base_rpc.load_wallet(&self.wallet_name) {
             Ok(_) => {
-                info!("Successfully reloaded wallet after unload: {}", self.wallet_name);
+                info!(
+                    "Successfully reloaded wallet after unload: {}",
+                    self.wallet_name
+                );
                 self.wallet_loaded.store(true, Ordering::Relaxed);
                 true
             }
@@ -173,19 +202,20 @@ impl WalletService {
         if !self.ensure_wallet_loaded() {
             anyhow::bail!("Wallet is not available and could not be recovered");
         }
-        
+
         // Try the operation
         match operation() {
             Ok(result) => Ok(result),
             Err(e) => {
                 let error_str = e.to_string();
                 // Check if the error is wallet-related
-                if error_str.contains("wallet does not exist") || 
-                   error_str.contains("not loaded") ||
-                   error_str.contains("code: -18") {
+                if error_str.contains("wallet does not exist")
+                    || error_str.contains("not loaded")
+                    || error_str.contains("code: -18")
+                {
                     // Mark wallet as not loaded for next attempt
                     self.wallet_loaded.store(false, Ordering::Relaxed);
-                    
+
                     // Try one more time after recovery
                     if self.ensure_wallet_loaded() {
                         return operation();
@@ -200,10 +230,10 @@ impl WalletService {
     pub fn get_balance(&self) -> Result<Balance> {
         self.with_wallet_check(|| {
             let balances = self.rpc.get_balances()?;
-            
+
             let confirmed = balances.mine.trusted.to_btc();
             let unconfirmed = balances.mine.untrusted_pending.to_btc();
-            
+
             Ok(Balance {
                 confirmed,
                 unconfirmed,
@@ -226,17 +256,19 @@ impl WalletService {
         self.with_wallet_check(|| {
             use std::collections::HashSet;
             let mut all_addresses: HashSet<String> = HashSet::new();
-            
+
             // 1. Get addresses from list_received_by_address
             // address_filter: None (all addresses)
             // minconf: Some(0) (include unconfirmed)
             // include_empty: Some(true) (include addresses with 0 balance)
             // include_watchonly: None
-            let received = self.rpc.list_received_by_address(None, Some(0), Some(true), None)?;
+            let received = self
+                .rpc
+                .list_received_by_address(None, Some(0), Some(true), None)?;
             for r in received {
                 all_addresses.insert(r.address.assume_checked().to_string());
             }
-            
+
             // 2. Get addresses from current UTXOs (captures taproot and other address types)
             if let Ok(utxos) = self.rpc.list_unspent(None, None, None, None, None) {
                 for u in utxos {
@@ -245,17 +277,20 @@ impl WalletService {
                     }
                 }
             }
-            
+
             // 3. Get addresses from list_transactions (past transactions)
             // This captures addresses used in spent outputs
-            if let Ok(txs) = self.rpc.list_transactions(None, Some(1000), None, Some(true)) {
+            if let Ok(txs) = self
+                .rpc
+                .list_transactions(None, Some(1000), None, Some(true))
+            {
                 for tx in txs {
                     if let Some(addr) = tx.detail.address {
                         all_addresses.insert(addr.assume_checked().to_string());
                     }
                 }
             }
-            
+
             Ok(all_addresses.into_iter().collect())
         })
     }
@@ -264,7 +299,7 @@ impl WalletService {
     pub fn list_utxos(&self) -> Result<Vec<Utxo>> {
         self.with_wallet_check(|| {
             let utxos = self.rpc.list_unspent(None, None, None, None, None)?;
-            
+
             Ok(utxos
                 .into_iter()
                 .map(|u| Utxo {
@@ -295,7 +330,7 @@ impl WalletService {
         locked_set: Option<&HashSet<(String, u32)>>,
     ) -> Result<Vec<bitcoincore_rpc::json::ListUnspentResultEntry>> {
         let utxos = self.rpc.list_unspent(min_conf, None, None, None, None)?;
-        
+
         if let Some(locked) = locked_set {
             Ok(utxos
                 .into_iter()
@@ -310,7 +345,9 @@ impl WalletService {
     pub fn mine_blocks(&self, count: u32) -> Result<Vec<String>> {
         self.with_wallet_check(|| {
             let address = self.rpc.get_new_address(None, None)?;
-            let hashes = self.rpc.generate_to_address(count as u64, &address.assume_checked())?;
+            let hashes = self
+                .rpc
+                .generate_to_address(count as u64, &address.assume_checked())?;
             Ok(hashes.into_iter().map(|h| h.to_string()).collect())
         })
     }
@@ -318,22 +355,23 @@ impl WalletService {
     /// Broadcast a raw transaction
     pub fn broadcast(&self, tx_hex: &str) -> Result<String> {
         self.with_wallet_check(|| {
-            let txid: String = self.rpc.call(
-                "sendrawtransaction",
-                &[serde_json::json!(tx_hex)],
-            )?;
+            let txid: String = self
+                .rpc
+                .call("sendrawtransaction", &[serde_json::json!(tx_hex)])?;
             Ok(txid)
         })
     }
 
     /// Get raw transaction by txid
-    pub fn get_raw_transaction(&self, txid: &str) -> Result<(String, serde_json::Value, Option<u64>)> {
+    pub fn get_raw_transaction(
+        &self,
+        txid: &str,
+    ) -> Result<(String, serde_json::Value, Option<u64>)> {
         self.with_wallet_check(|| {
             // Get raw hex
-            let hex: String = self.rpc.call(
-                "getrawtransaction",
-                &[serde_json::json!(txid)],
-            )?;
+            let hex: String = self
+                .rpc
+                .call("getrawtransaction", &[serde_json::json!(txid)])?;
 
             // Get decoded transaction
             let decoded: serde_json::Value = self.rpc.call(
@@ -394,4 +432,3 @@ impl WalletService {
         }
     }
 }
-

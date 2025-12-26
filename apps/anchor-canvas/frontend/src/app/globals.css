@@ -1,25 +1,33 @@
 /* Anchor UI Design System */
-@import "@AnchorProtocol/ui/styles/globals.css";
-@import "@AnchorProtocol/ui/styles/themes/canvas.css";
+@import '@AnchorProtocol/ui/styles/globals.css';
+@import '@AnchorProtocol/ui/styles/themes/canvas.css';
 
 /* App-specific overrides */
 :root {
   /* Primary color - Rose for Canvas */
   --primary: 349.7 89.2% 60.2%;
   --primary-foreground: 0 0% 100%;
-  
+
   /* Ring color */
   --ring: 349.7 89.2% 60.2%;
 }
 
 /* Apply fonts */
 body {
-  font-family: var(--font-geist-sans), 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family:
+    var(--font-geist-sans),
+    'Inter',
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-code, pre, .font-mono {
+code,
+pre,
+.font-mono {
   font-family: var(--font-geist-mono), 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 }
 
@@ -59,7 +67,9 @@ code, pre, .font-mono {
   height: 28px;
   border-radius: 6px;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
   border: 2px solid transparent;
 }
 
@@ -121,7 +131,9 @@ code, pre, .font-mono {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Activity item */
@@ -147,19 +159,33 @@ code, pre, .font-mono {
 
 /* Animations */
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 .shimmer {
-  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 50%, transparent 100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.04) 50%,
+    transparent 100%
+  );
   background-size: 200% 100%;
   animation: shimmer 2s infinite;
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
 }
 
 .float {
@@ -167,13 +193,14 @@ code, pre, .font-mono {
 }
 
 /* Focus states */
-input:focus, button:focus-visible {
+input:focus,
+button:focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px rgba(244, 63, 94, 0.4);
 }
 
 /* Range input styling */
-input[type="range"] {
+input[type='range'] {
   -webkit-appearance: none;
   appearance: none;
   height: 4px;
@@ -181,7 +208,7 @@ input[type="range"] {
   border-radius: 2px;
 }
 
-input[type="range"]::-webkit-slider-thumb {
+input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
   width: 14px;
@@ -192,6 +219,6 @@ input[type="range"]::-webkit-slider-thumb {
   transition: transform 0.15s ease;
 }
 
-input[type="range"]::-webkit-slider-thumb:hover {
+input[type='range']::-webkit-slider-thumb:hover {
   transform: scale(1.1);
 }

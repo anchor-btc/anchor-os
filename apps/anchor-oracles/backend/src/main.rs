@@ -78,7 +78,11 @@ async fn main() -> anyhow::Result<()> {
 
     // Load configuration
     let config = Config::from_env();
-    tracing::info!("Starting Anchor Oracles backend on {}:{}", config.host, config.port);
+    tracing::info!(
+        "Starting Anchor Oracles backend on {}:{}",
+        config.host,
+        config.port
+    );
 
     // Connect to database
     let db = Database::connect(&config.database_url).await?;
@@ -115,9 +119,15 @@ async fn main() -> anyhow::Result<()> {
         // Oracles
         .route("/api/oracles", get(list_oracles))
         .route("/api/oracles/register", post(register_oracle))
-        .route("/api/oracles/by-addresses", get(get_oracles_by_addresses).post(post_oracles_by_addresses))
+        .route(
+            "/api/oracles/by-addresses",
+            get(get_oracles_by_addresses).post(post_oracles_by_addresses),
+        )
         .route("/api/oracles/:pubkey", get(get_oracle))
-        .route("/api/oracles/:pubkey/attestations", get(get_oracle_attestations))
+        .route(
+            "/api/oracles/:pubkey/attestations",
+            get(get_oracle_attestations),
+        )
         // Attestations
         .route("/api/attestations", get(list_attestations))
         .route("/api/attestations/submit", post(submit_attestation))
@@ -143,4 +153,3 @@ async fn main() -> anyhow::Result<()> {
 
     Ok(())
 }
-

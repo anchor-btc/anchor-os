@@ -56,4 +56,3 @@ pub struct MapStats {
     pub last_block_height: Option<i32>,
     pub last_update: Option<chrono::DateTime<chrono::Utc>>,
 }
-

@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { Send, Plus, Trash2, Loader2, AlertCircle, Check, Wallet, Info } from "lucide-react";
-import { createTransferTx, broadcastTx, mineBlocks, getWalletTokens } from "@/lib/api";
-import { formatTokenAmount, truncateMiddle } from "@/lib/utils";
-import type { Token } from "@/lib/api";
+import { useState } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { Send, Plus, Trash2, Loader2, AlertCircle, Check, Wallet, Info } from 'lucide-react';
+import { createTransferTx, broadcastTx, mineBlocks, getWalletTokens } from '@/lib/api';
+import { formatTokenAmount } from '@/lib/utils';
+import type { Token } from '@/lib/api';
 
 interface TransferFormProps {
   token: Token;
@@ -18,24 +18,22 @@ interface Allocation {
 }
 
 export function TransferForm({ token, onSuccess }: TransferFormProps) {
-  const [allocations, setAllocations] = useState<Allocation[]>([
-    { address: "", amount: "" },
-  ]);
+  const [allocations, setAllocations] = useState<Allocation[]>([{ address: '', amount: '' }]);
   const [error, setError] = useState<string | null>(null);
   const [txid, setTxid] = useState<string | null>(null);
 
   // Get wallet balance for this token
   const { data: walletTokens } = useQuery({
-    queryKey: ["walletTokens"],
+    queryKey: ['walletTokens'],
     queryFn: getWalletTokens,
     refetchInterval: 10000,
   });
 
-  const tokenBalance = walletTokens?.balances?.find(b => b.ticker === token.ticker);
+  const tokenBalance = walletTokens?.balances?.find((b) => b.ticker === token.ticker);
   const availableBalance = tokenBalance ? BigInt(tokenBalance.balance) : 0n;
 
   const addAllocation = () => {
-    setAllocations([...allocations, { address: "", amount: "" }]);
+    setAllocations([...allocations, { address: '', amount: '' }]);
   };
 
   const removeAllocation = (index: number) => {
@@ -51,7 +49,7 @@ export function TransferForm({ token, onSuccess }: TransferFormProps) {
   };
 
   const totalToSend = allocations.reduce((sum, a) => {
-    const amount = BigInt(a.amount || "0");
+    const amount = BigInt(a.amount || '0');
     return sum + amount;
   }, 0n);
 
@@ -93,19 +91,21 @@ export function TransferForm({ token, onSuccess }: TransferFormProps) {
     // Validation
     for (const alloc of allocations) {
       if (!alloc.address || !alloc.amount) {
-        setError("All recipients must have an address and amount");
+        setError('All recipients must have an address and amount');
         return;
       }
 
-      const amount = BigInt(alloc.amount || "0");
+      const amount = BigInt(alloc.amount || '0');
       if (amount <= 0n) {
-        setError("Amounts must be greater than 0");
+        setError('Amounts must be greater than 0');
         return;
       }
     }
 
     if (totalToSend > availableBalance) {
-      setError(`Insufficient balance. You have ${formatTokenAmount(availableBalance.toString(), token.decimals)} ${token.ticker}`);
+      setError(
+        `Insufficient balance. You have ${formatTokenAmount(availableBalance.toString(), token.decimals)} ${token.ticker}`
+      );
       return;
     }
 
@@ -120,7 +120,8 @@ export function TransferForm({ token, onSuccess }: TransferFormProps) {
         </div>
         <p className="text-xl font-semibold mb-2">Transfer Successful!</p>
         <p className="text-gray-400 mb-4">
-          Sent {formatTokenAmount(totalToSend.toString(), token.decimals)} {token.ticker} to {allocations.length} recipient{allocations.length > 1 ? 's' : ''}
+          Sent {formatTokenAmount(totalToSend.toString(), token.decimals)} {token.ticker} to{' '}
+          {allocations.length} recipient{allocations.length > 1 ? 's' : ''}
         </p>
         <div className="bg-gray-900/50 rounded-xl p-3 mb-6">
           <p className="text-xs text-gray-500 mb-1">Transaction ID</p>
@@ -129,7 +130,7 @@ export function TransferForm({ token, onSuccess }: TransferFormProps) {
         <button
           onClick={() => {
             setTxid(null);
-            setAllocations([{ address: "", amount: "" }]);
+            setAllocations([{ address: '', amount: '' }]);
           }}
           className="px-6 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-xl transition-colors"
         >
@@ -168,9 +169,7 @@ export function TransferForm({ token, onSuccess }: TransferFormProps) {
 
       {/* Recipients */}
       <div>
-        <label className="block text-sm font-medium mb-3 text-gray-300">
-          Recipients
-        </label>
+        <label className="block text-sm font-medium mb-3 text-gray-300">Recipients</label>
         <div className="space-y-3">
           {allocations.map((alloc, index) => (
             <div key={index} className="bg-gray-900/30 rounded-xl p-4 border border-gray-700/30">
@@ -190,7 +189,7 @@ export function TransferForm({ token, onSuccess }: TransferFormProps) {
                 <input
                   type="text"
                   value={alloc.address}
-                  onChange={(e) => updateAllocation(index, "address", e.target.value)}
+                  onChange={(e) => updateAllocation(index, 'address', e.target.value)}
                   placeholder="bc1q... or bcrt1..."
                   className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition-all font-mono text-sm"
                 />
@@ -199,7 +198,7 @@ export function TransferForm({ token, onSuccess }: TransferFormProps) {
                     type="text"
                     value={alloc.amount}
                     onChange={(e) =>
-                      updateAllocation(index, "amount", e.target.value.replace(/[^0-9]/g, ""))
+                      updateAllocation(index, 'amount', e.target.value.replace(/[^0-9]/g, ''))
                     }
                     placeholder="0"
                     className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition-all font-mono pr-20"
@@ -213,7 +212,7 @@ export function TransferForm({ token, onSuccess }: TransferFormProps) {
                   <div className="flex gap-2">
                     <button
                       type="button"
-                      onClick={() => updateAllocation(index, "amount", availableBalance.toString())}
+                      onClick={() => updateAllocation(index, 'amount', availableBalance.toString())}
                       className="px-3 py-1.5 text-sm bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors"
                     >
                       Max
@@ -225,7 +224,7 @@ export function TransferForm({ token, onSuccess }: TransferFormProps) {
                         <button
                           key={pct}
                           type="button"
-                          onClick={() => updateAllocation(index, "amount", pctAmount.toString())}
+                          onClick={() => updateAllocation(index, 'amount', pctAmount.toString())}
                           className="px-3 py-1.5 text-sm bg-gray-700/50 text-gray-400 hover:bg-gray-700 hover:text-white rounded-lg transition-colors"
                         >
                           {pct}%
@@ -254,7 +253,11 @@ export function TransferForm({ token, onSuccess }: TransferFormProps) {
         <div className="flex items-center gap-2 p-3 bg-blue-500/10 border border-blue-500/30 rounded-xl">
           <Info className="w-4 h-4 text-blue-400" />
           <p className="text-sm text-blue-400">
-            Total: <span className="font-semibold">{formatTokenAmount(totalToSend.toString(), token.decimals)}</span> {token.ticker}
+            Total:{' '}
+            <span className="font-semibold">
+              {formatTokenAmount(totalToSend.toString(), token.decimals)}
+            </span>{' '}
+            {token.ticker}
             {totalToSend > availableBalance && (
               <span className="text-red-400 ml-2">(exceeds balance!)</span>
             )}

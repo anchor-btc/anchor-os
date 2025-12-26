@@ -38,4 +38,3 @@ describe('Dashboard Services', () => {
     cy.get('button').should('have.length.greaterThan', 0);
   });
 });
-

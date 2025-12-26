@@ -206,7 +206,7 @@ mod tests {
 
         assert_eq!(info.carrier_type, CarrierType::OpReturn);
         assert_eq!(info.name, "op_return");
-        assert_eq!(info.max_size, 80);
+        assert_eq!(info.max_size, OpReturnCarrier::EXTENDED_LIMIT);
         assert!(info.is_prunable);
         assert!(!info.utxo_impact);
         assert!(!info.witness_discount);
@@ -247,12 +247,12 @@ mod tests {
 
     #[test]
     fn test_payload_too_large() {
-        let carrier = OpReturnCarrier::new();
+        let carrier = OpReturnCarrier::legacy();
 
         let message = ParsedAnchorMessage {
             kind: AnchorKind::Text,
             anchors: vec![],
-            body: vec![0u8; 100], // Too large for 80 byte limit
+            body: vec![0u8; 100], // Too large for 80 byte legacy limit
         };
 
         let result = carrier.encode(&message);

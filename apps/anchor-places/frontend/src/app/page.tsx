@@ -1,30 +1,21 @@
-"use client";
+'use client';
 
-import { useState, useCallback, useEffect, Suspense } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
-import {
-  Header,
-  MarkerPopup,
-  CreateMarkerPanel,
-  CategoryFilter,
-  SearchBox,
-} from "@/components";
-import { fetchMarkerDetail, type Marker } from "@/lib/api";
-import type { PendingMarker } from "@/components/map";
+import { useState, useCallback, useEffect, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
+import { Header, MarkerPopup, CreateMarkerPanel, CategoryFilter, SearchBox } from '@/components';
+import { fetchMarkerDetail, type Marker } from '@/lib/api';
+import type { PendingMarker } from '@/components/map';
 
 // Dynamically import map to avoid SSR issues with Leaflet
-const MapComponent = dynamic(
-  () => import("@/components/map").then((mod) => mod.MapComponent),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="w-full h-full bg-map-bg flex items-center justify-center">
-        <div className="text-secondary-foreground">Loading map...</div>
-      </div>
-    ),
-  }
-);
+const MapComponent = dynamic(() => import('@/components/map').then((mod) => mod.MapComponent), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-full bg-map-bg flex items-center justify-center">
+      <div className="text-secondary-foreground">Loading map...</div>
+    </div>
+  ),
+});
 
 function HomeContent() {
   const searchParams = useSearchParams();
@@ -42,8 +33,8 @@ function HomeContent() {
 
   // Check for marker parameter on load
   useEffect(() => {
-    const markerTxid = searchParams.get("marker");
-    const markerVout = searchParams.get("vout");
+    const markerTxid = searchParams.get('marker');
+    const markerVout = searchParams.get('vout');
 
     if (markerTxid) {
       const vout = markerVout ? parseInt(markerVout, 10) : 0;
@@ -53,10 +44,10 @@ function HomeContent() {
           setSelectedMarker(detail.marker);
           setFlyToMarker(detail.marker);
           // Clear the URL parameters
-          router.replace("/", { scroll: false });
+          router.replace('/', { scroll: false });
         })
         .catch((err) => {
-          console.error("Failed to load marker:", err);
+          console.error('Failed to load marker:', err);
         });
     }
   }, [searchParams, router]);
@@ -76,9 +67,12 @@ function HomeContent() {
     setTimeout(() => setFlyToMarker(null), 2000);
   }, []);
 
-  const handlePendingMarker = useCallback((txid: string, lat: number, lng: number, categoryId: number) => {
-    setPendingMarkers(prev => [...prev, { txid, latitude: lat, longitude: lng, categoryId }]);
-  }, []);
+  const handlePendingMarker = useCallback(
+    (txid: string, lat: number, lng: number, categoryId: number) => {
+      setPendingMarkers((prev) => [...prev, { txid, latitude: lat, longitude: lng, categoryId }]);
+    },
+    []
+  );
 
   const handleCreateSuccess = useCallback(() => {
     // Remove the pending marker after confirmation
@@ -123,10 +117,7 @@ function HomeContent() {
 
       {/* Marker popup modal */}
       {selectedMarker && (
-        <MarkerPopup
-          marker={selectedMarker}
-          onClose={() => setSelectedMarker(null)}
-        />
+        <MarkerPopup marker={selectedMarker} onClose={() => setSelectedMarker(null)} />
       )}
 
       {/* Create marker panel */}
@@ -173,4 +164,3 @@ export default function Home() {
     </Suspense>
   );
 }
-

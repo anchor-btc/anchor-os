@@ -28,4 +28,3 @@ describe('Anchor Threads Home', () => {
     cy.get('nav, header, a[href]').should('exist');
   });
 });
-

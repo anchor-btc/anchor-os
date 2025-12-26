@@ -9,10 +9,10 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{info, error};
+use tracing::{error, info};
 
 use crate::backup::engine::{BackupEngine, BackupJob, BackupStatus, BackupTarget, BackupType};
-use crate::backup::{database, volumes, restore};
+use crate::backup::{database, restore, volumes};
 use crate::backup_config::BackupConfig;
 use crate::storage::{self, StorageInfo};
 
@@ -32,11 +32,13 @@ pub struct BackupState {
 impl BackupState {
     pub async fn new(config: BackupConfig) -> Self {
         let engine = BackupEngine::new(config.clone());
-        let scheduler = BackupScheduler::new().await.expect("Failed to create scheduler");
-        
+        let scheduler = BackupScheduler::new()
+            .await
+            .expect("Failed to create scheduler");
+
         // Try to detect host path from environment
         let host_backup_path = std::env::var("HOST_BACKUP_PATH").ok();
-        
+
         Self {
             config,
             engine,
@@ -47,7 +49,7 @@ impl BackupState {
             host_backup_path,
         }
     }
-    
+
     pub async fn start_scheduler(&self) -> anyhow::Result<()> {
         self.scheduler.start().await
     }
@@ -233,7 +235,7 @@ pub async fn get_status(State(state): State<Arc<BackupState>>) -> impl IntoRespo
     let current_job = state.current_job.read().await.clone();
     let history = state.job_history.read().await;
     let last_backup = history.last().cloned();
-    
+
     // Get next scheduled time
     let settings = state.settings.read().await;
     let next_scheduled = if settings.schedule.enabled {
@@ -244,7 +246,10 @@ pub async fn get_status(State(state): State<Arc<BackupState>>) -> impl IntoRespo
     };
 
     Json(BackupStatusResponse {
-        running: current_job.as_ref().map(|j| j.status == BackupStatus::Running).unwrap_or(false),
+        running: current_job
+            .as_ref()
+            .map(|j| j.status == BackupStatus::Running)
+            .unwrap_or(false),
         current_job,
         last_backup,
         next_scheduled,
@@ -272,25 +277,25 @@ pub async fn start_backup(
             }
         }
     }
-    
+
     let target = match req.target.as_deref() {
         Some("s3") => BackupTarget::S3,
         Some("smb") => BackupTarget::Smb,
         _ => BackupTarget::Local,
     };
-    
+
     let include_dbs = req.include_databases.unwrap_or(true);
     let include_vols = req.include_volumes.unwrap_or(true);
-    
+
     // Start backup in background
     let state_clone = state.clone();
     let job_id = uuid::Uuid::new_v4().to_string();
     let job_id_clone = job_id.clone();
-    
+
     tokio::spawn(async move {
         run_backup(state_clone, target, include_dbs, include_vols, job_id_clone).await;
     });
-    
+
     (
         StatusCode::ACCEPTED,
         Json(StartBackupResponse {
@@ -309,9 +314,9 @@ async fn run_backup(
     job_id: String,
 ) {
     info!("Starting backup job {}", job_id);
-    
+
     let started_at = chrono::Utc::now();
-    
+
     // Set current job
     {
         let mut current = state.current_job.write().await;
@@ -327,17 +332,17 @@ async fn run_backup(
             error_message: None,
         });
     }
-    
+
     let temp_dir = format!("{}/temp-{}", state.config.backup_dir, job_id);
     let mut paths_to_backup: Vec<String> = Vec::new();
     let mut errors: Vec<String> = Vec::new();
-    
+
     // Create temp directory
     if let Err(e) = tokio::fs::create_dir_all(&temp_dir).await {
         error!("Failed to create temp dir: {}", e);
         errors.push(format!("Failed to create temp dir: {}", e));
     }
-    
+
     // Dump databases
     if include_dbs {
         let db_dir = format!("{}/databases", temp_dir);
@@ -357,7 +362,7 @@ async fn run_backup(
             }
         }
     }
-    
+
     // Prepare volumes
     if include_vols {
         let vol_dir = format!("{}/volumes", temp_dir);
@@ -377,18 +382,21 @@ async fn run_backup(
             }
         }
     }
-    
+
     // Run restic backup
     let result = if !paths_to_backup.is_empty() {
         let path_refs: Vec<&str> = paths_to_backup.iter().map(|s| s.as_str()).collect();
-        state.engine.backup(&target, &path_refs, &["anchor-backup"]).await
+        state
+            .engine
+            .backup(&target, &path_refs, &["anchor-backup"])
+            .await
     } else {
         Err(anyhow::anyhow!("No paths to backup"))
     };
-    
+
     // Cleanup temp directory
     let _ = tokio::fs::remove_dir_all(&temp_dir).await;
-    
+
     // Update job status
     let completed_job = match result {
         Ok(mut job) => {
@@ -411,31 +419,34 @@ async fn run_backup(
             }
         }
     };
-    
+
     // Save to history
     {
         let mut history = state.job_history.write().await;
         history.push(completed_job.clone());
-        
+
         // Keep only last 100 jobs
         if history.len() > 100 {
             history.remove(0);
         }
     }
-    
+
     // Clear current job
     {
         let mut current = state.current_job.write().await;
         *current = None;
     }
-    
-    info!("Backup job {} completed with status {:?}", job_id, completed_job.status);
+
+    info!(
+        "Backup job {} completed with status {:?}",
+        job_id, completed_job.status
+    );
 }
 
 /// Get backup history
 pub async fn get_history(State(state): State<Arc<BackupState>>) -> impl IntoResponse {
     let history = state.job_history.read().await;
-    
+
     Json(HistoryResponse {
         total: history.len(),
         backups: history.iter().rev().take(50).cloned().collect(),
@@ -445,22 +456,22 @@ pub async fn get_history(State(state): State<Arc<BackupState>>) -> impl IntoResp
 /// Get storage targets
 pub async fn get_targets(State(state): State<Arc<BackupState>>) -> impl IntoResponse {
     let mut targets = Vec::new();
-    
+
     // Local storage
     if let Ok(info) = storage::local::get_storage_info(&state.config.backup_dir).await {
         targets.push(info);
     }
-    
+
     // S3 storage
     if let Ok(info) = storage::s3::get_storage_info(&state.config).await {
         targets.push(info);
     }
-    
+
     // SMB storage
     if let Ok(info) = storage::smb::get_storage_info(&state.config).await {
         targets.push(info);
     }
-    
+
     Json(TargetsResponse { targets })
 }
 
@@ -474,9 +485,9 @@ pub async fn restore(
         Some("smb") => BackupTarget::Smb,
         _ => BackupTarget::Local,
     };
-    
+
     info!("Starting full restore from snapshot {}", req.snapshot_id);
-    
+
     // Perform full restore (databases + volumes)
     match restore::full_restore(&req.snapshot_id, &state.config, &target).await {
         Ok(result) => {
@@ -496,7 +507,7 @@ pub async fn restore(
                     result.volumes_failed.len()
                 )
             };
-            
+
             Json(RestoreResponse {
                 success: result.success,
                 message,
@@ -505,7 +516,11 @@ pub async fn restore(
                 databases_failed: Some(result.databases_failed),
                 volumes_restored: Some(result.volumes_restored),
                 volumes_failed: Some(result.volumes_failed),
-                errors: if result.errors.is_empty() { None } else { Some(result.errors) },
+                errors: if result.errors.is_empty() {
+                    None
+                } else {
+                    Some(result.errors)
+                },
                 duration_ms: Some(result.duration_ms),
             })
         }
@@ -548,7 +563,7 @@ pub async fn list_snapshots(
         "smb" => BackupTarget::Smb,
         _ => BackupTarget::Local,
     };
-    
+
     match state.engine.list_snapshots(&backup_target).await {
         Ok(snapshots) => Json(SnapshotsResponse { snapshots }),
         Err(e) => {
@@ -574,22 +589,26 @@ pub async fn save_settings(
         let mut settings = state.settings.write().await;
         *settings = new_settings.clone();
     }
-    
+
     // Update scheduler
     let config = Arc::new(state.config.clone());
-    if let Err(e) = state.scheduler.update_schedule(
-        &new_settings,
-        config,
-        state.job_history.clone(),
-        state.current_job.clone(),
-    ).await {
+    if let Err(e) = state
+        .scheduler
+        .update_schedule(
+            &new_settings,
+            config,
+            state.job_history.clone(),
+            state.current_job.clone(),
+        )
+        .await
+    {
         error!("Failed to update scheduler: {}", e);
         return Json(serde_json::json!({
             "success": false,
             "message": format!("Settings saved but scheduler failed: {}", e)
         }));
     }
-    
+
     // Calculate next run time
     let next_run = if new_settings.schedule.enabled {
         BackupScheduler::get_next_run_time(&new_settings.schedule.cron_expression)
@@ -597,7 +616,7 @@ pub async fn save_settings(
     } else {
         None
     };
-    
+
     info!("Backup settings saved, next run: {:?}", next_run);
 
     Json(serde_json::json!({
@@ -610,16 +629,16 @@ pub async fn save_settings(
 /// List local backup files
 pub async fn list_local_files(State(state): State<Arc<BackupState>>) -> impl IntoResponse {
     let backup_dir = &state.config.backup_dir;
-    
+
     let mut files = Vec::new();
     let mut total_size: u64 = 0;
-    
+
     match tokio::fs::read_dir(backup_dir).await {
         Ok(mut entries) => {
             while let Ok(Some(entry)) = entries.next_entry().await {
                 let path = entry.path();
                 let name = entry.file_name().to_string_lossy().to_string();
-                
+
                 if let Ok(metadata) = entry.metadata().await {
                     let size = if metadata.is_dir() {
                         // Get directory size
@@ -627,14 +646,14 @@ pub async fn list_local_files(State(state): State<Arc<BackupState>>) -> impl Int
                     } else {
                         metadata.len()
                     };
-                    
+
                     total_size += size;
-                    
+
                     let modified = metadata.modified().ok().map(|t| {
                         let datetime: chrono::DateTime<chrono::Utc> = t.into();
                         datetime.to_rfc3339()
                     });
-                    
+
                     files.push(LocalFile {
                         name,
                         path: path.to_string_lossy().to_string(),
@@ -649,7 +668,7 @@ pub async fn list_local_files(State(state): State<Arc<BackupState>>) -> impl Int
             error!("Failed to read backup directory: {}", e);
         }
     }
-    
+
     // Sort by name
     files.sort_by(|a, b| a.name.cmp(&b.name));
 
@@ -664,7 +683,7 @@ pub async fn list_local_files(State(state): State<Arc<BackupState>>) -> impl Int
 async fn get_dir_size(path: &std::path::Path) -> Result<u64, std::io::Error> {
     let mut size: u64 = 0;
     let mut stack = vec![path.to_path_buf()];
-    
+
     while let Some(current) = stack.pop() {
         if let Ok(mut entries) = tokio::fs::read_dir(&current).await {
             while let Ok(Some(entry)) = entries.next_entry().await {
@@ -678,6 +697,6 @@ async fn get_dir_size(path: &std::path::Path) -> Result<u64, std::io::Error> {
             }
         }
     }
-    
+
     Ok(size)
 }

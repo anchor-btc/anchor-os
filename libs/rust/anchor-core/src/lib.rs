@@ -27,16 +27,16 @@
 //! let (carrier_type, output) = selector.encode(&message, &prefs)?;
 //! ```
 
-mod types;
-mod parser;
+pub mod carrier;
 mod encoder;
 mod error;
-pub mod carrier;
+mod parser;
+mod types;
 
-pub use types::*;
-pub use parser::*;
 pub use encoder::*;
 pub use error::*;
+pub use parser::*;
+pub use types::*;
 
 /// ANCHOR v1 magic bytes: 0xA11C0001
 /// - 0xA11C = "ANCH" in leetspeak
@@ -73,8 +73,8 @@ mod tests {
         // Magic + kind=1 + anchor_count=0 + body="hello"
         let payload = [
             0xA1, 0x1C, 0x00, 0x01, // magic
-            0x01,                   // kind = 1 (text)
-            0x00,                   // anchor_count = 0
+            0x01, // kind = 1 (text)
+            0x00, // anchor_count = 0
             b'h', b'e', b'l', b'l', b'o', // body
         ];
 
@@ -89,8 +89,8 @@ mod tests {
         // Magic + kind=1 + anchor_count=1 + anchor + body="reply"
         let mut payload = vec![
             0xA1, 0x1C, 0x00, 0x01, // magic
-            0x01,                   // kind = 1 (text)
-            0x01,                   // anchor_count = 1
+            0x01, // kind = 1 (text)
+            0x01, // anchor_count = 1
         ];
         // Add anchor: 8 bytes prefix + 1 byte vout
         payload.extend_from_slice(&[0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0]); // prefix
@@ -100,7 +100,10 @@ mod tests {
         let msg = parse_anchor_payload(&payload).unwrap();
         assert_eq!(msg.kind, AnchorKind::Text);
         assert_eq!(msg.anchors.len(), 1);
-        assert_eq!(msg.anchors[0].txid_prefix, [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0]);
+        assert_eq!(
+            msg.anchors[0].txid_prefix,
+            [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0]
+        );
         assert_eq!(msg.anchors[0].vout, 0);
         assert_eq!(msg.body, b"reply");
     }
@@ -109,12 +112,10 @@ mod tests {
     fn test_encode_decode_roundtrip() {
         let original = ParsedAnchorMessage {
             kind: AnchorKind::Text,
-            anchors: vec![
-                Anchor {
-                    txid_prefix: [0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x00, 0x11],
-                    vout: 1,
-                },
-            ],
+            anchors: vec![Anchor {
+                txid_prefix: [0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x00, 0x11],
+                vout: 1,
+            }],
             body: b"test message".to_vec(),
         };
 
@@ -123,14 +124,19 @@ mod tests {
 
         assert_eq!(decoded.kind, original.kind);
         assert_eq!(decoded.anchors.len(), original.anchors.len());
-        assert_eq!(decoded.anchors[0].txid_prefix, original.anchors[0].txid_prefix);
+        assert_eq!(
+            decoded.anchors[0].txid_prefix,
+            original.anchors[0].txid_prefix
+        );
         assert_eq!(decoded.anchors[0].vout, original.anchors[0].vout);
         assert_eq!(decoded.body, original.body);
     }
 
     #[test]
     fn test_txid_to_prefix() {
-        let txid = Txid::from_str("1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef").unwrap();
+        let txid =
+            Txid::from_str("1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef")
+                .unwrap();
         let prefix = txid_to_prefix(&txid);
         // Bitcoin txids are displayed in reverse byte order
         assert_eq!(prefix.len(), 8);
@@ -150,4 +156,3 @@ mod tests {
         assert!(matches!(result, Err(AnchorError::PayloadTooShort)));
     }
 }
-

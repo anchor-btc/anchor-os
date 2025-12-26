@@ -47,8 +47,7 @@ impl Config {
                     .join("anchor-wallet")
             });
 
-        let network = env::var("BITCOIN_NETWORK")
-            .unwrap_or_else(|_| "regtest".to_string());
+        let network = env::var("BITCOIN_NETWORK").unwrap_or_else(|_| "regtest".to_string());
 
         // Default Electrum URL based on network
         // In Docker, use the service name; on host, use localhost
@@ -61,12 +60,10 @@ impl Config {
         Ok(Self {
             bitcoin_rpc_url: env::var("BITCOIN_RPC_URL")
                 .unwrap_or_else(|_| "http://127.0.0.1:18443".to_string()),
-            bitcoin_rpc_user: env::var("BITCOIN_RPC_USER")
-                .unwrap_or_else(|_| "anchor".to_string()),
+            bitcoin_rpc_user: env::var("BITCOIN_RPC_USER").unwrap_or_else(|_| "anchor".to_string()),
             bitcoin_rpc_password: env::var("BITCOIN_RPC_PASSWORD")
                 .unwrap_or_else(|_| "anchor".to_string()),
-            wallet_name: env::var("WALLET_NAME")
-                .unwrap_or_else(|_| "anchor_wallet".to_string()),
+            wallet_name: env::var("WALLET_NAME").unwrap_or_else(|_| "anchor_wallet".to_string()),
             port: env::var("PORT")
                 .unwrap_or_else(|_| "8001".to_string())
                 .parse()
@@ -80,8 +77,7 @@ impl Config {
                 .unwrap_or_else(|_| "true".to_string())
                 .parse()
                 .unwrap_or(true),
-            electrum_url: env::var("ELECTRUM_URL")
-                .unwrap_or_else(|_| default_electrum.to_string()),
+            electrum_url: env::var("ELECTRUM_URL").unwrap_or_else(|_| default_electrum.to_string()),
             bdk_enabled: env::var("BDK_ENABLED")
                 .unwrap_or_else(|_| "true".to_string())
                 .parse()

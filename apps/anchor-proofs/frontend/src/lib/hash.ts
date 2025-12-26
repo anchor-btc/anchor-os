@@ -5,7 +5,7 @@
  * Supports SHA-256 and SHA-512 algorithms.
  */
 
-import { HashAlgorithm, bytesToHex } from "./proof-encoder";
+import { HashAlgorithm, bytesToHex } from './proof-encoder';
 
 /**
  * Hash result interface
@@ -29,7 +29,7 @@ export async function hashFile(
   algorithm: HashAlgorithm = HashAlgorithm.SHA256,
   onProgress?: HashProgressCallback
 ): Promise<HashResult> {
-  const algoName = algorithm === HashAlgorithm.SHA256 ? "SHA-256" : "SHA-512";
+  const algoName = algorithm === HashAlgorithm.SHA256 ? 'SHA-256' : 'SHA-512';
 
   // For small files, hash directly
   if (file.size <= 10 * 1024 * 1024) {
@@ -61,7 +61,7 @@ async function hashFileChunked(
   onProgress?: HashProgressCallback
 ): Promise<HashResult> {
   const CHUNK_SIZE = 64 * 1024 * 1024; // 64MB chunks
-  const algoName = algorithm === HashAlgorithm.SHA256 ? "SHA-256" : "SHA-512";
+  const algoName = algorithm === HashAlgorithm.SHA256 ? 'SHA-256' : 'SHA-512';
 
   // Unfortunately, Web Crypto API doesn't support streaming hashes natively
   // We need to read the entire file, but we can do it in chunks to show progress
@@ -108,7 +108,7 @@ export async function hashBytes(
   data: Uint8Array,
   algorithm: HashAlgorithm = HashAlgorithm.SHA256
 ): Promise<HashResult> {
-  const algoName = algorithm === HashAlgorithm.SHA256 ? "SHA-256" : "SHA-512";
+  const algoName = algorithm === HashAlgorithm.SHA256 ? 'SHA-256' : 'SHA-512';
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const hashBuffer = await crypto.subtle.digest(algoName, data as any);
   const hash = new Uint8Array(hashBuffer);
@@ -144,8 +144,8 @@ export async function hashFileBoth(
   if (onProgress) onProgress(30);
 
   const [sha256Buffer, sha512Buffer] = await Promise.all([
-    crypto.subtle.digest("SHA-256", buffer),
-    crypto.subtle.digest("SHA-512", buffer),
+    crypto.subtle.digest('SHA-256', buffer),
+    crypto.subtle.digest('SHA-512', buffer),
   ]);
   if (onProgress) onProgress(100);
 
@@ -188,7 +188,7 @@ export function getFileMetadata(file: File): {
 } {
   return {
     filename: file.name,
-    mimeType: file.type || "application/octet-stream",
+    mimeType: file.type || 'application/octet-stream',
     fileSize: file.size,
   };
 }
@@ -198,9 +198,9 @@ export function getFileMetadata(file: File): {
  */
 export function isCryptoAvailable(): boolean {
   return (
-    typeof crypto !== "undefined" &&
-    typeof crypto.subtle !== "undefined" &&
-    typeof crypto.subtle.digest === "function"
+    typeof crypto !== 'undefined' &&
+    typeof crypto.subtle !== 'undefined' &&
+    typeof crypto.subtle.digest === 'function'
   );
 }
 
@@ -216,9 +216,9 @@ export function truncateHash(hash: string, chars = 8): string {
  * Format file size for display
  */
 export function formatFileSize(bytes: number): string {
-  if (bytes === 0) return "0 B";
+  if (bytes === 0) return '0 B';
   const k = 1024;
-  const sizes = ["B", "KB", "MB", "GB", "TB"];
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }

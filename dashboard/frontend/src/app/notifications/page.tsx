@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useRef, useCallback } from "react";
-import { useTranslation } from "react-i18next";
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Bell,
   CheckCheck,
@@ -19,21 +19,21 @@ import {
   HardDrive,
   Settings,
   ChevronDown,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 // Import DS components
-import { PageHeader, ActionButton } from "@/components/ds";
+import { PageHeader, ActionButton } from '@/components/ds';
 import {
   Notification,
   markNotificationAsRead,
   markAllNotificationsAsRead,
   deleteNotification,
   clearReadNotifications,
-} from "@/lib/api";
+} from '@/lib/api';
 
 const DASHBOARD_BACKEND_URL =
-  process.env.NEXT_PUBLIC_DASHBOARD_BACKEND_URL || "http://localhost:8010";
+  process.env.NEXT_PUBLIC_DASHBOARD_BACKEND_URL || 'http://localhost:8010';
 
 const PAGE_SIZE = 20;
 
@@ -41,36 +41,36 @@ const PAGE_SIZE = 20;
 const severityConfig = {
   info: {
     icon: Info,
-    color: "text-blue-400",
-    bg: "bg-blue-500/10",
-    border: "border-blue-500/20",
+    color: 'text-blue-400',
+    bg: 'bg-blue-500/10',
+    border: 'border-blue-500/20',
   },
   success: {
     icon: CheckCircle,
-    color: "text-success",
-    bg: "bg-success/10",
-    border: "border-success/20",
+    color: 'text-success',
+    bg: 'bg-success/10',
+    border: 'border-success/20',
   },
   warning: {
     icon: AlertTriangle,
-    color: "text-warning",
-    bg: "bg-warning/10",
-    border: "border-warning/20",
+    color: 'text-warning',
+    bg: 'bg-warning/10',
+    border: 'border-warning/20',
   },
   error: {
     icon: AlertCircle,
-    color: "text-destructive",
-    bg: "bg-destructive/10",
-    border: "border-destructive/20",
+    color: 'text-destructive',
+    bg: 'bg-destructive/10',
+    border: 'border-destructive/20',
   },
 };
 
 // Type config
 const typeConfig: Record<string, { icon: typeof Bell; label: string }> = {
-  service: { icon: Server, label: "Service" },
-  transaction: { icon: Wallet, label: "Transaction" },
-  backup: { icon: HardDrive, label: "Backup" },
-  system: { icon: Settings, label: "System" },
+  service: { icon: Server, label: 'Service' },
+  transaction: { icon: Wallet, label: 'Transaction' },
+  backup: { icon: HardDrive, label: 'Backup' },
+  system: { icon: Settings, label: 'System' },
 };
 
 interface NotificationsResponse {
@@ -86,16 +86,16 @@ async function fetchNotificationsPaginated(
   filters: { type?: string; severity?: string; read?: string }
 ): Promise<NotificationsResponse> {
   const params = new URLSearchParams();
-  params.set("page", page.toString());
-  params.set("limit", PAGE_SIZE.toString());
-  if (filters.type && filters.type !== "all") params.set("type", filters.type);
-  if (filters.severity && filters.severity !== "all") params.set("severity", filters.severity);
-  if (filters.read && filters.read !== "all") params.set("read", filters.read);
+  params.set('page', page.toString());
+  params.set('limit', PAGE_SIZE.toString());
+  if (filters.type && filters.type !== 'all') params.set('type', filters.type);
+  if (filters.severity && filters.severity !== 'all') params.set('severity', filters.severity);
+  if (filters.read && filters.read !== 'all') params.set('read', filters.read);
 
   const res = await fetch(`${DASHBOARD_BACKEND_URL}/notifications?${params}`);
-  if (!res.ok) throw new Error("Failed to fetch notifications");
+  if (!res.ok) throw new Error('Failed to fetch notifications');
   const data = await res.json();
-  
+
   return {
     notifications: data.notifications || [],
     total: data.total || 0,
@@ -112,7 +112,7 @@ function formatTimeAgo(dateString: string): string {
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMins < 1) return "just now";
+  if (diffMins < 1) return 'just now';
   if (diffMins < 60) return `${diffMins}m ago`;
   if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays < 7) return `${diffDays}d ago`;
@@ -132,22 +132,15 @@ export default function NotificationsPage() {
 
   // Filter state
   const [filters, setFilters] = useState({
-    type: "all",
-    severity: "all",
-    read: "all",
+    type: 'all',
+    severity: 'all',
+    read: 'all',
   });
   const [showFilters, setShowFilters] = useState(false);
 
   // Infinite query
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading,
-    refetch,
-  } = useInfiniteQuery({
-    queryKey: ["notifications-history", filters],
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteQuery({
+    queryKey: ['notifications-history', filters],
     queryFn: ({ pageParam = 1 }) => fetchNotificationsPaginated(pageParam, filters),
     getNextPageParam: (lastPage) => (lastPage.hasMore ? lastPage.page + 1 : undefined),
     initialPageParam: 1,
@@ -158,31 +151,31 @@ export default function NotificationsPage() {
   const markReadMutation = useMutation({
     mutationFn: markNotificationAsRead,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications-history"] });
-      queryClient.invalidateQueries({ queryKey: ["notifications-unread"] });
+      queryClient.invalidateQueries({ queryKey: ['notifications-history'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications-unread'] });
     },
   });
 
   const markAllReadMutation = useMutation({
     mutationFn: markAllNotificationsAsRead,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications-history"] });
-      queryClient.invalidateQueries({ queryKey: ["notifications-unread"] });
+      queryClient.invalidateQueries({ queryKey: ['notifications-history'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications-unread'] });
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteNotification,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications-history"] });
-      queryClient.invalidateQueries({ queryKey: ["notifications-unread"] });
+      queryClient.invalidateQueries({ queryKey: ['notifications-history'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications-unread'] });
     },
   });
 
   const clearReadMutation = useMutation({
     mutationFn: clearReadNotifications,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications-history"] });
+      queryClient.invalidateQueries({ queryKey: ['notifications-history'] });
     },
   });
 
@@ -222,11 +215,11 @@ export default function NotificationsPage() {
   };
 
   const clearFilters = () => {
-    setFilters({ type: "all", severity: "all", read: "all" });
+    setFilters({ type: 'all', severity: 'all', read: 'all' });
   };
 
   const hasActiveFilters =
-    filters.type !== "all" || filters.severity !== "all" || filters.read !== "all";
+    filters.type !== 'all' || filters.severity !== 'all' || filters.read !== 'all';
 
   return (
     <div className="space-y-6">
@@ -234,38 +227,36 @@ export default function NotificationsPage() {
       <PageHeader
         icon={Bell}
         iconColor="yellow"
-        title={t("notifications.history", "Notification History")}
-        subtitle={t("notifications.historyDesc", "View and manage all your notifications")}
+        title={t('notifications.history', 'Notification History')}
+        subtitle={t('notifications.historyDesc', 'View and manage all your notifications')}
         actions={
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={cn(
-                "px-3 py-2 text-sm font-medium rounded-lg flex items-center gap-2 transition-colors",
+                'px-3 py-2 text-sm font-medium rounded-lg flex items-center gap-2 transition-colors',
                 showFilters || hasActiveFilters
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted hover:bg-muted/80 text-foreground"
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted hover:bg-muted/80 text-foreground'
               )}
             >
               <Filter className="w-4 h-4" />
-              {t("common.filters", "Filters")}
-              {hasActiveFilters && (
-                <span className="w-2 h-2 rounded-full bg-white" />
-              )}
+              {t('common.filters', 'Filters')}
+              {hasActiveFilters && <span className="w-2 h-2 rounded-full bg-white" />}
             </button>
             <ActionButton
               variant="secondary"
               loading={markAllReadMutation.isPending}
               onClick={() => markAllReadMutation.mutate()}
               icon={CheckCheck}
-              label={t("notifications.markAllRead", "Mark all read")}
+              label={t('notifications.markAllRead', 'Mark all read')}
             />
             <ActionButton
               variant="destructive"
               loading={clearReadMutation.isPending}
               onClick={() => clearReadMutation.mutate()}
               icon={Trash2}
-              label={t("notifications.clearRead", "Clear read")}
+              label={t('notifications.clearRead', 'Clear read')}
             />
           </div>
         }
@@ -276,7 +267,7 @@ export default function NotificationsPage() {
         <div className="mb-6 p-4 bg-card border border-border rounded-xl">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-foreground">
-              {t("notifications.filterNotifications", "Filter Notifications")}
+              {t('notifications.filterNotifications', 'Filter Notifications')}
             </h3>
             {hasActiveFilters && (
               <button
@@ -284,7 +275,7 @@ export default function NotificationsPage() {
                 className="text-xs text-primary hover:underline flex items-center gap-1"
               >
                 <X className="w-3 h-3" />
-                {t("common.clearFilters", "Clear filters")}
+                {t('common.clearFilters', 'Clear filters')}
               </button>
             )}
           </div>
@@ -293,19 +284,21 @@ export default function NotificationsPage() {
             {/* Type Filter */}
             <div>
               <label className="block text-xs font-medium text-muted-foreground mb-2">
-                {t("notifications.type", "Type")}
+                {t('notifications.type', 'Type')}
               </label>
               <div className="relative">
                 <select
                   value={filters.type}
-                  onChange={(e) => handleFilterChange("type", e.target.value)}
+                  onChange={(e) => handleFilterChange('type', e.target.value)}
                   className="w-full px-3 py-2 pr-8 rounded-lg border border-border bg-background text-foreground text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/50"
                 >
-                  <option value="all">{t("common.all", "All")}</option>
-                  <option value="service">{t("notifications.typeService", "Service")}</option>
-                  <option value="transaction">{t("notifications.typeTransaction", "Transaction")}</option>
-                  <option value="backup">{t("notifications.typeBackup", "Backup")}</option>
-                  <option value="system">{t("notifications.typeSystem", "System")}</option>
+                  <option value="all">{t('common.all', 'All')}</option>
+                  <option value="service">{t('notifications.typeService', 'Service')}</option>
+                  <option value="transaction">
+                    {t('notifications.typeTransaction', 'Transaction')}
+                  </option>
+                  <option value="backup">{t('notifications.typeBackup', 'Backup')}</option>
+                  <option value="system">{t('notifications.typeSystem', 'System')}</option>
                 </select>
                 <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               </div>
@@ -314,19 +307,19 @@ export default function NotificationsPage() {
             {/* Severity Filter */}
             <div>
               <label className="block text-xs font-medium text-muted-foreground mb-2">
-                {t("notifications.severity", "Severity")}
+                {t('notifications.severity', 'Severity')}
               </label>
               <div className="relative">
                 <select
                   value={filters.severity}
-                  onChange={(e) => handleFilterChange("severity", e.target.value)}
+                  onChange={(e) => handleFilterChange('severity', e.target.value)}
                   className="w-full px-3 py-2 pr-8 rounded-lg border border-border bg-background text-foreground text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/50"
                 >
-                  <option value="all">{t("common.all", "All")}</option>
-                  <option value="info">{t("notifications.severityInfo", "Info")}</option>
-                  <option value="success">{t("notifications.severitySuccess", "Success")}</option>
-                  <option value="warning">{t("notifications.severityWarning", "Warning")}</option>
-                  <option value="error">{t("notifications.severityError", "Error")}</option>
+                  <option value="all">{t('common.all', 'All')}</option>
+                  <option value="info">{t('notifications.severityInfo', 'Info')}</option>
+                  <option value="success">{t('notifications.severitySuccess', 'Success')}</option>
+                  <option value="warning">{t('notifications.severityWarning', 'Warning')}</option>
+                  <option value="error">{t('notifications.severityError', 'Error')}</option>
                 </select>
                 <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               </div>
@@ -335,17 +328,17 @@ export default function NotificationsPage() {
             {/* Read Status Filter */}
             <div>
               <label className="block text-xs font-medium text-muted-foreground mb-2">
-                {t("notifications.status", "Status")}
+                {t('notifications.status', 'Status')}
               </label>
               <div className="relative">
                 <select
                   value={filters.read}
-                  onChange={(e) => handleFilterChange("read", e.target.value)}
+                  onChange={(e) => handleFilterChange('read', e.target.value)}
                   className="w-full px-3 py-2 pr-8 rounded-lg border border-border bg-background text-foreground text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/50"
                 >
-                  <option value="all">{t("common.all", "All")}</option>
-                  <option value="false">{t("notifications.unread", "Unread")}</option>
-                  <option value="true">{t("notifications.read", "Read")}</option>
+                  <option value="all">{t('common.all', 'All')}</option>
+                  <option value="false">{t('notifications.unread', 'Unread')}</option>
+                  <option value="true">{t('notifications.read', 'Read')}</option>
                 </select>
                 <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               </div>
@@ -356,8 +349,8 @@ export default function NotificationsPage() {
 
       {/* Stats */}
       <div className="mb-4 text-sm text-muted-foreground">
-        {t("notifications.showing", "Showing")} {allNotifications.length}{" "}
-        {t("common.of", "of")} {totalCount} {t("notifications.notifications", "notifications")}
+        {t('notifications.showing', 'Showing')} {allNotifications.length} {t('common.of', 'of')}{' '}
+        {totalCount} {t('notifications.notifications', 'notifications')}
       </div>
 
       {/* Notifications List */}
@@ -370,18 +363,23 @@ export default function NotificationsPage() {
           <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
             <Bell className="w-12 h-12 mb-4 opacity-50" />
             <p className="text-lg font-medium">
-              {t("notifications.noNotifications", "No notifications")}
+              {t('notifications.noNotifications', 'No notifications')}
             </p>
             <p className="text-sm">
               {hasActiveFilters
-                ? t("notifications.noNotificationsFiltered", "Try changing your filters")
-                : t("notifications.noNotificationsYet", "You're all caught up!")}
+                ? t('notifications.noNotificationsFiltered', 'Try changing your filters')
+                : t('notifications.noNotificationsYet', "You're all caught up!")}
             </p>
           </div>
         ) : (
           allNotifications.map((notification) => {
-            const config = severityConfig[notification.severity as keyof typeof severityConfig] || severityConfig.info;
-            const typeInfo = typeConfig[notification.notification_type] || { icon: Bell, label: notification.notification_type };
+            const config =
+              severityConfig[notification.severity as keyof typeof severityConfig] ||
+              severityConfig.info;
+            const typeInfo = typeConfig[notification.notification_type] || {
+              icon: Bell,
+              label: notification.notification_type,
+            };
             const Icon = config.icon;
             const TypeIcon = typeInfo.icon;
 
@@ -389,36 +387,34 @@ export default function NotificationsPage() {
               <div
                 key={notification.id}
                 className={cn(
-                  "p-4 rounded-xl border transition-all group",
-                  notification.read
-                    ? "bg-card border-border"
-                    : "bg-primary/5 border-primary/20"
+                  'p-4 rounded-xl border transition-all group',
+                  notification.read ? 'bg-card border-border' : 'bg-primary/5 border-primary/20'
                 )}
               >
                 <div className="flex items-start gap-4">
                   {/* Severity Icon */}
-                  <div className={cn("p-2.5 rounded-xl shrink-0", config.bg)}>
-                    <Icon className={cn("w-5 h-5", config.color)} />
+                  <div className={cn('p-2.5 rounded-xl shrink-0', config.bg)}>
+                    <Icon className={cn('w-5 h-5', config.color)} />
                   </div>
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <p className={cn(
-                        "font-medium",
-                        notification.read ? "text-foreground" : "text-foreground"
-                      )}>
+                      <p
+                        className={cn(
+                          'font-medium',
+                          notification.read ? 'text-foreground' : 'text-foreground'
+                        )}
+                      >
                         {notification.title}
                       </p>
                       {!notification.read && (
                         <div className="w-2 h-2 rounded-full bg-primary shrink-0" />
                       )}
                     </div>
-                    
+
                     {notification.message && (
-                      <p className="text-sm text-muted-foreground mb-2">
-                        {notification.message}
-                      </p>
+                      <p className="text-sm text-muted-foreground mb-2">{notification.message}</p>
                     )}
 
                     <div className="flex items-center gap-4 text-xs text-muted-foreground">
@@ -427,7 +423,7 @@ export default function NotificationsPage() {
                         <TypeIcon className="w-3 h-3" />
                         {typeInfo.label}
                       </span>
-                      
+
                       {/* Time */}
                       <span title={formatDate(notification.created_at)}>
                         {formatTimeAgo(notification.created_at)}
@@ -442,7 +438,7 @@ export default function NotificationsPage() {
                         onClick={() => markReadMutation.mutate(notification.id)}
                         disabled={markReadMutation.isPending}
                         className="p-2 hover:bg-muted rounded-lg transition-colors"
-                        title={t("notifications.markAsRead", "Mark as read")}
+                        title={t('notifications.markAsRead', 'Mark as read')}
                       >
                         <CheckCircle className="w-4 h-4 text-muted-foreground" />
                       </button>
@@ -451,7 +447,7 @@ export default function NotificationsPage() {
                       onClick={() => deleteMutation.mutate(notification.id)}
                       disabled={deleteMutation.isPending}
                       className="p-2 hover:bg-destructive/10 rounded-lg transition-colors"
-                      title={t("common.delete", "Delete")}
+                      title={t('common.delete', 'Delete')}
                     >
                       <Trash2 className="w-4 h-4 text-destructive" />
                     </button>

@@ -1,23 +1,23 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useRef } from "react";
-import { useTranslation } from "react-i18next";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { useAuth } from "@/contexts/auth-context";
-import { cn } from "@/lib/utils";
+import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { useAuth } from '@/contexts/auth-context';
+import { cn } from '@/lib/utils';
 
 // Lock screen background video options
 const BACKGROUND_VIDEOS: Record<string, string> = {
-  "ocean-waves": "/1918465-hd_1920_1080_24fps.mp4",
-  "underwater": "/10109224-hd_1920_1080_24fps.mp4",
-  "jellyfish": "/12008759_1920_1080_30fps.mp4",
-  "coral-reef": "/5358852-hd_1920_1080_25fps.mp4",
-  "deep-blue": "/19924824-hd_1920_1080_30fps.mp4",
-  "sea-turtle": "/17799961-hd_1920_1080_25fps.mp4",
+  'ocean-waves': '/1918465-hd_1920_1080_24fps.mp4',
+  underwater: '/10109224-hd_1920_1080_24fps.mp4',
+  jellyfish: '/12008759_1920_1080_30fps.mp4',
+  'coral-reef': '/5358852-hd_1920_1080_25fps.mp4',
+  'deep-blue': '/19924824-hd_1920_1080_30fps.mp4',
+  'sea-turtle': '/17799961-hd_1920_1080_25fps.mp4',
 };
 
-const DEFAULT_VIDEO = "ocean-waves";
-const LOCK_SCREEN_BG_KEY = "anchor-lock-screen-bg";
+const DEFAULT_VIDEO = 'ocean-waves';
+const LOCK_SCREEN_BG_KEY = 'anchor-lock-screen-bg';
 
 // Custom Anchor icon with refined design
 function AnchorIcon({ className }: { className?: string }) {
@@ -43,7 +43,7 @@ function AnchorIcon({ className }: { className?: string }) {
 export function LockScreen() {
   const { t } = useTranslation();
   const { login, isLoading: authLoading } = useAuth();
-  const [password, setPassword] = useState("");
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -60,7 +60,7 @@ export function LockScreen() {
     if (savedBg && BACKGROUND_VIDEOS[savedBg]) {
       setVideoUrl(BACKGROUND_VIDEOS[savedBg]);
     }
-    
+
     // Auto-focus input after mount
     const timer = setTimeout(() => {
       inputRef.current?.focus();
@@ -79,11 +79,11 @@ export function LockScreen() {
 
     if (!result.success) {
       setError(result.message);
-      setPassword("");
+      setPassword('');
       // Shake animation trigger
-      inputRef.current?.classList.add("animate-shake");
+      inputRef.current?.classList.add('animate-shake');
       setTimeout(() => {
-        inputRef.current?.classList.remove("animate-shake");
+        inputRef.current?.classList.remove('animate-shake');
       }, 500);
       setIsSubmitting(false);
     } else {
@@ -101,12 +101,24 @@ export function LockScreen() {
             <div className="w-20 h-20 rounded-full bg-gradient-to-b from-white/10 to-transparent flex items-center justify-center">
               <AnchorIcon className="w-10 h-10 text-white/80" />
             </div>
-            <div className="absolute inset-0 rounded-full border border-white/20 animate-ping" style={{ animationDuration: "2s" }} />
+            <div
+              className="absolute inset-0 rounded-full border border-white/20 animate-ping"
+              style={{ animationDuration: '2s' }}
+            />
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-white/60 animate-pulse" style={{ animationDelay: "0ms" }} />
-            <div className="w-1.5 h-1.5 rounded-full bg-white/60 animate-pulse" style={{ animationDelay: "150ms" }} />
-            <div className="w-1.5 h-1.5 rounded-full bg-white/60 animate-pulse" style={{ animationDelay: "300ms" }} />
+            <div
+              className="w-1.5 h-1.5 rounded-full bg-white/60 animate-pulse"
+              style={{ animationDelay: '0ms' }}
+            />
+            <div
+              className="w-1.5 h-1.5 rounded-full bg-white/60 animate-pulse"
+              style={{ animationDelay: '150ms' }}
+            />
+            <div
+              className="w-1.5 h-1.5 rounded-full bg-white/60 animate-pulse"
+              style={{ animationDelay: '300ms' }}
+            />
           </div>
         </div>
       </div>
@@ -114,11 +126,11 @@ export function LockScreen() {
   }
 
   return (
-    <div 
+    <div
       className={cn(
-        "fixed inset-0 z-50 flex items-center justify-center overflow-hidden",
-        "transition-all duration-300 ease-out",
-        isUnlocking && "opacity-0 scale-105 blur-lg"
+        'fixed inset-0 z-50 flex items-center justify-center overflow-hidden',
+        'transition-all duration-300 ease-out',
+        isUnlocking && 'opacity-0 scale-105 blur-lg'
       )}
     >
       {/* Video Background */}
@@ -130,9 +142,9 @@ export function LockScreen() {
         playsInline
         onLoadedData={() => setVideoLoaded(true)}
         className={cn(
-          "absolute inset-0 w-full h-full object-cover transition-all duration-[2000ms]",
-          videoLoaded ? "opacity-100 scale-100" : "opacity-0 scale-110",
-          isUnlocking && "scale-110"
+          'absolute inset-0 w-full h-full object-cover transition-all duration-[2000ms]',
+          videoLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-110',
+          isUnlocking && 'scale-110'
         )}
       >
         <source src={videoUrl} type="video/mp4" />
@@ -140,35 +152,37 @@ export function LockScreen() {
 
       {/* Subtle gradient overlay - mimics natural light */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/50" />
-      
+
       {/* Vignette effect */}
-      <div className="absolute inset-0" style={{ 
-        background: "radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.3) 100%)" 
-      }} />
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.3) 100%)',
+        }}
+      />
 
       {/* Content Container */}
-      <div 
+      <div
         className={cn(
-          "relative z-10 w-full max-w-[340px] mx-4",
-          "transition-all duration-300 ease-out",
-          isUnlocking && "translate-y-[-20px] opacity-0 scale-95"
+          'relative z-10 w-full max-w-[340px] mx-4',
+          'transition-all duration-300 ease-out',
+          isUnlocking && 'translate-y-[-20px] opacity-0 scale-95'
         )}
       >
-        
         {/* Logo & Title - Floating above card */}
-        <div 
+        <div
           className={cn(
-            "text-center mb-8 animate-fade-in-up",
-            "transition-all duration-250 ease-out",
-            isUnlocking && "translate-y-[-15px] opacity-0"
+            'text-center mb-8 animate-fade-in-up',
+            'transition-all duration-250 ease-out',
+            isUnlocking && 'translate-y-[-15px] opacity-0'
           )}
-          style={{ animationDelay: "200ms" }}
+          style={{ animationDelay: '200ms' }}
         >
-          <div 
+          <div
             className={cn(
-              "inline-flex items-center justify-center w-20 h-20 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 mb-5 shadow-2xl",
-              "transition-all duration-300 ease-out",
-              isUnlocking && "scale-125 opacity-0"
+              'inline-flex items-center justify-center w-20 h-20 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 mb-5 shadow-2xl',
+              'transition-all duration-300 ease-out',
+              isUnlocking && 'scale-125 opacity-0'
             )}
           >
             <AnchorIcon className="w-9 h-9 text-white drop-shadow-lg" />
@@ -179,15 +193,15 @@ export function LockScreen() {
         </div>
 
         {/* Glass Card */}
-        <div 
+        <div
           className={cn(
-            "backdrop-blur-2xl bg-white/10 rounded-3xl border border-white/20 shadow-2xl overflow-hidden animate-fade-in-up",
-            "transition-all duration-250 ease-out",
-            isUnlocking && "translate-y-[10px] opacity-0 scale-95"
+            'backdrop-blur-2xl bg-white/10 rounded-3xl border border-white/20 shadow-2xl overflow-hidden animate-fade-in-up',
+            'transition-all duration-250 ease-out',
+            isUnlocking && 'translate-y-[10px] opacity-0 scale-95'
           )}
-          style={{ 
-            animationDelay: "400ms",
-            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.1)"
+          style={{
+            animationDelay: '400ms',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.1)',
           }}
         >
           {/* Form */}
@@ -202,12 +216,12 @@ export function LockScreen() {
             {/* Password Field */}
             <div className="mb-5">
               <label className="block text-[13px] font-medium text-white/70 mb-2.5 ml-1">
-                {t("lockScreen.password")}
+                {t('lockScreen.password')}
               </label>
-              <div 
+              <div
                 className={cn(
-                  "relative rounded-2xl transition-all duration-300",
-                  isFocused && "ring-2 ring-white/30"
+                  'relative rounded-2xl transition-all duration-300',
+                  isFocused && 'ring-2 ring-white/30'
                 )}
               >
                 {/* Hidden dummy field to confuse password managers */}
@@ -215,7 +229,13 @@ export function LockScreen() {
                   type="password"
                   name="fake-password-field"
                   autoComplete="new-password"
-                  style={{ position: 'absolute', opacity: 0, pointerEvents: 'none', width: 0, height: 0 }}
+                  style={{
+                    position: 'absolute',
+                    opacity: 0,
+                    pointerEvents: 'none',
+                    width: 0,
+                    height: 0,
+                  }}
                   tabIndex={-1}
                 />
                 <input
@@ -231,7 +251,7 @@ export function LockScreen() {
                   disabled={isUnlocking}
                   readOnly
                   className="w-full px-5 py-4 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10 text-white text-[16px] placeholder-white/30 focus:outline-none focus:bg-white/15 focus:border-white/20 transition-all duration-300 disabled:opacity-50"
-                  placeholder={t("lockScreen.placeholder")}
+                  placeholder={t('lockScreen.placeholder')}
                   autoComplete="off"
                   autoCorrect="off"
                   autoCapitalize="off"
@@ -240,9 +260,11 @@ export function LockScreen() {
                   data-1p-ignore="true"
                   data-bwignore="true"
                   data-form-type="other"
-                  style={{
-                    WebkitTextSecurity: showPassword ? 'none' : 'disc',
-                  } as React.CSSProperties}
+                  style={
+                    {
+                      WebkitTextSecurity: showPassword ? 'none' : 'disc',
+                    } as React.CSSProperties
+                  }
                 />
                 <button
                   type="button"
@@ -264,52 +286,60 @@ export function LockScreen() {
               type="submit"
               disabled={isSubmitting || !password.trim() || isUnlocking}
               className={cn(
-                "w-full py-4 rounded-2xl font-semibold text-[15px] transition-all duration-300",
-                "bg-white text-[#0c1821]",
-                "hover:bg-white/90 active:scale-[0.98]",
-                "disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:active:scale-100",
-                "flex items-center justify-center gap-2.5",
-                "shadow-lg shadow-white/20",
-                isUnlocking && "!bg-green-500 !text-white !opacity-100"
+                'w-full py-4 rounded-2xl font-semibold text-[15px] transition-all duration-300',
+                'bg-white text-[#0c1821]',
+                'hover:bg-white/90 active:scale-[0.98]',
+                'disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:active:scale-100',
+                'flex items-center justify-center gap-2.5',
+                'shadow-lg shadow-white/20',
+                isUnlocking && '!bg-green-500 !text-white !opacity-100'
               )}
             >
               {isSubmitting || isUnlocking ? (
                 <>
                   {isUnlocking ? (
-                    <svg className="w-5 h-5 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    <svg
+                      className="w-5 h-5 animate-pulse"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
                     </svg>
                   ) : (
                     <Loader2 className="w-[18px] h-[18px] animate-spin" />
                   )}
-                  <span>{isUnlocking ? t("lockScreen.welcome", "Welcome!") : t("lockScreen.unlocking")}</span>
+                  <span>
+                    {isUnlocking ? t('lockScreen.welcome', 'Welcome!') : t('lockScreen.unlocking')}
+                  </span>
                 </>
               ) : (
-                <span>{t("lockScreen.unlock")}</span>
+                <span>{t('lockScreen.unlock')}</span>
               )}
             </button>
           </form>
 
           {/* Footer */}
           <div className="px-7 pb-6 pt-1">
-            <p className="text-[11px] text-center text-white/40">
-              {t("lockScreen.protected")}
-            </p>
+            <p className="text-[11px] text-center text-white/40">{t('lockScreen.protected')}</p>
           </div>
         </div>
 
         {/* Branding */}
-        <div 
+        <div
           className={cn(
-            "mt-8 text-center animate-fade-in-up",
-            "transition-all duration-200 ease-out",
-            isUnlocking && "opacity-0"
+            'mt-8 text-center animate-fade-in-up',
+            'transition-all duration-200 ease-out',
+            isUnlocking && 'opacity-0'
           )}
-          style={{ animationDelay: "600ms" }}
+          style={{ animationDelay: '600ms' }}
         >
-          <p className="text-[11px] text-white/40 tracking-wide">
-            {t("lockScreen.poweredBy")}
-          </p>
+          <p className="text-[11px] text-white/40 tracking-wide">{t('lockScreen.poweredBy')}</p>
         </div>
       </div>
 
@@ -325,27 +355,45 @@ export function LockScreen() {
             transform: translateY(0);
           }
         }
-        
+
         @keyframes fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
         }
-        
+
         @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
-          20%, 40%, 60%, 80% { transform: translateX(4px); }
+          0%,
+          100% {
+            transform: translateX(0);
+          }
+          10%,
+          30%,
+          50%,
+          70%,
+          90% {
+            transform: translateX(-4px);
+          }
+          20%,
+          40%,
+          60%,
+          80% {
+            transform: translateX(4px);
+          }
         }
-        
+
         .animate-fade-in-up {
           animation: fade-in-up 0.7s ease-out forwards;
           opacity: 0;
         }
-        
+
         .animate-fade-in {
           animation: fade-in 0.3s ease-out forwards;
         }
-        
+
         .animate-shake {
           animation: shake 0.5s ease-in-out;
         }

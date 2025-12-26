@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useTranslation } from "react-i18next";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
 import {
   fetchInstallationStatus,
   fetchAvailableServices,
@@ -13,61 +13,61 @@ import {
   InstallationPreset,
   ServiceDefinition,
   PresetInfo,
-} from "@/lib/api";
-import { WelcomeStep } from "@/components/setup/welcome-step";
-import { ProfileStep } from "@/components/setup/profile-step";
-import { LanguageStep } from "@/components/setup/language-step";
-import { AppearanceStep } from "@/components/setup/appearance-step";
-import { NetworkStep, BitcoinNetwork } from "@/components/setup/network-step";
-import { PresetStep } from "@/components/setup/preset-step";
-import { CustomStep } from "@/components/setup/custom-step";
-import { ReviewStep } from "@/components/setup/review-step";
-import { SecurityStep } from "@/components/setup/security-step";
-import { InstallingStep } from "@/components/setup/installing-step";
-import { CompleteStep } from "@/components/setup/complete-step";
+} from '@/lib/api';
+import { WelcomeStep } from '@/components/setup/welcome-step';
+import { ProfileStep } from '@/components/setup/profile-step';
+import { LanguageStep } from '@/components/setup/language-step';
+import { AppearanceStep } from '@/components/setup/appearance-step';
+import { NetworkStep, BitcoinNetwork } from '@/components/setup/network-step';
+import { PresetStep } from '@/components/setup/preset-step';
+import { CustomStep } from '@/components/setup/custom-step';
+import { ReviewStep } from '@/components/setup/review-step';
+import { SecurityStep } from '@/components/setup/security-step';
+import { InstallingStep } from '@/components/setup/installing-step';
+import { CompleteStep } from '@/components/setup/complete-step';
 
-type SetupStep = 
-  | "welcome"
-  | "profile" 
-  | "language" 
-  | "appearance"
-  | "network" 
-  | "preset" 
-  | "custom" 
-  | "review" 
-  | "security"
-  | "installing" 
-  | "complete";
+type SetupStep =
+  | 'welcome'
+  | 'profile'
+  | 'language'
+  | 'appearance'
+  | 'network'
+  | 'preset'
+  | 'custom'
+  | 'review'
+  | 'security'
+  | 'installing'
+  | 'complete';
 
 const STEP_ORDER: SetupStep[] = [
-  "welcome",
-  "profile",
-  "language", 
-  "appearance",
-  "network",
-  "preset",
-  "custom", // conditional
-  "review",
-  "security",
-  "installing",
-  "complete",
+  'welcome',
+  'profile',
+  'language',
+  'appearance',
+  'network',
+  'preset',
+  'custom', // conditional
+  'review',
+  'security',
+  'installing',
+  'complete',
 ];
 
 export default function SetupPage() {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const router = useRouter();
-  
-  const [currentStep, setCurrentStep] = useState<SetupStep>("welcome");
-  const [selectedPreset, setSelectedPreset] = useState<InstallationPreset>("default");
+
+  const [currentStep, setCurrentStep] = useState<SetupStep>('welcome');
+  const [selectedPreset, setSelectedPreset] = useState<InstallationPreset>('default');
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [availableServices, setAvailableServices] = useState<ServiceDefinition[]>([]);
   const [presets, setPresets] = useState<PresetInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [installProgress, setInstallProgress] = useState(0);
-  const [selectedLanguage, setSelectedLanguage] = useState(i18n.language || "en");
-  const [selectedNetwork, setSelectedNetwork] = useState<BitcoinNetwork>("regtest");
-  const [userName, setUserName] = useState("");
+  const [installProgress] = useState(0);
+  const [selectedLanguage, setSelectedLanguage] = useState(i18n.language || 'en');
+  const [selectedNetwork, setSelectedNetwork] = useState<BitcoinNetwork>('regtest');
+  const [userName, setUserName] = useState('');
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
 
   // Check if setup was already completed
@@ -76,83 +76,83 @@ export default function SetupPage() {
       try {
         const status = await fetchInstallationStatus();
         if (status.setup_completed) {
-          router.push("/");
+          router.push('/');
           return;
         }
-        
+
         const servicesData = await fetchAvailableServices();
         setAvailableServices(servicesData.services);
         setPresets(servicesData.presets);
-        
+
         // Set default services based on default preset
-        const defaultPreset = servicesData.presets.find((p) => p.id === "default");
+        const defaultPreset = servicesData.presets.find((p) => p.id === 'default');
         if (defaultPreset) {
           setSelectedServices(defaultPreset.services);
         }
-        
+
         setIsLoading(false);
       } catch (err) {
-        console.error("Failed to check setup status:", err);
+        console.error('Failed to check setup status:', err);
         setIsLoading(false);
       }
     }
-    
+
     checkSetupStatus();
   }, [router]);
 
   const handlePresetSelect = (preset: InstallationPreset) => {
     setSelectedPreset(preset);
-    
-    if (preset === "custom") {
-      setCurrentStep("custom");
+
+    if (preset === 'custom') {
+      setCurrentStep('custom');
     } else {
       const presetInfo = presets.find((p) => p.id === preset);
       if (presetInfo) {
         setSelectedServices(presetInfo.services);
       }
-      setCurrentStep("review");
+      setCurrentStep('review');
     }
   };
 
   const handleCustomServicesSelect = (services: string[]) => {
     setSelectedServices(services);
-    setCurrentStep("review");
+    setCurrentStep('review');
   };
 
   const handleInstall = async () => {
     setError(null);
-    
+
     try {
       // Save user profile first
       if (userName.trim()) {
         try {
           await updateUserProfile(userName.trim(), userAvatar || undefined);
         } catch (e) {
-          console.warn("Failed to save profile:", e);
+          console.warn('Failed to save profile:', e);
         }
       }
 
       // Apply the installation configuration
-      if (selectedPreset === "custom") {
+      if (selectedPreset === 'custom') {
         await applyCustomInstallation(selectedServices);
       } else {
         await applyInstallationPreset(selectedPreset);
       }
-      
+
       // Complete setup (this triggers the docker compose build via SSE)
       await completeSetup();
-      
+
       // Move to installing step - the SSE stream will handle progress
-      setCurrentStep("installing");
+      setCurrentStep('installing');
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Installation failed");
-      setCurrentStep("review");
+      setError(err instanceof Error ? err.message : 'Installation failed');
+      setCurrentStep('review');
     }
   };
 
   const handleInstallComplete = () => {
     // Redirect to dashboard
-    window.location.href = "/";
+    window.location.href = '/';
   };
 
   const handleInstallError = (errorMsg: string) => {
@@ -160,38 +160,38 @@ export default function SetupPage() {
   };
 
   const handleComplete = () => {
-    router.push("/");
+    router.push('/');
   };
 
   const handleBack = () => {
     switch (currentStep) {
-      case "profile":
-        setCurrentStep("welcome");
+      case 'profile':
+        setCurrentStep('welcome');
         break;
-      case "language":
-        setCurrentStep("profile");
+      case 'language':
+        setCurrentStep('profile');
         break;
-      case "appearance":
-        setCurrentStep("language");
+      case 'appearance':
+        setCurrentStep('language');
         break;
-      case "network":
-        setCurrentStep("appearance");
+      case 'network':
+        setCurrentStep('appearance');
         break;
-      case "preset":
-        setCurrentStep("network");
+      case 'preset':
+        setCurrentStep('network');
         break;
-      case "custom":
-        setCurrentStep("preset");
+      case 'custom':
+        setCurrentStep('preset');
         break;
-      case "review":
-        if (selectedPreset === "custom") {
-          setCurrentStep("custom");
+      case 'review':
+        if (selectedPreset === 'custom') {
+          setCurrentStep('custom');
         } else {
-          setCurrentStep("preset");
+          setCurrentStep('preset');
         }
         break;
-      case "security":
-        setCurrentStep("review");
+      case 'security':
+        setCurrentStep('review');
         break;
       default:
         break;
@@ -228,45 +228,40 @@ export default function SetupPage() {
       </div>
 
       <div className="p-8">
-        {currentStep === "welcome" && (
-          <WelcomeStep onNext={() => setCurrentStep("profile")} />
-        )}
-        
-        {currentStep === "profile" && (
+        {currentStep === 'welcome' && <WelcomeStep onNext={() => setCurrentStep('profile')} />}
+
+        {currentStep === 'profile' && (
           <ProfileStep
             userName={userName}
             userAvatar={userAvatar}
             onProfileChange={handleProfileChange}
-            onNext={() => setCurrentStep("language")}
+            onNext={() => setCurrentStep('language')}
           />
         )}
-        
-        {currentStep === "language" && (
+
+        {currentStep === 'language' && (
           <LanguageStep
             selectedLanguage={selectedLanguage}
             onLanguageChange={setSelectedLanguage}
-            onNext={() => setCurrentStep("appearance")}
+            onNext={() => setCurrentStep('appearance')}
             onBack={handleBack}
           />
         )}
-        
-        {currentStep === "appearance" && (
-          <AppearanceStep
-            onNext={() => setCurrentStep("network")}
-            onBack={handleBack}
-          />
+
+        {currentStep === 'appearance' && (
+          <AppearanceStep onNext={() => setCurrentStep('network')} onBack={handleBack} />
         )}
-        
-        {currentStep === "network" && (
+
+        {currentStep === 'network' && (
           <NetworkStep
             selectedNetwork={selectedNetwork}
             onNetworkChange={setSelectedNetwork}
-            onNext={() => setCurrentStep("preset")}
+            onNext={() => setCurrentStep('preset')}
             onBack={handleBack}
           />
         )}
-        
-        {currentStep === "preset" && (
+
+        {currentStep === 'preset' && (
           <PresetStep
             presets={presets}
             selectedPreset={selectedPreset}
@@ -274,8 +269,8 @@ export default function SetupPage() {
             onBack={handleBack}
           />
         )}
-        
-        {currentStep === "custom" && (
+
+        {currentStep === 'custom' && (
           <CustomStep
             services={availableServices}
             selectedServices={selectedServices}
@@ -284,27 +279,23 @@ export default function SetupPage() {
             onBack={handleBack}
           />
         )}
-        
-        {currentStep === "review" && (
+
+        {currentStep === 'review' && (
           <ReviewStep
             preset={selectedPreset}
             selectedServices={selectedServices}
             availableServices={availableServices}
             error={error}
-            onInstall={() => setCurrentStep("security")}
+            onInstall={() => setCurrentStep('security')}
             onBack={handleBack}
           />
         )}
-        
-        {currentStep === "security" && (
-          <SecurityStep
-            onNext={handleInstall}
-            onBack={handleBack}
-            onSkip={handleInstall}
-          />
+
+        {currentStep === 'security' && (
+          <SecurityStep onNext={handleInstall} onBack={handleBack} onSkip={handleInstall} />
         )}
-        
-        {currentStep === "installing" && (
+
+        {currentStep === 'installing' && (
           <InstallingStep
             progress={installProgress}
             selectedServices={selectedServices}
@@ -313,8 +304,8 @@ export default function SetupPage() {
             onError={handleInstallError}
           />
         )}
-        
-        {currentStep === "complete" && (
+
+        {currentStep === 'complete' && (
           <CompleteStep
             selectedServices={selectedServices}
             availableServices={availableServices}

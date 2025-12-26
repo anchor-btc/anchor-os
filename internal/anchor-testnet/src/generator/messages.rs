@@ -14,6 +14,7 @@ use crate::config::{MessageType, SharedConfig, SharedStats, TestnetConfig};
 
 /// Tracked token info for mint/transfer/burn operations
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct TrackedToken {
     pub ticker: String,
     pub deploy_txid: String,
@@ -35,6 +36,7 @@ pub struct TrackedOracle {
 
 /// Tracked attestation for disputes
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct TrackedAttestation {
     pub oracle_pubkey: [u8; 32],
     pub event_id: [u8; 32],
@@ -44,6 +46,7 @@ pub struct TrackedAttestation {
 
 /// Tracked prediction market for bet/resolve operations
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct TrackedMarket {
     pub market_id: [u8; 32],
     pub question: String,
@@ -226,10 +229,11 @@ impl MessageGenerator {
             }
             MessageType::PredictionDraw => {
                 // Need at least one market with bets
-                let has_market_with_bets = self.market_history
+                let has_market_with_bets = self
+                    .market_history
                     .iter()
                     .any(|m| !m.resolved && m.bet_count > 0);
-                
+
                 if has_market_with_bets {
                     self.create_prediction_draw(carrier).await?
                 } else if !self.market_history.is_empty() {
@@ -713,7 +717,9 @@ impl MessageGenerator {
 
         // Track the minted tokens as a UTXO
         if let Some(token) = self.token_history.iter_mut().find(|t| t.ticker == ticker) {
-            token.utxos.push((response.txid.clone(), response.vout, amount));
+            token
+                .utxos
+                .push((response.txid.clone(), response.vout, amount));
             // Keep max 10 UTXOs per token
             if token.utxos.len() > 10 {
                 token.utxos.remove(0);
@@ -734,7 +740,9 @@ impl MessageGenerator {
     /// Create a token transfer message (Kind 20, Op 0x03)
     async fn create_token_transfer(&mut self, carrier: CarrierType) -> Result<MessageResult> {
         // Find a token with UTXOs
-        let tokens_with_utxos: Vec<_> = self.token_history.iter()
+        let tokens_with_utxos: Vec<_> = self
+            .token_history
+            .iter()
             .filter(|t| !t.utxos.is_empty())
             .collect();
 
@@ -803,9 +811,13 @@ impl MessageGenerator {
         // Update token UTXOs
         if let Some(token) = self.token_history.iter_mut().find(|t| t.ticker == ticker) {
             // Remove the spent UTXO
-            token.utxos.retain(|(txid, vout, _)| !(txid == &input_txid && *vout == input_vout));
+            token
+                .utxos
+                .retain(|(txid, vout, _)| !(txid == &input_txid && *vout == input_vout));
             // Add the new UTXOs
-            token.utxos.push((response.txid.clone(), 0, transfer_amount));
+            token
+                .utxos
+                .push((response.txid.clone(), 0, transfer_amount));
             if change_amount > 0 {
                 token.utxos.push((response.txid.clone(), 1, change_amount));
             }
@@ -825,7 +837,9 @@ impl MessageGenerator {
     /// Create a token burn message (Kind 20, Op 0x04)
     async fn create_token_burn(&mut self, carrier: CarrierType) -> Result<MessageResult> {
         // Find a token with UTXOs
-        let tokens_with_utxos: Vec<_> = self.token_history.iter()
+        let tokens_with_utxos: Vec<_> = self
+            .token_history
+            .iter()
             .filter(|t| !t.utxos.is_empty())
             .collect();
 
@@ -879,7 +893,11 @@ impl MessageGenerator {
             lock_for_dns: false,
             domain_name: None,
             lock_for_token: remaining > 0, // Only lock if there are remaining tokens
-            token_ticker: if remaining > 0 { Some(ticker.clone()) } else { None },
+            token_ticker: if remaining > 0 {
+                Some(ticker.clone())
+            } else {
+                None
+            },
         };
 
         let response = self.wallet.send_create_message(&request).await?;
@@ -887,7 +905,9 @@ impl MessageGenerator {
         // Update token UTXOs
         if let Some(token) = self.token_history.iter_mut().find(|t| t.ticker == ticker) {
             // Remove the spent UTXO
-            token.utxos.retain(|(txid, vout, _)| !(txid == &input_txid && *vout == input_vout));
+            token
+                .utxos
+                .retain(|(txid, vout, _)| !(txid == &input_txid && *vout == input_vout));
             // Add the remaining tokens as new UTXO
             if remaining > 0 {
                 token.utxos.push((response.txid.clone(), 0, remaining));
@@ -1004,7 +1024,8 @@ impl MessageGenerator {
     /// [category u8] [event_id 32 bytes] [attestation_block i64 BE] [outcome_len u16 BE] [outcome_data] [schnorr_sig 64 bytes]
     async fn create_oracle_attestation(&mut self, carrier: CarrierType) -> Result<MessageResult> {
         // Pick a random oracle from history
-        let oracle = self.oracle_history
+        let oracle = self
+            .oracle_history
             .choose(&mut self.rng)
             .cloned()
             .expect("Oracle history should not be empty");
@@ -1014,7 +1035,7 @@ impl MessageGenerator {
         self.rng.fill(&mut event_id);
 
         // Category from the oracle's registered categories
-        let category: u8 = (oracle.categories as u8) & 0xFF;
+        let category: u8 = oracle.categories as u8;
 
         // Attestation block (simulated as current + random)
         let attestation_block: i64 = self.rng.gen_range(1000..10000);
@@ -1101,7 +1122,8 @@ impl MessageGenerator {
     /// Format: [attestation_txid 32 bytes] [attestation_vout u16 BE] [reason u8] [stake i64 BE] [evidence...]
     async fn create_oracle_dispute(&mut self, carrier: CarrierType) -> Result<MessageResult> {
         // Pick a random attestation to dispute
-        let attestation = self.attestation_history
+        let attestation = self
+            .attestation_history
             .choose(&mut self.rng)
             .cloned()
             .expect("Attestation history should not be empty");
@@ -1118,17 +1140,20 @@ impl MessageGenerator {
         self.rng.fill(&mut disputer_pubkey);
 
         // Evidence (optional text)
-        let evidence = format!("Dispute reason: {}", match reason {
-            1 => "Incorrect outcome reported",
-            2 => "Attestation made before event resolution",
-            3 => "Invalid Schnorr signature",
-            4 => "Oracle not authorized for this category",
-            _ => "Unknown",
-        });
+        let evidence = format!(
+            "Dispute reason: {}",
+            match reason {
+                1 => "Incorrect outcome reported",
+                2 => "Attestation made before event resolution",
+                3 => "Invalid Schnorr signature",
+                4 => "Oracle not authorized for this category",
+                _ => "Unknown",
+            }
+        );
 
         // Parse attestation txid to bytes
-        let attestation_txid_bytes = hex::decode(&attestation.txid)
-            .unwrap_or_else(|_| vec![0u8; 32]);
+        let attestation_txid_bytes =
+            hex::decode(&attestation.txid).unwrap_or_else(|_| vec![0u8; 32]);
 
         // Build dispute body
         let mut data = Vec::new();
@@ -1231,7 +1256,8 @@ impl MessageGenerator {
             ],
         };
 
-        let description = descriptions.choose(&mut self.rng)
+        let description = descriptions
+            .choose(&mut self.rng)
             .unwrap_or(&"What will happen?")
             .to_string();
 
@@ -1260,7 +1286,11 @@ impl MessageGenerator {
         if !response.status().is_success() {
             let status = response.status();
             let error_text = response.text().await.unwrap_or_default();
-            return Err(anyhow::anyhow!("Failed to create event request: {} - {}", status, error_text));
+            return Err(anyhow::anyhow!(
+                "Failed to create event request: {} - {}",
+                status,
+                error_text
+            ));
         }
 
         let result: serde_json::Value = response.json().await?;
@@ -1288,11 +1318,11 @@ impl MessageGenerator {
     /// Create a lottery message (Kind 40 - LotteryCreate)
     /// Create a prediction market (Kind 40 - MarketCreate)
     /// Format expected by indexer:
-    /// [market_id 32] [question_len 2 BE] [question var] [desc_len 2 BE] [desc var] 
+    /// [market_id 32] [question_len 2 BE] [question var] [desc_len 2 BE] [desc var]
     /// [resolution_block 4 BE] [oracle_pubkey 32] [initial_liquidity 8 BE]
     async fn create_prediction(&mut self, carrier: CarrierType) -> Result<MessageResult> {
-        use super::sample_data::{SAMPLE_MARKET_QUESTIONS, SAMPLE_MARKET_DESCRIPTIONS};
-        
+        use super::sample_data::{SAMPLE_MARKET_DESCRIPTIONS, SAMPLE_MARKET_QUESTIONS};
+
         // Generate a random 32-byte market ID
         let mut market_id = [0u8; 32];
         self.rng.fill(&mut market_id);
@@ -1305,10 +1335,12 @@ impl MessageGenerator {
 
         // Pick a random description (80% chance)
         let description = if self.rng.gen_bool(0.8) {
-            Some(SAMPLE_MARKET_DESCRIPTIONS
-                .choose(&mut self.rng)
-                .unwrap_or(&"No description")
-                .to_string())
+            Some(
+                SAMPLE_MARKET_DESCRIPTIONS
+                    .choose(&mut self.rng)
+                    .unwrap_or(&"No description")
+                    .to_string(),
+            )
         } else {
             None
         };
@@ -1332,8 +1364,9 @@ impl MessageGenerator {
         // Build market creation body
         let question_bytes = question.as_bytes();
         let desc_bytes = description.as_ref().map(|d| d.as_bytes()).unwrap_or(&[]);
-        
-        let mut data = Vec::with_capacity(32 + 2 + question_bytes.len() + 2 + desc_bytes.len() + 4 + 32 + 8);
+
+        let mut data =
+            Vec::with_capacity(32 + 2 + question_bytes.len() + 2 + desc_bytes.len() + 4 + 32 + 8);
 
         // Market ID (32 bytes)
         data.extend_from_slice(&market_id);
@@ -1423,7 +1456,8 @@ impl MessageGenerator {
         }
 
         // Pick an open market (one that hasn't been resolved yet)
-        let open_markets: Vec<_> = self.market_history
+        let open_markets: Vec<_> = self
+            .market_history
             .iter()
             .filter(|m| !m.resolved && m.resolution_block > self.current_block)
             .collect();
@@ -1493,7 +1527,11 @@ impl MessageGenerator {
         let response = self.wallet.send_create_message(&request).await?;
 
         // Update market bet count and simulated pools
-        if let Some(market) = self.market_history.iter_mut().find(|m| m.market_id == market_id) {
+        if let Some(market) = self
+            .market_history
+            .iter_mut()
+            .find(|m| m.market_id == market_id)
+        {
             market.bet_count += 1;
             // Simulate AMM pool changes
             if outcome == 1 {
@@ -1526,7 +1564,8 @@ impl MessageGenerator {
         // Find markets that are ready for resolution:
         // - Have at least one bet
         // - Not already resolved
-        let ready_markets: Vec<_> = self.market_history
+        let ready_markets: Vec<_> = self
+            .market_history
             .iter()
             .filter(|m| !m.resolved && m.bet_count > 0)
             .collect();
@@ -1545,7 +1584,11 @@ impl MessageGenerator {
         let yes_pool = market.yes_pool as f64;
         let no_pool = market.no_pool as f64;
         let yes_prob = no_pool / (yes_pool + no_pool); // Price of YES
-        let resolution: u8 = if self.rng.gen_bool(yes_prob.max(0.3).min(0.7)) { 1 } else { 0 };
+        let resolution: u8 = if self.rng.gen_bool(yes_prob.clamp(0.3, 0.7)) {
+            1
+        } else {
+            0
+        };
         let resolution_str = if resolution == 1 { "YES" } else { "NO" };
 
         // Generate a mock Schnorr signature (64 bytes)
@@ -1591,7 +1634,11 @@ impl MessageGenerator {
         let response = self.wallet.send_create_message(&request).await?;
 
         // Mark market as resolved
-        if let Some(market) = self.market_history.iter_mut().find(|m| m.market_id == market_id) {
+        if let Some(market) = self
+            .market_history
+            .iter_mut()
+            .find(|m| m.market_id == market_id)
+        {
             market.resolved = true;
         }
 
@@ -1657,4 +1704,3 @@ fn encode_varint(mut value: u128) -> Vec<u8> {
     }
     bytes
 }
-

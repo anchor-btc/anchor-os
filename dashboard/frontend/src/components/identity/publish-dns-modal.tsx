@@ -1,17 +1,8 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import {
-  Globe,
-  X,
-  AlertCircle,
-  RefreshCw,
-  Check,
-  Copy,
-  ExternalLink,
-  Loader2,
-} from "lucide-react";
-import { Identity, publishIdentityToDns, fetchAssetsDomains, DomainAsset } from "@/lib/api";
+import { useState, useEffect } from 'react';
+import { Globe, X, AlertCircle, RefreshCw, Check, Copy, ExternalLink, Loader2 } from 'lucide-react';
+import { Identity, publishIdentityToDns, fetchAssetsDomains, DomainAsset } from '@/lib/api';
 
 interface PublishDnsModalProps {
   isOpen: boolean;
@@ -21,17 +12,12 @@ interface PublishDnsModalProps {
 }
 
 // Anchor Domains API URL
-const DOMAINS_API_URL = process.env.NEXT_PUBLIC_DOMAINS_API_URL || "http://localhost:3401";
+const DOMAINS_API_URL = process.env.NEXT_PUBLIC_DOMAINS_API_URL || 'http://localhost:3401';
 
-export function PublishDnsModal({
-  isOpen,
-  onClose,
-  identity,
-  onSuccess,
-}: PublishDnsModalProps) {
+export function PublishDnsModal({ isOpen, onClose, identity, onSuccess }: PublishDnsModalProps) {
   const [domains, setDomains] = useState<DomainAsset[]>([]);
-  const [selectedDomain, setSelectedDomain] = useState<string>("");
-  const [subdomain, setSubdomain] = useState<string>("");
+  const [selectedDomain, setSelectedDomain] = useState<string>('');
+  const [subdomain, setSubdomain] = useState<string>('');
   const [isLoadingDomains, setIsLoadingDomains] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,18 +25,18 @@ export function PublishDnsModal({
     recordName: string;
     recordValue: string;
   } | null>(null);
-  const [copied, setCopied] = useState<"name" | "value" | null>(null);
+  const [copied, setCopied] = useState<'name' | 'value' | null>(null);
 
   // Load domains when modal opens
   useEffect(() => {
     if (isOpen) {
-      setSelectedDomain("");
-      setSubdomain("");
+      setSelectedDomain('');
+      setSubdomain('');
       setIsPublishing(false);
       setError(null);
       setSuccess(null);
       setCopied(null);
-      
+
       // Fetch user's domains from wallet
       loadDomains();
     }
@@ -65,8 +51,8 @@ export function PublishDnsModal({
       if (domainAssets.length > 0) {
         setSelectedDomain(domainAssets[0].name);
       }
-    } catch (e: any) {
-      console.error("Failed to load domains:", e);
+    } catch (e) {
+      console.error('Failed to load domains:', e);
       // Don't show error, just empty list
       setDomains([]);
     } finally {
@@ -76,18 +62,19 @@ export function PublishDnsModal({
 
   if (!isOpen || !identity) return null;
 
-  const identityPrefix = identity.identity_type === "nostr" ? "_nostr" : "_pubky";
+  const identityPrefix = identity.identity_type === 'nostr' ? '_nostr' : '_pubky';
   const previewRecordName = subdomain
     ? `${subdomain}.user.${identityPrefix}.${selectedDomain}`
     : `user.${identityPrefix}.${selectedDomain}`;
 
-  const previewValue = identity.identity_type === "nostr"
-    ? `npub1${identity.public_key.slice(0, 56)}...`
-    : `pk:${identity.public_key.slice(0, 16)}...`;
+  const previewValue =
+    identity.identity_type === 'nostr'
+      ? `npub1${identity.public_key.slice(0, 56)}...`
+      : `pk:${identity.public_key.slice(0, 16)}...`;
 
   const handlePublish = async () => {
     if (!selectedDomain) {
-      setError("Please select a domain");
+      setError('Please select a domain');
       return;
     }
 
@@ -99,8 +86,8 @@ export function PublishDnsModal({
       const domainsResponse = await fetch(
         `${DOMAINS_API_URL}/domains/${selectedDomain}/identities`,
         {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             identity_type: identity.identity_type,
             public_key: identity.public_key,
@@ -111,33 +98,31 @@ export function PublishDnsModal({
 
       if (!domainsResponse.ok) {
         const errorText = await domainsResponse.text();
-        throw new Error(errorText || "Failed to publish identity to domain");
+        throw new Error(errorText || 'Failed to publish identity to domain');
       }
 
       const domainsResult = await domainsResponse.json();
 
       // Step 2: Update wallet's local record of DNS publishing
-      await publishIdentityToDns(
-        identity.id,
-        selectedDomain,
-        subdomain || undefined
-      );
-      
+      await publishIdentityToDns(identity.id, selectedDomain, subdomain || undefined);
+
       setSuccess({
         recordName: domainsResult.record_name || previewRecordName,
-        recordValue: domainsResult.record_value || (identity.identity_type === "nostr"
-          ? `npub1${identity.public_key.slice(0, 56)}`
-          : `pk:${identity.public_key}`),
+        recordValue:
+          domainsResult.record_value ||
+          (identity.identity_type === 'nostr'
+            ? `npub1${identity.public_key.slice(0, 56)}`
+            : `pk:${identity.public_key}`),
       });
       onSuccess();
-    } catch (e: any) {
-      setError(e.message || "Failed to publish identity to DNS");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to publish identity to DNS');
     } finally {
       setIsPublishing(false);
     }
   };
 
-  const copyToClipboard = (text: string, type: "name" | "value") => {
+  const copyToClipboard = (text: string, type: 'name' | 'value') => {
     navigator.clipboard.writeText(text);
     setCopied(type);
     setTimeout(() => setCopied(null), 2000);
@@ -154,9 +139,7 @@ export function PublishDnsModal({
             </div>
             <div>
               <h2 className="text-lg font-semibold text-white">Publish Identity to DNS</h2>
-              <p className="text-sm text-gray-400">
-                Using Selfie Records (BIP-353)
-              </p>
+              <p className="text-sm text-gray-400">Using Selfie Records (BIP-353)</p>
             </div>
           </div>
           <button
@@ -188,10 +171,14 @@ export function PublishDnsModal({
                         {success.recordName}
                       </code>
                       <button
-                        onClick={() => copyToClipboard(success.recordName, "name")}
+                        onClick={() => copyToClipboard(success.recordName, 'name')}
                         className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
                       >
-                        {copied === "name" ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                        {copied === 'name' ? (
+                          <Check className="w-4 h-4 text-green-400" />
+                        ) : (
+                          <Copy className="w-4 h-4" />
+                        )}
                       </button>
                     </div>
                   </div>
@@ -227,11 +214,13 @@ export function PublishDnsModal({
               <div className="p-4 bg-gray-800/50 rounded-xl">
                 <p className="text-xs text-gray-500 mb-2">Identity</p>
                 <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg ${
-                    identity.identity_type === "nostr"
-                      ? "bg-purple-500/20 text-purple-400"
-                      : "bg-cyan-500/20 text-cyan-400"
-                  }`}>
+                  <div
+                    className={`p-2 rounded-lg ${
+                      identity.identity_type === 'nostr'
+                        ? 'bg-purple-500/20 text-purple-400'
+                        : 'bg-cyan-500/20 text-cyan-400'
+                    }`}
+                  >
                     <Globe className="w-4 h-4" />
                   </div>
                   <div>
@@ -250,11 +239,11 @@ export function PublishDnsModal({
                     disabled={isLoadingDomains}
                     className="text-xs text-gray-500 hover:text-white flex items-center gap-1"
                   >
-                    <RefreshCw className={`w-3 h-3 ${isLoadingDomains ? "animate-spin" : ""}`} />
+                    <RefreshCw className={`w-3 h-3 ${isLoadingDomains ? 'animate-spin' : ''}`} />
                     Refresh
                   </button>
                 </div>
-                
+
                 {isLoadingDomains ? (
                   <div className="flex items-center justify-center py-8 text-gray-500">
                     <Loader2 className="w-6 h-6 animate-spin" />
@@ -275,11 +264,15 @@ export function PublishDnsModal({
                         onClick={() => setSelectedDomain(domain.name)}
                         className={`w-full p-3 rounded-lg border-2 text-left transition-all ${
                           selectedDomain === domain.name
-                            ? "border-green-500 bg-green-500/10"
-                            : "border-gray-700 hover:border-gray-600"
+                            ? 'border-green-500 bg-green-500/10'
+                            : 'border-gray-700 hover:border-gray-600'
                         }`}
                       >
-                        <span className={selectedDomain === domain.name ? "text-white" : "text-gray-400"}>
+                        <span
+                          className={
+                            selectedDomain === domain.name ? 'text-white' : 'text-gray-400'
+                          }
+                        >
                           {domain.name}
                         </span>
                       </button>
@@ -297,12 +290,14 @@ export function PublishDnsModal({
                   <input
                     type="text"
                     value={subdomain}
-                    onChange={(e) => setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+                    onChange={(e) =>
+                      setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))
+                    }
                     placeholder="hello"
                     className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-green-500 focus:outline-none"
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    For address format: {subdomain || "hello"}@{selectedDomain || "domain.btc"}
+                    For address format: {subdomain || 'hello'}@{selectedDomain || 'domain.btc'}
                   </p>
                 </div>
               )}
@@ -333,8 +328,8 @@ export function PublishDnsModal({
                   <div className="text-sm text-blue-300">
                     <p className="font-medium mb-1">Selfie Records</p>
                     <p className="text-blue-400/80">
-                      This publishes your identity using the Selfie Records spec (BIP-353 extension).
-                      Anyone can resolve your Nostr or Pubky key using your domain.
+                      This publishes your identity using the Selfie Records spec (BIP-353
+                      extension). Anyone can resolve your Nostr or Pubky key using your domain.
                     </p>
                   </div>
                 </div>

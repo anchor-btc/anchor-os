@@ -17,7 +17,7 @@ const ANCHOR_MAGIC = new Uint8Array([0xa1, 0x1c, 0x00, 0x01]);
 const ANCHOR_KIND_DNS = 10; // Custom kind for DNS
 
 // Supported TLDs for Anchor Domains
-export const SUPPORTED_TLDS = [".btc", ".sat", ".anchor", ".anc", ".bit"] as const;
+export const SUPPORTED_TLDS = ['.btc', '.sat', '.anchor', '.anc', '.bit'] as const;
 export type SupportedTLD = (typeof SUPPORTED_TLDS)[number];
 
 /**
@@ -48,21 +48,21 @@ export enum RecordType {
 export function getRecordTypeName(type: RecordType): string {
   switch (type) {
     case RecordType.A:
-      return "A";
+      return 'A';
     case RecordType.AAAA:
-      return "AAAA";
+      return 'AAAA';
     case RecordType.CNAME:
-      return "CNAME";
+      return 'CNAME';
     case RecordType.TXT:
-      return "TXT";
+      return 'TXT';
     case RecordType.MX:
-      return "MX";
+      return 'MX';
     case RecordType.NS:
-      return "NS";
+      return 'NS';
     case RecordType.SRV:
-      return "SRV";
+      return 'SRV';
     default:
-      return "UNKNOWN";
+      return 'UNKNOWN';
   }
 }
 
@@ -91,7 +91,7 @@ export interface DnsPayload {
  * Parse an IPv4 address string to bytes
  */
 export function ipv4ToBytes(ip: string): Uint8Array {
-  const parts = ip.split(".");
+  const parts = ip.split('.');
   if (parts.length !== 4) {
     throw new Error(`Invalid IPv4 address: ${ip}`);
   }
@@ -113,7 +113,7 @@ export function bytesToIpv4(bytes: Uint8Array): string {
   if (bytes.length !== 4) {
     throw new Error(`Invalid IPv4 bytes length: ${bytes.length}`);
   }
-  return Array.from(bytes).join(".");
+  return Array.from(bytes).join('.');
 }
 
 /**
@@ -121,16 +121,16 @@ export function bytesToIpv4(bytes: Uint8Array): string {
  */
 export function ipv6ToBytes(ip: string): Uint8Array {
   // Handle :: expansion
-  const parts = ip.split("::");
+  const parts = ip.split('::');
   let groups: string[] = [];
 
   if (parts.length === 1) {
-    groups = parts[0].split(":");
+    groups = parts[0].split(':');
   } else if (parts.length === 2) {
-    const left = parts[0] ? parts[0].split(":") : [];
-    const right = parts[1] ? parts[1].split(":") : [];
+    const left = parts[0] ? parts[0].split(':') : [];
+    const right = parts[1] ? parts[1].split(':') : [];
     const missing = 8 - left.length - right.length;
-    groups = [...left, ...Array(missing).fill("0"), ...right];
+    groups = [...left, ...Array(missing).fill('0'), ...right];
   } else {
     throw new Error(`Invalid IPv6 address: ${ip}`);
   }
@@ -141,7 +141,7 @@ export function ipv6ToBytes(ip: string): Uint8Array {
 
   const bytes = new Uint8Array(16);
   for (let i = 0; i < 8; i++) {
-    const num = parseInt(groups[i] || "0", 16);
+    const num = parseInt(groups[i] || '0', 16);
     if (isNaN(num) || num < 0 || num > 0xffff) {
       throw new Error(`Invalid IPv6 group: ${groups[i]}`);
     }
@@ -163,7 +163,7 @@ export function bytesToIpv6(bytes: Uint8Array): string {
     const num = (bytes[i] << 8) | bytes[i + 1];
     groups.push(num.toString(16));
   }
-  return groups.join(":");
+  return groups.join(':');
 }
 
 /**
@@ -394,17 +394,17 @@ export function createAnchorDnsMessage(
  */
 export function bytesToHex(bytes: Uint8Array): string {
   return Array.from(bytes)
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
 }
 
 /**
  * Convert hex string to Uint8Array
  */
 export function hexToBytes(hex: string): Uint8Array {
-  const cleanHex = hex.startsWith("0x") ? hex.slice(2) : hex;
+  const cleanHex = hex.startsWith('0x') ? hex.slice(2) : hex;
   if (cleanHex.length % 2 !== 0) {
-    throw new Error("Invalid hex string length");
+    throw new Error('Invalid hex string length');
   }
   const bytes = new Uint8Array(cleanHex.length / 2);
   for (let i = 0; i < bytes.length; i++) {

@@ -7,9 +7,8 @@ use crate::{Anchor, AnchorKind, ParsedAnchorMessage, ANCHOR_MAGIC};
 
 /// Encode an ANCHOR message to a raw payload
 pub fn encode_anchor_payload(message: &ParsedAnchorMessage) -> Vec<u8> {
-    let mut payload = Vec::with_capacity(
-        4 + 1 + 1 + message.anchors.len() * 9 + message.body.len()
-    );
+    let mut payload =
+        Vec::with_capacity(4 + 1 + 1 + message.anchors.len() * 9 + message.body.len());
 
     // Magic bytes
     payload.extend_from_slice(&ANCHOR_MAGIC);
@@ -35,9 +34,9 @@ pub fn encode_anchor_payload(message: &ParsedAnchorMessage) -> Vec<u8> {
 /// Create an OP_RETURN script containing an ANCHOR message
 pub fn create_anchor_script(message: &ParsedAnchorMessage) -> ScriptBuf {
     let payload = encode_anchor_payload(message);
-    let push_bytes = PushBytesBuf::try_from(payload)
-        .expect("ANCHOR payload should fit in push bytes");
-    
+    let push_bytes =
+        PushBytesBuf::try_from(payload).expect("ANCHOR payload should fit in push bytes");
+
     Builder::new()
         .push_opcode(bitcoin::opcodes::all::OP_RETURN)
         .push_slice(push_bytes.as_push_bytes())
@@ -152,12 +151,10 @@ mod tests {
 
     #[test]
     fn test_encode_root_message() {
-        let msg = AnchorMessageBuilder::new()
-            .text("Hello, ANCHOR!")
-            .build();
+        let msg = AnchorMessageBuilder::new().text("Hello, ANCHOR!").build();
 
         let encoded = encode_anchor_payload(&msg);
-        
+
         assert_eq!(&encoded[0..4], &ANCHOR_MAGIC);
         assert_eq!(encoded[4], 1); // kind = Text
         assert_eq!(encoded[5], 0); // no anchors
@@ -167,10 +164,9 @@ mod tests {
     #[test]
     fn test_encode_reply() {
         let parent_txid = Txid::from_byte_array([
-            0xab, 0xcd, 0xef, 0x12, 0x34, 0x56, 0x78, 0x9a,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0xab, 0xcd, 0xef, 0x12, 0x34, 0x56, 0x78, 0x9a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00,
         ]);
 
         let msg = AnchorMessageBuilder::new()
@@ -188,12 +184,10 @@ mod tests {
 
     #[test]
     fn test_create_script() {
-        let msg = AnchorMessageBuilder::new()
-            .text("Test")
-            .build();
+        let msg = AnchorMessageBuilder::new().text("Test").build();
 
         let script = create_anchor_script(&msg);
-        
+
         assert!(script.is_op_return());
     }
 
@@ -215,4 +209,3 @@ mod tests {
         assert!(msg.anchors[1].matches_txid(&txid2)); // additional reference
     }
 }
-

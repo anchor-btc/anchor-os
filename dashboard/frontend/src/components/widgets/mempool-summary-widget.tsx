@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useQuery } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
-import { Layers, Loader2, AlertCircle } from "lucide-react";
-import Link from "next/link";
+import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
+import { Layers, Loader2, AlertCircle } from 'lucide-react';
+import Link from 'next/link';
 
-const MEMPOOL_API = "http://localhost:4000/api";
+const MEMPOOL_API = 'http://localhost:4000/api';
 
 interface MempoolInfo {
   count: number;
@@ -23,13 +23,13 @@ interface FeeEstimates {
 
 async function fetchMempoolInfo(): Promise<MempoolInfo> {
   const res = await fetch(`${MEMPOOL_API}/mempool`);
-  if (!res.ok) throw new Error("Failed to fetch mempool info");
+  if (!res.ok) throw new Error('Failed to fetch mempool info');
   return res.json();
 }
 
 async function fetchFeeEstimates(): Promise<FeeEstimates> {
   const res = await fetch(`${MEMPOOL_API}/v1/fees/recommended`);
-  if (!res.ok) throw new Error("Failed to fetch fee estimates");
+  if (!res.ok) throw new Error('Failed to fetch fee estimates');
   return res.json();
 }
 
@@ -42,13 +42,13 @@ function formatVsize(vsize: number): string {
 export function MempoolSummaryWidget() {
   const { t } = useTranslation();
   const { data: mempool, isLoading: mempoolLoading } = useQuery({
-    queryKey: ["mempool-info"],
+    queryKey: ['mempool-info'],
     queryFn: fetchMempoolInfo,
     refetchInterval: 10000,
   });
 
   const { data: fees, isLoading: feesLoading } = useQuery({
-    queryKey: ["fee-estimates"],
+    queryKey: ['fee-estimates'],
     queryFn: fetchFeeEstimates,
     refetchInterval: 10000,
   });
@@ -74,8 +74,8 @@ export function MempoolSummaryWidget() {
               <AlertCircle className="w-4 h-4 text-destructive" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">{t("widgets.mempool")}</p>
-              <p className="text-sm text-muted-foreground">{t("widgets.unavailable")}</p>
+              <p className="text-xs text-muted-foreground">{t('widgets.mempool')}</p>
+              <p className="text-sm text-muted-foreground">{t('widgets.unavailable')}</p>
             </div>
           </div>
         </div>
@@ -91,7 +91,7 @@ export function MempoolSummaryWidget() {
             <Layers className="w-4 h-4 text-orange-500" />
           </div>
           <div className="flex-1">
-            <p className="text-xs text-muted-foreground">{t("widgets.mempool")}</p>
+            <p className="text-xs text-muted-foreground">{t('widgets.mempool')}</p>
             <p className="text-sm font-medium text-foreground">
               {mempool.count.toLocaleString()} txs • {formatVsize(mempool.vsize)}
             </p>
@@ -101,7 +101,7 @@ export function MempoolSummaryWidget() {
         <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-border text-center">
           <div className="bg-success/10 rounded-lg py-1.5 px-2">
             <p className="text-sm font-bold text-success">{fees.fastestFee}</p>
-            <p className="text-[9px] text-muted-foreground">{t("widgets.fast")}</p>
+            <p className="text-[9px] text-muted-foreground">{t('widgets.fast')}</p>
           </div>
           <div className="bg-warning/10 rounded-lg py-1.5 px-2">
             <p className="text-sm font-bold text-warning">{fees.halfHourFee}</p>

@@ -78,6 +78,7 @@ pub struct VerifyMnemonicResponse {
 
 /// Restore wallet request
 #[derive(Debug, Deserialize, ToSchema)]
+#[allow(dead_code)]
 pub struct RestoreWalletRequest {
     /// The 12 or 24 mnemonic words
     pub mnemonic: String,
@@ -131,17 +132,17 @@ pub async fn get_mnemonic(
                 available: true,
                 word_count: Some(words.len()),
                 words: Some(words),
-                warning: "NEVER share your seed phrase with anyone! Store it securely offline.".to_string(),
+                warning: "NEVER share your seed phrase with anyone! Store it securely offline."
+                    .to_string(),
             }))
         }
-        None => {
-            Ok(Json(MnemonicResponse {
-                available: false,
-                words: None,
-                word_count: None,
-                warning: "Mnemonic not available. Wallet may have been imported without seed phrase.".to_string(),
-            }))
-        }
+        None => Ok(Json(MnemonicResponse {
+            available: false,
+            words: None,
+            word_count: None,
+            warning: "Mnemonic not available. Wallet may have been imported without seed phrase."
+                .to_string(),
+        })),
     }
 }
 
@@ -408,6 +409,7 @@ pub struct ExportBackupResponse {
 
 /// Import backup request
 #[derive(Debug, Deserialize, ToSchema)]
+#[allow(dead_code)]
 pub struct ImportBackupRequest {
     /// The encrypted backup data
     pub backup: EncryptedBackup,
@@ -497,25 +499,36 @@ pub async fn export_backup(
     };
 
     // Get wallet info
-    let wallet_info = bdk_wallet.get_wallet_info()
+    let wallet_info = bdk_wallet
+        .get_wallet_info()
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     // Get locked UTXOs
-    let locked_utxos: Vec<LockedUtxoBackup> = state.lock_manager
+    let locked_utxos: Vec<LockedUtxoBackup> = state
+        .lock_manager
         .list_locked()
         .into_iter()
         .map(|u| {
             let (reason, asset_type, asset_id) = match &u.reason {
                 crate::locked::LockReason::Manual => ("manual".to_string(), None, None),
-                crate::locked::LockReason::Domain { name } => {
-                    ("domain".to_string(), Some("domain".to_string()), Some(name.clone()))
-                }
-                crate::locked::LockReason::Token { ticker, amount } => {
-                    ("token".to_string(), Some("token".to_string()), Some(format!("{} {}", amount, ticker)))
-                }
-                crate::locked::LockReason::Asset { asset_type, asset_id } => {
-                    ("asset".to_string(), Some(asset_type.clone()), Some(asset_id.clone()))
-                }
+                crate::locked::LockReason::Domain { name } => (
+                    "domain".to_string(),
+                    Some("domain".to_string()),
+                    Some(name.clone()),
+                ),
+                crate::locked::LockReason::Token { ticker, amount } => (
+                    "token".to_string(),
+                    Some("token".to_string()),
+                    Some(format!("{} {}", amount, ticker)),
+                ),
+                crate::locked::LockReason::Asset {
+                    asset_type,
+                    asset_id,
+                } => (
+                    "asset".to_string(),
+                    Some(asset_type.clone()),
+                    Some(asset_id.clone()),
+                ),
             };
             LockedUtxoBackup {
                 txid: u.txid,
@@ -535,7 +548,12 @@ pub async fn export_backup(
     let mut key = [0u8; 32];
     Argon2::default()
         .hash_password_into(req.password.as_bytes(), &salt, &mut key)
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Key derivation failed: {:?}", e)))?;
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Key derivation failed: {:?}", e),
+            )
+        })?;
 
     // Generate nonce
     let mut nonce_bytes = [0u8; 12];
@@ -543,12 +561,21 @@ pub async fn export_backup(
     let nonce = Nonce::from_slice(&nonce_bytes);
 
     // Encrypt mnemonic
-    let cipher = Aes256Gcm::new_from_slice(&key)
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Cipher creation failed: {:?}", e)))?;
+    let cipher = Aes256Gcm::new_from_slice(&key).map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Cipher creation failed: {:?}", e),
+        )
+    })?;
 
     let ciphertext = cipher
         .encrypt(nonce, mnemonic_words.as_bytes())
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Encryption failed: {:?}", e)))?;
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Encryption failed: {:?}", e),
+            )
+        })?;
 
     // Calculate checksum (hash of mnemonic + descriptors + locked UTXOs)
     let mut hasher = Sha256::new();
@@ -565,9 +592,12 @@ pub async fn export_backup(
         version: 1,
         created_at: chrono::Utc::now().to_rfc3339(),
         network: wallet_info.network,
-        encrypted_mnemonic: base64::Engine::encode(&base64::engine::general_purpose::STANDARD, &ciphertext),
-        salt: base64::Engine::encode(&base64::engine::general_purpose::STANDARD, &salt),
-        nonce: base64::Engine::encode(&base64::engine::general_purpose::STANDARD, &nonce_bytes),
+        encrypted_mnemonic: base64::Engine::encode(
+            &base64::engine::general_purpose::STANDARD,
+            &ciphertext,
+        ),
+        salt: base64::Engine::encode(&base64::engine::general_purpose::STANDARD, salt),
+        nonce: base64::Engine::encode(&base64::engine::general_purpose::STANDARD, nonce_bytes),
         external_descriptor: wallet_info.external_descriptor,
         internal_descriptor: wallet_info.internal_descriptor,
         locked_utxos,
@@ -609,12 +639,18 @@ pub async fn verify_backup(
             checksum_valid: false,
             network: req.backup.network,
             locked_utxos_count: 0,
-            error: Some(format!("Unsupported backup version: {}", req.backup.version)),
+            error: Some(format!(
+                "Unsupported backup version: {}",
+                req.backup.version
+            )),
         }));
     }
 
     // Decode base64 fields
-    let salt = match base64::Engine::decode(&base64::engine::general_purpose::STANDARD, &req.backup.salt) {
+    let salt = match base64::Engine::decode(
+        &base64::engine::general_purpose::STANDARD,
+        &req.backup.salt,
+    ) {
         Ok(s) => s,
         Err(e) => {
             return Ok(Json(VerifyBackupResponse {
@@ -627,7 +663,10 @@ pub async fn verify_backup(
         }
     };
 
-    let nonce_bytes = match base64::Engine::decode(&base64::engine::general_purpose::STANDARD, &req.backup.nonce) {
+    let nonce_bytes = match base64::Engine::decode(
+        &base64::engine::general_purpose::STANDARD,
+        &req.backup.nonce,
+    ) {
         Ok(n) => n,
         Err(e) => {
             return Ok(Json(VerifyBackupResponse {
@@ -640,7 +679,10 @@ pub async fn verify_backup(
         }
     };
 
-    let ciphertext = match base64::Engine::decode(&base64::engine::general_purpose::STANDARD, &req.backup.encrypted_mnemonic) {
+    let ciphertext = match base64::Engine::decode(
+        &base64::engine::general_purpose::STANDARD,
+        &req.backup.encrypted_mnemonic,
+    ) {
         Ok(c) => c,
         Err(e) => {
             return Ok(Json(VerifyBackupResponse {
@@ -730,7 +772,11 @@ pub async fn verify_backup(
         checksum_valid,
         network: req.backup.network,
         locked_utxos_count: req.backup.locked_utxos.len(),
-        error: if mnemonic_valid { None } else { Some("Invalid mnemonic in backup".to_string()) },
+        error: if mnemonic_valid {
+            None
+        } else {
+            Some("Invalid mnemonic in backup".to_string())
+        },
     }))
 }
 
@@ -749,7 +795,8 @@ pub async fn get_migration_status(
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     let migrator = WalletMigrator::new(state.config.data_dir.clone());
 
-    let status = migrator.load_status()
+    let status = migrator
+        .load_status()
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     let notification = MigrationNotification::from_status(&status);
@@ -759,4 +806,3 @@ pub async fn get_migration_status(
         "notification": notification
     })))
 }
-

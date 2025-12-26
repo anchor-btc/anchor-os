@@ -28,7 +28,7 @@ impl AnchorWallet {
         config.validate()?;
 
         let auth = Auth::UserPass(config.rpc_user.clone(), config.rpc_password.clone());
-        
+
         let client = if let Some(ref wallet_name) = config.wallet_name {
             let url = format!("{}/wallet/{}", config.rpc_url, wallet_name);
             Client::new(&url, auth)?
@@ -52,10 +52,10 @@ impl AnchorWallet {
     /// Get wallet balance
     pub fn get_balance(&self) -> Result<Balance> {
         let balances = self.client.get_balances()?;
-        
+
         let confirmed = balances.mine.trusted.to_sat();
         let unconfirmed = balances.mine.untrusted_pending.to_sat();
-        
+
         Ok(Balance {
             confirmed,
             unconfirmed,
@@ -107,4 +107,3 @@ mod tests {
         assert!(config.validate().is_ok());
     }
 }
-

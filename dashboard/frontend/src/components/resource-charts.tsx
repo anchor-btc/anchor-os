@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useCallback } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
-import { Cpu, HardDrive, Wifi, Database, Activity, TrendingUp } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useState, useEffect, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
+import { Cpu, HardDrive, Wifi, Database, Activity, TrendingUp } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8010";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8010';
 
 interface ContainerStats {
   name: string;
@@ -41,14 +41,14 @@ interface HistoryPoint {
 
 async function fetchDockerStats(): Promise<AggregateStats> {
   const res = await fetch(`${API_URL}/docker/stats`);
-  if (!res.ok) throw new Error("Failed to fetch docker stats");
+  if (!res.ok) throw new Error('Failed to fetch docker stats');
   return res.json();
 }
 
 function formatBytes(bytes: number): string {
-  if (bytes === 0) return "0 B";
+  if (bytes === 0) return '0 B';
   const k = 1024;
-  const sizes = ["B", "KB", "MB", "GB", "TB"];
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`;
 }
@@ -56,29 +56,26 @@ function formatBytes(bytes: number): string {
 const MAX_HISTORY = 20;
 
 // Mini sparkline component using pure CSS/divs
-function Sparkline({ 
-  data, 
-  color, 
-  maxValue = 100 
-}: { 
-  data: number[]; 
+function Sparkline({
+  data,
+  color,
+  maxValue = 100,
+}: {
+  data: number[];
   color: string;
   maxValue?: number;
 }) {
-  const normalizedData = data.map(v => Math.min((v / maxValue) * 100, 100));
-  
+  const normalizedData = data.map((v) => Math.min((v / maxValue) * 100, 100));
+
   return (
     <div className="flex items-end gap-[2px] h-8 w-full">
       {normalizedData.map((value, i) => (
         <div
           key={i}
-          className={cn(
-            "flex-1 rounded-sm transition-all duration-300",
-            color
-          )}
-          style={{ 
+          className={cn('flex-1 rounded-sm transition-all duration-300', color)}
+          style={{
             height: `${Math.max(value, 2)}%`,
-            opacity: 0.3 + (i / normalizedData.length) * 0.7
+            opacity: 0.3 + (i / normalizedData.length) * 0.7,
           }}
         />
       ))}
@@ -91,7 +88,7 @@ export function ResourceCharts() {
   const [history, setHistory] = useState<HistoryPoint[]>([]);
 
   const { data: stats } = useQuery({
-    queryKey: ["docker-stats"],
+    queryKey: ['docker-stats'],
     queryFn: fetchDockerStats,
     refetchInterval: 2000,
   });
@@ -124,21 +121,19 @@ export function ResourceCharts() {
             <Activity className="w-5 h-5 text-primary animate-pulse" />
           </div>
           <div>
-            <h2 className="font-semibold text-foreground">{t("resourceMonitor.title")}</h2>
-            <p className="text-sm text-muted-foreground">{t("resourceMonitor.loading")}</p>
+            <h2 className="font-semibold text-foreground">{t('resourceMonitor.title')}</h2>
+            <p className="text-sm text-muted-foreground">{t('resourceMonitor.loading')}</p>
           </div>
         </div>
       </div>
     );
   }
 
-  const cpuHistory = history.map(h => h.cpu);
-  const memoryHistory = history.map(h => h.memory);
+  const cpuHistory = history.map((h) => h.cpu);
+  const memoryHistory = history.map((h) => h.memory);
 
   // Top 5 containers by CPU
-  const topContainers = stats.containers
-    .sort((a, b) => b.cpu_percent - a.cpu_percent)
-    .slice(0, 5);
+  const topContainers = stats.containers.sort((a, b) => b.cpu_percent - a.cpu_percent).slice(0, 5);
 
   return (
     <div className="bg-card border border-border rounded-xl p-5">
@@ -146,11 +141,11 @@ export function ResourceCharts() {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Activity className="w-5 h-5 text-primary" />
-          <h2 className="font-semibold text-foreground">{t("resourceMonitor.title")}</h2>
+          <h2 className="font-semibold text-foreground">{t('resourceMonitor.title')}</h2>
         </div>
         <span className="text-xs text-muted-foreground flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-          {stats.container_count} {t("resourceMonitor.containers")}
+          {stats.container_count} {t('resourceMonitor.containers')}
         </span>
       </div>
 
@@ -162,7 +157,7 @@ export function ResourceCharts() {
             <div className="w-6 h-6 rounded-md bg-orange-500/10 flex items-center justify-center">
               <Cpu className="w-3.5 h-3.5 text-orange-500" />
             </div>
-            <span className="text-xs text-muted-foreground">{t("resourceMonitor.cpu")}</span>
+            <span className="text-xs text-muted-foreground">{t('resourceMonitor.cpu')}</span>
           </div>
           <p className="text-xl font-bold font-tabular text-foreground">
             {stats.total_cpu_percent.toFixed(1)}%
@@ -176,7 +171,7 @@ export function ResourceCharts() {
             <div className="w-6 h-6 rounded-md bg-blue-500/10 flex items-center justify-center">
               <Database className="w-3.5 h-3.5 text-blue-500" />
             </div>
-            <span className="text-xs text-muted-foreground">{t("resourceMonitor.memory")}</span>
+            <span className="text-xs text-muted-foreground">{t('resourceMonitor.memory')}</span>
           </div>
           <p className="text-xl font-bold font-tabular text-foreground">
             {formatBytes(stats.total_memory_usage)}
@@ -190,7 +185,7 @@ export function ResourceCharts() {
             <div className="w-6 h-6 rounded-md bg-green-500/10 flex items-center justify-center">
               <Wifi className="w-3.5 h-3.5 text-green-500" />
             </div>
-            <span className="text-xs text-muted-foreground">{t("resourceMonitor.network")}</span>
+            <span className="text-xs text-muted-foreground">{t('resourceMonitor.network')}</span>
           </div>
           <div>
             <p className="text-sm font-semibold font-tabular text-foreground">
@@ -208,7 +203,7 @@ export function ResourceCharts() {
             <div className="w-6 h-6 rounded-md bg-purple-500/10 flex items-center justify-center">
               <HardDrive className="w-3.5 h-3.5 text-purple-500" />
             </div>
-            <span className="text-xs text-muted-foreground">{t("resourceMonitor.diskIO")}</span>
+            <span className="text-xs text-muted-foreground">{t('resourceMonitor.diskIO')}</span>
           </div>
           <div>
             <p className="text-sm font-semibold font-tabular text-foreground">
@@ -226,13 +221,13 @@ export function ResourceCharts() {
             <div className="w-6 h-6 rounded-md bg-amber-500/10 flex items-center justify-center">
               <TrendingUp className="w-3.5 h-3.5 text-amber-500" />
             </div>
-            <span className="text-xs text-muted-foreground">{t("resourceMonitor.topCpu")}</span>
+            <span className="text-xs text-muted-foreground">{t('resourceMonitor.topCpu')}</span>
           </div>
           <div className="space-y-1">
             {topContainers.slice(0, 3).map((container) => (
               <div key={container.name} className="flex items-center justify-between text-xs">
                 <span className="text-muted-foreground truncate max-w-[80px]">
-                  {container.name.replace("anchor-", "").replace(/-/g, " ").split(" ")[0]}
+                  {container.name.replace('anchor-', '').replace(/-/g, ' ').split(' ')[0]}
                 </span>
                 <span className="font-tabular text-foreground">
                   {container.cpu_percent.toFixed(1)}%

@@ -177,4 +177,3 @@ pub async fn get_canvas(
         }
     }
 }
-

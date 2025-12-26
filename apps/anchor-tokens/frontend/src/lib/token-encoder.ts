@@ -12,12 +12,7 @@
  * - 0x05: SPLIT - Split tokens across outputs
  */
 
-import {
-  encodeVarint,
-  decodeVarint,
-  encodeVarints,
-  varintLength,
-} from "./varint";
+import { encodeVarint, decodeVarint, varintLength } from './varint';
 
 // Anchor protocol constants
 const ANCHOR_MAGIC = new Uint8Array([0xa1, 0x1c, 0x00, 0x01]);
@@ -111,7 +106,7 @@ export function encodeDeployPayload(payload: DeployPayload): Uint8Array {
   const tickerBytes = encoder.encode(payload.ticker.toUpperCase());
 
   if (tickerBytes.length > 32) {
-    throw new Error("Ticker too long (max 32 bytes)");
+    throw new Error('Ticker too long (max 32 bytes)');
   }
 
   const maxSupplyVarint = encodeVarint(payload.maxSupply);
@@ -172,7 +167,7 @@ export function encodeMintPayload(payload: MintPayload): Uint8Array {
  */
 export function encodeTransferPayload(payload: TransferPayload): Uint8Array {
   if (payload.allocations.length > 255) {
-    throw new Error("Too many allocations (max 255)");
+    throw new Error('Too many allocations (max 255)');
   }
 
   const tokenIdVarint = encodeVarint(payload.tokenId);
@@ -410,9 +405,7 @@ export function createAnchorTokenMessage(
 /**
  * Parse an Anchor token message
  */
-export function parseAnchorTokenMessage(
-  bytes: Uint8Array
-): ParsedTokenOperation | null {
+export function parseAnchorTokenMessage(bytes: Uint8Array): ParsedTokenOperation | null {
   // Verify magic
   if (bytes.length < 6) return null;
   for (let i = 0; i < 4; i++) {
@@ -441,17 +434,17 @@ export function parseAnchorTokenMessage(
  */
 export function bytesToHex(bytes: Uint8Array): string {
   return Array.from(bytes)
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
 }
 
 /**
  * Convert hex string to Uint8Array
  */
 export function hexToBytes(hex: string): Uint8Array {
-  const cleanHex = hex.startsWith("0x") ? hex.slice(2) : hex;
+  const cleanHex = hex.startsWith('0x') ? hex.slice(2) : hex;
   if (cleanHex.length % 2 !== 0) {
-    throw new Error("Invalid hex string length");
+    throw new Error('Invalid hex string length');
   }
   const bytes = new Uint8Array(cleanHex.length / 2);
   for (let i = 0; i < bytes.length; i++) {
@@ -489,12 +482,7 @@ export function calculatePayloadSize(operation: ParsedTokenOperation): number {
     }
     case TokenOperation.MINT: {
       const data = operation.data;
-      return (
-        1 +
-        varintLength(data.tokenId) +
-        varintLength(data.amount) +
-        1
-      );
+      return 1 + varintLength(data.tokenId) + varintLength(data.amount) + 1;
     }
     case TokenOperation.TRANSFER:
     case TokenOperation.SPLIT: {
@@ -552,34 +540,34 @@ export enum CarrierType {
  */
 export const CARRIER_INFO = {
   [CarrierType.OpReturn]: {
-    name: "OP_RETURN",
+    name: 'OP_RETURN',
     maxSize: 80,
     witnessDiscount: false,
-    description: "Standard OP_RETURN output (80 bytes max)",
+    description: 'Standard OP_RETURN output (80 bytes max)',
   },
   [CarrierType.Inscription]: {
-    name: "Inscription",
+    name: 'Inscription',
     maxSize: 4_000_000,
     witnessDiscount: true,
-    description: "Ordinals-style inscription (~4MB max, 75% discount)",
+    description: 'Ordinals-style inscription (~4MB max, 75% discount)',
   },
   [CarrierType.Stamps]: {
-    name: "Stamps",
+    name: 'Stamps',
     maxSize: 8000,
     witnessDiscount: false,
-    description: "Permanent bare multisig (~8KB max, unprunable)",
+    description: 'Permanent bare multisig (~8KB max, unprunable)',
   },
   [CarrierType.TaprootAnnex]: {
-    name: "Taproot Annex",
+    name: 'Taproot Annex',
     maxSize: 10000,
     witnessDiscount: true,
-    description: "Taproot annex field (reserved)",
+    description: 'Taproot annex field (reserved)',
   },
   [CarrierType.WitnessData]: {
-    name: "Witness Data",
+    name: 'Witness Data',
     maxSize: 4_000_000,
     witnessDiscount: true,
-    description: "Raw witness data (~4MB max, 75% discount)",
+    description: 'Raw witness data (~4MB max, 75% discount)',
   },
 };
 
@@ -632,7 +620,7 @@ export function formatTokenAmount(amount: bigint, decimals: number): string {
     return intPart.toString();
   }
 
-  const fracStr = fracPart.toString().padStart(decimals, "0").replace(/0+$/, "");
+  const fracStr = fracPart.toString().padStart(decimals, '0').replace(/0+$/, '');
   return fracStr ? `${intPart}.${fracStr}` : intPart.toString();
 }
 
@@ -640,12 +628,12 @@ export function formatTokenAmount(amount: bigint, decimals: number): string {
  * Parse token amount string to bigint
  */
 export function parseTokenAmount(amountStr: string, decimals: number): bigint {
-  const parts = amountStr.split(".");
-  const intPart = BigInt(parts[0] || "0");
-  const fracPart = parts[1] || "";
+  const parts = amountStr.split('.');
+  const intPart = BigInt(parts[0] || '0');
+  const fracPart = parts[1] || '';
 
   const divisor = 10n ** BigInt(decimals);
-  const fracValue = BigInt(fracPart.padEnd(decimals, "0").slice(0, decimals));
+  const fracValue = BigInt(fracPart.padEnd(decimals, '0').slice(0, decimals));
 
   return intPart * divisor + fracValue;
 }

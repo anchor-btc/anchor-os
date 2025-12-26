@@ -1,8 +1,8 @@
 //! Message creation methods for the wallet
 
-use bitcoin::Txid;
 use anchor_core::carrier::CarrierType;
 use anchor_core::AnchorKind;
+use bitcoin::Txid;
 
 use super::core::AnchorWallet;
 use crate::error::{Result, WalletError};
@@ -165,4 +165,3 @@ impl AnchorWallet {
         builder.build()
     }
 }
-

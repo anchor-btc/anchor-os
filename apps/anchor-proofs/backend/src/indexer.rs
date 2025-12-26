@@ -179,7 +179,8 @@ impl Indexer {
                 if let Some(output) = vout_array.get(prev_vout as usize) {
                     if let Some(script_pub_key) = output.get("scriptPubKey") {
                         // Try to get address from scriptPubKey
-                        if let Some(address) = script_pub_key.get("address").and_then(|a| a.as_str())
+                        if let Some(address) =
+                            script_pub_key.get("address").and_then(|a| a.as_str())
                         {
                             return Some(address.to_string());
                         }

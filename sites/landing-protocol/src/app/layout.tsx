@@ -1,16 +1,16 @@
-import type { Metadata } from "next";
-import "./globals.css";
+import type { Metadata } from 'next';
+import './globals.css';
 
 export const metadata: Metadata = {
-  title: "Anchor Protocol - Messages on Bitcoin. Forever.",
+  title: 'Anchor Protocol - Messages on Bitcoin. Forever.',
   description:
-    "A Bitcoin-native messaging protocol for embedding structured, immutable data directly on the Bitcoin blockchain.",
-  keywords: ["Bitcoin", "Protocol", "Messaging", "Blockchain", "OP_RETURN", "Immutable"],
-  authors: [{ name: "Anchor Protocol" }],
+    'A Bitcoin-native messaging protocol for embedding structured, immutable data directly on the Bitcoin blockchain.',
+  keywords: ['Bitcoin', 'Protocol', 'Messaging', 'Blockchain', 'OP_RETURN', 'Immutable'],
+  authors: [{ name: 'Anchor Protocol' }],
   openGraph: {
-    title: "Anchor Protocol",
-    description: "Messages on Bitcoin. Forever.",
-    type: "website",
+    title: 'Anchor Protocol',
+    description: 'Messages on Bitcoin. Forever.',
+    type: 'website',
   },
 };
 
@@ -29,4 +29,3 @@ export default function RootLayout({
     </html>
   );
 }
-

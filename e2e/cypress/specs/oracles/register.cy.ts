@@ -17,7 +17,10 @@ describe('Anchor Oracles Register Page', () => {
 
   it('should have category options', () => {
     // Categories are displayed as clickable buttons/cards
-    cy.get('button, [role="checkbox"], input[type="checkbox"]').should('have.length.greaterThan', 0);
+    cy.get('button, [role="checkbox"], input[type="checkbox"]').should(
+      'have.length.greaterThan',
+      0
+    );
   });
 
   it('should have description field', () => {
@@ -30,7 +33,9 @@ describe('Anchor Oracles Register Page', () => {
   });
 
   it('should have submit button', () => {
-    cy.get('button[type="submit"], button').contains(/register|registrar/i).should('exist');
+    cy.get('button[type="submit"], button')
+      .contains(/register|registrar/i)
+      .should('exist');
   });
 
   it('should allow typing oracle name', () => {

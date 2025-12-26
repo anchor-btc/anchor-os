@@ -11,13 +11,15 @@ impl AnchorWallet {
     /// Sign and broadcast a transaction
     pub fn sign_and_broadcast(&self, anchor_tx: &AnchorTransaction) -> Result<Txid> {
         let hex = anchor_tx.to_hex();
-        
+
         // Sign the transaction
-        let signed = self.client.sign_raw_transaction_with_wallet(hex.as_str(), None, None)?;
-        
+        let signed = self
+            .client
+            .sign_raw_transaction_with_wallet(hex.as_str(), None, None)?;
+
         if !signed.complete {
             return Err(WalletError::TransactionBuild(
-                "Failed to sign transaction".to_string()
+                "Failed to sign transaction".to_string(),
             ));
         }
 
@@ -43,7 +45,10 @@ impl AnchorWallet {
     }
 
     /// Get transaction details
-    pub fn get_transaction(&self, txid: &Txid) -> Result<bitcoincore_rpc::json::GetTransactionResult> {
+    pub fn get_transaction(
+        &self,
+        txid: &Txid,
+    ) -> Result<bitcoincore_rpc::json::GetTransactionResult> {
         let tx = self.client.get_transaction(txid, None)?;
         Ok(tx)
     }
@@ -66,4 +71,3 @@ impl AnchorWallet {
         Ok(result.fee_rate.unwrap_or(Amount::from_sat(1000)))
     }
 }
-

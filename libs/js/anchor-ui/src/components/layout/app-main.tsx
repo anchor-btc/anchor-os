@@ -1,13 +1,13 @@
-import * as React from "react";
-import { cn } from "../../utils/cn";
-import { Container, type ContainerProps } from "../container";
+import * as React from 'react';
+import { cn } from '../../utils/cn';
+import { Container, type ContainerProps } from '../container';
 
 const mainSizes = {
-  sm: "max-w-4xl",
-  md: "max-w-5xl",
-  lg: "max-w-6xl",
-  xl: "max-w-7xl",
-  full: "max-w-full",
+  sm: 'max-w-4xl',
+  md: 'max-w-5xl',
+  lg: 'max-w-6xl',
+  xl: 'max-w-7xl',
+  full: 'max-w-full',
 } as const;
 
 export interface AppMainProps {
@@ -70,11 +70,8 @@ export function AppMain({
 }: AppMainProps) {
   const content = size ? (
     <Container
-      size={size === "full" ? "xl" : (size as ContainerProps["size"])}
-      className={cn(
-        size === "full" && "max-w-full",
-        containerClassName
-      )}
+      size={size === 'full' ? 'xl' : (size as ContainerProps['size'])}
+      className={cn(size === 'full' && 'max-w-full', containerClassName)}
     >
       {children}
     </Container>
@@ -82,17 +79,7 @@ export function AppMain({
     children
   );
 
-  return (
-    <main
-      className={cn(
-        "flex-1",
-        !noPadding && "py-8",
-        className
-      )}
-    >
-      {content}
-    </main>
-  );
+  return <main className={cn('flex-1', !noPadding && 'py-8', className)}>{content}</main>;
 }
 
 export { mainSizes };

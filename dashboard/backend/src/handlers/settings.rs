@@ -54,7 +54,10 @@ pub async fn get_all_settings(
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<AllSettingsResponse>, (StatusCode, String)> {
     let pool = state.db_pool.as_ref().ok_or_else(|| {
-        (StatusCode::SERVICE_UNAVAILABLE, "Database not available".to_string())
+        (
+            StatusCode::SERVICE_UNAVAILABLE,
+            "Database not available".to_string(),
+        )
     })?;
 
     let rows = sqlx::query("SELECT key, value, updated_at FROM system_settings")
@@ -92,7 +95,10 @@ pub async fn get_setting(
     Path(key): Path<String>,
 ) -> Result<Json<SettingResponse>, (StatusCode, String)> {
     let pool = state.db_pool.as_ref().ok_or_else(|| {
-        (StatusCode::SERVICE_UNAVAILABLE, "Database not available".to_string())
+        (
+            StatusCode::SERVICE_UNAVAILABLE,
+            "Database not available".to_string(),
+        )
     })?;
 
     let row = sqlx::query("SELECT key, value, updated_at FROM system_settings WHERE key = $1")
@@ -111,7 +117,10 @@ pub async fn get_setting(
             }),
             message: None,
         })),
-        None => Err((StatusCode::NOT_FOUND, format!("Setting '{}' not found", key))),
+        None => Err((
+            StatusCode::NOT_FOUND,
+            format!("Setting '{}' not found", key),
+        )),
     }
 }
 
@@ -134,14 +143,17 @@ pub async fn update_setting(
     Json(req): Json<UpdateSettingRequest>,
 ) -> Result<Json<SettingResponse>, (StatusCode, String)> {
     let pool = state.db_pool.as_ref().ok_or_else(|| {
-        (StatusCode::SERVICE_UNAVAILABLE, "Database not available".to_string())
+        (
+            StatusCode::SERVICE_UNAVAILABLE,
+            "Database not available".to_string(),
+        )
     })?;
 
     // Use UPSERT to create or update the setting
     let row = sqlx::query(
         "INSERT INTO system_settings (key, value, updated_at) VALUES ($1, $2, NOW())
          ON CONFLICT (key) DO UPDATE SET value = $2, updated_at = NOW()
-         RETURNING key, value, updated_at"
+         RETURNING key, value, updated_at",
     )
     .bind(&key)
     .bind(&req.value)
@@ -196,13 +208,16 @@ pub async fn import_settings(
     Json(req): Json<ImportSettingsRequest>,
 ) -> Result<Json<SettingResponse>, (StatusCode, String)> {
     let pool = state.db_pool.as_ref().ok_or_else(|| {
-        (StatusCode::SERVICE_UNAVAILABLE, "Database not available".to_string())
+        (
+            StatusCode::SERVICE_UNAVAILABLE,
+            "Database not available".to_string(),
+        )
     })?;
 
     for setting in req.settings {
         sqlx::query(
             "INSERT INTO system_settings (key, value, updated_at) VALUES ($1, $2, NOW())
-             ON CONFLICT (key) DO UPDATE SET value = $2, updated_at = NOW()"
+             ON CONFLICT (key) DO UPDATE SET value = $2, updated_at = NOW()",
         )
         .bind(&setting.key)
         .bind(&setting.value)
@@ -217,9 +232,3 @@ pub async fn import_settings(
         message: Some("Settings imported successfully".to_string()),
     }))
 }
-
-
-
-
-
-

@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { ReactNode } from "react";
+import { ReactNode } from 'react';
 import {
   DndContext,
   DragEndEvent,
@@ -11,24 +11,24 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-} from "@dnd-kit/core";
+} from '@dnd-kit/core';
 import {
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import Masonry from "react-masonry-css";
-import { useState } from "react";
-import { WidgetConfig } from "@/types/widgets";
-import { WidgetWrapper } from "./widget-wrapper";
-import { cn } from "@/lib/utils";
+} from '@dnd-kit/sortable';
+import Masonry from 'react-masonry-css';
+import { useState } from 'react';
+import { WidgetConfig } from '@/types/widgets';
+import { WidgetWrapper } from './widget-wrapper';
+import { cn } from '@/lib/utils';
 
 interface WidgetGridProps {
   widgets: WidgetConfig[];
   isEditMode: boolean;
   onReorder: (activeId: string, overId: string) => void;
   onRemove: (id: string) => void;
-  onChangeSize: (id: string, size: WidgetConfig["size"]) => void;
+  onChangeSize: (id: string, size: WidgetConfig['size']) => void;
   renderWidget: (widget: WidgetConfig) => ReactNode;
 }
 
@@ -79,13 +79,13 @@ export function WidgetGrid({
   const activeWidget = activeId ? widgets.find((w) => w.id === activeId) : null;
 
   // Separate large widgets (full width) from smaller ones
-  const largeWidgets = widgets.filter((w) => w.size === "large");
-  const smallMediumWidgets = widgets.filter((w) => w.size !== "large");
+  const largeWidgets = widgets.filter((w) => w.size === 'large');
+  const smallMediumWidgets = widgets.filter((w) => w.size !== 'large');
 
   // Calculate columns based on widget sizes
   const getBreakpoints = () => {
     // If we have medium widgets, use 2 columns max
-    const hasMedium = smallMediumWidgets.some((w) => w.size === "medium");
+    const hasMedium = smallMediumWidgets.some((w) => w.size === 'medium');
     if (hasMedium) {
       return {
         default: 2,
@@ -105,11 +105,8 @@ export function WidgetGrid({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <SortableContext
-        items={widgets.map((w) => w.id)}
-        strategy={verticalListSortingStrategy}
-      >
-        <div className={cn("space-y-4", isEditMode && "min-h-[200px]")}>
+      <SortableContext items={widgets.map((w) => w.id)} strategy={verticalListSortingStrategy}>
+        <div className={cn('space-y-4', isEditMode && 'min-h-[200px]')}>
           {/* Large widgets - full width */}
           {largeWidgets.map((widget) => (
             <div key={widget.id} className="w-full">
@@ -152,10 +149,10 @@ export function WidgetGrid({
         {activeWidget ? (
           <div
             className={cn(
-              "opacity-80",
-              activeWidget.size === "small" && "w-[300px]",
-              activeWidget.size === "medium" && "w-[450px]",
-              activeWidget.size === "large" && "w-[800px]"
+              'opacity-80',
+              activeWidget.size === 'small' && 'w-[300px]',
+              activeWidget.size === 'medium' && 'w-[450px]',
+              activeWidget.size === 'large' && 'w-[800px]'
             )}
           >
             <div className="bg-card border border-primary rounded-xl p-4 shadow-2xl">

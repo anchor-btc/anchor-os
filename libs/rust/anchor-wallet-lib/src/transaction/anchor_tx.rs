@@ -1,8 +1,8 @@
 //! ANCHOR transaction types
 
-use bitcoin::{ScriptBuf, Transaction, Txid};
 use anchor_core::carrier::CarrierType;
 use anchor_core::{Anchor, AnchorKind};
+use bitcoin::{ScriptBuf, Transaction, Txid};
 
 /// Represents an ANCHOR transaction
 #[derive(Debug, Clone)]
@@ -71,4 +71,3 @@ impl AnchorTransaction {
         self.transaction.weight().to_wu() as usize
     }
 }
-

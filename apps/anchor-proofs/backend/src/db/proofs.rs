@@ -9,13 +9,12 @@ use crate::models::{Proof, ProofListItem, ProofRow, ProofStats};
 impl Database {
     /// Check if a transaction output is already indexed
     pub async fn tx_exists(&self, txid: &[u8], vout: i32) -> Result<bool> {
-        let row: (bool,) = sqlx::query_as(
-            "SELECT EXISTS(SELECT 1 FROM proofs WHERE txid = $1 AND vout = $2)",
-        )
-        .bind(txid)
-        .bind(vout)
-        .fetch_one(&self.pool)
-        .await?;
+        let row: (bool,) =
+            sqlx::query_as("SELECT EXISTS(SELECT 1 FROM proofs WHERE txid = $1 AND vout = $2)")
+                .bind(txid)
+                .bind(vout)
+                .fetch_one(&self.pool)
+                .await?;
 
         Ok(row.0)
     }
@@ -286,7 +285,17 @@ impl Database {
 
     /// Get protocol statistics
     pub async fn get_stats(&self) -> Result<ProofStats> {
-        let row: (i64, i64, i64, i64, i64, i64, Option<i32>, Option<chrono::DateTime<chrono::Utc>>, i64) = sqlx::query_as(
+        let row: (
+            i64,
+            i64,
+            i64,
+            i64,
+            i64,
+            i64,
+            Option<i32>,
+            Option<chrono::DateTime<chrono::Utc>>,
+            i64,
+        ) = sqlx::query_as(
             r#"
             SELECT 
                 COUNT(*)::bigint as total_proofs,
@@ -344,10 +353,7 @@ impl Database {
     }
 
     /// Get proof stats by creator addresses
-    pub async fn get_proofs_stats_by_addresses(
-        &self,
-        addresses: &[String],
-    ) -> Result<(i64, i64)> {
+    pub async fn get_proofs_stats_by_addresses(&self, addresses: &[String]) -> Result<(i64, i64)> {
         if addresses.is_empty() {
             return Ok((0, 0));
         }
@@ -368,4 +374,3 @@ impl Database {
         Ok((row.0, row.1))
     }
 }
-

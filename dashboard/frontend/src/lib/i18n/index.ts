@@ -1,7 +1,1 @@
-export { default as i18n, supportedLanguages, defaultLanguage } from "./config";
-
-
-
-
-
-
+export { default as i18n, supportedLanguages, defaultLanguage } from './config';

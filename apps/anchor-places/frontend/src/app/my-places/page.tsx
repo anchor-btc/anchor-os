@@ -1,18 +1,10 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import Link from "next/link";
-import {
-  MapPin,
-  ArrowLeft,
-  Loader2,
-  ExternalLink,
-  Map,
-  Filter,
-  MessageCircle,
-} from "lucide-react";
-import { Header } from "@/components";
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
+import { MapPin, ArrowLeft, Loader2, ExternalLink, Map, Filter, MessageCircle } from 'lucide-react';
+import { Header } from '@/components';
 import {
   fetchMyMarkersForAddresses,
   fetchWalletAddresses,
@@ -20,15 +12,15 @@ import {
   getExplorerTxUrl,
   CATEGORIES,
   type Marker,
-} from "@/lib/api";
+} from '@/lib/api';
 
 const CATEGORY_COLORS: Record<number, string> = {
-  0: "#FF6B35",
-  1: "#3B82F6",
-  2: "#10B981",
-  3: "#8B5CF6",
-  4: "#EF4444",
-  5: "#F59E0B",
+  0: '#FF6B35',
+  1: '#3B82F6',
+  2: '#10B981',
+  3: '#8B5CF6',
+  4: '#EF4444',
+  5: '#F59E0B',
 };
 
 export default function MyPlacesPage() {
@@ -36,20 +28,16 @@ export default function MyPlacesPage() {
 
   // Fetch all wallet addresses
   const { data: walletAddresses, isLoading: isLoadingAddresses } = useQuery({
-    queryKey: ["wallet-addresses"],
+    queryKey: ['wallet-addresses'],
     queryFn: fetchWalletAddresses,
   });
 
   // Fetch my markers for all addresses
   const { data: markers, isLoading: isLoadingMarkers } = useQuery({
-    queryKey: ["my-markers", walletAddresses, categoryFilter],
+    queryKey: ['my-markers', walletAddresses, categoryFilter],
     queryFn: () =>
       walletAddresses && walletAddresses.length > 0
-        ? fetchMyMarkersForAddresses(
-            walletAddresses,
-            categoryFilter ?? undefined,
-            500
-          )
+        ? fetchMyMarkersForAddresses(walletAddresses, categoryFilter ?? undefined, 500)
         : Promise.resolve([]),
     enabled: !!walletAddresses && walletAddresses.length > 0,
   });
@@ -85,7 +73,7 @@ export default function MyPlacesPage() {
 
           {addressCount > 0 && (
             <div className="text-xs text-secondary-foreground bg-map-bg border border-map-border rounded-lg px-3 py-2">
-              <span className="text-foreground/60">Scanning:</span>{" "}
+              <span className="text-foreground/60">Scanning:</span>{' '}
               <span className="font-mono">{addressCount} addresses</span>
             </div>
           )}
@@ -98,8 +86,8 @@ export default function MyPlacesPage() {
             onClick={() => setCategoryFilter(null)}
             className={`px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-all ${
               categoryFilter === null
-                ? "bg-primary text-white"
-                : "bg-map-bg border border-map-border text-secondary-foreground hover:border-primary/50"
+                ? 'bg-primary text-white'
+                : 'bg-map-bg border border-map-border text-secondary-foreground hover:border-primary/50'
             }`}
           >
             All
@@ -110,19 +98,12 @@ export default function MyPlacesPage() {
               onClick={() => setCategoryFilter(cat.id)}
               className={`px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-all flex items-center gap-1.5 ${
                 categoryFilter === cat.id
-                  ? "text-white"
-                  : "bg-map-bg border border-map-border text-secondary-foreground hover:border-primary/50"
+                  ? 'text-white'
+                  : 'bg-map-bg border border-map-border text-secondary-foreground hover:border-primary/50'
               }`}
-              style={
-                categoryFilter === cat.id
-                  ? { backgroundColor: cat.color }
-                  : undefined
-              }
+              style={categoryFilter === cat.id ? { backgroundColor: cat.color } : undefined}
             >
-              <span
-                className="w-2 h-2 rounded-full"
-                style={{ backgroundColor: cat.color }}
-              />
+              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color }} />
               {cat.name}
             </button>
           ))}
@@ -136,19 +117,13 @@ export default function MyPlacesPage() {
         ) : !walletAddresses || walletAddresses.length === 0 ? (
           <div className="text-center py-20">
             <MapPin className="w-16 h-16 text-secondary-foreground mx-auto mb-4 opacity-30" />
-            <h2 className="text-xl font-medium text-foreground mb-2">
-              Wallet Not Connected
-            </h2>
-            <p className="text-secondary-foreground">
-              Unable to fetch wallet addresses
-            </p>
+            <h2 className="text-xl font-medium text-foreground mb-2">Wallet Not Connected</h2>
+            <p className="text-secondary-foreground">Unable to fetch wallet addresses</p>
           </div>
         ) : markers && markers.length === 0 ? (
           <div className="text-center py-20">
             <MapPin className="w-16 h-16 text-secondary-foreground mx-auto mb-4 opacity-30" />
-            <h2 className="text-xl font-medium text-foreground mb-2">
-              No Places Yet
-            </h2>
+            <h2 className="text-xl font-medium text-foreground mb-2">No Places Yet</h2>
             <p className="text-secondary-foreground mb-6">
               You haven&apos;t created any markers yet
             </p>
@@ -164,7 +139,7 @@ export default function MyPlacesPage() {
           <div className="space-y-3">
             {/* Stats */}
             <div className="text-sm text-secondary-foreground mb-4">
-              {markers?.length} marker{markers?.length !== 1 ? "s" : ""} found
+              {markers?.length} marker{markers?.length !== 1 ? 's' : ''} found
             </div>
 
             {/* Markers list */}
@@ -179,7 +154,7 @@ export default function MyPlacesPage() {
 }
 
 function MarkerCard({ marker }: { marker: Marker }) {
-  const categoryColor = CATEGORY_COLORS[marker.category.id] || "#FF6B35";
+  const categoryColor = CATEGORY_COLORS[marker.category.id] || '#FF6B35';
 
   return (
     <div className="bg-secondary border border-map-border rounded-xl p-4 hover:border-primary/30 transition-colors">
@@ -248,4 +223,3 @@ function MarkerCard({ marker }: { marker: Marker }) {
     </div>
   );
 }
-

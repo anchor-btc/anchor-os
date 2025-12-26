@@ -23,7 +23,7 @@ describe('Anchor Domains Register', () => {
   it('should display cost information', () => {
     // Enter a domain name to trigger cost calculation
     cy.get('input').first().clear().type('testdomain');
-    
+
     // Page should show some content (cost/fee info)
     cy.wait(500);
     cy.get('body').should('be.visible');

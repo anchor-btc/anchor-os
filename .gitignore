@@ -41,5 +41,8 @@ docker-compose.override.yml
 .playwright-mcp/
 .cursor/plans/
 
-# Runtime data
-data/
+# Runtime data (only root level)
+/data/
+/docs/
+
+/sites/docs/.vitepress/dist/

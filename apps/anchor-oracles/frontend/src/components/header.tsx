@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import Link from "next/link";
+import Link from 'next/link';
 import {
   AppHeader,
   AppLogo,
@@ -9,10 +9,21 @@ import {
   NavDropdown,
   Container,
   Button,
-} from "@AnchorProtocol/ui";
-import { Eye, Home, Users, Calendar, AlertTriangle, BookOpen, UserPlus, User, CheckCircle, Compass } from "lucide-react";
+} from '@AnchorProtocol/ui';
+import {
+  Eye,
+  Home,
+  Users,
+  Calendar,
+  AlertTriangle,
+  BookOpen,
+  UserPlus,
+  User,
+  CheckCircle,
+  Compass,
+} from 'lucide-react';
 
-const DOCS_URL = "http://localhost:3900/apps/oracles";
+const DOCS_URL = 'http://localhost:3900/apps/oracles';
 
 export function Header() {
   return (
@@ -44,8 +55,8 @@ export function Header() {
                 icon={Compass}
                 accentColor="purple"
                 items={[
-                  { href: "/attestations", label: "Attestations", icon: CheckCircle },
-                  { href: "/disputes", label: "Disputes", icon: AlertTriangle },
+                  { href: '/attestations', label: 'Attestations', icon: CheckCircle },
+                  { href: '/disputes', label: 'Disputes', icon: AlertTriangle },
                 ]}
               />
               <NavLink href="/my-oracles" icon={User} accentColor="purple">

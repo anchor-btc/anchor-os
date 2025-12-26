@@ -43,4 +43,3 @@ pub async fn health() -> Json<HealthResponse> {
         service: "dashboard-backend".to_string(),
     })
 }
-

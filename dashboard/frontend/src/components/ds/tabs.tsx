@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { LucideIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
+import * as React from 'react';
+import { LucideIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export interface TabsProps {
   /** Currently active tab value */
@@ -14,7 +14,7 @@ export interface TabsProps {
   /** Additional class names */
   className?: string;
   /** Style variant */
-  variant?: "pills" | "underline";
+  variant?: 'pills' | 'underline';
 }
 
 /**
@@ -29,19 +29,13 @@ export interface TabsProps {
  * </Tabs>
  * ```
  */
-export function Tabs({
-  value,
-  onChange,
-  children,
-  className,
-  variant = "pills",
-}: TabsProps) {
+export function Tabs({ value, onChange, children, className, variant = 'pills' }: TabsProps) {
   return (
     <div
       className={cn(
-        "flex gap-1",
-        variant === "pills" && "bg-muted/50 p-1 rounded-lg",
-        variant === "underline" && "border-b border-border",
+        'flex gap-1',
+        variant === 'pills' && 'bg-muted/50 p-1 rounded-lg',
+        variant === 'underline' && 'border-b border-border',
         className
       )}
       role="tablist"
@@ -76,36 +70,33 @@ export interface TabProps {
   /** Internal: Click handler (set by Tabs parent) */
   onClick?: () => void;
   /** Internal: Variant (set by Tabs parent) */
-  variant?: "pills" | "underline";
+  variant?: 'pills' | 'underline';
 }
 
 /**
  * Tab - Individual tab button within Tabs.
  */
 export function Tab({
-  value,
   children,
   icon: Icon,
   disabled = false,
   className,
   isActive = false,
   onClick,
-  variant = "pills",
+  variant = 'pills',
 }: TabProps) {
   const pillsClasses = cn(
-    "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors",
-    isActive
-      ? "bg-card text-foreground shadow-sm"
-      : "text-muted-foreground hover:text-foreground",
-    disabled && "opacity-50 cursor-not-allowed"
+    'flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors',
+    isActive ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
+    disabled && 'opacity-50 cursor-not-allowed'
   );
 
   const underlineClasses = cn(
-    "flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
+    'flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
     isActive
-      ? "border-primary text-foreground"
-      : "border-transparent text-muted-foreground hover:text-foreground hover:border-border",
-    disabled && "opacity-50 cursor-not-allowed"
+      ? 'border-primary text-foreground'
+      : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border',
+    disabled && 'opacity-50 cursor-not-allowed'
   );
 
   return (
@@ -114,14 +105,10 @@ export function Tab({
       aria-selected={isActive}
       disabled={disabled}
       onClick={onClick}
-      className={cn(
-        variant === "pills" ? pillsClasses : underlineClasses,
-        className
-      )}
+      className={cn(variant === 'pills' ? pillsClasses : underlineClasses, className)}
     >
       {Icon && <Icon className="w-4 h-4" />}
       {children}
     </button>
   );
 }
-

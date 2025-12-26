@@ -63,18 +63,16 @@ pub fn create_and_broadcast_tx_with_script(
     let signed_hex = signed["hex"].as_str().context("No hex in signed tx")?;
 
     // Broadcast the transaction
-    let txid: String = wallet.rpc.call(
-        "sendrawtransaction",
-        &[serde_json::json!(signed_hex)],
-    )?;
+    let txid: String = wallet
+        .rpc
+        .call("sendrawtransaction", &[serde_json::json!(signed_hex)])?;
 
     debug!("Broadcast transaction: {}", txid);
 
     // Find the OP_RETURN output index
-    let decoded: serde_json::Value = wallet.rpc.call(
-        "decoderawtransaction",
-        &[serde_json::json!(signed_hex)],
-    )?;
+    let decoded: serde_json::Value = wallet
+        .rpc
+        .call("decoderawtransaction", &[serde_json::json!(signed_hex)])?;
 
     let mut anchor_vout = 0u32;
     if let Some(outputs) = decoded["vout"].as_array() {
@@ -96,4 +94,3 @@ pub fn create_and_broadcast_tx_with_script(
         carrier_name: carrier_name(carrier_type).to_string(),
     })
 }
-

@@ -1,33 +1,20 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useRef } from "react";
-import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
-import { fetchContainerLogs } from "@/lib/api";
-import {
-  FileText,
-  Loader2,
-  RefreshCw,
-  Download,
-  Trash2,
-  Search,
-  ChevronDown,
-  ArrowDown,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useQuery } from '@tanstack/react-query';
+import { fetchContainerLogs } from '@/lib/api';
+import { FileText, Loader2, Download, Search, ArrowDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-import {
-  Section,
-  SectionHeader,
-  ActionButton,
-} from "@/components/ds";
+import { Section, SectionHeader, ActionButton } from '@/components/ds';
 
-const CONTAINER_NAME = "anchor-core-bitcoin";
+const CONTAINER_NAME = 'anchor-core-bitcoin';
 
 export function NodeLogsTab() {
   const { t } = useTranslation();
   const [tailLines, setTailLines] = useState(200);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
   const [autoScroll, setAutoScroll] = useState(true);
   const logsEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -38,7 +25,7 @@ export function NodeLogsTab() {
     refetch,
     isRefetching,
   } = useQuery({
-    queryKey: ["node-logs", tailLines],
+    queryKey: ['node-logs', tailLines],
     queryFn: () => fetchContainerLogs(CONTAINER_NAME, tailLines),
     refetchInterval: 3000,
   });
@@ -53,7 +40,7 @@ export function NodeLogsTab() {
   // Auto-scroll to bottom
   useEffect(() => {
     if (autoScroll && logsEndRef.current) {
-      logsEndRef.current.scrollIntoView({ behavior: "smooth" });
+      logsEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [filteredLogs, autoScroll]);
 
@@ -67,15 +54,15 @@ export function NodeLogsTab() {
   };
 
   const scrollToBottom = () => {
-    logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     setAutoScroll(true);
   };
 
   const downloadLogs = () => {
-    const content = logs.join("\n");
-    const blob = new Blob([content], { type: "text/plain" });
+    const content = logs.join('\n');
+    const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
+    const a = document.createElement('a');
     a.href = url;
     a.download = `bitcoin-node-logs-${new Date().toISOString().slice(0, 10)}.txt`;
     a.click();
@@ -87,8 +74,8 @@ export function NodeLogsTab() {
       <SectionHeader
         icon={FileText}
         iconColor="cyan"
-        title={t("node.logs", "Logs")}
-        subtitle={`${CONTAINER_NAME} - ${t("node.lastNLines", { count: tailLines })}`}
+        title={t('node.logs', 'Logs')}
+        subtitle={`${CONTAINER_NAME} - ${t('node.lastNLines', { count: tailLines })}`}
         actions={
           <div className="flex items-center gap-2">
             {/* Tail lines selector */}
@@ -97,11 +84,11 @@ export function NodeLogsTab() {
               onChange={(e) => setTailLines(parseInt(e.target.value))}
               className="px-2 py-1.5 text-sm bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
             >
-              <option value={50}>50 {t("node.lines", "lines")}</option>
-              <option value={100}>100 {t("node.lines", "lines")}</option>
-              <option value={200}>200 {t("node.lines", "lines")}</option>
-              <option value={500}>500 {t("node.lines", "lines")}</option>
-              <option value={1000}>1000 {t("node.lines", "lines")}</option>
+              <option value={50}>50 {t('node.lines', 'lines')}</option>
+              <option value={100}>100 {t('node.lines', 'lines')}</option>
+              <option value={200}>200 {t('node.lines', 'lines')}</option>
+              <option value={500}>500 {t('node.lines', 'lines')}</option>
+              <option value={1000}>1000 {t('node.lines', 'lines')}</option>
             </select>
 
             <ActionButton
@@ -127,12 +114,12 @@ export function NodeLogsTab() {
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder={t("node.searchLogs", "Search logs...")}
+          placeholder={t('node.searchLogs', 'Search logs...')}
           className="w-full pl-10 pr-4 py-2 text-sm bg-muted border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
         />
         {search && (
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-            {filteredLogs.length} {t("node.matches", "matches")}
+            {filteredLogs.length} {t('node.matches', 'matches')}
           </span>
         )}
       </div>
@@ -150,7 +137,11 @@ export function NodeLogsTab() {
         ) : filteredLogs.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
             <FileText className="w-12 h-12 mb-2 opacity-50" />
-            <p>{search ? t("node.noLogsMatch", "No logs match your search") : t("node.noLogs", "No logs available")}</p>
+            <p>
+              {search
+                ? t('node.noLogsMatch', 'No logs match your search')
+                : t('node.noLogs', 'No logs available')}
+            </p>
           </div>
         ) : (
           <div className="p-4 space-y-0.5">
@@ -187,17 +178,17 @@ function LogLine({
   // Determine log level/color
   const getLineColor = () => {
     const lower = line.toLowerCase();
-    if (lower.includes("error") || lower.includes("err:")) return "text-red-400";
-    if (lower.includes("warning") || lower.includes("warn:")) return "text-yellow-400";
-    if (lower.includes("info:") || lower.includes("[info]")) return "text-blue-400";
-    if (lower.includes("debug:") || lower.includes("[debug]")) return "text-gray-500";
-    return "text-gray-300";
+    if (lower.includes('error') || lower.includes('err:')) return 'text-red-400';
+    if (lower.includes('warning') || lower.includes('warn:')) return 'text-yellow-400';
+    if (lower.includes('info:') || lower.includes('[info]')) return 'text-blue-400';
+    if (lower.includes('debug:') || lower.includes('[debug]')) return 'text-gray-500';
+    return 'text-gray-300';
   };
 
   // Highlight search term
   const highlightSearch = (text: string) => {
     if (!search) return text;
-    const regex = new RegExp(`(${search})`, "gi");
+    const regex = new RegExp(`(${search})`, 'gi');
     const parts = text.split(regex);
     return parts.map((part, i) =>
       regex.test(part) ? (
@@ -211,14 +202,11 @@ function LogLine({
   };
 
   return (
-    <div className={cn("flex hover:bg-white/5 group", getLineColor())}>
+    <div className={cn('flex hover:bg-white/5 group', getLineColor())}>
       <span className="w-12 text-right pr-4 text-gray-600 select-none shrink-0 group-hover:text-gray-500">
         {lineNumber}
       </span>
-      <span className="whitespace-pre-wrap break-all">
-        {highlightSearch(line)}
-      </span>
+      <span className="whitespace-pre-wrap break-all">{highlightSearch(line)}</span>
     </div>
   );
 }
-

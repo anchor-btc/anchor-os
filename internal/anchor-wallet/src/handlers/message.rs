@@ -111,9 +111,8 @@ pub async fn create_message(
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     // Parse body
     let body = if req.body_is_hex {
-        hex::decode(&req.body).map_err(|e| {
-            (StatusCode::BAD_REQUEST, format!("Invalid hex body: {}", e))
-        })?
+        hex::decode(&req.body)
+            .map_err(|e| (StatusCode::BAD_REQUEST, format!("Invalid hex body: {}", e)))?
     } else {
         req.body.as_bytes().to_vec()
     };
@@ -141,12 +140,18 @@ pub async fn create_message(
 
     // Track DNS unlock info for lock transfer after successful TX
     let dns_unlock_info: Option<(String, String, u32)> = if req.unlock_for_dns {
-        if let (Some(domain_name), Some(first_input)) = (&req.domain_name, req.required_inputs.first()) {
+        if let (Some(domain_name), Some(first_input)) =
+            (&req.domain_name, req.required_inputs.first())
+        {
             info!(
                 "DNS unlock requested for domain '{}': spending UTXO {}:{}",
                 domain_name, first_input.txid, first_input.vout
             );
-            Some((domain_name.clone(), first_input.txid.clone(), first_input.vout as u32))
+            Some((
+                domain_name.clone(),
+                first_input.txid.clone(),
+                first_input.vout as u32,
+            ))
         } else {
             None
         }
@@ -203,7 +208,7 @@ pub async fn create_message(
                 // The new ownership UTXO is at output 0 of the new transaction (standard change output)
                 // We use vout 0 as the new ownership output
                 let new_vout = 0u32;
-                
+
                 match state.lock_manager.transfer_domain_lock(
                     &domain_name,
                     &old_txid,
@@ -222,7 +227,9 @@ pub async fn create_message(
                         if let Err(e) = state.lock_manager.lock(
                             result.txid.clone(),
                             new_vout,
-                            LockReason::Domain { name: domain_name.clone() },
+                            LockReason::Domain {
+                                name: domain_name.clone(),
+                            },
                         ) {
                             warn!("Failed to lock new domain UTXO: {}", e);
                         } else {
@@ -247,9 +254,14 @@ pub async fn create_message(
                     if let Err(e) = state.lock_manager.lock(
                         result.txid.clone(),
                         lock_vout,
-                        LockReason::Domain { name: domain_name.clone() },
+                        LockReason::Domain {
+                            name: domain_name.clone(),
+                        },
                     ) {
-                        warn!("Failed to lock new domain UTXO {}:{}: {}", result.txid, lock_vout, e);
+                        warn!(
+                            "Failed to lock new domain UTXO {}:{}: {}",
+                            result.txid, lock_vout, e
+                        );
                     } else {
                         info!(
                             "Locked domain '{}' UTXO at {}:{}",
@@ -267,9 +279,15 @@ pub async fn create_message(
                     if let Err(e) = state.lock_manager.lock(
                         result.txid.clone(),
                         lock_vout,
-                        LockReason::Token { ticker: ticker.clone(), amount: "0".to_string() },
+                        LockReason::Token {
+                            ticker: ticker.clone(),
+                            amount: "0".to_string(),
+                        },
                     ) {
-                        warn!("Failed to lock token UTXO {}:{}: {}", result.txid, lock_vout, e);
+                        warn!(
+                            "Failed to lock token UTXO {}:{}: {}",
+                            result.txid, lock_vout, e
+                        );
                     } else {
                         info!(
                             "Locked token '{}' UTXO at {}:{}",
@@ -293,4 +311,3 @@ pub async fn create_message(
         }
     }
 }
-

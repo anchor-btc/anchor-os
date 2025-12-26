@@ -20,16 +20,12 @@ use utoipa::ToSchema;
 
 // Re-export Token types from anchor-specs
 pub use anchor_specs::token::{
-    TokenSpec,
-    TokenOperation,
-    TokenAllocation,
-    DeployFlags,
-    is_valid_ticker,
+    is_valid_ticker, DeployFlags, TokenAllocation, TokenOperation, TokenSpec,
 };
 
 // Re-export for tests
 #[cfg(test)]
-pub use anchor_specs::token::{encode_varint, decode_varint};
+pub use anchor_specs::token::{decode_varint, encode_varint};
 
 // ============================================================================
 // API Response Types
@@ -241,7 +237,15 @@ mod tests {
     #[test]
     fn test_varint_roundtrip() {
         let test_values: Vec<u128> = vec![
-            0, 1, 127, 128, 255, 256, 16383, 16384, 1_000_000,
+            0,
+            1,
+            127,
+            128,
+            255,
+            256,
+            16383,
+            16384,
+            1_000_000,
             u64::MAX as u128,
         ];
 

@@ -57,16 +57,7 @@ pub const SAMPLE_IMAGES: &[(&str, &str)] = &[
 
 /// Sample domain names for DNS
 pub const SAMPLE_DOMAINS: &[&str] = &[
-    "bitcoin",
-    "satoshi",
-    "anchor",
-    "crypto",
-    "web3",
-    "defi",
-    "nft",
-    "hodl",
-    "moon",
-    "stack",
+    "bitcoin", "satoshi", "anchor", "crypto", "web3", "defi", "nft", "hodl", "moon", "stack",
 ];
 
 /// Sample city names for map markers
@@ -85,16 +76,7 @@ pub const SAMPLE_CITIES: &[(&str, f64, f64)] = &[
 
 /// Sample token tickers for Token operations
 pub const SAMPLE_TOKEN_TICKERS: &[&str] = &[
-    "ANCHOR",
-    "SATS",
-    "BITS",
-    "GOLD",
-    "STACK",
-    "HODL",
-    "RUNES",
-    "ORDX",
-    "BTCFI",
-    "ATOM",
+    "ANCHOR", "SATS", "BITS", "GOLD", "STACK", "HODL", "RUNES", "ORDX", "BTCFI", "ATOM",
 ];
 
 /// Sample oracle data sources
@@ -134,16 +116,16 @@ pub const SAMPLE_ORACLE_NAMES: &[&str] = &[
 /// 1 = Block/Chain, 2 = Crypto prices, 4 = Sports, 8 = Weather,
 /// 16 = Elections, 32 = Random/VRF, 64 = Custom
 pub const SAMPLE_ORACLE_CATEGORIES: &[i32] = &[
-    2,      // Crypto prices only
-    3,      // Block + Crypto
-    6,      // Crypto + Sports  
-    10,     // Crypto + Weather
-    18,     // Crypto + Elections
-    34,     // Crypto + VRF
-    66,     // Crypto + Custom
-    127,    // All categories
-    4,      // Sports only
-    8,      // Weather only
+    2,   // Crypto prices only
+    3,   // Block + Crypto
+    6,   // Crypto + Sports
+    10,  // Crypto + Weather
+    18,  // Crypto + Elections
+    34,  // Crypto + VRF
+    66,  // Crypto + Custom
+    127, // All categories
+    4,   // Sports only
+    8,   // Weather only
 ];
 
 /// Sample prediction market questions (binary YES/NO)
@@ -183,4 +165,3 @@ pub const SAMPLE_MARKET_DESCRIPTIONS: &[&str] = &[
     "Data sourced from multiple reliable oracles.",
     "Objective resolution based on verifiable on-chain data.",
 ];
-

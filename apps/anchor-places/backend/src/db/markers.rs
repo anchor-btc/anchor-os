@@ -293,7 +293,11 @@ impl Database {
     }
 
     /// Get marker with replies
-    pub async fn get_marker_detail(&self, txid_hex: &str, vout: i32) -> Result<Option<MarkerDetail>> {
+    pub async fn get_marker_detail(
+        &self,
+        txid_hex: &str,
+        vout: i32,
+    ) -> Result<Option<MarkerDetail>> {
         let marker = self.get_marker(txid_hex, vout).await?;
 
         match marker {
@@ -405,4 +409,3 @@ impl Database {
             .collect())
     }
 }
-

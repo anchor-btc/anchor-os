@@ -12,18 +12,19 @@
 //! | 30-39 | Oracles | Oracle, OracleAttestation, OracleDispute, OracleSlash |
 //! | 40-49 | Predictions | MarketCreate, PlaceBet, MarketResolve, ClaimWinnings |
 
-pub mod text;
-pub mod state;
 pub mod dns;
-pub mod proof;
-pub mod token;
 pub mod geomarker;
+pub mod proof;
+pub mod state;
+pub mod text;
+pub mod token;
 
 // Re-export main types for convenience
+pub use dns::{DnsOperation, DnsRecord, DnsSpec, RecordType};
+pub use geomarker::{GeoMarkerSpec, MarkerCategory, HEADER_SIZE, MAX_MESSAGE_LENGTH};
+pub use proof::{HashAlgorithm, ProofEntry, ProofOperation, ProofSpec};
+pub use state::{
+    PixelData, StateSpec, DEFAULT_CANVAS_HEIGHT, DEFAULT_CANVAS_WIDTH, MAX_PIXELS_PER_TX,
+};
 pub use text::TextSpec;
-pub use state::{StateSpec, PixelData, DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT, MAX_PIXELS_PER_TX};
-pub use dns::{DnsSpec, DnsOperation, DnsRecord, RecordType};
-pub use proof::{ProofSpec, ProofOperation, ProofEntry, HashAlgorithm};
-pub use token::{TokenSpec, TokenOperation, TokenAllocation};
-pub use geomarker::{GeoMarkerSpec, MarkerCategory, MAX_MESSAGE_LENGTH, HEADER_SIZE};
-
+pub use token::{TokenAllocation, TokenOperation, TokenSpec};

@@ -1,11 +1,6 @@
 //! Tailscale VPN management handlers
 
-use axum::{
-    extract::State,
-    http::StatusCode,
-    response::IntoResponse,
-    Json,
-};
+use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tracing::{error, info};
@@ -72,7 +67,10 @@ pub async fn get_tailscale_status(
         ..Default::default()
     });
 
-    let containers = state.docker.list_containers(options).await
+    let containers = state
+        .docker
+        .list_containers(options)
+        .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     let container = containers.first();
@@ -100,7 +98,11 @@ pub async fn get_tailscale_status(
         ..Default::default()
     };
 
-    let exec = match state.docker.create_exec(TAILSCALE_CONTAINER, exec_options).await {
+    let exec = match state
+        .docker
+        .create_exec(TAILSCALE_CONTAINER, exec_options)
+        .await
+    {
         Ok(exec) => exec,
         Err(e) => {
             error!("Failed to create exec: {}", e);
@@ -117,62 +119,69 @@ pub async fn get_tailscale_status(
     };
 
     let mut output = String::new();
-    if let Ok(StartExecResults::Attached { output: mut stream, .. }) = state.docker.start_exec(&exec.id, None).await {
+    if let Ok(StartExecResults::Attached {
+        output: mut stream, ..
+    }) = state.docker.start_exec(&exec.id, None).await
+    {
         while let Some(Ok(chunk)) = stream.next().await {
             output.push_str(&chunk.to_string());
         }
     }
 
     // Parse JSON output
-    let status: TailscaleStatus = if let Ok(json) = serde_json::from_str::<serde_json::Value>(&output) {
-        let backend_state = json.get("BackendState")
-            .and_then(|v| v.as_str())
-            .map(|s| s.to_string());
-        
-        let logged_in = backend_state.as_deref() == Some("Running");
-        
-        let self_node = json.get("Self");
-        
-        let hostname = self_node
-            .and_then(|s| s.get("HostName"))
-            .and_then(|v| v.as_str())
-            .map(|s| s.to_string());
-        
-        let ip_address = self_node
-            .and_then(|s| s.get("TailscaleIPs"))
-            .and_then(|v| v.as_array())
-            .and_then(|arr| arr.first())
-            .and_then(|v| v.as_str())
-            .map(|s| s.to_string());
-        
-        let tailnet = json.get("MagicDNSSuffix")
-            .and_then(|v| v.as_str())
-            .map(|s| s.to_string());
-        
-        let version = json.get("Version")
-            .and_then(|v| v.as_str())
-            .map(|s| s.to_string());
+    let status: TailscaleStatus =
+        if let Ok(json) = serde_json::from_str::<serde_json::Value>(&output) {
+            let backend_state = json
+                .get("BackendState")
+                .and_then(|v| v.as_str())
+                .map(|s| s.to_string());
 
-        TailscaleStatus {
-            running: true,
-            logged_in,
-            hostname,
-            ip_address,
-            tailnet,
-            version,
-            backend_state,
-        }
-    } else {
-        TailscaleStatus {
-            running: true,
-            logged_in: false,
-            hostname: None,
-            ip_address: None,
-            tailnet: None,
-            version: None,
-            backend_state: Some("NeedsLogin".to_string()),
-        }
-    };
+            let logged_in = backend_state.as_deref() == Some("Running");
+
+            let self_node = json.get("Self");
+
+            let hostname = self_node
+                .and_then(|s| s.get("HostName"))
+                .and_then(|v| v.as_str())
+                .map(|s| s.to_string());
+
+            let ip_address = self_node
+                .and_then(|s| s.get("TailscaleIPs"))
+                .and_then(|v| v.as_array())
+                .and_then(|arr| arr.first())
+                .and_then(|v| v.as_str())
+                .map(|s| s.to_string());
+
+            let tailnet = json
+                .get("MagicDNSSuffix")
+                .and_then(|v| v.as_str())
+                .map(|s| s.to_string());
+
+            let version = json
+                .get("Version")
+                .and_then(|v| v.as_str())
+                .map(|s| s.to_string());
+
+            TailscaleStatus {
+                running: true,
+                logged_in,
+                hostname,
+                ip_address,
+                tailnet,
+                version,
+                backend_state,
+            }
+        } else {
+            TailscaleStatus {
+                running: true,
+                logged_in: false,
+                hostname: None,
+                ip_address: None,
+                tailnet: None,
+                version: None,
+                backend_state: Some("NeedsLogin".to_string()),
+            }
+        };
 
     Ok(Json(status))
 }
@@ -199,7 +208,7 @@ pub async fn connect_tailscale(
 
     // Build tailscale up command with --reset to override any existing settings
     let mut cmd = vec!["tailscale", "up", "--reset", "--authkey", &req.auth_key];
-    
+
     let hostname_str;
     if let Some(hostname) = &req.hostname {
         hostname_str = format!("--hostname={}", hostname);
@@ -219,11 +228,17 @@ pub async fn connect_tailscale(
         ..Default::default()
     };
 
-    let exec = state.docker.create_exec(TAILSCALE_CONTAINER, exec_options).await
+    let exec = state
+        .docker
+        .create_exec(TAILSCALE_CONTAINER, exec_options)
+        .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     let mut output = String::new();
-    if let Ok(StartExecResults::Attached { output: mut stream, .. }) = state.docker.start_exec(&exec.id, None).await {
+    if let Ok(StartExecResults::Attached {
+        output: mut stream, ..
+    }) = state.docker.start_exec(&exec.id, None).await
+    {
         while let Some(Ok(chunk)) = stream.next().await {
             output.push_str(&chunk.to_string());
         }
@@ -271,11 +286,17 @@ pub async fn disconnect_tailscale(
         ..Default::default()
     };
 
-    let exec = state.docker.create_exec(TAILSCALE_CONTAINER, exec_options).await
+    let exec = state
+        .docker
+        .create_exec(TAILSCALE_CONTAINER, exec_options)
+        .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     let mut output = String::new();
-    if let Ok(StartExecResults::Attached { output: mut stream, .. }) = state.docker.start_exec(&exec.id, None).await {
+    if let Ok(StartExecResults::Attached {
+        output: mut stream, ..
+    }) = state.docker.start_exec(&exec.id, None).await
+    {
         while let Some(Ok(chunk)) = stream.next().await {
             output.push_str(&chunk.to_string());
         }
@@ -286,4 +307,3 @@ pub async fn disconnect_tailscale(
         message: "Logged out from Tailscale".to_string(),
     }))
 }
-

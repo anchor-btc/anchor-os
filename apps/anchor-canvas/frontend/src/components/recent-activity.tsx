@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useQuery } from "@tanstack/react-query";
-import { fetchRecentPixels, rgbToHex, truncateTxid } from "@/lib/api";
-import { formatDistanceToNow } from "date-fns";
-import { Activity, ExternalLink } from "lucide-react";
+import { useQuery } from '@tanstack/react-query';
+import { fetchRecentPixels, rgbToHex, truncateTxid } from '@/lib/api';
+import { formatDistanceToNow } from 'date-fns';
+import { Activity } from 'lucide-react';
 
 interface RecentActivityProps {
   onPixelClick?: (x: number, y: number) => void;
@@ -11,7 +11,7 @@ interface RecentActivityProps {
 
 export function RecentActivity({ onPixelClick }: RecentActivityProps) {
   const { data: pixels, isLoading } = useQuery({
-    queryKey: ["recent-pixels"],
+    queryKey: ['recent-pixels'],
     queryFn: () => fetchRecentPixels(20),
     refetchInterval: 10000,
   });
@@ -64,9 +64,7 @@ export function RecentActivity({ onPixelClick }: RecentActivityProps) {
               <div className="flex items-center gap-2 text-xs text-gray-500">
                 <span>{truncateTxid(pixel.txid, 4)}</span>
                 <span>•</span>
-                <span>
-                  {formatDistanceToNow(new Date(pixel.updated_at), { addSuffix: true })}
-                </span>
+                <span>{formatDistanceToNow(new Date(pixel.updated_at), { addSuffix: true })}</span>
               </div>
             </div>
           </div>
@@ -82,5 +80,3 @@ export function RecentActivity({ onPixelClick }: RecentActivityProps) {
     </div>
   );
 }
-
-

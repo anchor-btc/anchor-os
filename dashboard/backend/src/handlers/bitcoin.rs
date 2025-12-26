@@ -312,4 +312,3 @@ pub async fn get_node_status(
         network,
     }))
 }
-

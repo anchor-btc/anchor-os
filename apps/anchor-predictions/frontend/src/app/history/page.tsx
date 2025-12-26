@@ -1,25 +1,25 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
-import { 
-  Clock, 
-  Trophy, 
-  Loader2, 
-  AlertCircle, 
+import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
+import {
+  Clock,
+  Trophy,
+  Loader2,
+  AlertCircle,
   RefreshCw,
   Coins,
   Users,
   CheckCircle,
   XCircle,
-  ArrowUpRight
-} from "lucide-react";
-import { fetchHistory, type Market } from "@/lib/api";
-import { cn, formatSats, formatPercent, shortenHash, resolutionColor } from "@/lib/utils";
+  ArrowUpRight,
+} from 'lucide-react';
+import { fetchHistory, type Market } from '@/lib/api';
+import { cn, formatSats, formatPercent, resolutionColor } from '@/lib/utils';
 
 function ResolvedMarketCard({ market }: { market: Market }) {
   const isYesWin = market.resolution === 1;
-  
+
   return (
     <Link
       href={`/markets/${market.market_id}`}
@@ -29,10 +29,12 @@ function ResolvedMarketCard({ market }: { market: Market }) {
         <h3 className="font-semibold text-white group-hover:text-amber-400 transition-colors line-clamp-2">
           {market.question}
         </h3>
-        <div className={cn(
-          "px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1.5 shrink-0",
-          resolutionColor(market.resolution)
-        )}>
+        <div
+          className={cn(
+            'px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1.5 shrink-0',
+            resolutionColor(market.resolution)
+          )}
+        >
           {isYesWin ? (
             <CheckCircle className="w-4 h-4" />
           ) : market.resolution === 0 ? (
@@ -46,19 +48,28 @@ function ResolvedMarketCard({ market }: { market: Market }) {
       <div className="mb-4 p-3 rounded-lg bg-white/5 border border-white/5">
         <p className="text-xs text-gray-500 mb-2">Final Odds</p>
         <div className="flex gap-4">
-          <div className={cn(
-            "flex-1 text-center py-2 rounded",
-            isYesWin ? "bg-green-500/20 border border-green-500/30" : "bg-white/5"
-          )}>
-            <p className={cn("font-bold", isYesWin ? "text-green-400" : "text-gray-400")}>
+          <div
+            className={cn(
+              'flex-1 text-center py-2 rounded',
+              isYesWin ? 'bg-green-500/20 border border-green-500/30' : 'bg-white/5'
+            )}
+          >
+            <p className={cn('font-bold', isYesWin ? 'text-green-400' : 'text-gray-400')}>
               YES {formatPercent(market.yes_price)}
             </p>
           </div>
-          <div className={cn(
-            "flex-1 text-center py-2 rounded",
-            market.resolution === 0 ? "bg-red-500/20 border border-red-500/30" : "bg-white/5"
-          )}>
-            <p className={cn("font-bold", market.resolution === 0 ? "text-red-400" : "text-gray-400")}>
+          <div
+            className={cn(
+              'flex-1 text-center py-2 rounded',
+              market.resolution === 0 ? 'bg-red-500/20 border border-red-500/30' : 'bg-white/5'
+            )}
+          >
+            <p
+              className={cn(
+                'font-bold',
+                market.resolution === 0 ? 'text-red-400' : 'text-gray-400'
+              )}
+            >
               NO {formatPercent(market.no_price)}
             </p>
           </div>
@@ -86,18 +97,26 @@ function ResolvedMarketCard({ market }: { market: Market }) {
 }
 
 export default function HistoryPage() {
-  const { data: markets, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["history"],
+  const {
+    data: markets,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ['history'],
     queryFn: () => fetchHistory(50),
   });
 
   // Calculate stats
-  const stats = markets ? {
-    total: markets.length,
-    yesWins: markets.filter(m => m.resolution === 1).length,
-    noWins: markets.filter(m => m.resolution === 0).length,
-    totalVolume: markets.reduce((sum, m) => sum + m.total_volume_sats, 0),
-  } : null;
+  const stats = markets
+    ? {
+        total: markets.length,
+        yesWins: markets.filter((m) => m.resolution === 1).length,
+        noWins: markets.filter((m) => m.resolution === 0).length,
+        totalVolume: markets.reduce((sum, m) => sum + m.total_volume_sats, 0),
+      }
+    : null;
 
   return (
     <div className="space-y-6">
@@ -142,7 +161,9 @@ export default function HistoryPage() {
         <div className="text-center py-12 rounded-xl border border-red-500/20 bg-red-500/5">
           <AlertCircle className="w-12 h-12 mx-auto text-red-400 mb-4" />
           <p className="text-red-400 mb-2">Failed to load history</p>
-          <p className="text-gray-500 text-sm mb-4">{(error as Error)?.message || "Connection error"}</p>
+          <p className="text-gray-500 text-sm mb-4">
+            {(error as Error)?.message || 'Connection error'}
+          </p>
           <button
             onClick={() => refetch()}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors"

@@ -24,10 +24,10 @@
  */
 
 // Re-export everything from browser bundle
-export * from "./browser.js";
+export * from './browser.js';
 
 // Node.js specific exports (wallet with RPC)
-export { AnchorWallet, createWallet, WalletConfig } from "./wallet.js";
+export { AnchorWallet, createWallet, WalletConfig } from './wallet.js';
 
 // Re-export wallet types
 export type {
@@ -35,5 +35,4 @@ export type {
   Balance,
   Utxo,
   TransactionResult,
-} from "./types.js";
-
+} from './types.js';

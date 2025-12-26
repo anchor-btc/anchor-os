@@ -9,8 +9,8 @@ use std::sync::Arc;
 use crate::error::{AppError, Result};
 use crate::handlers::AppState;
 use crate::models::{
-    GetProofsByAddressResponse, HashAlgorithm, ListParams, PaginatedResponse, Proof,
-    ProofListItem, ValidateRequest, ValidationResult,
+    GetProofsByAddressResponse, HashAlgorithm, ListParams, PaginatedResponse, Proof, ProofListItem,
+    ValidateRequest, ValidationResult,
 };
 
 /// List all proofs with pagination
@@ -81,11 +81,13 @@ pub async fn get_proof(
     let hash_bytes =
         hex::decode(&hash).map_err(|_| AppError::bad_request("Invalid hash format"))?;
 
-    let algo = params.get("algo").and_then(|a| match a.to_lowercase().as_str() {
-        "sha256" | "sha-256" => Some(HashAlgorithm::Sha256 as i16),
-        "sha512" | "sha-512" => Some(HashAlgorithm::Sha512 as i16),
-        _ => None,
-    });
+    let algo = params
+        .get("algo")
+        .and_then(|a| match a.to_lowercase().as_str() {
+            "sha256" | "sha-256" => Some(HashAlgorithm::Sha256 as i16),
+            "sha512" | "sha-512" => Some(HashAlgorithm::Sha512 as i16),
+            _ => None,
+        });
 
     let proof = state
         .db
@@ -211,4 +213,3 @@ pub async fn get_my_proofs(
         per_page,
     }))
 }
-

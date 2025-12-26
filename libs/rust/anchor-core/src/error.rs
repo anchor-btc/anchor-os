@@ -14,7 +14,9 @@ pub enum AnchorError {
     InvalidMagic,
 
     /// Not enough bytes for the declared number of anchors
-    #[error("truncated anchors: expected {expected} anchors but only {available_bytes} bytes available")]
+    #[error(
+        "truncated anchors: expected {expected} anchors but only {available_bytes} bytes available"
+    )]
     TruncatedAnchors {
         expected: usize,
         available_bytes: usize,
@@ -27,4 +29,3 @@ pub enum AnchorError {
 
 /// Result type for ANCHOR operations
 pub type AnchorResult<T> = Result<T, AnchorError>;
-

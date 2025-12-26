@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
-import { 
-  TrendingUp, 
-  Plus, 
-  Loader2, 
+import { useState } from 'react';
+import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
+import {
+  TrendingUp,
+  Plus,
+  Loader2,
   AlertCircle,
   RefreshCw,
   Coins,
@@ -14,10 +14,10 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Filter,
-  Search
-} from "lucide-react";
-import { fetchMarkets, type Market } from "@/lib/api";
-import { cn, formatSats, formatPercent, statusColor } from "@/lib/utils";
+  Search,
+} from 'lucide-react';
+import { fetchMarkets, type Market } from '@/lib/api';
+import { cn, formatSats, formatPercent, statusColor } from '@/lib/utils';
 
 function MarketCard({ market }: { market: Market }) {
   return (
@@ -29,7 +29,12 @@ function MarketCard({ market }: { market: Market }) {
         <h3 className="font-semibold text-white group-hover:text-amber-400 transition-colors line-clamp-2">
           {market.question}
         </h3>
-        <span className={cn("px-2 py-1 rounded text-xs font-medium shrink-0", statusColor(market.status))}>
+        <span
+          className={cn(
+            'px-2 py-1 rounded text-xs font-medium shrink-0',
+            statusColor(market.status)
+          )}
+        >
           {market.status.toUpperCase()}
         </span>
       </div>
@@ -51,7 +56,7 @@ function MarketCard({ market }: { market: Market }) {
           </span>
         </div>
         <div className="h-3 rounded-full bg-red-500/30 overflow-hidden">
-          <div 
+          <div
             className="h-full bg-gradient-to-r from-green-500 to-green-400 transition-all duration-500"
             style={{ width: `${market.yes_price * 100}%` }}
           />
@@ -69,20 +74,24 @@ function MarketCard({ market }: { market: Market }) {
             {market.position_count} bets
           </span>
         </div>
-        <span className="text-xs text-gray-500">
-          Resolves @ block {market.resolution_block}
-        </span>
+        <span className="text-xs text-gray-500">Resolves @ block {market.resolution_block}</span>
       </div>
     </Link>
   );
 }
 
 export default function MarketsPage() {
-  const [statusFilter, setStatusFilter] = useState<string | undefined>("open");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string | undefined>('open');
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const { data: markets, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["markets", statusFilter],
+  const {
+    data: markets,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ['markets', statusFilter],
     queryFn: () => fetchMarkets(statusFilter, 100),
   });
 
@@ -126,18 +135,18 @@ export default function MarketsPage() {
           <Filter className="w-5 h-5 text-gray-400" />
           <div className="flex rounded-lg overflow-hidden border border-white/10">
             {[
-              { value: undefined, label: "All" },
-              { value: "open", label: "Active" },
-              { value: "resolved", label: "Resolved" },
+              { value: undefined, label: 'All' },
+              { value: 'open', label: 'Active' },
+              { value: 'resolved', label: 'Resolved' },
             ].map((option) => (
               <button
                 key={option.label}
                 onClick={() => setStatusFilter(option.value)}
                 className={cn(
-                  "px-4 py-2 text-sm font-medium transition-colors",
+                  'px-4 py-2 text-sm font-medium transition-colors',
                   statusFilter === option.value
-                    ? "bg-amber-600 text-white"
-                    : "bg-white/5 text-gray-400 hover:bg-white/10"
+                    ? 'bg-amber-600 text-white'
+                    : 'bg-white/5 text-gray-400 hover:bg-white/10'
                 )}
               >
                 {option.label}
@@ -157,7 +166,9 @@ export default function MarketsPage() {
         <div className="text-center py-12 rounded-xl border border-red-500/20 bg-red-500/5">
           <AlertCircle className="w-12 h-12 mx-auto text-red-400 mb-4" />
           <p className="text-red-400 mb-2">Failed to load markets</p>
-          <p className="text-gray-500 text-sm mb-4">{(error as Error)?.message || "Connection error"}</p>
+          <p className="text-gray-500 text-sm mb-4">
+            {(error as Error)?.message || 'Connection error'}
+          </p>
           <button
             onClick={() => refetch()}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors"
@@ -176,7 +187,7 @@ export default function MarketsPage() {
         <div className="text-center py-12 rounded-xl border border-white/10 bg-white/5">
           <TrendingUp className="w-12 h-12 mx-auto text-gray-600 mb-4" />
           <p className="text-gray-400 mb-4">
-            {searchQuery ? "No markets match your search" : "No markets found"}
+            {searchQuery ? 'No markets match your search' : 'No markets found'}
           </p>
           <Link
             href="/create"

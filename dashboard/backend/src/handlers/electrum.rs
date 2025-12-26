@@ -1,18 +1,13 @@
 //! Electrum server management handlers (Electrs vs Fulcrum)
-//! 
+//!
 //! Both servers can run simultaneously on different ports:
 //! - Electrs: port 50001
 //! - Fulcrum: port 50002
 //!
 //! The "default" server is used by dependent services (Mempool, BTC RPC Explorer).
 
-use axum::{
-    extract::State,
-    http::StatusCode,
-    response::IntoResponse,
-    Json,
-};
-use bollard::container::{ListContainersOptions, StopContainerOptions, StartContainerOptions};
+use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
+use bollard::container::{ListContainersOptions, StartContainerOptions, StopContainerOptions};
 use serde::{Deserialize, Serialize};
 use sqlx::Row;
 use std::collections::HashMap;
@@ -32,10 +27,7 @@ const ELECTRS_PORT: u16 = 50001;
 const FULCRUM_PORT: u16 = 50002;
 
 // Dependent services that need to be restarted when switching default
-const DEPENDENT_CONTAINERS: &[&str] = &[
-    "anchor-explorer-mempool-api",
-    "anchor-explorer-btc-rpc",
-];
+const DEPENDENT_CONTAINERS: &[&str] = &["anchor-explorer-mempool-api", "anchor-explorer-btc-rpc"];
 
 /// Electrum server types
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
@@ -157,7 +149,9 @@ pub async fn get_electrum_status(
     State(state): State<Arc<AppState>>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     // Get configured default server from database
-    let default_server = get_configured_server(&state).await.unwrap_or(ElectrumServer::Electrs);
+    let default_server = get_configured_server(&state)
+        .await
+        .unwrap_or(ElectrumServer::Electrs);
 
     // Check container statuses
     let electrs_status = get_container_status(&state, ELECTRS_CONTAINER).await;
@@ -206,7 +200,10 @@ pub async fn set_default_electrum_server(
     if target_status.as_deref() != Some("running") {
         return Ok(Json(ElectrumActionResponse {
             success: false,
-            message: format!("{} is not running. Start it first before setting as default.", target_server),
+            message: format!(
+                "{} is not running. Start it first before setting as default.",
+                target_server
+            ),
         }));
     }
 
@@ -222,10 +219,10 @@ pub async fn set_default_electrum_server(
     // Recreate dependent services with new Electrum configuration
     // We need to use docker compose to recreate them with the correct env vars
     info!("Recreating dependent services with new Electrum configuration...");
-    
+
     let electrum_host = target_server.host();
     let electrum_port = target_server.port();
-    
+
     // Spawn background task to recreate dependent services
     tokio::spawn(async move {
         // First, stop the dependent containers
@@ -236,9 +233,9 @@ pub async fn set_default_electrum_server(
                 .output()
                 .await;
         }
-        
+
         sleep(Duration::from_secs(2)).await;
-        
+
         // Remove the containers so they can be recreated with new env vars
         for container in DEPENDENT_CONTAINERS {
             info!("Removing {} for recreation", container);
@@ -247,9 +244,9 @@ pub async fn set_default_electrum_server(
                 .output()
                 .await;
         }
-        
+
         sleep(Duration::from_secs(1)).await;
-        
+
         // Recreate with docker compose, passing the new env vars
         // Map container names to service names
         let services: Vec<&str> = DEPENDENT_CONTAINERS
@@ -260,11 +257,13 @@ pub async fn set_default_electrum_server(
                 _ => c.strip_prefix("anchor-").unwrap_or(c),
             })
             .collect();
-        
+
         for service in services {
-            info!("Recreating {} with ELECTRUM_DEFAULT_HOST={} ELECTRUM_DEFAULT_PORT={}", 
-                  service, electrum_host, electrum_port);
-            
+            info!(
+                "Recreating {} with ELECTRUM_DEFAULT_HOST={} ELECTRUM_DEFAULT_PORT={}",
+                service, electrum_host, electrum_port
+            );
+
             let output = tokio::process::Command::new("docker")
                 .args(["compose", "up", "-d", service])
                 .env("ELECTRUM_DEFAULT_HOST", electrum_host)
@@ -272,7 +271,7 @@ pub async fn set_default_electrum_server(
                 .current_dir("/anchor-project")
                 .output()
                 .await;
-            
+
             match output {
                 Ok(out) => {
                     if out.status.success() {
@@ -287,13 +286,16 @@ pub async fn set_default_electrum_server(
                 }
             }
         }
-        
+
         info!("Finished recreating dependent services with new Electrum configuration");
     });
 
     Ok(Json(ElectrumActionResponse {
         success: true,
-        message: format!("{} is now the default Electrum server. Dependent services being recreated...", target_server),
+        message: format!(
+            "{} is now the default Electrum server. Dependent services being recreated...",
+            target_server
+        ),
     }))
 }
 
@@ -313,7 +315,7 @@ pub async fn electrum_server_action(
     Json(req): Json<ElectrumServerActionRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     let container = req.server.container_name();
-    
+
     match req.action {
         ServerAction::Start => {
             info!("Starting electrum server: {}", container);
@@ -330,9 +332,11 @@ pub async fn electrum_server_action(
         }
         ServerAction::Stop => {
             info!("Stopping electrum server: {}", container);
-            
+
             // Check if this is the default server
-            let default_server = get_configured_server(&state).await.unwrap_or(ElectrumServer::Electrs);
+            let default_server = get_configured_server(&state)
+                .await
+                .unwrap_or(ElectrumServer::Electrs);
             if default_server == req.server {
                 // Check if the other server is running
                 let other = if req.server == ElectrumServer::Electrs {
@@ -341,7 +345,7 @@ pub async fn electrum_server_action(
                     ElectrumServer::Electrs
                 };
                 let other_status = get_container_status(&state, other.container_name()).await;
-                
+
                 if other_status.as_deref() != Some("running") {
                     return Ok(Json(ElectrumActionResponse {
                         success: false,
@@ -349,7 +353,7 @@ pub async fn electrum_server_action(
                     }));
                 }
             }
-            
+
             match stop_container_safe(&state, container).await {
                 Ok(_) => Ok(Json(ElectrumActionResponse {
                     success: true,
@@ -419,7 +423,8 @@ async fn get_container_status(state: &Arc<AppState>, container_name: &str) -> Op
 
 async fn stop_container_safe(state: &Arc<AppState>, container_name: &str) -> Result<(), String> {
     let options = Some(StopContainerOptions { t: 10 });
-    state.docker
+    state
+        .docker
         .stop_container(container_name, options)
         .await
         .map_err(|e| e.to_string())
@@ -428,27 +433,33 @@ async fn stop_container_safe(state: &Arc<AppState>, container_name: &str) -> Res
 async fn start_container_safe(state: &Arc<AppState>, container_name: &str) -> Result<(), String> {
     // First check if container exists
     let status = get_container_status(state, container_name).await;
-    
+
     if status.is_some() {
         // Container exists, just start it
         info!("Container {} exists, starting it", container_name);
-        state.docker
+        state
+            .docker
             .start_container(container_name, None::<StartContainerOptions<String>>)
             .await
             .map_err(|e| e.to_string())
     } else {
         // Container doesn't exist, use docker compose to create and start it
-        info!("Container {} doesn't exist, creating with docker compose", container_name);
-        
+        info!(
+            "Container {} doesn't exist, creating with docker compose",
+            container_name
+        );
+
         // Map container name to service name
         let service_name = match container_name {
             "anchor-core-electrs" => "core-electrs",
             "anchor-core-fulcrum" => "core-fulcrum",
             "anchor-explorer-mempool-api" => "explorer-mempool-api",
             "anchor-explorer-btc-rpc" => "explorer-btc-rpc",
-            _ => container_name.strip_prefix("anchor-").unwrap_or(container_name),
+            _ => container_name
+                .strip_prefix("anchor-")
+                .unwrap_or(container_name),
         };
-        
+
         // Run docker compose up -d for the service
         // Note: The dashboard-backend container has the project mounted at /anchor-project
         let output = tokio::process::Command::new("docker")
@@ -457,9 +468,12 @@ async fn start_container_safe(state: &Arc<AppState>, container_name: &str) -> Re
             .output()
             .await
             .map_err(|e| format!("Failed to run docker compose: {}", e))?;
-        
+
         if output.status.success() {
-            info!("Successfully created and started {} via docker compose", container_name);
+            info!(
+                "Successfully created and started {} via docker compose",
+                container_name
+            );
             Ok(())
         } else {
             let stderr = String::from_utf8_lossy(&output.stderr);
@@ -487,14 +501,17 @@ async fn get_configured_server(state: &Arc<AppState>) -> Result<ElectrumServer, 
     }
 }
 
-async fn save_configured_server(state: &Arc<AppState>, server: ElectrumServer) -> Result<(), String> {
+async fn save_configured_server(
+    state: &Arc<AppState>,
+    server: ElectrumServer,
+) -> Result<(), String> {
     let pool = state.db_pool.as_ref().ok_or("Database not available")?;
 
     let value = serde_json::json!(server.to_string());
 
     sqlx::query(
         "INSERT INTO system_settings (key, value, updated_at) VALUES ('electrum_server', $1, NOW())
-         ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()"
+         ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()",
     )
     .bind(&value)
     .execute(pool)

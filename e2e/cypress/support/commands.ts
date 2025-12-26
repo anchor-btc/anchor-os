@@ -61,7 +61,9 @@ Cypress.Commands.add('bypassSetup', () => {
 Cypress.Commands.add('visitApp', (app: string, path = '/') => {
   const baseUrl = Cypress.env(app);
   if (!baseUrl) {
-    throw new Error(`Unknown app: ${app}. Available apps: dashboard, domains, proofs, tokens, threads, canvas, places, oracles, predictions`);
+    throw new Error(
+      `Unknown app: ${app}. Available apps: dashboard, domains, proofs, tokens, threads, canvas, places, oracles, predictions`
+    );
   }
   return cy.visit(`${baseUrl}${path}`);
 });
@@ -97,4 +99,3 @@ Cypress.Commands.add('fillField', (selector: string, value: string) => {
 });
 
 export {};
-

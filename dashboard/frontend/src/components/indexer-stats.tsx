@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useQuery } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
+import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import {
   Search,
   Loader2,
@@ -19,11 +19,11 @@ import {
   Stamp,
   Leaf,
   Eye,
-} from "lucide-react";
-import Link from "next/link";
-import { cn } from "@/lib/utils";
+} from 'lucide-react';
+import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8010";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8010';
 
 interface MessageKindCount {
   kind: number;
@@ -48,7 +48,7 @@ interface IndexerStats {
 
 async function fetchIndexerStats(): Promise<IndexerStats> {
   const res = await fetch(`${API_URL}/indexer/stats`);
-  if (!res.ok) throw new Error("Failed to fetch indexer stats");
+  if (!res.ok) throw new Error('Failed to fetch indexer stats');
   return res.json();
 }
 
@@ -59,43 +59,47 @@ const kindIcons: Record<string, React.ElementType> = {
   Map: MapPin,
   DNS: Globe,
   Proof: FileCheck,
-  "Token Deploy": Coins,
-  "Token Mint": Coins,
-  "Token Transfer": Coins,
+  'Token Deploy': Coins,
+  'Token Mint': Coins,
+  'Token Transfer': Coins,
 };
 
 const kindColors: Record<string, string> = {
-  Text: "text-orange-500 bg-orange-500/10",
-  Canvas: "text-purple-500 bg-purple-500/10",
-  Image: "text-pink-500 bg-pink-500/10",
-  Map: "text-blue-500 bg-blue-500/10",
-  DNS: "text-cyan-500 bg-cyan-500/10",
-  Proof: "text-emerald-500 bg-emerald-500/10",
-  "Token Deploy": "text-amber-500 bg-amber-500/10",
-  "Token Mint": "text-amber-500 bg-amber-500/10",
-  "Token Transfer": "text-amber-500 bg-amber-500/10",
+  Text: 'text-orange-500 bg-orange-500/10',
+  Canvas: 'text-purple-500 bg-purple-500/10',
+  Image: 'text-pink-500 bg-pink-500/10',
+  Map: 'text-blue-500 bg-blue-500/10',
+  DNS: 'text-cyan-500 bg-cyan-500/10',
+  Proof: 'text-emerald-500 bg-emerald-500/10',
+  'Token Deploy': 'text-amber-500 bg-amber-500/10',
+  'Token Mint': 'text-amber-500 bg-amber-500/10',
+  'Token Transfer': 'text-amber-500 bg-amber-500/10',
 };
 
 const carrierIcons: Record<string, React.ElementType> = {
-  "OP_RETURN": Box,
-  "Inscription": FileCode,
-  "Stamps": Stamp,
-  "Taproot Annex": Leaf,
-  "Witness Data": Eye,
+  OP_RETURN: Box,
+  Inscription: FileCode,
+  Stamps: Stamp,
+  'Taproot Annex': Leaf,
+  'Witness Data': Eye,
 };
 
 const carrierColors: Record<string, string> = {
-  "OP_RETURN": "text-blue-500 bg-blue-500/10",
-  "Inscription": "text-orange-500 bg-orange-500/10",
-  "Stamps": "text-pink-500 bg-pink-500/10",
-  "Taproot Annex": "text-green-500 bg-green-500/10",
-  "Witness Data": "text-purple-500 bg-purple-500/10",
+  OP_RETURN: 'text-blue-500 bg-blue-500/10',
+  Inscription: 'text-orange-500 bg-orange-500/10',
+  Stamps: 'text-pink-500 bg-pink-500/10',
+  'Taproot Annex': 'text-green-500 bg-green-500/10',
+  'Witness Data': 'text-purple-500 bg-purple-500/10',
 };
 
 export function IndexerStatsWidget() {
   const { t } = useTranslation();
-  const { data: stats, isLoading, error } = useQuery({
-    queryKey: ["indexer-stats"],
+  const {
+    data: stats,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ['indexer-stats'],
     queryFn: fetchIndexerStats,
     refetchInterval: 10000,
   });
@@ -119,8 +123,8 @@ export function IndexerStatsWidget() {
               <Search className="w-4 h-4 text-cyan-500" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">{t("indexer.title")}</p>
-              <p className="text-sm text-muted-foreground">{t("indexer.unavailable")}</p>
+              <p className="text-xs text-muted-foreground">{t('indexer.title')}</p>
+              <p className="text-sm text-muted-foreground">{t('indexer.unavailable')}</p>
             </div>
           </div>
         </div>
@@ -143,13 +147,15 @@ export function IndexerStatsWidget() {
                 <Search className="w-4 h-4 text-cyan-500" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">{t("indexer.title")}</p>
-                <p className="text-sm font-medium text-foreground">{t("indexer.protocolMessages")}</p>
+                <p className="text-xs text-muted-foreground">{t('indexer.title')}</p>
+                <p className="text-sm font-medium text-foreground">
+                  {t('indexer.protocolMessages')}
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-1 text-[10px] text-success">
               <Activity className="w-2.5 h-2.5 animate-pulse" />
-              {t("indexer.live")}
+              {t('indexer.live')}
             </div>
           </div>
         </div>
@@ -160,19 +166,19 @@ export function IndexerStatsWidget() {
             <p className="text-sm font-bold font-tabular text-foreground">
               {totalMessages.toLocaleString()}
             </p>
-            <p className="text-[10px] text-muted-foreground">{t("indexer.messages")}</p>
+            <p className="text-[10px] text-muted-foreground">{t('indexer.messages')}</p>
           </div>
           <div className="py-2 px-3 text-center">
             <p className="text-sm font-bold font-tabular text-foreground">
               {stats.total_blocks_with_messages.toLocaleString()}
             </p>
-            <p className="text-[10px] text-muted-foreground">{t("indexer.blocks")}</p>
+            <p className="text-[10px] text-muted-foreground">{t('indexer.blocks')}</p>
           </div>
           <div className="py-2 px-3 text-center">
             <p className="text-sm font-bold font-tabular text-foreground">
-              {stats.last_indexed_block?.toLocaleString() || "-"}
+              {stats.last_indexed_block?.toLocaleString() || '-'}
             </p>
-            <p className="text-[10px] text-muted-foreground">{t("indexer.lastBlock")}</p>
+            <p className="text-[10px] text-muted-foreground">{t('indexer.lastBlock')}</p>
           </div>
         </div>
 
@@ -182,17 +188,22 @@ export function IndexerStatsWidget() {
           <div className="p-3">
             <div className="flex items-center gap-1 mb-2 text-[10px] text-muted-foreground">
               <TrendingUp className="w-2.5 h-2.5" />
-              {t("indexer.messageTypes")}
+              {t('indexer.messageTypes')}
             </div>
             <div className="space-y-1">
               {topKinds.map((kind) => {
                 const Icon = kindIcons[kind.kind_name] || MessageSquare;
-                const colorClass = kindColors[kind.kind_name] || "text-gray-500 bg-gray-500/10";
-                
+                const colorClass = kindColors[kind.kind_name] || 'text-gray-500 bg-gray-500/10';
+
                 return (
                   <div key={kind.kind} className="flex items-center justify-between">
                     <div className="flex items-center gap-1">
-                      <div className={cn("w-4 h-4 rounded flex items-center justify-center", colorClass)}>
+                      <div
+                        className={cn(
+                          'w-4 h-4 rounded flex items-center justify-center',
+                          colorClass
+                        )}
+                      >
                         <Icon className="w-2.5 h-2.5" />
                       </div>
                       <span className="text-[10px] text-foreground">{kind.kind_name}</span>
@@ -210,20 +221,25 @@ export function IndexerStatsWidget() {
           <div className="p-3">
             <div className="flex items-center gap-1 mb-2 text-[10px] text-muted-foreground">
               <Box className="w-2.5 h-2.5" />
-              {t("indexer.carrierTypes")}
+              {t('indexer.carrierTypes')}
             </div>
             <div className="space-y-1">
               {topCarriers.map((carrier) => {
                 const Icon = carrierIcons[carrier.carrier_name] || Box;
-                const colorClass = carrierColors[carrier.carrier_name] || "text-gray-500 bg-gray-500/10";
-                const percentage = totalMessages > 0 
-                  ? ((carrier.count / totalMessages) * 100).toFixed(0)
-                  : "0";
-                
+                const colorClass =
+                  carrierColors[carrier.carrier_name] || 'text-gray-500 bg-gray-500/10';
+                const percentage =
+                  totalMessages > 0 ? ((carrier.count / totalMessages) * 100).toFixed(0) : '0';
+
                 return (
                   <div key={carrier.carrier} className="flex items-center justify-between">
                     <div className="flex items-center gap-1">
-                      <div className={cn("w-4 h-4 rounded flex items-center justify-center", colorClass)}>
+                      <div
+                        className={cn(
+                          'w-4 h-4 rounded flex items-center justify-center',
+                          colorClass
+                        )}
+                      >
                         <Icon className="w-2.5 h-2.5" />
                       </div>
                       <span className="text-[10px] text-foreground">{carrier.carrier_name}</span>

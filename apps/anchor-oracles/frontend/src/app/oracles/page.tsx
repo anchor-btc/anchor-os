@@ -1,31 +1,31 @@
-"use client";
+'use client';
 
-import { useQuery } from "@tanstack/react-query";
-import { Search } from "lucide-react";
-import { useState } from "react";
-import { fetchOracles, fetchCategories } from "@/lib/api";
-import { OracleCard } from "@/components";
+import { useQuery } from '@tanstack/react-query';
+import { Search } from 'lucide-react';
+import { useState } from 'react';
+import { fetchOracles, fetchCategories } from '@/lib/api';
+import { OracleCard } from '@/components';
 
 export default function OraclesPage() {
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
 
   const { data: oracles, isLoading } = useQuery({
-    queryKey: ["oracles", 100],
+    queryKey: ['oracles', 100],
     queryFn: () => fetchOracles(100),
   });
 
   const { data: categories } = useQuery({
-    queryKey: ["categories"],
+    queryKey: ['categories'],
     queryFn: fetchCategories,
   });
 
   const filteredOracles = oracles?.filter((oracle) => {
-    const matchesSearch = !search || 
+    const matchesSearch =
+      !search ||
       oracle.name.toLowerCase().includes(search.toLowerCase()) ||
       oracle.pubkey.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory = !selectedCategory || 
-      (oracle.categories & selectedCategory) !== 0;
+    const matchesCategory = !selectedCategory || (oracle.categories & selectedCategory) !== 0;
     return matchesSearch && matchesCategory;
   });
 
@@ -53,8 +53,8 @@ export default function OraclesPage() {
             onClick={() => setSelectedCategory(null)}
             className={`px-3 py-2 rounded-lg text-sm transition-colors ${
               !selectedCategory
-                ? "bg-purple-600 text-white"
-                : "bg-white/5 text-gray-400 hover:text-white"
+                ? 'bg-purple-600 text-white'
+                : 'bg-white/5 text-gray-400 hover:text-white'
             }`}
           >
             All
@@ -65,8 +65,8 @@ export default function OraclesPage() {
               onClick={() => setSelectedCategory(cat.id === selectedCategory ? null : cat.id)}
               className={`px-3 py-2 rounded-lg text-sm transition-colors ${
                 selectedCategory === cat.id
-                  ? "bg-purple-600 text-white"
-                  : "bg-white/5 text-gray-400 hover:text-white"
+                  ? 'bg-purple-600 text-white'
+                  : 'bg-white/5 text-gray-400 hover:text-white'
               }`}
             >
               {cat.name}
@@ -84,13 +84,10 @@ export default function OraclesPage() {
             <OracleCard key={oracle.id} oracle={oracle} />
           ))}
           {(!filteredOracles || filteredOracles.length === 0) && (
-            <div className="col-span-full text-center py-12 text-gray-400">
-              No oracles found
-            </div>
+            <div className="col-span-full text-center py-12 text-gray-400">No oracles found</div>
           )}
         </div>
       )}
     </div>
   );
 }
-

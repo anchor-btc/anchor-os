@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { motion } from "framer-motion";
-import { coreFeatures } from "@/lib/apps-data";
+import { motion } from 'framer-motion';
+import { coreFeatures } from '@/lib/apps-data';
 
 export function FeaturesGrid() {
   return (
@@ -22,8 +22,8 @@ export function FeaturesGrid() {
             <span className="text-gradient">Core Features</span>
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
-            Everything you need to run a complete Bitcoin infrastructure. 
-            Built for sovereignty, designed for simplicity.
+            Everything you need to run a complete Bitcoin infrastructure. Built for sovereignty,
+            designed for simplicity.
           </p>
         </motion.div>
 
@@ -36,26 +36,26 @@ export function FeaturesGrid() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className={`group relative ${
-                index === 0 ? "md:col-span-2 lg:col-span-1" : ""
-              }`}
+              className={`group relative ${index === 0 ? 'md:col-span-2 lg:col-span-1' : ''}`}
             >
               <div className="glass-card p-8 h-full transition-all duration-300 group-hover:bg-white/10 overflow-hidden">
                 {/* Background gradient */}
-                <div 
+                <div
                   className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${feature.color} opacity-10 blur-3xl group-hover:opacity-20 transition-opacity`}
                 />
-                
+
                 {/* Icon */}
-                <div className={`relative w-16 h-16 rounded-2xl bg-gradient-to-br ${feature.color} flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                <div
+                  className={`relative w-16 h-16 rounded-2xl bg-gradient-to-br ${feature.color} flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform duration-300`}
+                >
                   {feature.icon}
                 </div>
-                
+
                 {/* Title */}
                 <h3 className="relative text-xl font-bold mb-3 group-hover:text-primary transition-colors">
                   {feature.title}
                 </h3>
-                
+
                 {/* Description */}
                 <p className="relative text-muted-foreground leading-relaxed">
                   {feature.description}
@@ -68,4 +68,3 @@ export function FeaturesGrid() {
     </section>
   );
 }
-

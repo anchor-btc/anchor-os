@@ -26,4 +26,3 @@ impl Database {
         Ok(())
     }
 }
-

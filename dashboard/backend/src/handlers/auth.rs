@@ -4,12 +4,8 @@ use argon2::{
     password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
 };
-use axum::{
-    extract::State,
-    http::StatusCode,
-    Json,
-};
-use jsonwebtoken::{encode, decode, Header, Validation, EncodingKey, DecodingKey};
+use axum::{extract::State, http::StatusCode, Json};
+use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sqlx::Row;
@@ -96,7 +92,10 @@ pub async fn get_auth_status(
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<AuthStatusResponse>, (StatusCode, String)> {
     let pool = state.db_pool.as_ref().ok_or_else(|| {
-        (StatusCode::SERVICE_UNAVAILABLE, "Database not available".to_string())
+        (
+            StatusCode::SERVICE_UNAVAILABLE,
+            "Database not available".to_string(),
+        )
     })?;
 
     let row = sqlx::query("SELECT value FROM system_settings WHERE key = 'auth'")
@@ -107,10 +106,19 @@ pub async fn get_auth_status(
     match row {
         Some(r) => {
             let value: serde_json::Value = r.get("value");
-            let enabled = value.get("enabled").and_then(|v| v.as_bool()).unwrap_or(false);
-            let has_password = value.get("password_hash").map(|v| !v.is_null()).unwrap_or(false);
-            let inactivity_timeout = value.get("inactivity_timeout").and_then(|v| v.as_i64()).unwrap_or(300);
-            
+            let enabled = value
+                .get("enabled")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false);
+            let has_password = value
+                .get("password_hash")
+                .map(|v| !v.is_null())
+                .unwrap_or(false);
+            let inactivity_timeout = value
+                .get("inactivity_timeout")
+                .and_then(|v| v.as_i64())
+                .unwrap_or(300);
+
             Ok(Json(AuthStatusResponse {
                 enabled,
                 has_password,
@@ -140,7 +148,10 @@ pub async fn setup_password(
     Json(req): Json<SetupPasswordRequest>,
 ) -> Result<Json<AuthActionResponse>, (StatusCode, String)> {
     let pool = state.db_pool.as_ref().ok_or_else(|| {
-        (StatusCode::SERVICE_UNAVAILABLE, "Database not available".to_string())
+        (
+            StatusCode::SERVICE_UNAVAILABLE,
+            "Database not available".to_string(),
+        )
     })?;
 
     // Hash the password
@@ -186,7 +197,10 @@ pub async fn login(
     Json(req): Json<LoginRequest>,
 ) -> Result<Json<LoginResponse>, (StatusCode, String)> {
     let pool = state.db_pool.as_ref().ok_or_else(|| {
-        (StatusCode::SERVICE_UNAVAILABLE, "Database not available".to_string())
+        (
+            StatusCode::SERVICE_UNAVAILABLE,
+            "Database not available".to_string(),
+        )
     })?;
 
     let row = sqlx::query("SELECT value FROM system_settings WHERE key = 'auth'")
@@ -198,7 +212,10 @@ pub async fn login(
         .ok_or_else(|| (StatusCode::UNAUTHORIZED, "Auth not configured".to_string()))?
         .get("value");
 
-    let enabled = auth_value.get("enabled").and_then(|v| v.as_bool()).unwrap_or(false);
+    let enabled = auth_value
+        .get("enabled")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
     if !enabled {
         return Ok(Json(LoginResponse {
             success: true,
@@ -207,25 +224,24 @@ pub async fn login(
         }));
     }
 
-    let stored_hash = match auth_value
-        .get("password_hash")
-        .and_then(|v| v.as_str()) {
-            Some(h) => h,
-            None => {
-                // No password set but auth is enabled - this is an inconsistent state
-                // Return a proper JSON response so frontend can handle it
-                return Ok(Json(LoginResponse {
-                    success: false,
-                    token: None,
-                    message: "No password has been set. Please configure a password in Settings.".to_string(),
-                }));
-            }
-        };
+    let stored_hash = match auth_value.get("password_hash").and_then(|v| v.as_str()) {
+        Some(h) => h,
+        None => {
+            // No password set but auth is enabled - this is an inconsistent state
+            // Return a proper JSON response so frontend can handle it
+            return Ok(Json(LoginResponse {
+                success: false,
+                token: None,
+                message: "No password has been set. Please configure a password in Settings."
+                    .to_string(),
+            }));
+        }
+    };
 
     // Verify password
     let parsed_hash = PasswordHash::new(stored_hash)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-    
+
     let is_valid = Argon2::default()
         .verify_password(req.password.as_bytes(), &parsed_hash)
         .is_ok();
@@ -273,9 +289,7 @@ pub async fn login(
     ),
     tag = "Auth"
 )]
-pub async fn verify_token(
-    Json(req): Json<VerifyTokenRequest>,
-) -> Json<VerifyTokenResponse> {
+pub async fn verify_token(Json(req): Json<VerifyTokenRequest>) -> Json<VerifyTokenResponse> {
     let validation = Validation::default();
     let is_valid = decode::<Claims>(
         &req.token,
@@ -302,7 +316,10 @@ pub async fn change_password(
     Json(req): Json<ChangePasswordRequest>,
 ) -> Result<Json<AuthActionResponse>, (StatusCode, String)> {
     let pool = state.db_pool.as_ref().ok_or_else(|| {
-        (StatusCode::SERVICE_UNAVAILABLE, "Database not available".to_string())
+        (
+            StatusCode::SERVICE_UNAVAILABLE,
+            "Database not available".to_string(),
+        )
     })?;
 
     // Get current auth settings
@@ -323,7 +340,7 @@ pub async fn change_password(
     // Verify current password
     let parsed_hash = PasswordHash::new(stored_hash)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-    
+
     let is_valid = Argon2::default()
         .verify_password(req.current_password.as_bytes(), &parsed_hash)
         .is_ok();
@@ -344,7 +361,10 @@ pub async fn change_password(
         .to_string();
 
     // Update password hash
-    let timeout = auth_value.get("inactivity_timeout").and_then(|v| v.as_i64()).unwrap_or(300);
+    let timeout = auth_value
+        .get("inactivity_timeout")
+        .and_then(|v| v.as_i64())
+        .unwrap_or(300);
     let new_auth_value = json!({
         "enabled": true,
         "password_hash": new_hash,
@@ -376,7 +396,10 @@ pub async fn disable_auth(
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<AuthActionResponse>, (StatusCode, String)> {
     let pool = state.db_pool.as_ref().ok_or_else(|| {
-        (StatusCode::SERVICE_UNAVAILABLE, "Database not available".to_string())
+        (
+            StatusCode::SERVICE_UNAVAILABLE,
+            "Database not available".to_string(),
+        )
     })?;
 
     let auth_value = json!({
@@ -396,9 +419,3 @@ pub async fn disable_auth(
         message: "Authentication disabled".to_string(),
     }))
 }
-
-
-
-
-
-

@@ -1,11 +1,10 @@
-"use client";
+'use client';
 
-import { useTranslation } from "react-i18next";
-import { Button } from "@/components/ui/button";
-import { InstallationPreset, ServiceDefinition, ServiceCategory } from "@/lib/api";
-import { categoryLabels } from "@/lib/service-rules";
-import { ChevronLeft, AlertCircle, Check, Download } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useTranslation } from 'react-i18next';
+import { Button } from '@/components/ui/button';
+import { InstallationPreset, ServiceDefinition, ServiceCategory } from '@/lib/api';
+import { categoryLabels } from '@/lib/service-rules';
+import { ChevronLeft, AlertCircle, Check, Download } from 'lucide-react';
 
 interface ReviewStepProps {
   preset: InstallationPreset;
@@ -17,12 +16,12 @@ interface ReviewStepProps {
 }
 
 const categoryOrder: ServiceCategory[] = [
-  "core",
-  "dashboard",
-  "explorer",
-  "networking",
-  "monitoring",
-  "app",
+  'core',
+  'dashboard',
+  'explorer',
+  'networking',
+  'monitoring',
+  'app',
 ];
 
 export function ReviewStep({
@@ -35,32 +34,33 @@ export function ReviewStep({
 }: ReviewStepProps) {
   const { t } = useTranslation();
 
-  const selectedServiceDetails = availableServices.filter((s) =>
-    selectedServices.includes(s.id)
+  const selectedServiceDetails = availableServices.filter((s) => selectedServices.includes(s.id));
+
+  const groupedServices = selectedServiceDetails.reduce(
+    (acc, service) => {
+      if (!acc[service.category]) {
+        acc[service.category] = [];
+      }
+      acc[service.category].push(service);
+      return acc;
+    },
+    {} as Record<ServiceCategory, ServiceDefinition[]>
   );
 
-  const groupedServices = selectedServiceDetails.reduce((acc, service) => {
-    if (!acc[service.category]) {
-      acc[service.category] = [];
-    }
-    acc[service.category].push(service);
-    return acc;
-  }, {} as Record<ServiceCategory, ServiceDefinition[]>);
-
   const presetNames: Record<InstallationPreset, string> = {
-    minimum: t("setup.preset.minimum", "Minimum"),
-    default: t("setup.preset.default", "Default"),
-    full: t("setup.preset.full", "Full"),
-    custom: t("setup.preset.custom", "Custom"),
+    minimum: t('setup.preset.minimum', 'Minimum'),
+    default: t('setup.preset.default', 'Default'),
+    full: t('setup.preset.full', 'Full'),
+    custom: t('setup.preset.custom', 'Custom'),
   };
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold">{t("setup.review.title", "Review Installation")}</h2>
+        <h2 className="text-2xl font-bold">{t('setup.review.title', 'Review Installation')}</h2>
         <p className="text-muted-foreground">
-          {t("setup.review.description", "Review the services that will be installed")}
+          {t('setup.review.description', 'Review the services that will be installed')}
         </p>
       </div>
 
@@ -76,7 +76,7 @@ export function ReviewStep({
       <div className="flex justify-center">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary">
           <span className="text-sm font-medium">
-            {t("setup.review.preset", "Preset")}: {presetNames[preset]}
+            {t('setup.review.preset', 'Preset')}: {presetNames[preset]}
           </span>
         </div>
       </div>
@@ -95,15 +95,12 @@ export function ReviewStep({
                 </h4>
                 <div className="space-y-1">
                   {categoryServices.map((service) => (
-                    <div
-                      key={service.id}
-                      className="flex items-center gap-2 text-sm"
-                    >
+                    <div key={service.id} className="flex items-center gap-2 text-sm">
                       <Check className="w-4 h-4 text-green-500" />
                       <span>{service.name}</span>
                       {service.required && (
                         <span className="text-xs px-1.5 py-0.5 rounded bg-primary/10 text-primary">
-                          {t("setup.review.required", "Required")}
+                          {t('setup.review.required', 'Required')}
                         </span>
                       )}
                     </div>
@@ -120,7 +117,7 @@ export function ReviewStep({
         <div>
           <div className="text-2xl font-bold text-primary">{selectedServices.length}</div>
           <div className="text-sm text-muted-foreground">
-            {t("setup.review.services", "Services")}
+            {t('setup.review.services', 'Services')}
           </div>
         </div>
         <div>
@@ -128,7 +125,7 @@ export function ReviewStep({
             {selectedServiceDetails.reduce((acc, s) => acc + s.containers.length, 0)}
           </div>
           <div className="text-sm text-muted-foreground">
-            {t("setup.review.containers", "Containers")}
+            {t('setup.review.containers', 'Containers')}
           </div>
         </div>
       </div>
@@ -137,11 +134,11 @@ export function ReviewStep({
       <div className="flex justify-between pt-4">
         <Button variant="outline" onClick={onBack}>
           <ChevronLeft className="w-4 h-4 mr-2" />
-          {t("common.back", "Back")}
+          {t('common.back', 'Back')}
         </Button>
         <Button onClick={onInstall} className="px-6">
           <Download className="w-4 h-4 mr-2" />
-          {t("setup.review.install", "Install")}
+          {t('setup.review.install', 'Install')}
         </Button>
       </div>
     </div>

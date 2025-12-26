@@ -8,12 +8,12 @@
   html {
     scroll-behavior: smooth;
   }
-  
+
   body {
     @apply bg-background text-foreground antialiased;
     background: linear-gradient(135deg, #09090b 0%, #18181b 50%, #09090b 100%);
   }
-  
+
   ::selection {
     @apply bg-primary/30 text-primary;
   }
@@ -23,40 +23,44 @@
   .glass-card {
     @apply bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl;
   }
-  
+
   .glow-primary {
     box-shadow: 0 0 40px rgba(249, 115, 22, 0.2);
   }
-  
+
   .glow-primary-strong {
     box-shadow: 0 0 60px rgba(249, 115, 22, 0.3);
   }
-  
+
   .glow-primary-subtle {
     box-shadow: 0 0 20px rgba(249, 115, 22, 0.1);
   }
-  
+
   .glow-primary-subtle:hover {
     box-shadow: 0 0 30px rgba(249, 115, 22, 0.2);
   }
-  
+
   .text-gradient {
     @apply bg-gradient-to-r from-primary to-amber-400 bg-clip-text text-transparent;
   }
-  
+
   .gradient-border {
     position: relative;
   }
-  
+
   .gradient-border::before {
-    content: "";
+    content: '';
     position: absolute;
     inset: 0;
     padding: 1px;
     border-radius: inherit;
     background: linear-gradient(135deg, rgba(249, 115, 22, 0.5), rgba(251, 191, 36, 0.2));
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     pointer-events: none;
@@ -81,7 +85,8 @@
 }
 
 @keyframes float-particle {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0) translateX(0);
     opacity: 0.3;
   }
@@ -90,4 +95,3 @@
     opacity: 0.8;
   }
 }
-

@@ -97,4 +97,3 @@ pub struct ResolvedAnchor {
     /// Whether the anchor is orphan (no matches)
     pub is_orphan: bool,
 }
-

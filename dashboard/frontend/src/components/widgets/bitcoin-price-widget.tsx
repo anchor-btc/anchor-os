@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useQuery } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
-import { Loader2, Bitcoin } from "lucide-react";
+import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
+import { Loader2, Bitcoin } from 'lucide-react';
 
 interface PriceData {
   USD: number;
@@ -11,15 +11,15 @@ interface PriceData {
 }
 
 async function fetchBitcoinPrice(): Promise<PriceData> {
-  const res = await fetch("http://localhost:4000/api/v1/prices");
-  if (!res.ok) throw new Error("Failed to fetch price");
+  const res = await fetch('http://localhost:4000/api/v1/prices');
+  if (!res.ok) throw new Error('Failed to fetch price');
   return res.json();
 }
 
 export function BitcoinPriceWidget() {
   const { t } = useTranslation();
   const { data, isLoading, error } = useQuery({
-    queryKey: ["bitcoin-price"],
+    queryKey: ['bitcoin-price'],
     queryFn: fetchBitcoinPrice,
     refetchInterval: 60000,
   });
@@ -42,8 +42,8 @@ export function BitcoinPriceWidget() {
             <Bitcoin className="w-4 h-4 text-orange-500" />
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">{t("widgets.btcPrice")}</p>
-            <p className="text-sm text-muted-foreground">{t("widgets.unavailable")}</p>
+            <p className="text-xs text-muted-foreground">{t('widgets.btcPrice')}</p>
+            <p className="text-sm text-muted-foreground">{t('widgets.unavailable')}</p>
           </div>
         </div>
       </div>
@@ -51,9 +51,9 @@ export function BitcoinPriceWidget() {
   }
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(price);
@@ -67,10 +67,8 @@ export function BitcoinPriceWidget() {
             <Bitcoin className="w-4 h-4 text-orange-500" />
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">{t("widgets.bitcoinPrice")}</p>
-            <p className="text-lg font-bold text-foreground">
-              {formatPrice(data.USD)}
-            </p>
+            <p className="text-xs text-muted-foreground">{t('widgets.bitcoinPrice')}</p>
+            <p className="text-lg font-bold text-foreground">{formatPrice(data.USD)}</p>
           </div>
         </div>
       </div>
@@ -78,11 +76,11 @@ export function BitcoinPriceWidget() {
       <div className="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-border">
         <div>
           <p className="text-[10px] text-muted-foreground">EUR</p>
-          <p className="text-xs font-medium">€{data.EUR?.toLocaleString() || "-"}</p>
+          <p className="text-xs font-medium">€{data.EUR?.toLocaleString() || '-'}</p>
         </div>
         <div>
           <p className="text-[10px] text-muted-foreground">GBP</p>
-          <p className="text-xs font-medium">£{data.GBP?.toLocaleString() || "-"}</p>
+          <p className="text-xs font-medium">£{data.GBP?.toLocaleString() || '-'}</p>
         </div>
       </div>
     </div>

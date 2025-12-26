@@ -166,4 +166,3 @@ impl FilterParams {
         (self.page - 1) * self.per_page
     }
 }
-

@@ -1,13 +1,19 @@
-"use client";
+'use client';
 
-import { useCallback, useRef, useState, useMemo } from "react";
-import { Upload, X, Check, Loader2, ZoomIn, ZoomOut, Maximize2, Move } from "lucide-react";
-import { type Pixel, CANVAS_WIDTH, CANVAS_HEIGHT, calculatePayloadSize, CARRIER_INFO } from "@/lib/api";
+import { useCallback, useRef, useState, useMemo } from 'react';
+import { Upload, X, Check, Loader2, ZoomIn, ZoomOut, Maximize2, Move } from 'lucide-react';
+import {
+  type Pixel,
+  CANVAS_WIDTH,
+  CANVAS_HEIGHT,
+  calculatePayloadSize,
+  CARRIER_INFO,
+} from '@/lib/api';
 
 // Export the preview type for canvas integration
 export interface ImagePreview {
-  pixels: Pixel[];          // Current pixels with offset applied
-  originalPixels: Pixel[];  // Original pixels at (0,0) origin for recalculation
+  pixels: Pixel[]; // Current pixels with offset applied
+  originalPixels: Pixel[]; // Original pixels at (0,0) origin for recalculation
   offsetX: number;
   offsetY: number;
   width: number;
@@ -23,14 +29,14 @@ interface ImageUploadProps {
 
 // Preset sizes for quick resize
 const PRESETS = [
-  { name: "Tiny", width: 32, height: 32 },
-  { name: "Small", width: 64, height: 64 },
-  { name: "Medium", width: 128, height: 128 },
-  { name: "Large", width: 256, height: 256 },
-  { name: "XL", width: 512, height: 512 },
+  { name: 'Tiny', width: 32, height: 32 },
+  { name: 'Small', width: 64, height: 64 },
+  { name: 'Medium', width: 128, height: 128 },
+  { name: 'Large', width: 256, height: 256 },
+  { name: 'XL', width: 512, height: 512 },
 ];
 
-export function ImageUpload({ onImport, onPreview, hasActivePreview }: ImageUploadProps) {
+export function ImageUpload({ onImport, onPreview }: ImageUploadProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [originalDimensions, setOriginalDimensions] = useState({ width: 0, height: 0 });
@@ -46,7 +52,7 @@ export function ImageUpload({ onImport, onPreview, hasActivePreview }: ImageUplo
   const [pixelCount, setPixelCount] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  
+
   // Calculate estimated costs
   const payloadSize = useMemo(() => calculatePayloadSize(pixelCount), [pixelCount]);
   const maxBytes = CARRIER_INFO.inscription.maxBytes;
@@ -61,7 +67,7 @@ export function ImageUpload({ onImport, onPreview, hasActivePreview }: ImageUplo
     reader.onload = (event) => {
       const dataUrl = event.target?.result as string;
       setPreview(dataUrl);
-      
+
       // Get original dimensions
       const img = new Image();
       img.onload = () => {
@@ -69,16 +75,16 @@ export function ImageUpload({ onImport, onPreview, hasActivePreview }: ImageUplo
         // Auto-set max dimensions based on image aspect ratio
         const aspectRatio = img.width / img.height;
         if (aspectRatio > 1) {
-          setSettings(s => ({ 
-            ...s, 
-            maxWidth: Math.min(128, img.width), 
-            maxHeight: Math.min(Math.round(128 / aspectRatio), img.height) 
+          setSettings((s) => ({
+            ...s,
+            maxWidth: Math.min(128, img.width),
+            maxHeight: Math.min(Math.round(128 / aspectRatio), img.height),
           }));
         } else {
-          setSettings(s => ({ 
-            ...s, 
-            maxWidth: Math.min(Math.round(128 * aspectRatio), img.width), 
-            maxHeight: Math.min(128, img.height) 
+          setSettings((s) => ({
+            ...s,
+            maxWidth: Math.min(Math.round(128 * aspectRatio), img.width),
+            maxHeight: Math.min(128, img.height),
           }));
         }
       };
@@ -100,18 +106,14 @@ export function ImageUpload({ onImport, onPreview, hasActivePreview }: ImageUplo
         }
 
         // Calculate scaled dimensions
-        const scale = Math.min(
-          settings.maxWidth / img.width,
-          settings.maxHeight / img.height,
-          1
-        );
+        const scale = Math.min(settings.maxWidth / img.width, settings.maxHeight / img.height, 1);
         const width = Math.floor(img.width * scale);
         const height = Math.floor(img.height * scale);
 
         canvas.width = width;
         canvas.height = height;
 
-        const ctx = canvas.getContext("2d");
+        const ctx = canvas.getContext('2d');
         if (!ctx) {
           resolve([]);
           return;
@@ -156,7 +158,11 @@ export function ImageUpload({ onImport, onPreview, hasActivePreview }: ImageUplo
   }, [preview, settings]);
 
   // Process image and return pixels at origin (0,0) for preview mode
-  const processImageAtOrigin = useCallback(async (): Promise<{ pixels: Pixel[]; width: number; height: number }> => {
+  const processImageAtOrigin = useCallback(async (): Promise<{
+    pixels: Pixel[];
+    width: number;
+    height: number;
+  }> => {
     if (!preview) return { pixels: [], width: 0, height: 0 };
 
     return new Promise((resolve) => {
@@ -168,18 +174,14 @@ export function ImageUpload({ onImport, onPreview, hasActivePreview }: ImageUplo
           return;
         }
 
-        const scale = Math.min(
-          settings.maxWidth / img.width,
-          settings.maxHeight / img.height,
-          1
-        );
+        const scale = Math.min(settings.maxWidth / img.width, settings.maxHeight / img.height, 1);
         const width = Math.floor(img.width * scale);
         const height = Math.floor(img.height * scale);
 
         canvas.width = width;
         canvas.height = height;
 
-        const ctx = canvas.getContext("2d");
+        const ctx = canvas.getContext('2d');
         if (!ctx) {
           resolve({ pixels: [], width: 0, height: 0 });
           return;
@@ -222,21 +224,23 @@ export function ImageUpload({ onImport, onPreview, hasActivePreview }: ImageUplo
   // Send preview to canvas for interactive positioning
   const handlePreviewOnCanvas = useCallback(async () => {
     if (!onPreview) return;
-    
+
     setProcessing(true);
     const { pixels: originalPixels, width, height } = await processImageAtOrigin();
-    
+
     // Apply current offset to pixels
     const offsetX = settings.x;
     const offsetY = settings.y;
-    const pixels = originalPixels.map(p => ({
-      ...p,
-      x: p.x + offsetX,
-      y: p.y + offsetY,
-    })).filter(p => p.x >= 0 && p.x < CANVAS_WIDTH && p.y >= 0 && p.y < CANVAS_HEIGHT);
-    
+    const pixels = originalPixels
+      .map((p) => ({
+        ...p,
+        x: p.x + offsetX,
+        y: p.y + offsetY,
+      }))
+      .filter((p) => p.x >= 0 && p.x < CANVAS_WIDTH && p.y >= 0 && p.y < CANVAS_HEIGHT);
+
     setPixelCount(pixels.length);
-    
+
     onPreview({
       pixels,
       originalPixels,
@@ -245,7 +249,7 @@ export function ImageUpload({ onImport, onPreview, hasActivePreview }: ImageUplo
       width,
       height,
     });
-    
+
     setIsOpen(false);
     setProcessing(false);
   }, [onPreview, processImageAtOrigin, settings.x, settings.y]);
@@ -303,11 +307,7 @@ export function ImageUpload({ onImport, onPreview, hasActivePreview }: ImageUplo
         ) : (
           <div className="space-y-4">
             <div className="relative aspect-video bg-secondary rounded-lg overflow-hidden">
-              <img
-                src={preview}
-                alt="Preview"
-                className="w-full h-full object-contain"
-              />
+              <img src={preview} alt="Preview" className="w-full h-full object-contain" />
               <div className="absolute top-2 left-2 bg-black/70 px-2 py-1 rounded text-xs">
                 {originalDimensions.width} x {originalDimensions.height}
               </div>
@@ -323,23 +323,23 @@ export function ImageUpload({ onImport, onPreview, hasActivePreview }: ImageUplo
                     onClick={() => {
                       const aspectRatio = originalDimensions.width / originalDimensions.height;
                       if (aspectRatio > 1) {
-                        setSettings(s => ({ 
-                          ...s, 
-                          maxWidth: preset.width, 
-                          maxHeight: Math.round(preset.width / aspectRatio) 
+                        setSettings((s) => ({
+                          ...s,
+                          maxWidth: preset.width,
+                          maxHeight: Math.round(preset.width / aspectRatio),
                         }));
                       } else {
-                        setSettings(s => ({ 
-                          ...s, 
-                          maxWidth: Math.round(preset.height * aspectRatio), 
-                          maxHeight: preset.height 
+                        setSettings((s) => ({
+                          ...s,
+                          maxWidth: Math.round(preset.height * aspectRatio),
+                          maxHeight: preset.height,
                         }));
                       }
                     }}
                     className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
                       settings.maxWidth === preset.width || settings.maxHeight === preset.height
-                        ? "bg-primary text-black"
-                        : "bg-secondary hover:bg-secondary/80"
+                        ? 'bg-primary text-black'
+                        : 'bg-secondary hover:bg-secondary/80'
                     }`}
                   >
                     {preset.name} ({preset.width}px)
@@ -379,7 +379,9 @@ export function ImageUpload({ onImport, onPreview, hasActivePreview }: ImageUplo
                 <input
                   type="number"
                   value={settings.maxWidth}
-                  onChange={(e) => setSettings({ ...settings, maxWidth: parseInt(e.target.value) || 10 })}
+                  onChange={(e) =>
+                    setSettings({ ...settings, maxWidth: parseInt(e.target.value) || 10 })
+                  }
                   min={1}
                   max={1000}
                   className="w-full px-3 py-2 bg-secondary rounded-lg text-sm"
@@ -393,7 +395,9 @@ export function ImageUpload({ onImport, onPreview, hasActivePreview }: ImageUplo
                 <input
                   type="number"
                   value={settings.maxHeight}
-                  onChange={(e) => setSettings({ ...settings, maxHeight: parseInt(e.target.value) || 10 })}
+                  onChange={(e) =>
+                    setSettings({ ...settings, maxHeight: parseInt(e.target.value) || 10 })
+                  }
                   min={1}
                   max={1000}
                   className="w-full px-3 py-2 bg-secondary rounded-lg text-sm"
@@ -423,14 +427,18 @@ export function ImageUpload({ onImport, onPreview, hasActivePreview }: ImageUplo
             <div className="bg-secondary/50 rounded-lg p-3 space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-400">Pixels:</span>
-                <span className={`font-mono ${isPayloadTooLarge ? "text-red-400" : "text-primary"}`}>
-                  {pixelCount > 0 ? pixelCount.toLocaleString() : "—"}
+                <span
+                  className={`font-mono ${isPayloadTooLarge ? 'text-red-400' : 'text-primary'}`}
+                >
+                  {pixelCount > 0 ? pixelCount.toLocaleString() : '—'}
                 </span>
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-400">Payload size:</span>
-                <span className={`font-mono ${isPayloadTooLarge ? "text-red-400" : "text-gray-300"}`}>
-                  {payloadSize > 0 ? `${(payloadSize / 1024).toFixed(1)} KB` : "—"}
+                <span
+                  className={`font-mono ${isPayloadTooLarge ? 'text-red-400' : 'text-gray-300'}`}
+                >
+                  {payloadSize > 0 ? `${(payloadSize / 1024).toFixed(1)} KB` : '—'}
                 </span>
               </div>
               <div className="flex items-center justify-between text-sm">
@@ -440,9 +448,7 @@ export function ImageUpload({ onImport, onPreview, hasActivePreview }: ImageUplo
                 </span>
               </div>
               {isPayloadTooLarge && (
-                <div className="text-xs text-red-400 mt-2">
-                  ⚠️ Too large! Reduce image size.
-                </div>
+                <div className="text-xs text-red-400 mt-2">⚠️ Too large! Reduce image size.</div>
               )}
             </div>
 
@@ -453,7 +459,11 @@ export function ImageUpload({ onImport, onPreview, hasActivePreview }: ImageUplo
                   disabled={processing}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors disabled:opacity-50"
                 >
-                  {processing ? <Loader2 className="animate-spin" size={16} /> : <ZoomIn size={16} />}
+                  {processing ? (
+                    <Loader2 className="animate-spin" size={16} />
+                  ) : (
+                    <ZoomIn size={16} />
+                  )}
                   Count Pixels
                 </button>
                 <button
@@ -461,11 +471,15 @@ export function ImageUpload({ onImport, onPreview, hasActivePreview }: ImageUplo
                   disabled={processing || pixelCount === 0 || isPayloadTooLarge}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-primary hover:bg-primary/80 transition-colors disabled:opacity-50"
                 >
-                  {processing ? <Loader2 className="animate-spin" size={16} /> : <Check size={16} />}
-                  Import {pixelCount > 0 ? `${pixelCount.toLocaleString()}` : ""}
+                  {processing ? (
+                    <Loader2 className="animate-spin" size={16} />
+                  ) : (
+                    <Check size={16} />
+                  )}
+                  Import {pixelCount > 0 ? `${pixelCount.toLocaleString()}` : ''}
                 </button>
               </div>
-              
+
               {/* Preview on canvas for interactive positioning */}
               {onPreview && (
                 <button
@@ -497,4 +511,3 @@ export function ImageUpload({ onImport, onPreview, hasActivePreview }: ImageUplo
     </div>
   );
 }
-

@@ -1,20 +1,24 @@
-"use client";
+'use client';
 
-import { useParams, useSearchParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
-import Link from "next/link";
-import { Certificate } from "@/components/certificate";
-import { getProofByHash } from "@/lib/api";
-import { ArrowLeft, Loader2, XCircle } from "lucide-react";
+import { useParams, useSearchParams } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
+import { Certificate } from '@/components/certificate';
+import { getProofByHash } from '@/lib/api';
+import { ArrowLeft, Loader2, XCircle } from 'lucide-react';
 
 export default function CertificatePage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const hash = params.hash as string;
-  const algo = searchParams.get("algo") || undefined;
+  const algo = searchParams.get('algo') || undefined;
 
-  const { data: proof, isLoading, error } = useQuery({
-    queryKey: ["proof", hash, algo],
+  const {
+    data: proof,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ['proof', hash, algo],
     queryFn: () => getProofByHash(hash, algo),
   });
 
@@ -52,7 +56,7 @@ export default function CertificatePage() {
   return (
     <main className="max-w-4xl mx-auto px-4 py-12 print:p-0 print:max-w-none">
       <Link
-        href={`/proof/${hash}?algo=${algo || "sha256"}`}
+        href={`/proof/${hash}?algo=${algo || 'sha256'}`}
         className="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-8 print:hidden"
       >
         <ArrowLeft className="w-4 h-4" />

@@ -163,7 +163,10 @@ async fn main() -> Result<()> {
                 Some(bdk)
             }
             Err(e) => {
-                warn!("Failed to initialize BDK wallet: {}. Continuing with Bitcoin Core only.", e);
+                warn!(
+                    "Failed to initialize BDK wallet: {}. Continuing with Bitcoin Core only.",
+                    e
+                );
                 None
             }
         }
@@ -215,8 +218,14 @@ async fn main() -> Result<()> {
         .route("/wallet/backup/verify", post(handlers::verify_mnemonic))
         .route("/wallet/backup/sync", post(handlers::sync_bdk_wallet))
         .route("/wallet/backup/export", post(handlers::export_backup))
-        .route("/wallet/backup/verify-backup", post(handlers::verify_backup))
-        .route("/wallet/backup/migration-status", get(handlers::get_migration_status))
+        .route(
+            "/wallet/backup/verify-backup",
+            post(handlers::verify_backup),
+        )
+        .route(
+            "/wallet/backup/migration-status",
+            get(handlers::get_migration_status),
+        )
         .route("/wallet/bdk/balance", get(handlers::get_bdk_balance))
         .route("/wallet/create-message", post(handlers::create_message))
         .route("/wallet/broadcast", post(handlers::broadcast))
@@ -225,18 +234,48 @@ async fn main() -> Result<()> {
         // Identity endpoints
         .route("/wallet/identities", get(handlers::list_identities))
         .route("/wallet/identities", post(handlers::create_identity))
-        .route("/wallet/identities/defaults", get(handlers::get_identity_defaults))
-        .route("/wallet/identities/generate", post(handlers::generate_keypair))
-        .route("/wallet/identities/verify", post(handlers::verify_signature))
+        .route(
+            "/wallet/identities/defaults",
+            get(handlers::get_identity_defaults),
+        )
+        .route(
+            "/wallet/identities/generate",
+            post(handlers::generate_keypair),
+        )
+        .route(
+            "/wallet/identities/verify",
+            post(handlers::verify_signature),
+        )
         .route("/wallet/identities/:id", get(handlers::get_identity))
-        .route("/wallet/identities/:id", axum::routing::put(handlers::update_identity))
-        .route("/wallet/identities/:id", axum::routing::delete(handlers::delete_identity))
-        .route("/wallet/identities/:id/primary", post(handlers::set_identity_primary))
-        .route("/wallet/identities/:id/dns", post(handlers::set_identity_dns))
-        .route("/wallet/identities/:id/dns", axum::routing::delete(handlers::remove_identity_dns))
+        .route(
+            "/wallet/identities/:id",
+            axum::routing::put(handlers::update_identity),
+        )
+        .route(
+            "/wallet/identities/:id",
+            axum::routing::delete(handlers::delete_identity),
+        )
+        .route(
+            "/wallet/identities/:id/primary",
+            post(handlers::set_identity_primary),
+        )
+        .route(
+            "/wallet/identities/:id/dns",
+            post(handlers::set_identity_dns),
+        )
+        .route(
+            "/wallet/identities/:id/dns",
+            axum::routing::delete(handlers::remove_identity_dns),
+        )
         .route("/wallet/identities/:id/sign", post(handlers::sign_message))
-        .route("/wallet/identities/:id/export", get(handlers::export_private_key))
-        .route("/wallet/identities/sync-dns", post(handlers::sync_identities_from_dns))
+        .route(
+            "/wallet/identities/:id/export",
+            get(handlers::export_private_key),
+        )
+        .route(
+            "/wallet/identities/sync-dns",
+            post(handlers::sync_identities_from_dns),
+        )
         .with_state(state)
         .layer(TraceLayer::new_for_http())
         .layer(
@@ -246,7 +285,10 @@ async fn main() -> Result<()> {
                 .allow_headers(Any),
         );
 
-    info!("Swagger UI available at http://localhost:{}/swagger-ui/", config.port);
+    info!(
+        "Swagger UI available at http://localhost:{}/swagger-ui/",
+        config.port
+    );
 
     // Start server
     let addr = format!("0.0.0.0:{}", config.port);

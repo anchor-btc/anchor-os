@@ -1,5 +1,5 @@
-import * as React from "react";
-import { cn } from "../../utils/cn";
+import * as React from 'react';
+import { cn } from '../../utils/cn';
 
 export interface NavGroupProps {
   /**
@@ -13,13 +13,13 @@ export interface NavGroupProps {
   /**
    * Gap size between items
    */
-  gap?: "sm" | "md" | "lg";
+  gap?: 'sm' | 'md' | 'lg';
 }
 
 const gapSizes = {
-  sm: "gap-1",
-  md: "gap-2",
-  lg: "gap-4",
+  sm: 'gap-1',
+  md: 'gap-2',
+  lg: 'gap-4',
 } as const;
 
 /**
@@ -35,16 +35,8 @@ const gapSizes = {
  * </NavGroup>
  * ```
  */
-export function NavGroup({
-  children,
-  className,
-  gap = "sm",
-}: NavGroupProps) {
-  return (
-    <nav className={cn("flex items-center", gapSizes[gap], className)}>
-      {children}
-    </nav>
-  );
+export function NavGroup({ children, className, gap = 'sm' }: NavGroupProps) {
+  return <nav className={cn('flex items-center', gapSizes[gap], className)}>{children}</nav>;
 }
 
 export { gapSizes };

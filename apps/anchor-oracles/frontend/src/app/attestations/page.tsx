@@ -1,20 +1,19 @@
-"use client";
+'use client';
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from '@tanstack/react-query';
+import { AlertTriangle, ExternalLink, Filter } from 'lucide-react';
+import { useState } from 'react';
+import Link from 'next/link';
 import {
-  CheckCircle,
-  AlertTriangle,
-  Clock,
-  ExternalLink,
-  Filter,
-} from "lucide-react";
-import { useState } from "react";
-import Link from "next/link";
-import { fetchAttestations, Attestation, fetchDefaultExplorer, buildExplorerTxUrl } from "@/lib/api";
-import { formatDistanceToNow } from "date-fns";
-import { shortenPubkey } from "@/lib/utils";
+  fetchAttestations,
+  Attestation,
+  fetchDefaultExplorer,
+  buildExplorerTxUrl,
+} from '@/lib/api';
+import { formatDistanceToNow } from 'date-fns';
+import { shortenPubkey } from '@/lib/utils';
 
-const WALLET_URL = process.env.NEXT_PUBLIC_WALLET_URL || "http://localhost:3700";
+const WALLET_URL = process.env.NEXT_PUBLIC_WALLET_URL || 'http://localhost:3700';
 
 // Dispute Modal component
 function DisputeModal({
@@ -33,10 +32,14 @@ function DisputeModal({
   const [txid, setTxid] = useState<string | null>(null);
 
   const reasons = [
-    { id: 1, name: "Incorrect outcome", description: "The attested outcome is factually wrong" },
-    { id: 2, name: "Premature attestation", description: "Event was attested before resolution" },
-    { id: 3, name: "Invalid signature", description: "The attestation signature is invalid" },
-    { id: 4, name: "Oracle not authorized", description: "Oracle not authorized for this category" },
+    { id: 1, name: 'Incorrect outcome', description: 'The attested outcome is factually wrong' },
+    { id: 2, name: 'Premature attestation', description: 'Event was attested before resolution' },
+    { id: 3, name: 'Invalid signature', description: 'The attestation signature is invalid' },
+    {
+      id: 4,
+      name: 'Oracle not authorized',
+      description: 'Oracle not authorized for this category',
+    },
   ];
 
   const handleSubmit = async () => {
@@ -46,43 +49,43 @@ function DisputeModal({
     try {
       // Create the dispute message body (Kind 32)
       const attestationTxidBytes = hexToBytes(attestation.txid);
-      const evidence = new TextEncoder().encode("Disputed via Anchor Oracles UI");
-      
+      const evidence = new TextEncoder().encode('Disputed via Anchor Oracles UI');
+
       const body = new Uint8Array(1 + 32 + 1 + 8 + 2 + evidence.length);
       let offset = 0;
-      
+
       body[offset++] = 1; // action = create dispute
       body.set(attestationTxidBytes, offset);
       offset += 32;
       body[offset++] = reason;
-      
+
       const stakeView = new DataView(new ArrayBuffer(8));
       stakeView.setBigUint64(0, BigInt(stakeSats), true);
       body.set(new Uint8Array(stakeView.buffer), offset);
       offset += 8;
-      
+
       body[offset++] = evidence.length & 0xff;
       body[offset++] = (evidence.length >> 8) & 0xff;
       body.set(evidence, offset);
 
       const res = await fetch(`${WALLET_URL}/wallet/create-message`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           kind: 32,
           body: bytesToHex(body),
-          carrier: "op_return",
+          carrier: 'op_return',
         }),
       });
 
       if (!res.ok) {
-        throw new Error(await res.text() || "Failed to create dispute");
+        throw new Error((await res.text()) || 'Failed to create dispute');
       }
 
       const result = await res.json();
       setTxid(result.txid);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setIsSubmitting(false);
     }
@@ -99,7 +102,7 @@ function DisputeModal({
           <p className="text-xs text-gray-500">Attestation</p>
           <p className="text-sm text-gray-400 font-mono">{shortenPubkey(attestation.txid, 16)}</p>
           <p className="text-xs text-gray-500 mt-2">Oracle</p>
-          <p className="text-sm text-white">{attestation.oracle_name || "Unknown"}</p>
+          <p className="text-sm text-white">{attestation.oracle_name || 'Unknown'}</p>
         </div>
 
         {txid ? (
@@ -125,8 +128,8 @@ function DisputeModal({
                     onClick={() => setReason(r.id)}
                     className={`w-full p-3 rounded-lg border text-left transition-colors ${
                       reason === r.id
-                        ? "border-red-500 bg-red-500/20"
-                        : "border-white/10 bg-white/5 hover:border-red-500/50"
+                        ? 'border-red-500 bg-red-500/20'
+                        : 'border-white/10 bg-white/5 hover:border-red-500/50'
                     }`}
                   >
                     <p className="text-white font-medium">{r.name}</p>
@@ -151,9 +154,7 @@ function DisputeModal({
             </div>
 
             {error && (
-              <div className="mb-4 p-3 rounded-lg bg-red-500/20 text-red-400 text-sm">
-                {error}
-              </div>
+              <div className="mb-4 p-3 rounded-lg bg-red-500/20 text-red-400 text-sm">{error}</div>
             )}
 
             <div className="flex gap-3">
@@ -168,7 +169,7 @@ function DisputeModal({
                 disabled={isSubmitting}
                 className="flex-1 px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
               >
-                {isSubmitting ? "Submitting..." : "Submit Dispute"}
+                {isSubmitting ? 'Submitting...' : 'Submit Dispute'}
               </button>
             </div>
           </>
@@ -189,14 +190,14 @@ function hexToBytes(hex: string): Uint8Array {
 
 function bytesToHex(bytes: Uint8Array): string {
   return Array.from(bytes)
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
 }
 
 function hexToString(hex: string): string | null {
   try {
     const bytes = hexToBytes(hex);
-    const decoder = new TextDecoder("utf-8", { fatal: true });
+    const decoder = new TextDecoder('utf-8', { fatal: true });
     return decoder.decode(bytes);
   } catch {
     return null;
@@ -204,27 +205,27 @@ function hexToString(hex: string): string | null {
 }
 
 const CATEGORIES = [
-  { id: 0, name: "All" },
-  { id: 1, name: "Block" },
-  { id: 2, name: "Prices" },
-  { id: 4, name: "Sports" },
-  { id: 8, name: "Weather" },
-  { id: 16, name: "Elections" },
-  { id: 32, name: "Random" },
+  { id: 0, name: 'All' },
+  { id: 1, name: 'Block' },
+  { id: 2, name: 'Prices' },
+  { id: 4, name: 'Sports' },
+  { id: 8, name: 'Weather' },
+  { id: 16, name: 'Elections' },
+  { id: 32, name: 'Random' },
 ];
 
 export default function AttestationsPage() {
   const [categoryFilter, setCategoryFilter] = useState(0);
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState('all');
   const [disputeAttestation, setDisputeAttestation] = useState<Attestation | null>(null);
 
   const { data: attestations, isLoading } = useQuery({
-    queryKey: ["attestations"],
+    queryKey: ['attestations'],
     queryFn: () => fetchAttestations(100, 0),
   });
 
   const { data: explorer } = useQuery({
-    queryKey: ["default-explorer"],
+    queryKey: ['default-explorer'],
     queryFn: fetchDefaultExplorer,
     staleTime: 1000 * 60 * 5,
   });
@@ -232,7 +233,7 @@ export default function AttestationsPage() {
   // Filter attestations
   const filteredAttestations = attestations?.filter((att) => {
     if (categoryFilter !== 0 && att.category !== categoryFilter) return false;
-    if (statusFilter !== "all" && att.status !== statusFilter) return false;
+    if (statusFilter !== 'all' && att.status !== statusFilter) return false;
     return true;
   });
 
@@ -254,8 +255,8 @@ export default function AttestationsPage() {
                 onClick={() => setCategoryFilter(cat.id)}
                 className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
                   categoryFilter === cat.id
-                    ? "bg-purple-600 text-white"
-                    : "bg-white/5 text-gray-400 hover:text-white"
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-white/5 text-gray-400 hover:text-white'
                 }`}
               >
                 {cat.name}
@@ -267,14 +268,14 @@ export default function AttestationsPage() {
         <div>
           <label className="block text-xs text-gray-500 mb-1">Status</label>
           <div className="flex gap-1">
-            {["all", "valid", "pending", "disputed"].map((status) => (
+            {['all', 'valid', 'pending', 'disputed'].map((status) => (
               <button
                 key={status}
                 onClick={() => setStatusFilter(status)}
                 className={`px-3 py-1.5 rounded-lg text-sm capitalize transition-colors ${
                   statusFilter === status
-                    ? "bg-purple-600 text-white"
-                    : "bg-white/5 text-gray-400 hover:text-white"
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-white/5 text-gray-400 hover:text-white'
                 }`}
               >
                 {status}
@@ -329,23 +330,23 @@ export default function AttestationsPage() {
                   <td className="px-4 py-3">
                     <span
                       className={`px-2 py-0.5 rounded text-xs ${
-                        att.status === "valid"
-                          ? "bg-green-500/20 text-green-400"
-                          : att.status === "disputed"
-                          ? "bg-red-500/20 text-red-400"
-                          : "bg-yellow-500/20 text-yellow-400"
+                        att.status === 'valid'
+                          ? 'bg-green-500/20 text-green-400'
+                          : att.status === 'disputed'
+                            ? 'bg-red-500/20 text-red-400'
+                            : 'bg-yellow-500/20 text-yellow-400'
                       }`}
                     >
                       {att.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-gray-500">{att.block_height ?? "-"}</td>
+                  <td className="px-4 py-3 text-gray-500">{att.block_height ?? '-'}</td>
                   <td className="px-4 py-3 text-gray-500 text-sm">
                     {formatDistanceToNow(new Date(att.created_at), { addSuffix: true })}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      {att.status !== "disputed" && (
+                      {att.status !== 'disputed' && (
                         <button
                           onClick={() => setDisputeAttestation(att)}
                           className="p-1.5 rounded bg-red-500/20 text-red-400 hover:bg-red-500/30"
@@ -376,9 +377,9 @@ export default function AttestationsPage() {
             <Filter className="w-12 h-12 text-gray-600 mx-auto mb-4" />
             <p className="text-gray-400">No attestations found</p>
             <p className="text-sm text-gray-500 mt-1">
-              {categoryFilter !== 0 || statusFilter !== "all"
-                ? "Try adjusting your filters"
-                : "Attestations will appear here when oracles respond to events"}
+              {categoryFilter !== 0 || statusFilter !== 'all'
+                ? 'Try adjusting your filters'
+                : 'Attestations will appear here when oracles respond to events'}
             </p>
           </div>
         )}
@@ -406,4 +407,3 @@ export default function AttestationsPage() {
     </div>
   );
 }
-

@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useState, useEffect, useRef } from "react";
-import { ThemeProvider } from "@/contexts/theme-context";
-import { AuthProvider, useAuth } from "@/contexts/auth-context";
-import { LockScreen } from "@/components/lock-screen";
-import { I18nProvider } from "@/components/i18n-provider";
-import { cn } from "@/lib/utils";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useState, useEffect, useRef } from 'react';
+import { ThemeProvider } from '@/contexts/theme-context';
+import { AuthProvider, useAuth } from '@/contexts/auth-context';
+import { LockScreen } from '@/components/lock-screen';
+import { I18nProvider } from '@/components/i18n-provider';
+import { cn } from '@/lib/utils';
 
 // Transition duration in ms
 const UNLOCK_TRANSITION_DURATION = 350;
@@ -46,17 +46,15 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   return (
     <div
       className={cn(
-        "min-h-screen transition-all ease-out",
-        isUnlocking 
-          ? "animate-content-emerge" 
-          : "opacity-100"
+        'min-h-screen transition-all ease-out',
+        isUnlocking ? 'animate-content-emerge' : 'opacity-100'
       )}
-      style={{ 
+      style={{
         animationDuration: `${UNLOCK_TRANSITION_DURATION}ms`,
       }}
     >
       {children}
-      
+
       {/* Unlock animation styles */}
       <style jsx global>{`
         @keyframes content-emerge {
@@ -71,7 +69,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
             filter: blur(0px);
           }
         }
-        
+
         .animate-content-emerge {
           animation: content-emerge ${UNLOCK_TRANSITION_DURATION}ms ease-out forwards;
         }

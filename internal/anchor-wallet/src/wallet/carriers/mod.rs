@@ -12,4 +12,3 @@ pub mod inscription;
 pub mod op_return;
 pub mod stamps;
 pub mod witness;
-

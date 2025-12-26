@@ -8,10 +8,7 @@ mod handlers;
 mod models;
 
 use anyhow::Result;
-use axum::{
-    routing::get,
-    Router,
-};
+use axum::{routing::get, Router};
 use std::sync::Arc;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
@@ -107,7 +104,10 @@ async fn main() -> Result<()> {
                 .allow_headers(Any),
         );
 
-    info!("Swagger UI available at http://localhost:{}/swagger-ui/", config.port);
+    info!(
+        "Swagger UI available at http://localhost:{}/swagger-ui/",
+        config.port
+    );
 
     // Start server
     let addr = format!("0.0.0.0:{}", config.port);
@@ -118,4 +118,3 @@ async fn main() -> Result<()> {
 
     Ok(())
 }
-

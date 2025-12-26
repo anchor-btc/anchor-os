@@ -39,11 +39,7 @@ impl WalletClient {
     }
 
     /// Create a proof transaction (stamp or batch)
-    pub async fn create_proof(
-        &self,
-        spec: &ProofSpec,
-        carrier: u8,
-    ) -> Result<CreateTxResponse> {
+    pub async fn create_proof(&self, spec: &ProofSpec, carrier: u8) -> Result<CreateTxResponse> {
         // Validate the spec
         spec.validate().map_err(|e| AppError::Spec(e.to_string()))?;
 
@@ -67,7 +63,10 @@ impl WalletClient {
             .await?;
 
         if !res.status().is_success() {
-            let error_text = res.text().await.unwrap_or_else(|_| "Unknown error".to_string());
+            let error_text = res
+                .text()
+                .await
+                .unwrap_or_else(|_| "Unknown error".to_string());
             tracing::error!("Wallet error: {}", error_text);
             return Err(AppError::internal(format!("Wallet error: {}", error_text)));
         }
@@ -110,7 +109,10 @@ impl WalletClient {
             .await?;
 
         if !res.status().is_success() {
-            let error_text = res.text().await.unwrap_or_else(|_| "Unknown error".to_string());
+            let error_text = res
+                .text()
+                .await
+                .unwrap_or_else(|_| "Unknown error".to_string());
             tracing::error!("Wallet error: {}", error_text);
             return Err(AppError::internal(format!("Wallet error: {}", error_text)));
         }
@@ -141,8 +143,10 @@ impl WalletClient {
             AppError::internal(format!("Failed to parse wallet response: {}", e))
         })?;
 
-        tracing::info!("Fetched {} addresses from wallet", wallet_data.addresses.len());
+        tracing::info!(
+            "Fetched {} addresses from wallet",
+            wallet_data.addresses.len()
+        );
         Ok(wallet_data.addresses)
     }
 }
-

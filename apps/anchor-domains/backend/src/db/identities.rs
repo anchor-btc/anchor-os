@@ -30,7 +30,7 @@ impl Database {
         record_value: &str,
     ) -> Result<i32> {
         let mut tx = self.pool.begin().await?;
-        
+
         // Insert into domain_identities
         let row: (i32,) = sqlx::query_as(
             r#"
@@ -54,12 +54,11 @@ impl Database {
         let identity_id = row.0;
 
         // Get the domain's current txid for the DNS record reference
-        let domain_txid: (Vec<u8>, i32, Option<i32>) = sqlx::query_as(
-            "SELECT txid, vout, block_height FROM domains WHERE id = $1"
-        )
-        .bind(domain_id)
-        .fetch_one(&mut *tx)
-        .await?;
+        let domain_txid: (Vec<u8>, i32, Option<i32>) =
+            sqlx::query_as("SELECT txid, vout, block_height FROM domains WHERE id = $1")
+                .bind(domain_id)
+                .fetch_one(&mut *tx)
+                .await?;
 
         // Create the TXT record for this identity (Selfie Records format)
         // Record type 4 = TXT (in anchor-specs enum)
@@ -68,9 +67,13 @@ impl Database {
         //   TXT value: just the formatted public key (npub1xxx... or pk:xxx...)
         // We store: record_name=value as the TXT record value since DNS record names
         // are not separately stored in our schema
-        
+
         // First, deactivate any existing identity TXT records for this identity type on this domain
-        let identity_prefix = if identity_type == "nostr" { "npub1" } else { "pk:" };
+        let identity_prefix = if identity_type == "nostr" {
+            "npub1"
+        } else {
+            "pk:"
+        };
         sqlx::query(
             r#"
             UPDATE dns_records 
@@ -82,7 +85,7 @@ impl Database {
         .bind(format!("{}%", identity_prefix))
         .execute(&mut *tx)
         .await?;
-        
+
         // Insert the new TXT record with the formatted public key as value
         // record_name stores just the prefix/subdomain (e.g., "user._nostr" or "hello.user._nostr")
         // The full DNS name is: {record_name}.{domain}
@@ -91,7 +94,7 @@ impl Database {
         } else {
             format!("user._{}", identity_type)
         };
-        
+
         sqlx::query(
             r#"
             INSERT INTO dns_records (domain_id, txid, vout, record_type, ttl, value, record_name, block_height, is_active)
@@ -137,7 +140,7 @@ impl Database {
         subdomain: Option<&str>,
     ) -> Result<bool> {
         let mut tx = self.pool.begin().await?;
-        
+
         // Delete the identity record
         let result = if subdomain.is_some() {
             sqlx::query(
@@ -163,10 +166,14 @@ impl Database {
             .execute(&mut *tx)
             .await?
         };
-        
+
         // Also deactivate the TXT record (record_type 4 = TXT in anchor-specs)
         // Identity TXT records start with npub1 (nostr) or pk: (pubky)
-        let identity_prefix = if identity_type == "nostr" { "npub1" } else { "pk:" };
+        let identity_prefix = if identity_type == "nostr" {
+            "npub1"
+        } else {
+            "pk:"
+        };
         sqlx::query(
             r#"
             UPDATE dns_records 
@@ -178,10 +185,9 @@ impl Database {
         .bind(format!("{}%", identity_prefix))
         .execute(&mut *tx)
         .await?;
-        
+
         tx.commit().await?;
 
         Ok(result.rows_affected() > 0)
     }
 }
-

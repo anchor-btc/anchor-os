@@ -46,13 +46,13 @@ export const MAX_WITNESS_SIZE = 4_000_000;
  */
 export enum CarrierStatus {
   /** Fully functional and actively used */
-  Active = "active",
+  Active = 'active',
   /** Reserved for future use, may not relay by default */
-  Reserved = "reserved",
+  Reserved = 'reserved',
   /** Proposed but not yet implemented in Bitcoin */
-  Proposed = "proposed",
+  Proposed = 'proposed',
   /** Legacy, not recommended for new use */
-  Deprecated = "deprecated",
+  Deprecated = 'deprecated',
 }
 
 /**
@@ -99,7 +99,7 @@ export function getCarrierInfo(type: CarrierType): CarrierInfo {
     case CarrierType.OpReturn:
       return {
         type: CarrierType.OpReturn,
-        name: "op_return",
+        name: 'op_return',
         maxSize: MAX_OP_RETURN_SIZE,
         isPrunable: true,
         utxoImpact: false,
@@ -109,7 +109,7 @@ export function getCarrierInfo(type: CarrierType): CarrierInfo {
     case CarrierType.Inscription:
       return {
         type: CarrierType.Inscription,
-        name: "inscription",
+        name: 'inscription',
         maxSize: MAX_WITNESS_SIZE,
         isPrunable: true,
         utxoImpact: false,
@@ -119,7 +119,7 @@ export function getCarrierInfo(type: CarrierType): CarrierInfo {
     case CarrierType.Stamps:
       return {
         type: CarrierType.Stamps,
-        name: "stamps",
+        name: 'stamps',
         maxSize: 8000,
         isPrunable: false,
         utxoImpact: true,
@@ -129,7 +129,7 @@ export function getCarrierInfo(type: CarrierType): CarrierInfo {
     case CarrierType.TaprootAnnex:
       return {
         type: CarrierType.TaprootAnnex,
-        name: "taproot_annex",
+        name: 'taproot_annex',
         maxSize: 10000,
         isPrunable: true,
         utxoImpact: false,
@@ -139,7 +139,7 @@ export function getCarrierInfo(type: CarrierType): CarrierInfo {
     case CarrierType.WitnessData:
       return {
         type: CarrierType.WitnessData,
-        name: "witness_data",
+        name: 'witness_data',
         maxSize: MAX_WITNESS_SIZE,
         isPrunable: true,
         utxoImpact: false,
@@ -219,9 +219,9 @@ export interface TextMessage extends AnchorMessage {
  * Result of anchor resolution
  */
 export type AnchorResolution =
-  | { status: "resolved"; txid: string }
-  | { status: "orphan" }
-  | { status: "ambiguous"; candidates: string[] };
+  | { status: 'resolved'; txid: string }
+  | { status: 'orphan' }
+  | { status: 'ambiguous'; candidates: string[] };
 
 /**
  * Options for creating a message
@@ -284,7 +284,7 @@ export interface Balance {
 /**
  * Bitcoin network type
  */
-export type Network = "mainnet" | "testnet" | "signet" | "regtest";
+export type Network = 'mainnet' | 'testnet' | 'signet' | 'regtest';
 
 /**
  * Wallet configuration
@@ -322,15 +322,15 @@ export interface TransactionResult {
  * Error codes
  */
 export enum AnchorErrorCode {
-  InvalidMagic = "INVALID_MAGIC",
-  PayloadTooShort = "PAYLOAD_TOO_SHORT",
-  TruncatedAnchors = "TRUNCATED_ANCHORS",
-  MessageTooLarge = "MESSAGE_TOO_LARGE",
-  InvalidTxid = "INVALID_TXID",
-  InsufficientFunds = "INSUFFICIENT_FUNDS",
-  NoUtxos = "NO_UTXOS",
-  RpcError = "RPC_ERROR",
-  SigningError = "SIGNING_ERROR",
+  InvalidMagic = 'INVALID_MAGIC',
+  PayloadTooShort = 'PAYLOAD_TOO_SHORT',
+  TruncatedAnchors = 'TRUNCATED_ANCHORS',
+  MessageTooLarge = 'MESSAGE_TOO_LARGE',
+  InvalidTxid = 'INVALID_TXID',
+  InsufficientFunds = 'INSUFFICIENT_FUNDS',
+  NoUtxos = 'NO_UTXOS',
+  RpcError = 'RPC_ERROR',
+  SigningError = 'SIGNING_ERROR',
 }
 
 /**
@@ -339,10 +339,9 @@ export enum AnchorErrorCode {
 export class AnchorError extends Error {
   constructor(
     public code: AnchorErrorCode,
-    message: string,
+    message: string
   ) {
     super(message);
-    this.name = "AnchorError";
+    this.name = 'AnchorError';
   }
 }
-

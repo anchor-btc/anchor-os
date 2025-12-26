@@ -1,14 +1,9 @@
 //! Block Explorer settings handlers
-//! 
+//!
 //! Allows users to choose a default block explorer for the Anchor OS.
 //! Apps can query this setting to generate correct explorer links.
 
-use axum::{
-    extract::State,
-    http::StatusCode,
-    response::IntoResponse,
-    Json,
-};
+use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 use serde::{Deserialize, Serialize};
 use sqlx::Row;
 use std::sync::Arc;
@@ -153,7 +148,9 @@ pub async fn get_explorer_settings(
     State(state): State<Arc<AppState>>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     // Get configured default explorer from database
-    let default_explorer = get_configured_explorer(&state).await.unwrap_or(BlockExplorer::Mempool);
+    let default_explorer = get_configured_explorer(&state)
+        .await
+        .unwrap_or(BlockExplorer::Mempool);
 
     // Get container statuses
     let explorers = vec![
@@ -211,7 +208,10 @@ pub async fn set_default_explorer(
 
     Ok(Json(ExplorerActionResponse {
         success: true,
-        message: format!("{} is now the default block explorer.", req.explorer.display_name()),
+        message: format!(
+            "{} is now the default block explorer.",
+            req.explorer.display_name()
+        ),
     }))
 }
 
@@ -228,7 +228,9 @@ pub async fn set_default_explorer(
 pub async fn get_default_explorer(
     State(state): State<Arc<AppState>>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
-    let default_explorer = get_configured_explorer(&state).await.unwrap_or(BlockExplorer::Mempool);
+    let default_explorer = get_configured_explorer(&state)
+        .await
+        .unwrap_or(BlockExplorer::Mempool);
     let status = get_container_status(&state, default_explorer.container_name()).await;
 
     Ok(Json(ExplorerInfo {
@@ -245,8 +247,8 @@ pub async fn get_default_explorer(
 
 // Helper functions
 
-use std::collections::HashMap;
 use bollard::container::ListContainersOptions;
+use std::collections::HashMap;
 
 async fn get_container_status(state: &Arc<AppState>, container_name: &str) -> Option<String> {
     let mut filters = HashMap::new();
@@ -282,7 +284,10 @@ async fn get_configured_explorer(state: &Arc<AppState>) -> Result<BlockExplorer,
     }
 }
 
-async fn save_configured_explorer(state: &Arc<AppState>, explorer: BlockExplorer) -> Result<(), String> {
+async fn save_configured_explorer(
+    state: &Arc<AppState>,
+    explorer: BlockExplorer,
+) -> Result<(), String> {
     let pool = state.db_pool.as_ref().ok_or("Database not available")?;
 
     let value = serde_json::json!(explorer.to_string());
@@ -298,4 +303,3 @@ async fn save_configured_explorer(state: &Arc<AppState>, explorer: BlockExplorer
 
     Ok(())
 }
-

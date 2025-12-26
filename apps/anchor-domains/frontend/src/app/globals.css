@@ -1,6 +1,6 @@
 /* Anchor UI Design System */
-@import "@AnchorProtocol/ui/styles/globals.css";
-@import "@AnchorProtocol/ui/styles/themes/domains.css";
+@import '@AnchorProtocol/ui/styles/globals.css';
+@import '@AnchorProtocol/ui/styles/themes/domains.css';
 
 /* App-specific overrides */
 :root {
@@ -42,5 +42,5 @@
 
 /* Bitcoin orange utility */
 .text-bitcoin-orange {
-  color: #F7931A;
+  color: #f7931a;
 }

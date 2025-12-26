@@ -18,4 +18,3 @@ pub use anchor::Anchor;
 pub use kind::AnchorKind;
 pub use message::{IndexedAnchorMessage, ParsedAnchorMessage, ResolvedAnchor};
 pub use thread::{Thread, ThreadNode};
-

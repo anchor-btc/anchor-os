@@ -116,13 +116,13 @@ fn get_app_info(kind: i32) -> Option<AppInfo> {
             app_path: "/apps/tokens".to_string(),
             color: "#F59E0B".to_string(), // amber
         }),
-        30 | 31 | 32 | 33 => Some(AppInfo {
+        30..=33 => Some(AppInfo {
             app_id: "oracles".to_string(),
             app_name: "Oracles".to_string(),
             app_path: "/apps/oracles".to_string(),
             color: "#EF4444".to_string(), // red
         }),
-        40 | 41 | 42 | 43 => Some(AppInfo {
+        40..=43 => Some(AppInfo {
             app_id: "predictions".to_string(),
             app_name: "Predictions".to_string(),
             app_path: "/apps/predictions".to_string(),
@@ -157,12 +157,7 @@ async fn exec_sql(docker: &bollard::Docker, query: &str) -> Result<String, Strin
         attach_stdout: Some(true),
         attach_stderr: Some(true),
         cmd: Some(vec![
-            "psql",
-            "-U", "anchor",
-            "-d", "anchor",
-            "-t",
-            "-A",
-            "-c", query,
+            "psql", "-U", "anchor", "-d", "anchor", "-t", "-A", "-c", query,
         ]),
         ..Default::default()
     };
@@ -178,7 +173,10 @@ async fn exec_sql(docker: &bollard::Docker, query: &str) -> Result<String, Strin
     };
 
     let mut output = String::new();
-    if let StartExecResults::Attached { output: mut stream, .. } = start_result {
+    if let StartExecResults::Attached {
+        output: mut stream, ..
+    } = start_result
+    {
         while let Some(result) = stream.next().await {
             match result {
                 Ok(chunk) => output.push_str(&chunk.to_string()),
@@ -211,11 +209,14 @@ pub async fn get_indexer_stats(
         .unwrap_or(0);
 
     // Get total blocks with messages
-    let total_blocks = exec_sql(&state.docker, "SELECT COUNT(DISTINCT block_height) FROM messages")
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?
-        .parse::<i64>()
-        .unwrap_or(0);
+    let total_blocks = exec_sql(
+        &state.docker,
+        "SELECT COUNT(DISTINCT block_height) FROM messages",
+    )
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?
+    .parse::<i64>()
+    .unwrap_or(0);
 
     // Get messages by kind
     let kind_query = "SELECT kind, COUNT(*) FROM messages GROUP BY kind ORDER BY count DESC";
@@ -242,7 +243,8 @@ pub async fn get_indexer_stats(
         .collect();
 
     // Get messages by carrier
-    let carrier_query = "SELECT carrier, COUNT(*) FROM messages GROUP BY carrier ORDER BY count DESC";
+    let carrier_query =
+        "SELECT carrier, COUNT(*) FROM messages GROUP BY carrier ORDER BY count DESC";
     let carrier_result = exec_sql(&state.docker, carrier_query)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?;
@@ -276,10 +278,13 @@ pub async fn get_indexer_stats(
         .unwrap_or(0);
 
     // Get last indexed block
-    let last_block = exec_sql(&state.docker, "SELECT COALESCE(MAX(block_height), 0) FROM messages")
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?;
-    
+    let last_block = exec_sql(
+        &state.docker,
+        "SELECT COALESCE(MAX(block_height), 0) FROM messages",
+    )
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?;
+
     let last_indexed_block = if last_block.is_empty() {
         None
     } else {
@@ -397,7 +402,7 @@ pub async fn get_messages(
     State(state): State<Arc<AppState>>,
     Query(params): Query<MessageQuery>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
-    let limit = params.limit.unwrap_or(50).min(100).max(1);
+    let limit = params.limit.unwrap_or(50).clamp(1, 100);
     let offset = params.offset.unwrap_or(0).max(0);
     let order = params.order.as_deref().unwrap_or("desc");
     let order_sql = if order == "asc" { "ASC" } else { "DESC" };
@@ -560,12 +565,17 @@ pub async fn get_message_detail(
 
     let parts: Vec<&str> = result.split('|').collect();
     if parts.len() < 10 {
-        return Err((StatusCode::INTERNAL_SERVER_ERROR, "Invalid response".to_string()));
+        return Err((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Invalid response".to_string(),
+        ));
     }
 
-    let id = parts[0].parse::<i32>().map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Parse error".to_string()))?;
+    let id = parts[0]
+        .parse::<i32>()
+        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Parse error".to_string()))?;
     let body_hex = parts[7].to_string();
-    
+
     // Try to decode body as UTF-8 text
     let body_text = hex::decode(&body_hex)
         .ok()
@@ -602,7 +612,11 @@ pub async fn get_message_detail(
                     anchor_index: parts[0].parse().ok()?,
                     txid_prefix: parts[1].to_string(),
                     vout: parts[2].parse().ok()?,
-                    resolved_txid: if parts[3].is_empty() { None } else { Some(parts[3].to_string()) },
+                    resolved_txid: if parts[3].is_empty() {
+                        None
+                    } else {
+                        Some(parts[3].to_string())
+                    },
                     resolved_message_id: parts[4].parse().ok(),
                     is_ambiguous: parts[5] == "t",
                     is_orphan: parts[6] == "t",
@@ -633,7 +647,11 @@ pub async fn get_message_detail(
         txid: parts[1].to_string(),
         vout: parts[2].parse().unwrap_or(0),
         block_height: parts[3].parse().ok(),
-        block_hash: if parts[4].is_empty() { None } else { Some(parts[4].to_string()) },
+        block_hash: if parts[4].is_empty() {
+            None
+        } else {
+            Some(parts[4].to_string())
+        },
         kind: parts[5].parse().unwrap_or(0),
         kind_name: get_kind_name(parts[5].parse().unwrap_or(0)),
         carrier: parts[6].parse().unwrap_or(0),
@@ -684,7 +702,7 @@ pub struct UtxoProtocolInfoResponse {
 }
 
 /// Get protocol info for wallet UTXOs
-/// 
+///
 /// This endpoint accepts a list of txids and returns protocol information
 /// for any that are found in the Anchor Protocol index, including the
 /// app they belong to with links for easy navigation.
@@ -719,27 +737,29 @@ pub async fn get_utxo_protocol_info(
 
     // Build a map from db_txid (little-endian) -> original_txid (big-endian)
     // This allows us to return the original format that the frontend will use for lookups
-    let mut txid_to_original: std::collections::HashMap<String, String> = std::collections::HashMap::new();
-    
+    let mut txid_to_original: std::collections::HashMap<String, String> =
+        std::collections::HashMap::new();
+
     // Build query for all txids - check both original and reversed format
     // Bitcoin Core returns txids in big-endian, but the indexer stores in little-endian
-    let txid_conditions: Vec<String> = req.txids
+    let txid_conditions: Vec<String> = req
+        .txids
         .iter()
         .flat_map(|txid| {
             let txid_lower = txid.to_lowercase();
             let txid_reversed = reverse_hex_bytes(&txid_lower);
-            
+
             // Map both formats to the original txid
             txid_to_original.insert(txid_lower.clone(), txid_lower.clone());
             txid_to_original.insert(txid_reversed.clone(), txid_lower.clone());
-            
+
             vec![
                 format!("encode(m.txid, 'hex') = '{}'", txid_lower),
                 format!("encode(m.txid, 'hex') = '{}'", txid_reversed),
             ]
         })
         .collect();
-    
+
     let query = format!(
         r#"
         SELECT 
@@ -768,12 +788,13 @@ pub async fn get_utxo_protocol_info(
                 let db_txid = parts[0].to_string();
                 let kind = parts[2].parse::<i32>().ok()?;
                 let carrier = parts[3].parse::<i32>().ok()?;
-                
+
                 // Get the original txid (big-endian) from our map
-                let original_txid = txid_to_original.get(&db_txid)
+                let original_txid = txid_to_original
+                    .get(&db_txid)
                     .cloned()
                     .unwrap_or_else(|| db_txid.clone());
-                
+
                 Some(UtxoProtocolInfo {
                     txid: db_txid,
                     original_txid,
@@ -863,7 +884,7 @@ pub async fn get_timeseries(
     Query(params): Query<TimeseriesQuery>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     let period = params.period.as_deref().unwrap_or("day");
-    let count = params.count.unwrap_or(30).min(365).max(1);
+    let count = params.count.unwrap_or(30).clamp(1, 365);
 
     let truncate_fn = match period {
         "hour" => "hour",
@@ -928,7 +949,8 @@ pub async fn get_timeseries(
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?;
 
     // Build points map
-    let mut points_map: std::collections::HashMap<String, TimeseriesPoint> = std::collections::HashMap::new();
+    let mut points_map: std::collections::HashMap<String, TimeseriesPoint> =
+        std::collections::HashMap::new();
 
     // Parse totals
     for line in totals_result.lines() {
@@ -936,12 +958,15 @@ pub async fn get_timeseries(
         if parts.len() >= 2 {
             let ts = parts[0].to_string();
             let total = parts[1].parse::<i64>().unwrap_or(0);
-            points_map.insert(ts.clone(), TimeseriesPoint {
-                timestamp: ts,
-                total,
-                by_kind: Vec::new(),
-                by_carrier: Vec::new(),
-            });
+            points_map.insert(
+                ts.clone(),
+                TimeseriesPoint {
+                    timestamp: ts,
+                    total,
+                    by_kind: Vec::new(),
+                    by_carrier: Vec::new(),
+                },
+            );
         }
     }
 
@@ -951,7 +976,9 @@ pub async fn get_timeseries(
         if parts.len() >= 3 {
             let ts = parts[0].to_string();
             if let Some(point) = points_map.get_mut(&ts) {
-                if let (Some(kind), Some(count)) = (parts[1].parse::<i32>().ok(), parts[2].parse::<i64>().ok()) {
+                if let (Some(kind), Some(count)) =
+                    (parts[1].parse::<i32>().ok(), parts[2].parse::<i64>().ok())
+                {
                     point.by_kind.push(KindDataPoint {
                         kind,
                         kind_name: get_kind_name(kind),
@@ -968,7 +995,9 @@ pub async fn get_timeseries(
         if parts.len() >= 3 {
             let ts = parts[0].to_string();
             if let Some(point) = points_map.get_mut(&ts) {
-                if let (Some(carrier), Some(count)) = (parts[1].parse::<i32>().ok(), parts[2].parse::<i64>().ok()) {
+                if let (Some(carrier), Some(count)) =
+                    (parts[1].parse::<i32>().ok(), parts[2].parse::<i64>().ok())
+                {
                     point.by_carrier.push(CarrierDataPoint {
                         carrier,
                         carrier_name: get_carrier_name(carrier),
@@ -1044,7 +1073,10 @@ pub async fn get_anchor_stats(
 
     let parts: Vec<&str> = result.split('|').collect();
     if parts.len() < 5 {
-        return Err((StatusCode::INTERNAL_SERVER_ERROR, "Invalid response".to_string()));
+        return Err((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Invalid response".to_string(),
+        ));
     }
 
     let total = parts[0].parse::<i64>().unwrap_or(0);
@@ -1091,7 +1123,7 @@ pub async fn get_orphan_anchors(
     State(state): State<Arc<AppState>>,
     Query(params): Query<OrphansQuery>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
-    let limit = params.limit.unwrap_or(20).min(100).max(1);
+    let limit = params.limit.unwrap_or(20).clamp(1, 100);
 
     let query = format!(
         r#"
@@ -1181,7 +1213,10 @@ pub async fn get_performance(
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?;
 
     let parts: Vec<&str> = state_result.split('|').collect();
-    let last_indexed_block = parts.first().and_then(|s| s.parse::<i32>().ok()).unwrap_or(0);
+    let last_indexed_block = parts
+        .first()
+        .and_then(|s| s.parse::<i32>().ok())
+        .unwrap_or(0);
     let last_update = parts.get(1).map(|s| s.to_string()).unwrap_or_default();
 
     // Get total messages
@@ -1192,11 +1227,14 @@ pub async fn get_performance(
         .unwrap_or(0);
 
     // Get blocks with messages count
-    let blocks_with_messages = exec_sql(&state.docker, "SELECT COUNT(DISTINCT block_height) FROM messages WHERE block_height IS NOT NULL")
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?
-        .parse::<i64>()
-        .unwrap_or(0);
+    let blocks_with_messages = exec_sql(
+        &state.docker,
+        "SELECT COUNT(DISTINCT block_height) FROM messages WHERE block_height IS NOT NULL",
+    )
+    .await
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?
+    .parse::<i64>()
+    .unwrap_or(0);
 
     let messages_per_block = if blocks_with_messages > 0 {
         total_messages as f64 / blocks_with_messages as f64
@@ -1211,7 +1249,11 @@ pub async fn get_performance(
     let is_synced = blocks_behind <= 1;
 
     // Check if indexer container is running
-    let indexer_status = match state.docker.inspect_container("anchor-core-indexer", None).await {
+    let indexer_status = match state
+        .docker
+        .inspect_container("anchor-core-indexer", None)
+        .await
+    {
         Ok(info) => {
             if info.state.as_ref().and_then(|s| s.running).unwrap_or(false) {
                 "running".to_string()
@@ -1288,7 +1330,7 @@ async fn handle_live_feed(mut socket: WebSocket, state: Arc<AppState>) {
     // Send initial stats
     if let Ok(stats_event) = get_live_stats(&state.docker).await {
         let msg = serde_json::to_string(&stats_event).unwrap_or_default();
-        if socket.send(Message::Text(msg.into())).await.is_err() {
+        if socket.send(Message::Text(msg)).await.is_err() {
             return;
         }
     }
@@ -1320,7 +1362,7 @@ async fn handle_live_feed(mut socket: WebSocket, state: Arc<AppState>) {
                 for line in result.lines() {
                     let parts: Vec<&str> = line.split('|').collect();
                     if parts.len() >= 7 {
-                        if let Some(id) = parts[0].parse::<i32>().ok() {
+                        if let Ok(id) = parts[0].parse::<i32>() {
                             let kind = parts[4].parse::<i32>().unwrap_or(0);
                             let carrier = parts[5].parse::<i32>().unwrap_or(0);
 
@@ -1342,7 +1384,7 @@ async fn handle_live_feed(mut socket: WebSocket, state: Arc<AppState>) {
                             };
 
                             let msg = serde_json::to_string(&event).unwrap_or_default();
-                            if socket.send(Message::Text(msg.into())).await.is_err() {
+                            if socket.send(Message::Text(msg)).await.is_err() {
                                 return;
                             }
 
@@ -1360,20 +1402,20 @@ async fn handle_live_feed(mut socket: WebSocket, state: Arc<AppState>) {
                     timestamp: chrono::Utc::now().to_rfc3339(),
                 };
                 let msg = serde_json::to_string(&event).unwrap_or_default();
-                let _ = socket.send(Message::Text(msg.into())).await;
+                let _ = socket.send(Message::Text(msg)).await;
             }
         }
 
         // Send periodic stats update
         if let Ok(stats_event) = get_live_stats(&state.docker).await {
             let msg = serde_json::to_string(&stats_event).unwrap_or_default();
-            if socket.send(Message::Text(msg.into())).await.is_err() {
+            if socket.send(Message::Text(msg)).await.is_err() {
                 return;
             }
         }
 
         // Check if client disconnected
-        if socket.send(Message::Ping(vec![].into())).await.is_err() {
+        if socket.send(Message::Ping(vec![])).await.is_err() {
             return;
         }
     }
@@ -1385,10 +1427,13 @@ async fn get_live_stats(docker: &bollard::Docker) -> Result<LiveMessageEvent, St
         .parse::<i64>()
         .unwrap_or(0);
 
-    let last_block = exec_sql(docker, "SELECT COALESCE(last_block_height, 0) FROM indexer_state WHERE id = 1")
-        .await?
-        .parse::<i32>()
-        .unwrap_or(0);
+    let last_block = exec_sql(
+        docker,
+        "SELECT COALESCE(last_block_height, 0) FROM indexer_state WHERE id = 1",
+    )
+    .await?
+    .parse::<i32>()
+    .unwrap_or(0);
 
     Ok(LiveMessageEvent {
         event_type: "stats".to_string(),

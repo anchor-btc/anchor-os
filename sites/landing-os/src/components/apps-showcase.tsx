@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { motion } from "framer-motion";
-import { apps } from "@/lib/apps-data";
+import { motion } from 'framer-motion';
+import { apps } from '@/lib/apps-data';
 
 export function AppsShowcase() {
   return (
@@ -22,8 +22,8 @@ export function AppsShowcase() {
             <span className="text-gradient">Decentralized Apps</span>
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
-            A growing ecosystem of applications built on Bitcoin. 
-            All self-hosted, all sovereign, all yours.
+            A growing ecosystem of applications built on Bitcoin. All self-hosted, all sovereign,
+            all yours.
           </p>
         </motion.div>
 
@@ -40,32 +40,38 @@ export function AppsShowcase() {
             >
               <div className="glass-card p-6 h-full transition-all duration-300 group-hover:bg-white/10 group-hover:scale-[1.02] group-hover:shadow-xl">
                 {/* Gradient border on hover */}
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-r opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10 blur-xl"
+                <div
+                  className="absolute inset-0 rounded-2xl bg-gradient-to-r opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10 blur-xl"
                   style={{
                     background: `linear-gradient(135deg, ${app.color.replace('from-', '').replace(' to-', ', ')})`,
                   }}
                 />
-                
+
                 {/* Icon */}
-                <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${app.color} flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                <div
+                  className={`w-14 h-14 rounded-xl bg-gradient-to-br ${app.color} flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform duration-300`}
+                >
                   {app.icon}
                 </div>
-                
+
                 {/* Name */}
                 <h3 className="text-lg font-bold mb-2 group-hover:text-primary transition-colors">
                   {app.name}
                 </h3>
-                
+
                 {/* Description */}
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {app.description}
-                </p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{app.description}</p>
 
                 {/* Learn more link */}
                 <div className="mt-4 flex items-center gap-1 text-sm text-primary opacity-0 group-hover:opacity-100 transition-opacity">
                   <span>Learn more</span>
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
                   </svg>
                 </div>
               </div>
@@ -90,4 +96,3 @@ export function AppsShowcase() {
     </section>
   );
 }
-

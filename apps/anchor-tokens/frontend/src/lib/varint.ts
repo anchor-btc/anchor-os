@@ -13,7 +13,7 @@
  */
 export function encodeVarint(n: bigint): Uint8Array {
   if (n < 0n) {
-    throw new Error("Cannot encode negative numbers as varint");
+    throw new Error('Cannot encode negative numbers as varint');
   }
 
   const bytes: number[] = [];
@@ -31,10 +31,7 @@ export function encodeVarint(n: bigint): Uint8Array {
  * Decode a LEB128 varint from bytes
  * @returns [value, bytesRead]
  */
-export function decodeVarint(
-  bytes: Uint8Array,
-  offset: number = 0
-): [bigint, number] {
+export function decodeVarint(bytes: Uint8Array, offset: number = 0): [bigint, number] {
   let result = 0n;
   let shift = 0n;
   let bytesRead = 0;
@@ -53,11 +50,11 @@ export function decodeVarint(
 
     // Prevent infinite loops on malformed data
     if (shift > 128n) {
-      throw new Error("Varint too long");
+      throw new Error('Varint too long');
     }
   }
 
-  throw new Error("Unexpected end of varint data");
+  throw new Error('Unexpected end of varint data');
 }
 
 /**

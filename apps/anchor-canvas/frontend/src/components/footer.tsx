@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { Footer } from "@AnchorProtocol/ui";
-import { Grid3X3 } from "lucide-react";
+import { Footer } from '@AnchorProtocol/ui';
+import { Grid3X3 } from 'lucide-react';
 
 export function CanvasFooter() {
   return (
@@ -13,4 +13,3 @@ export function CanvasFooter() {
     />
   );
 }
-

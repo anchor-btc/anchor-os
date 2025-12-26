@@ -11,7 +11,7 @@ services:
       dockerfile: Dockerfile
     container_name: anchor-docs
     ports:
-      - "3900:3900"
+      - '3900:3900'
     networks:
       - anchor-network
     restart: unless-stopped
@@ -28,7 +28,7 @@ services:
       dockerfile: Dockerfile
     container_name: anchor-landing-protocol
     ports:
-      - "3950:3000"
+      - '3950:3000'
     networks:
       - anchor-network
     restart: unless-stopped
@@ -44,7 +44,7 @@ services:
       dockerfile: Dockerfile
     container_name: anchor-landing-os
     ports:
-      - "3951:3000"
+      - '3951:3000'
     networks:
       - anchor-network
     restart: unless-stopped
@@ -52,4 +52,3 @@ services:
       - default
       - full
       - anchor-landing-os
-

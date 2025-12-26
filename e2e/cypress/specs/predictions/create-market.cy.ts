@@ -64,4 +64,3 @@ describe('Anchor Predictions Markets List', () => {
     cy.get('div').should('have.length.greaterThan', 0);
   });
 });
-

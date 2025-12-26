@@ -21,4 +21,3 @@ pub struct ThreadNode {
     /// Replies to this message
     pub replies: Vec<ThreadNode>,
 }
-

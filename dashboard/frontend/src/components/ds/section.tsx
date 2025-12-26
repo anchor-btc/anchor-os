@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { LucideIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { IconBox } from "./icon-box";
-import { type DSColor } from "./colors";
+import * as React from 'react';
+import { LucideIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { IconBox } from './icon-box';
+import { type DSColor } from './colors';
 
 export interface SectionProps {
   /** Section content */
@@ -28,13 +28,7 @@ export interface SectionProps {
  */
 export function Section({ children, className, noPadding = false }: SectionProps) {
   return (
-    <div
-      className={cn(
-        "bg-card border border-border rounded-xl",
-        !noPadding && "p-6",
-        className
-      )}
-    >
+    <div className={cn('bg-card border border-border rounded-xl', !noPadding && 'p-6', className)}>
       {children}
     </div>
   );
@@ -62,19 +56,17 @@ export function SectionHeader({
   title,
   subtitle,
   icon,
-  iconColor = "primary",
+  iconColor = 'primary',
   actions,
   className,
 }: SectionHeaderProps) {
   return (
-    <div className={cn("flex items-center justify-between mb-4", className)}>
+    <div className={cn('flex items-center justify-between mb-4', className)}>
       <div className="flex items-center gap-3">
         {icon && <IconBox icon={icon} color={iconColor} size="md" />}
         <div>
           <h2 className="font-semibold text-foreground">{title}</h2>
-          {subtitle && (
-            <p className="text-sm text-muted-foreground">{subtitle}</p>
-          )}
+          {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
         </div>
       </div>
       {actions && <div className="flex items-center gap-2">{actions}</div>}
@@ -95,4 +87,3 @@ export interface SectionContentProps {
 export function SectionContent({ children, className }: SectionContentProps) {
   return <div className={cn(className)}>{children}</div>;
 }
-

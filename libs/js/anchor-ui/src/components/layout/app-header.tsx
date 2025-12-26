@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useState, useEffect } from "react";
-import { cn } from "../../utils/cn";
+import * as React from 'react';
+import { useState, useEffect } from 'react';
+import { cn } from '../../utils/cn';
 
 // ============================================================================
 // APPLE-INSPIRED GLASS HEADER VARIANTS
@@ -11,28 +11,32 @@ import { cn } from "../../utils/cn";
 const headerVariants = {
   // Premium glass effect - the default Apple-style
   glass: {
-    base: "bg-white/[0.02] backdrop-blur-2xl border-white/[0.05] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]",
-    scrolled: "bg-slate-900/80 backdrop-blur-2xl border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.05)]",
+    base: 'bg-white/[0.02] backdrop-blur-2xl border-white/[0.05] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]',
+    scrolled:
+      'bg-slate-900/80 backdrop-blur-2xl border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.05)]',
   },
   // Transparent until scroll
   transparent: {
-    base: "bg-transparent border-transparent",
-    scrolled: "bg-slate-900/90 backdrop-blur-2xl border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.3)]",
+    base: 'bg-transparent border-transparent',
+    scrolled:
+      'bg-slate-900/90 backdrop-blur-2xl border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.3)]',
   },
   // Always visible solid background
   solid: {
-    base: "bg-slate-900 border-slate-800",
-    scrolled: "bg-slate-900 border-slate-700 shadow-[0_4px_16px_rgba(0,0,0,0.2)]",
+    base: 'bg-slate-900 border-slate-800',
+    scrolled: 'bg-slate-900 border-slate-700 shadow-[0_4px_16px_rgba(0,0,0,0.2)]',
   },
   // Semi-transparent blur (legacy)
   blur: {
-    base: "bg-slate-900/50 backdrop-blur-xl border-white/[0.05]",
-    scrolled: "bg-slate-900/90 backdrop-blur-2xl border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.3)]",
+    base: 'bg-slate-900/50 backdrop-blur-xl border-white/[0.05]',
+    scrolled:
+      'bg-slate-900/90 backdrop-blur-2xl border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.3)]',
   },
   // Dark theme variant (legacy)
   dark: {
-    base: "bg-slate-900/50 backdrop-blur-xl border-slate-700/50",
-    scrolled: "bg-slate-900/95 backdrop-blur-2xl border-slate-700 shadow-[0_4px_16px_rgba(0,0,0,0.2)]",
+    base: 'bg-slate-900/50 backdrop-blur-xl border-slate-700/50',
+    scrolled:
+      'bg-slate-900/95 backdrop-blur-2xl border-slate-700 shadow-[0_4px_16px_rgba(0,0,0,0.2)]',
   },
 } as const;
 
@@ -68,7 +72,7 @@ export interface AppHeaderProps {
 
 /**
  * AppHeader - Apple-inspired floating glass navigation header.
- * 
+ *
  * Features:
  * - Premium glassmorphism with backdrop blur
  * - Smooth scroll-triggered transitions
@@ -89,7 +93,7 @@ export interface AppHeaderProps {
  */
 export function AppHeader({
   children,
-  variant = "glass",
+  variant = 'glass',
   sticky = true,
   disableScrollEffect = false,
   className,
@@ -104,24 +108,23 @@ export function AppHeader({
     };
 
     handleScroll();
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, [disableScrollEffect]);
 
   const variantStyles = headerVariants[variant];
-  const currentStyles = isScrolled || disableScrollEffect 
-    ? variantStyles.scrolled 
-    : variantStyles.base;
+  const currentStyles =
+    isScrolled || disableScrollEffect ? variantStyles.scrolled : variantStyles.base;
 
   return (
     <header
       className={cn(
         // Base styles
-        "border-b",
+        'border-b',
         // Smooth Apple-style transition
-        "transition-all duration-500 ease-out",
+        'transition-all duration-500 ease-out',
         // Sticky positioning
-        sticky && "sticky top-0 z-50",
+        sticky && 'sticky top-0 z-50',
         // Current variant styles
         currentStyles,
         className

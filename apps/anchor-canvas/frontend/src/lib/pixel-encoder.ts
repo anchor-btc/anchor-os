@@ -5,7 +5,7 @@
  * Uses the State kind (2) for pixel updates.
  */
 
-import type { Pixel } from "./api";
+import type { Pixel } from './api';
 
 // Anchor protocol constants
 const ANCHOR_MAGIC = new Uint8Array([0xa1, 0x1c, 0x00, 0x01]);
@@ -49,7 +49,7 @@ export function decodePixel(bytes: Uint8Array, offset = 0): Pixel {
  */
 export function encodePixelPayload(pixels: Pixel[]): Uint8Array {
   if (pixels.length === 0) {
-    throw new Error("No pixels to encode");
+    throw new Error('No pixels to encode');
   }
   if (pixels.length > MAX_PIXELS_PER_TX) {
     throw new Error(`Too many pixels: ${pixels.length} (max ${MAX_PIXELS_PER_TX})`);
@@ -77,7 +77,7 @@ export function encodePixelPayload(pixels: Pixel[]): Uint8Array {
  */
 export function decodePixelPayload(payload: Uint8Array): Pixel[] {
   if (payload.length < 4) {
-    throw new Error("Payload too short");
+    throw new Error('Payload too short');
   }
 
   const view = new DataView(payload.buffer, payload.byteOffset);
@@ -121,15 +121,15 @@ export function createAnchorPixelMessage(pixels: Pixel[]): Uint8Array {
  */
 export function bytesToHex(bytes: Uint8Array): string {
   return Array.from(bytes)
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
 }
 
 /**
  * Convert hex string to Uint8Array
  */
 export function hexToBytes(hex: string): Uint8Array {
-  const cleanHex = hex.startsWith("0x") ? hex.slice(2) : hex;
+  const cleanHex = hex.startsWith('0x') ? hex.slice(2) : hex;
   const bytes = new Uint8Array(cleanHex.length / 2);
   for (let i = 0; i < bytes.length; i++) {
     bytes[i] = parseInt(cleanHex.slice(i * 2, i * 2 + 2), 16);
@@ -140,11 +140,7 @@ export function hexToBytes(hex: string): Uint8Array {
 /**
  * Validate pixel coordinates
  */
-export function validatePixel(
-  pixel: Pixel,
-  canvasWidth = 4580,
-  canvasHeight = 4580
-): boolean {
+export function validatePixel(pixel: Pixel, canvasWidth = 4580, canvasHeight = 4580): boolean {
   return (
     pixel.x >= 0 &&
     pixel.x < canvasWidth &&
@@ -183,5 +179,3 @@ export function estimateFee(pixelCount: number, feeRate = 1): number {
   const totalSize = baseTxSize + opReturnOverhead + pixelDataSize;
   return totalSize * feeRate; // satoshis
 }
-
-

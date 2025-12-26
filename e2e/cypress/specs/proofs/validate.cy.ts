@@ -17,7 +17,7 @@ describe('Anchor Proofs Validate', () => {
 
   it('should upload a file for validation', () => {
     cy.get('input[type="file"]').selectFile('cypress/fixtures/test-file.txt', { force: true });
-    
+
     // Should process the file
     cy.wait(1000);
     cy.get('body').should('be.visible');
@@ -25,17 +25,17 @@ describe('Anchor Proofs Validate', () => {
 
   it('should validate file and show result', () => {
     cy.get('input[type="file"]').selectFile('cypress/fixtures/test-file.txt', { force: true });
-    
+
     // Wait for validation
     cy.wait(1000);
-    
+
     // Should show some result (page still visible and functional)
     cy.get('body').should('be.visible');
   });
 
   it('should display hash after file upload', () => {
     cy.get('input[type="file"]').selectFile('cypress/fixtures/test-file.txt', { force: true });
-    
+
     // Should show the computed hash
     cy.contains(/sha|hash/i, { timeout: 10000 }).should('exist');
   });
@@ -74,4 +74,3 @@ describe('Anchor Proofs My Proofs', () => {
     cy.contains(/my proofs|your proofs|no proofs|create/i, { timeout: 10000 }).should('exist');
   });
 });
-

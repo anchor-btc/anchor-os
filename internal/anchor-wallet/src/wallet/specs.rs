@@ -7,11 +7,11 @@ use anyhow::Result;
 use std::collections::HashSet;
 use tracing::debug;
 
-use anchor_specs::prelude::*;
 use anchor_specs::dns::DnsSpec;
-use anchor_specs::token::TokenSpec;
+use anchor_specs::prelude::*;
 use anchor_specs::proof::ProofSpec;
 use anchor_specs::text::TextSpec;
+use anchor_specs::token::TokenSpec;
 
 use super::service::WalletService;
 use super::types::CreatedTransaction;
@@ -169,11 +169,7 @@ impl WalletService {
     /// ]);
     /// let tx = wallet.register_domain(spec, 1)?;
     /// ```
-    pub fn register_domain(
-        &self,
-        spec: DnsSpec,
-        fee_rate: u64,
-    ) -> Result<CreatedTransaction> {
+    pub fn register_domain(&self, spec: DnsSpec, fee_rate: u64) -> Result<CreatedTransaction> {
         if !matches!(spec.operation, anchor_specs::dns::DnsOperation::Register) {
             anyhow::bail!("Expected Register operation for register_domain");
         }
@@ -230,12 +226,11 @@ impl WalletService {
     /// );
     /// let tx = wallet.deploy_token(spec, 1)?;
     /// ```
-    pub fn deploy_token(
-        &self,
-        spec: TokenSpec,
-        fee_rate: u64,
-    ) -> Result<CreatedTransaction> {
-        if !matches!(spec.operation, anchor_specs::token::TokenOperation::Deploy { .. }) {
+    pub fn deploy_token(&self, spec: TokenSpec, fee_rate: u64) -> Result<CreatedTransaction> {
+        if !matches!(
+            spec.operation,
+            anchor_specs::token::TokenOperation::Deploy { .. }
+        ) {
             anyhow::bail!("Expected Deploy operation for deploy_token");
         }
         self.create_spec_transaction(spec, vec![], None, fee_rate)
@@ -251,7 +246,10 @@ impl WalletService {
         deploy_vout: u8,
         fee_rate: u64,
     ) -> Result<CreatedTransaction> {
-        if !matches!(spec.operation, anchor_specs::token::TokenOperation::Mint { .. }) {
+        if !matches!(
+            spec.operation,
+            anchor_specs::token::TokenOperation::Mint { .. }
+        ) {
             anyhow::bail!("Expected Mint operation for mint_token");
         }
         let anchor = AnchorRef::new(deploy_txid, deploy_vout);
@@ -268,7 +266,10 @@ impl WalletService {
         token_vout: u8,
         fee_rate: u64,
     ) -> Result<CreatedTransaction> {
-        if !matches!(spec.operation, anchor_specs::token::TokenOperation::Transfer { .. }) {
+        if !matches!(
+            spec.operation,
+            anchor_specs::token::TokenOperation::Transfer { .. }
+        ) {
             anyhow::bail!("Expected Transfer operation for transfer_token");
         }
         let anchor = AnchorRef::new(token_txid, token_vout);
@@ -283,7 +284,10 @@ impl WalletService {
         token_vout: u8,
         fee_rate: u64,
     ) -> Result<CreatedTransaction> {
-        if !matches!(spec.operation, anchor_specs::token::TokenOperation::Burn { .. }) {
+        if !matches!(
+            spec.operation,
+            anchor_specs::token::TokenOperation::Burn { .. }
+        ) {
             anyhow::bail!("Expected Burn operation for burn_token");
         }
         let anchor = AnchorRef::new(token_txid, token_vout);
@@ -310,11 +314,7 @@ impl WalletService {
     /// )?);
     /// let tx = wallet.create_proof(spec, 1)?;
     /// ```
-    pub fn create_proof(
-        &self,
-        spec: ProofSpec,
-        fee_rate: u64,
-    ) -> Result<CreatedTransaction> {
+    pub fn create_proof(&self, spec: ProofSpec, fee_rate: u64) -> Result<CreatedTransaction> {
         self.create_spec_transaction(spec, vec![], None, fee_rate)
     }
 
@@ -360,4 +360,3 @@ mod tests {
         assert_eq!(anchor.vout, 0);
     }
 }
-

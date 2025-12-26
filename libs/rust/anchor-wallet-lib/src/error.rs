@@ -52,4 +52,3 @@ pub enum WalletError {
     #[error("Hex decoding error: {0}")]
     HexDecode(#[from] hex::FromHexError),
 }
-

@@ -3,4 +3,3 @@
 mod wallet;
 
 pub use wallet::WalletClient;
-

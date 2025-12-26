@@ -27,9 +27,11 @@ pub fn create_and_broadcast_witness_data_tx(
     locked_set: Option<&HashSet<(String, u32)>>,
 ) -> Result<CreatedTransaction> {
     // Acquire the transaction creation mutex to prevent race conditions
-    let _tx_guard = wallet.tx_creation_mutex.lock()
+    let _tx_guard = wallet
+        .tx_creation_mutex
+        .lock()
         .map_err(|e| anyhow::anyhow!("Transaction mutex poisoned: {}", e))?;
-    
+
     let secp = Secp256k1::new();
 
     // Use a NUMS (Nothing Up My Sleeve) point for the internal key
@@ -154,10 +156,10 @@ pub fn create_and_broadcast_witness_data_tx(
         .context("No hex in signed commit")?;
 
     // Broadcast commit
-    let commit_txid: String =
-        wallet
-            .rpc
-            .call("sendrawtransaction", &[serde_json::json!(signed_commit_hex)])?;
+    let commit_txid: String = wallet.rpc.call(
+        "sendrawtransaction",
+        &[serde_json::json!(signed_commit_hex)],
+    )?;
     info!("Broadcast witness data commit tx: {}", commit_txid);
 
     let commit_txid_parsed = Txid::from_str(&commit_txid)?;
@@ -210,10 +212,9 @@ pub fn create_and_broadcast_witness_data_tx(
     let reveal_hex = serialize_hex(&reveal_tx);
 
     // Broadcast reveal transaction
-    let reveal_txid: String =
-        wallet
-            .rpc
-            .call("sendrawtransaction", &[serde_json::json!(reveal_hex)])?;
+    let reveal_txid: String = wallet
+        .rpc
+        .call("sendrawtransaction", &[serde_json::json!(reveal_hex)])?;
 
     info!(
         "Broadcast witness data reveal tx: {} (commit: {})",
@@ -228,4 +229,3 @@ pub fn create_and_broadcast_witness_data_tx(
         carrier_name: "witness_data".to_string(),
     })
 }
-

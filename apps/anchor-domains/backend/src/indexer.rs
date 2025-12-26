@@ -17,7 +17,7 @@ use crate::config::Config;
 use crate::db::Database;
 
 // Use anchor-specs for DNS protocol types
-use anchor_specs::dns::{DnsSpec, DnsOperation};
+use anchor_specs::dns::{DnsOperation, DnsSpec};
 use anchor_specs::KindSpec;
 
 /// DNS message kind (Custom(10))
@@ -37,7 +37,10 @@ impl Indexer {
         // Connect to Bitcoin Core
         let rpc = Client::new(
             &config.bitcoin_rpc_url,
-            Auth::UserPass(config.bitcoin_rpc_user.clone(), config.bitcoin_rpc_password.clone()),
+            Auth::UserPass(
+                config.bitcoin_rpc_user.clone(),
+                config.bitcoin_rpc_password.clone(),
+            ),
         )
         .context("Failed to connect to Bitcoin RPC")?;
 
@@ -226,7 +229,10 @@ impl Indexer {
 
                     // Remove pending transaction now that it's confirmed
                     if let Err(e) = self.db.delete_pending_by_domain(&payload.name).await {
-                        debug!("Failed to delete pending transaction for {}: {}", payload.name, e);
+                        debug!(
+                            "Failed to delete pending transaction for {}: {}",
+                            payload.name, e
+                        );
                     }
 
                     info!("Registered domain: {}", payload.name);
@@ -245,7 +251,7 @@ impl Indexer {
                             let mut prefix_reversed = anchor.txid_prefix;
                             prefix_reversed.reverse();
                             let owner_suffix = &owner_txid[owner_txid.len().saturating_sub(8)..];
-                            
+
                             if owner_suffix == prefix_reversed {
                                 self.db
                                     .update_domain(
@@ -259,8 +265,13 @@ impl Indexer {
                                     .await?;
 
                                 // Remove pending transaction now that it's confirmed
-                                if let Err(e) = self.db.delete_pending_by_domain(&payload.name).await {
-                                    debug!("Failed to delete pending transaction for {}: {}", payload.name, e);
+                                if let Err(e) =
+                                    self.db.delete_pending_by_domain(&payload.name).await
+                                {
+                                    debug!(
+                                        "Failed to delete pending transaction for {}: {}",
+                                        payload.name, e
+                                    );
                                 }
 
                                 info!("Updated domain: {}", payload.name);
@@ -269,7 +280,7 @@ impl Indexer {
                                 debug!(
                                     "Update for {} rejected: anchor doesn't match owner. \
                                     Anchor prefix (reversed): {:?}, Owner suffix: {:?}",
-                                    payload.name, 
+                                    payload.name,
                                     hex::encode(prefix_reversed),
                                     hex::encode(owner_suffix)
                                 );

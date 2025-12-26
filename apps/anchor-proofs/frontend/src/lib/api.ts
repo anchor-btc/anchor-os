@@ -2,9 +2,10 @@
  * AnchorProofs API client
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3012";
-const DASHBOARD_API_URL = process.env.NEXT_PUBLIC_DASHBOARD_API_URL || "http://localhost:8000";
-const DEFAULT_BLOCK_EXPLORER_URL = process.env.NEXT_PUBLIC_BLOCK_EXPLORER_URL || "http://localhost:4000";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3012';
+const DASHBOARD_API_URL = process.env.NEXT_PUBLIC_DASHBOARD_API_URL || 'http://localhost:8000';
+const DEFAULT_BLOCK_EXPLORER_URL =
+  process.env.NEXT_PUBLIC_BLOCK_EXPLORER_URL || 'http://localhost:4000';
 
 // Explorer cache
 let cachedExplorerUrl: string | null = null;
@@ -19,13 +20,13 @@ async function fetchDefaultExplorerUrl(): Promise<string> {
       return data.base_url;
     }
   } catch (e) {
-    console.warn("Failed to fetch default explorer, using fallback:", e);
+    console.warn('Failed to fetch default explorer, using fallback:', e);
   }
   return DEFAULT_BLOCK_EXPLORER_URL;
 }
 
 // Initialize explorer URL on module load
-if (typeof window !== "undefined") {
+if (typeof window !== 'undefined') {
   fetchDefaultExplorerUrl();
 }
 
@@ -125,7 +126,7 @@ export interface BatchStampRequest {
 export async function getStats(): Promise<ProofStats> {
   const response = await fetch(`${API_BASE}/api/stats`);
   if (!response.ok) {
-    throw new Error("Failed to fetch stats");
+    throw new Error('Failed to fetch stats');
   }
   return response.json();
 }
@@ -145,12 +146,12 @@ export async function listProofs(
     include_revoked: includeRevoked.toString(),
   });
   if (search) {
-    params.set("search", search);
+    params.set('search', search);
   }
 
   const response = await fetch(`${API_BASE}/api/proofs?${params}`);
   if (!response.ok) {
-    throw new Error("Failed to fetch proofs");
+    throw new Error('Failed to fetch proofs');
   }
   return response.json();
 }
@@ -158,17 +159,14 @@ export async function listProofs(
 /**
  * Get proof by file hash
  */
-export async function getProofByHash(
-  hash: string,
-  algo?: string
-): Promise<Proof> {
-  const params = algo ? `?algo=${algo}` : "";
+export async function getProofByHash(hash: string, algo?: string): Promise<Proof> {
+  const params = algo ? `?algo=${algo}` : '';
   const response = await fetch(`${API_BASE}/api/proof/${hash}${params}`);
   if (!response.ok) {
     if (response.status === 404) {
-      throw new Error("Proof not found");
+      throw new Error('Proof not found');
     }
-    throw new Error("Failed to fetch proof");
+    throw new Error('Failed to fetch proof');
   }
   return response.json();
 }
@@ -180,9 +178,9 @@ export async function getProofById(id: number): Promise<Proof> {
   const response = await fetch(`${API_BASE}/api/proof/id/${id}`);
   if (!response.ok) {
     if (response.status === 404) {
-      throw new Error("Proof not found");
+      throw new Error('Proof not found');
     }
-    throw new Error("Failed to fetch proof");
+    throw new Error('Failed to fetch proof');
   }
   return response.json();
 }
@@ -190,20 +188,17 @@ export async function getProofById(id: number): Promise<Proof> {
 /**
  * Validate a file hash
  */
-export async function validateHash(
-  fileHash: string,
-  hashAlgo: string
-): Promise<ValidationResult> {
+export async function validateHash(fileHash: string, hashAlgo: string): Promise<ValidationResult> {
   const response = await fetch(`${API_BASE}/api/validate`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       file_hash: fileHash,
       hash_algo: hashAlgo,
     }),
   });
   if (!response.ok) {
-    throw new Error("Failed to validate hash");
+    throw new Error('Failed to validate hash');
   }
   return response.json();
 }
@@ -213,13 +208,13 @@ export async function validateHash(
  */
 export async function stampProof(req: StampRequest): Promise<CreateTxResponse> {
   const response = await fetch(`${API_BASE}/api/stamp`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(req),
   });
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: "Unknown error" }));
-    throw new Error(error.error || "Failed to create proof");
+    const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+    throw new Error(error.error || 'Failed to create proof');
   }
   return response.json();
 }
@@ -227,17 +222,15 @@ export async function stampProof(req: StampRequest): Promise<CreateTxResponse> {
 /**
  * Create batch proofs
  */
-export async function stampBatch(
-  req: BatchStampRequest
-): Promise<CreateTxResponse> {
+export async function stampBatch(req: BatchStampRequest): Promise<CreateTxResponse> {
   const response = await fetch(`${API_BASE}/api/stamp/batch`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(req),
   });
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: "Unknown error" }));
-    throw new Error(error.error || "Failed to create batch proof");
+    const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+    throw new Error(error.error || 'Failed to create batch proof');
   }
   return response.json();
 }
@@ -245,21 +238,18 @@ export async function stampBatch(
 /**
  * Revoke a proof
  */
-export async function revokeProof(
-  fileHash: string,
-  hashAlgo: string
-): Promise<CreateTxResponse> {
+export async function revokeProof(fileHash: string, hashAlgo: string): Promise<CreateTxResponse> {
   const response = await fetch(`${API_BASE}/api/revoke`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       file_hash: fileHash,
       hash_algo: hashAlgo,
     }),
   });
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: "Unknown error" }));
-    throw new Error(error.error || "Failed to revoke proof");
+    const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+    throw new Error(error.error || 'Failed to revoke proof');
   }
   return response.json();
 }
@@ -268,10 +258,10 @@ export async function revokeProof(
  * Mine blocks (for testing)
  */
 export async function mineBlocks(count = 1): Promise<void> {
-  const walletUrl = process.env.NEXT_PUBLIC_WALLET_URL || "http://localhost:3001";
+  const walletUrl = process.env.NEXT_PUBLIC_WALLET_URL || 'http://localhost:3001';
   await fetch(`${walletUrl}/api/mine`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ blocks: count }),
   });
 }
@@ -292,7 +282,7 @@ export interface MyProofsResponse {
 export async function getMyProofs(perPage = 100): Promise<MyProofsResponse> {
   const response = await fetch(`${API_BASE}/api/proofs/my?per_page=${perPage}`);
   if (!response.ok) {
-    throw new Error("Failed to fetch my proofs");
+    throw new Error('Failed to fetch my proofs');
   }
   return response.json();
 }

@@ -1,17 +1,17 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
-import Link from "next/link";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { 
-  ArrowLeft, 
-  TrendingUp, 
-  Clock, 
-  Coins, 
-  ExternalLink, 
-  Loader2, 
-  CheckCircle, 
+import { useState } from 'react';
+import { useParams } from 'next/navigation';
+import Link from 'next/link';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  ArrowLeft,
+  TrendingUp,
+  Clock,
+  Coins,
+  ExternalLink,
+  Loader2,
+  CheckCircle,
   XCircle,
   ArrowUpRight,
   ArrowDownRight,
@@ -20,32 +20,39 @@ import {
   AlertCircle,
   RefreshCw,
   Info,
-  Gift
-} from "lucide-react";
-import { 
-  fetchMarket, 
-  fetchMarketPositions, 
+  Gift,
+} from 'lucide-react';
+import {
+  fetchMarket,
+  fetchMarketPositions,
   fetchMarketWinners,
   getBetQuote,
   placeBet,
   claimWinnings,
-  type BetQuote
-} from "@/lib/api";
-import { cn, formatSats, formatPercent, shortenHash, statusColor, resolutionColor, outcomeColor } from "@/lib/utils";
-import { useWallet } from "@/contexts";
+  type BetQuote,
+} from '@/lib/api';
+import {
+  cn,
+  formatSats,
+  formatPercent,
+  shortenHash,
+  statusColor,
+  resolutionColor,
+} from '@/lib/utils';
+import { useWallet } from '@/contexts';
 
 // Generate a deterministic pubkey from address (for demo purposes)
 function addressToPubkey(address: string): string {
   // Create a 33-byte compressed pubkey (02 prefix + 32 bytes derived from address hash)
   const encoder = new TextEncoder();
-  const data = encoder.encode(address + "anchor-predictions");
+  const data = encoder.encode(address + 'anchor-predictions');
   let hash = 0x02; // Start with compressed pubkey prefix
   const result = [0x02]; // 02 = compressed pubkey prefix
   for (let i = 0; i < 32; i++) {
     hash = ((hash << 5) - hash + (data[i % data.length] || 0)) | 0;
     result.push(Math.abs(hash % 256));
   }
-  return result.map(b => b.toString(16).padStart(2, '0')).join('');
+  return result.map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 export default function MarketDetailPage() {
@@ -56,29 +63,39 @@ export default function MarketDetailPage() {
 
   // Betting state
   const [selectedOutcome, setSelectedOutcome] = useState<number | null>(null);
-  const [betAmount, setBetAmount] = useState("");
+  const [betAmount, setBetAmount] = useState('');
   const [quote, setQuote] = useState<BetQuote | null>(null);
   const [betResult, setBetResult] = useState<{ success: boolean; message: string } | null>(null);
-  const [claimResult, setClaimResult] = useState<{ success: boolean; message: string; positionId?: number } | null>(null);
-  
+  const [claimResult, setClaimResult] = useState<{
+    success: boolean;
+    message: string;
+    positionId?: number;
+  } | null>(null);
+
   // Generate user pubkey from wallet address
-  const userPubkey = address ? addressToPubkey(address) : "";
+  const userPubkey = address ? addressToPubkey(address) : '';
 
   // Queries
-  const { data: market, isLoading: marketLoading, isError, error, refetch } = useQuery({
-    queryKey: ["market", marketId],
+  const {
+    data: market,
+    isLoading: marketLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ['market', marketId],
     queryFn: () => fetchMarket(marketId),
   });
 
   const { data: positions } = useQuery({
-    queryKey: ["market-positions", marketId],
+    queryKey: ['market-positions', marketId],
     queryFn: () => fetchMarketPositions(marketId, 50),
   });
 
   const { data: winners } = useQuery({
-    queryKey: ["market-winners", marketId],
+    queryKey: ['market-winners', marketId],
     queryFn: () => fetchMarketWinners(marketId),
-    enabled: market?.status === "resolved",
+    enabled: market?.status === 'resolved',
   });
 
   // Get quote when outcome and amount change
@@ -88,7 +105,7 @@ export default function MarketDetailPage() {
       return getBetQuote(marketId, {
         outcome: selectedOutcome!,
         amount_sats: parseInt(betAmount),
-        user_pubkey: userPubkey || "placeholder",
+        user_pubkey: userPubkey || 'placeholder',
       });
     },
     onSuccess: (data) => {
@@ -107,11 +124,14 @@ export default function MarketDetailPage() {
       });
     },
     onSuccess: (data) => {
-      setBetResult({ success: true, message: data.message + (data.is_real_tx ? ` TXID: ${data.txid}` : "") });
-      setBetAmount("");
+      setBetResult({
+        success: true,
+        message: data.message + (data.is_real_tx ? ` TXID: ${data.txid}` : ''),
+      });
+      setBetAmount('');
       setQuote(null);
-      queryClient.invalidateQueries({ queryKey: ["market", marketId] });
-      queryClient.invalidateQueries({ queryKey: ["market-positions", marketId] });
+      queryClient.invalidateQueries({ queryKey: ['market', marketId] });
+      queryClient.invalidateQueries({ queryKey: ['market-positions', marketId] });
     },
     onError: (error: Error) => {
       setBetResult({ success: false, message: error.message });
@@ -122,16 +142,16 @@ export default function MarketDetailPage() {
   const claimMutation = useMutation({
     mutationFn: async (positionId: number) => {
       if (!address) {
-        throw new Error("Wallet not connected. Please connect your wallet to claim winnings.");
+        throw new Error('Wallet not connected. Please connect your wallet to claim winnings.');
       }
       return claimWinnings(marketId, { position_id: positionId, payout_address: address });
     },
     onSuccess: (data, positionId) => {
-      const message = data.payout_sats 
+      const message = data.payout_sats
         ? `${data.message} TXID: ${data.claim_txid?.slice(0, 16)}...`
         : data.message;
       setClaimResult({ success: true, message, positionId });
-      queryClient.invalidateQueries({ queryKey: ["market-winners", marketId] });
+      queryClient.invalidateQueries({ queryKey: ['market-winners', marketId] });
     },
     onError: (error: Error, positionId) => {
       setClaimResult({ success: false, message: error.message, positionId });
@@ -140,7 +160,7 @@ export default function MarketDetailPage() {
 
   const handleClaim = (positionId: number) => {
     if (!connected || !address) {
-      setClaimResult({ success: false, message: "Please connect your wallet first", positionId });
+      setClaimResult({ success: false, message: 'Please connect your wallet first', positionId });
       return;
     }
     setClaimResult(null);
@@ -171,7 +191,9 @@ export default function MarketDetailPage() {
       <div className="text-center py-12 rounded-xl border border-red-500/20 bg-red-500/5">
         <AlertCircle className="w-12 h-12 mx-auto text-red-400 mb-4" />
         <p className="text-red-400 mb-2">Failed to load market</p>
-        <p className="text-gray-500 text-sm mb-4">{(error as Error)?.message || "Market not found"}</p>
+        <p className="text-gray-500 text-sm mb-4">
+          {(error as Error)?.message || 'Market not found'}
+        </p>
         <button
           onClick={() => refetch()}
           className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors"
@@ -183,7 +205,7 @@ export default function MarketDetailPage() {
     );
   }
 
-  const isOpen = market.status === "open";
+  const isOpen = market.status === 'open';
 
   return (
     <div className="space-y-6">
@@ -201,23 +223,23 @@ export default function MarketDetailPage() {
         <div className="flex items-start justify-between gap-4 mb-4">
           <div>
             <h1 className="text-2xl font-bold text-white mb-2">{market.question}</h1>
-            {market.description && (
-              <p className="text-gray-400">{market.description}</p>
-            )}
+            {market.description && <p className="text-gray-400">{market.description}</p>}
           </div>
-          <span className={cn("px-3 py-1.5 rounded-lg text-sm font-medium", statusColor(market.status))}>
+          <span
+            className={cn('px-3 py-1.5 rounded-lg text-sm font-medium', statusColor(market.status))}
+          >
             {market.status.toUpperCase()}
           </span>
         </div>
 
         {/* Large Probability Display */}
         <div className="grid grid-cols-2 gap-4 mb-6">
-          <div 
+          <div
             className={cn(
-              "rounded-xl p-5 border-2 transition-all cursor-pointer",
+              'rounded-xl p-5 border-2 transition-all cursor-pointer',
               selectedOutcome === 1
-                ? "border-green-500 bg-green-500/20"
-                : "border-green-500/30 bg-green-500/10 hover:border-green-500/60"
+                ? 'border-green-500 bg-green-500/20'
+                : 'border-green-500/30 bg-green-500/10 hover:border-green-500/60'
             )}
             onClick={() => isOpen && setSelectedOutcome(1)}
           >
@@ -226,19 +248,17 @@ export default function MarketDetailPage() {
                 <ArrowUpRight className="w-5 h-5" />
                 YES
               </span>
-              {market.resolution === 1 && (
-                <CheckCircle className="w-5 h-5 text-green-400" />
-              )}
+              {market.resolution === 1 && <CheckCircle className="w-5 h-5 text-green-400" />}
             </div>
             <p className="text-4xl font-bold text-white">{formatPercent(market.yes_price)}</p>
             <p className="text-gray-400 text-sm mt-1">{formatSats(market.total_yes_sats)} bet</p>
           </div>
-          <div 
+          <div
             className={cn(
-              "rounded-xl p-5 border-2 transition-all cursor-pointer",
+              'rounded-xl p-5 border-2 transition-all cursor-pointer',
               selectedOutcome === 0
-                ? "border-red-500 bg-red-500/20"
-                : "border-red-500/30 bg-red-500/10 hover:border-red-500/60"
+                ? 'border-red-500 bg-red-500/20'
+                : 'border-red-500/30 bg-red-500/10 hover:border-red-500/60'
             )}
             onClick={() => isOpen && setSelectedOutcome(0)}
           >
@@ -247,9 +267,7 @@ export default function MarketDetailPage() {
                 <ArrowDownRight className="w-5 h-5" />
                 NO
               </span>
-              {market.resolution === 0 && (
-                <CheckCircle className="w-5 h-5 text-red-400" />
-              )}
+              {market.resolution === 0 && <CheckCircle className="w-5 h-5 text-red-400" />}
             </div>
             <p className="text-4xl font-bold text-white">{formatPercent(market.no_price)}</p>
             <p className="text-gray-400 text-sm mt-1">{formatSats(market.total_no_sats)} bet</p>
@@ -281,7 +299,12 @@ export default function MarketDetailPage() {
           </div>
           <div>
             <p className="text-gray-500 mb-1">Resolution</p>
-            <p className={cn("font-medium px-2 py-0.5 rounded inline-block", resolutionColor(market.resolution))}>
+            <p
+              className={cn(
+                'font-medium px-2 py-0.5 rounded inline-block',
+                resolutionColor(market.resolution)
+              )}
+            >
               {market.resolution_name}
             </p>
           </div>
@@ -304,19 +327,21 @@ export default function MarketDetailPage() {
           ) : (
             <div className="space-y-4">
               <div className="flex items-center gap-4">
-                <span className={cn(
-                  "px-4 py-2 rounded-lg font-semibold",
-                  selectedOutcome === 1 
-                    ? "bg-green-500/20 text-green-400 border border-green-500/50"
-                    : "bg-red-500/20 text-red-400 border border-red-500/50"
-                )}>
-                  Betting {selectedOutcome === 1 ? "YES" : "NO"}
+                <span
+                  className={cn(
+                    'px-4 py-2 rounded-lg font-semibold',
+                    selectedOutcome === 1
+                      ? 'bg-green-500/20 text-green-400 border border-green-500/50'
+                      : 'bg-red-500/20 text-red-400 border border-red-500/50'
+                  )}
+                >
+                  Betting {selectedOutcome === 1 ? 'YES' : 'NO'}
                 </span>
                 <button
                   onClick={() => setSelectedOutcome(selectedOutcome === 1 ? 0 : 1)}
                   className="text-sm text-gray-400 hover:text-white"
                 >
-                  Switch to {selectedOutcome === 1 ? "NO" : "YES"}
+                  Switch to {selectedOutcome === 1 ? 'NO' : 'YES'}
                 </button>
               </div>
 
@@ -359,7 +384,9 @@ export default function MarketDetailPage() {
                     </div>
                     <div>
                       <p className="text-gray-500">You Get</p>
-                      <p className="text-white font-medium">{quote.shares_out.toLocaleString()} shares</p>
+                      <p className="text-white font-medium">
+                        {quote.shares_out.toLocaleString()} shares
+                      </p>
                     </div>
                     <div>
                       <p className="text-gray-500">Avg Price</p>
@@ -367,10 +394,12 @@ export default function MarketDetailPage() {
                     </div>
                     <div>
                       <p className="text-gray-500">Price Impact</p>
-                      <p className={cn(
-                        "font-medium",
-                        quote.price_impact > 0.05 ? "text-red-400" : "text-green-400"
-                      )}>
+                      <p
+                        className={cn(
+                          'font-medium',
+                          quote.price_impact > 0.05 ? 'text-red-400' : 'text-green-400'
+                        )}
+                      >
                         {formatPercent(quote.price_impact)}
                       </p>
                     </div>
@@ -380,11 +409,19 @@ export default function MarketDetailPage() {
 
               {/* Result message */}
               {betResult && (
-                <div className={cn(
-                  "rounded-lg p-4 flex items-center gap-3",
-                  betResult.success ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"
-                )}>
-                  {betResult.success ? <CheckCircle className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
+                <div
+                  className={cn(
+                    'rounded-lg p-4 flex items-center gap-3',
+                    betResult.success
+                      ? 'bg-green-500/20 text-green-400'
+                      : 'bg-red-500/20 text-red-400'
+                  )}
+                >
+                  {betResult.success ? (
+                    <CheckCircle className="w-5 h-5" />
+                  ) : (
+                    <XCircle className="w-5 h-5" />
+                  )}
                   <p>{betResult.message}</p>
                 </div>
               )}
@@ -405,7 +442,7 @@ export default function MarketDetailPage() {
                   className="flex-1 px-4 py-2.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {betMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-                  {connected ? "Place Bet" : "Connect Wallet"}
+                  {connected ? 'Place Bet' : 'Connect Wallet'}
                 </button>
               </div>
             </div>
@@ -414,7 +451,7 @@ export default function MarketDetailPage() {
       )}
 
       {/* Winners (if resolved) */}
-      {market.status === "resolved" && winners && winners.length > 0 && (
+      {market.status === 'resolved' && winners && winners.length > 0 && (
         <div className="rounded-xl border border-white/10 bg-white/5 p-6">
           <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
             <Trophy className="w-5 h-5 text-amber-400" />
@@ -423,11 +460,19 @@ export default function MarketDetailPage() {
 
           {/* Claim Result */}
           {claimResult && (
-            <div className={cn(
-              "rounded-lg p-3 mb-4 flex items-center gap-2",
-              claimResult.success ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"
-            )}>
-              {claimResult.success ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+            <div
+              className={cn(
+                'rounded-lg p-3 mb-4 flex items-center gap-2',
+                claimResult.success
+                  ? 'bg-green-500/20 text-green-400'
+                  : 'bg-red-500/20 text-red-400'
+              )}
+            >
+              {claimResult.success ? (
+                <CheckCircle className="w-4 h-4" />
+              ) : (
+                <XCircle className="w-4 h-4" />
+              )}
               <p className="text-sm">{claimResult.message}</p>
             </div>
           )}
@@ -435,21 +480,26 @@ export default function MarketDetailPage() {
           <div className="space-y-3">
             {winners.map((winner) => {
               const isMyWin = winner.user_pubkey === userPubkey;
-              const isClaimingThis = claimMutation.isPending && claimResult?.positionId === winner.position_id;
-              
+              const isClaimingThis =
+                claimMutation.isPending && claimResult?.positionId === winner.position_id;
+
               return (
                 <div
                   key={winner.position_id}
                   className={cn(
-                    "rounded-lg border p-4 flex items-center justify-between",
-                    isMyWin ? "border-amber-500/50 bg-amber-500/10" : "border-white/10 bg-white/5"
+                    'rounded-lg border p-4 flex items-center justify-between',
+                    isMyWin ? 'border-amber-500/50 bg-amber-500/10' : 'border-white/10 bg-white/5'
                   )}
                 >
                   <div>
                     <div className="flex items-center gap-2">
-                      <p className="text-white font-mono text-sm">{shortenHash(winner.user_pubkey)}</p>
+                      <p className="text-white font-mono text-sm">
+                        {shortenHash(winner.user_pubkey)}
+                      </p>
                       {isMyWin && (
-                        <span className="px-2 py-0.5 rounded text-xs bg-amber-500/20 text-amber-400">You</span>
+                        <span className="px-2 py-0.5 rounded text-xs bg-amber-500/20 text-amber-400">
+                          You
+                        </span>
                       )}
                     </div>
                     <p className="text-gray-400 text-sm">
@@ -504,12 +554,14 @@ export default function MarketDetailPage() {
                 className="rounded-lg border border-white/10 bg-white/5 p-3 flex items-center justify-between text-sm"
               >
                 <div className="flex items-center gap-3">
-                  <span className={cn(
-                    "px-2 py-1 rounded text-xs font-medium",
-                    pos.outcome === 1 
-                      ? "bg-green-500/20 text-green-400" 
-                      : "bg-red-500/20 text-red-400"
-                  )}>
+                  <span
+                    className={cn(
+                      'px-2 py-1 rounded text-xs font-medium',
+                      pos.outcome === 1
+                        ? 'bg-green-500/20 text-green-400'
+                        : 'bg-red-500/20 text-red-400'
+                    )}
+                  >
                     {pos.outcome_name}
                   </span>
                   <span className="text-gray-400 font-mono text-xs">
@@ -519,10 +571,7 @@ export default function MarketDetailPage() {
                 <div className="flex items-center gap-4">
                   <span className="text-white">{formatSats(pos.amount_sats)}</span>
                   <span className="text-gray-500">@ {formatPercent(pos.avg_price)}</span>
-                  <a
-                    href={`#tx/${pos.txid}`}
-                    className="text-amber-400 hover:text-amber-300"
-                  >
+                  <a href={`#tx/${pos.txid}`} className="text-amber-400 hover:text-amber-300">
                     <ExternalLink className="w-4 h-4" />
                   </a>
                 </div>

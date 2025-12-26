@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { useTranslation } from "react-i18next";
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useTranslation } from 'react-i18next';
 import {
   Shield,
   Palette,
@@ -17,51 +17,51 @@ import {
   Anchor,
   BookOpen,
   Globe,
-} from "lucide-react";
-import { useTheme } from "@/contexts/theme-context";
-import { useAuth } from "@/contexts/auth-context";
-import { useQuery } from "@tanstack/react-query";
-import { fetchUserProfile } from "@/lib/api";
+} from 'lucide-react';
+import { useTheme } from '@/contexts/theme-context';
+import { useAuth } from '@/contexts/auth-context';
+import { useQuery } from '@tanstack/react-query';
+import { fetchUserProfile } from '@/lib/api';
 
 const DASHBOARD_BACKEND_URL =
-  process.env.NEXT_PUBLIC_DASHBOARD_BACKEND_URL || "http://localhost:8010";
+  process.env.NEXT_PUBLIC_DASHBOARD_BACKEND_URL || 'http://localhost:8010';
 
-const WIDGET_STORAGE_KEY = "anchor-dashboard-widgets";
+const WIDGET_STORAGE_KEY = 'anchor-dashboard-widgets';
 
 const LANGUAGE_NAMES: Record<string, string> = {
-  en: "English",
-  "pt-BR": "Português (Brasil)",
-  es: "Español",
+  en: 'English',
+  'pt-BR': 'Português (Brasil)',
+  es: 'Español',
 };
 
 export default function SettingsPage() {
   const { t, i18n } = useTranslation();
   const { currentTheme } = useTheme();
   const { isAuthEnabled } = useAuth();
-  
-  const [networkChain, setNetworkChain] = useState<string>("...");
+
+  const [networkChain, setNetworkChain] = useState<string>('...');
   const [notificationsEnabled, setNotificationsEnabled] = useState<boolean | null>(null);
   const [widgetCount, setWidgetCount] = useState<number>(0);
 
   const { data: userProfile } = useQuery({
-    queryKey: ["userProfile"],
+    queryKey: ['userProfile'],
     queryFn: fetchUserProfile,
   });
 
   useEffect(() => {
     // Fetch network info
     fetch(`${DASHBOARD_BACKEND_URL}/bitcoin/info`)
-      .then((res) => res.ok ? res.json() : null)
+      .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data?.chain) {
           setNetworkChain(data.chain.charAt(0).toUpperCase() + data.chain.slice(1));
         }
       })
-      .catch(() => setNetworkChain("Offline"));
+      .catch(() => setNetworkChain('Offline'));
 
     // Fetch notification settings
     fetch(`${DASHBOARD_BACKEND_URL}/settings/notifications`)
-      .then((res) => res.ok ? res.json() : null)
+      .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data?.setting?.value?.enabled !== undefined) {
           setNotificationsEnabled(data.setting.value.enabled);
@@ -84,14 +84,15 @@ export default function SettingsPage() {
   const currentLanguage = LANGUAGE_NAMES[i18n.language] || i18n.language;
 
   // Check if avatar is an image (base64 or URL)
-  const isImageAvatar = userProfile?.avatar_url?.startsWith("data:") || userProfile?.avatar_url?.startsWith("http");
+  const isImageAvatar =
+    userProfile?.avatar_url?.startsWith('data:') || userProfile?.avatar_url?.startsWith('http');
 
   const settingsCards = [
     {
-      href: "/settings/profile",
-      labelKey: "settings.sections.profile.title",
+      href: '/settings/profile',
+      labelKey: 'settings.sections.profile.title',
       icon: <User className="w-6 h-6" />,
-      descriptionKey: "settings.sections.profile.description",
+      descriptionKey: 'settings.sections.profile.description',
       preview: (
         <div className="flex items-center gap-2">
           {isImageAvatar ? (
@@ -101,98 +102,85 @@ export default function SettingsPage() {
               className="w-6 h-6 rounded-full object-cover"
             />
           ) : (
-            <span className="text-lg">{userProfile?.avatar_url || "🧑‍💻"}</span>
+            <span className="text-lg">{userProfile?.avatar_url || '🧑‍💻'}</span>
           )}
-          <span className="text-sm text-muted-foreground">
-            {userProfile?.name || "Bitcoiner"}
-          </span>
+          <span className="text-sm text-muted-foreground">{userProfile?.name || 'Bitcoiner'}</span>
         </div>
       ),
     },
     {
-      href: "/settings/appearance",
-      labelKey: "settings.sections.appearance.title",
+      href: '/settings/appearance',
+      labelKey: 'settings.sections.appearance.title',
       icon: <Palette className="w-6 h-6" />,
-      descriptionKey: "settings.sections.appearance.description",
+      descriptionKey: 'settings.sections.appearance.description',
       preview: (
         <div className="flex items-center gap-2">
           <div
             className="w-4 h-4 rounded-full border border-border"
             style={{ backgroundColor: currentTheme.preview.primary }}
           />
-          <span className="text-sm text-muted-foreground">
-            {currentTheme.name}
-          </span>
+          <span className="text-sm text-muted-foreground">{currentTheme.name}</span>
         </div>
       ),
     },
     {
-      href: "/settings/security",
-      labelKey: "settings.sections.security.title",
+      href: '/settings/security',
+      labelKey: 'settings.sections.security.title',
       icon: <Shield className="w-6 h-6" />,
-      descriptionKey: "settings.sections.security.description",
+      descriptionKey: 'settings.sections.security.description',
       preview: (
         <span className="text-sm text-muted-foreground">
-          {isAuthEnabled ? t("security.enabled") : t("security.disabled")}
+          {isAuthEnabled ? t('security.enabled') : t('security.disabled')}
         </span>
       ),
     },
     {
-      href: "/settings/network",
-      labelKey: "settings.sections.network.title",
+      href: '/settings/network',
+      labelKey: 'settings.sections.network.title',
       icon: <Network className="w-6 h-6" />,
-      descriptionKey: "settings.sections.network.description",
-      preview: (
-        <span className="text-sm text-muted-foreground">{networkChain}</span>
-      ),
+      descriptionKey: 'settings.sections.network.description',
+      preview: <span className="text-sm text-muted-foreground">{networkChain}</span>,
     },
     {
-      href: "/settings/language",
-      labelKey: "settings.sections.language.title",
+      href: '/settings/language',
+      labelKey: 'settings.sections.language.title',
       icon: <Languages className="w-6 h-6" />,
-      descriptionKey: "settings.sections.language.description",
-      preview: (
-        <span className="text-sm text-muted-foreground">{currentLanguage}</span>
-      ),
+      descriptionKey: 'settings.sections.language.description',
+      preview: <span className="text-sm text-muted-foreground">{currentLanguage}</span>,
     },
     {
-      href: "/settings/notifications",
-      labelKey: "settings.sections.notifications.title",
+      href: '/settings/notifications',
+      labelKey: 'settings.sections.notifications.title',
       icon: <Bell className="w-6 h-6" />,
-      descriptionKey: "settings.sections.notifications.description",
+      descriptionKey: 'settings.sections.notifications.description',
       preview: (
         <span className="text-sm text-muted-foreground">
           {notificationsEnabled === null
-            ? "..."
+            ? '...'
             : notificationsEnabled
-            ? t("notifications.enable")
-            : t("common.disabled")}
+              ? t('notifications.enable')
+              : t('common.disabled')}
         </span>
       ),
     },
     {
-      href: "/settings/dashboard",
-      labelKey: "settings.sections.dashboard.title",
+      href: '/settings/dashboard',
+      labelKey: 'settings.sections.dashboard.title',
       icon: <LayoutGrid className="w-6 h-6" />,
-      descriptionKey: "settings.sections.dashboard.description",
-      preview: (
-        <span className="text-sm text-muted-foreground">
-          {widgetCount} widgets
-        </span>
-      ),
+      descriptionKey: 'settings.sections.dashboard.description',
+      preview: <span className="text-sm text-muted-foreground">{widgetCount} widgets</span>,
     },
     {
-      href: "/settings/data",
-      labelKey: "settings.sections.data.title",
+      href: '/settings/data',
+      labelKey: 'settings.sections.data.title',
       icon: <Database className="w-6 h-6" />,
-      descriptionKey: "settings.sections.data.description",
+      descriptionKey: 'settings.sections.data.description',
     },
   ];
 
   return (
     <div className="space-y-6">
       <div className="bg-card border border-border rounded-xl p-6">
-
         <div className="grid gap-3">
           {settingsCards.map((card) => (
             <Link
@@ -204,16 +192,10 @@ export default function SettingsPage() {
                 {card.icon}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-medium text-foreground">
-                  {t(card.labelKey)}
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  {t(card.descriptionKey)}
-                </div>
+                <div className="font-medium text-foreground">{t(card.labelKey)}</div>
+                <div className="text-sm text-muted-foreground">{t(card.descriptionKey)}</div>
               </div>
-              {card.preview && (
-                <div className="hidden sm:block">{card.preview}</div>
-              )}
+              {card.preview && <div className="hidden sm:block">{card.preview}</div>}
               <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
             </Link>
           ))}
@@ -224,7 +206,7 @@ export default function SettingsPage() {
       <div className="bg-card border border-border rounded-xl p-6">
         <h3 className="text-sm font-medium text-foreground mb-4 flex items-center gap-2">
           <Globe className="w-4 h-4 text-primary" />
-          {t("settings.resources", "Resources")}
+          {t('settings.resources', 'Resources')}
         </h3>
         <div className="grid gap-3">
           <a
@@ -239,7 +221,7 @@ export default function SettingsPage() {
             <div className="flex-1 min-w-0">
               <div className="font-medium text-foreground">Anchor OS</div>
               <div className="text-sm text-muted-foreground">
-                {t("settings.anchorOsDescription", "Self-sovereign Bitcoin infrastructure")}
+                {t('settings.anchorOsDescription', 'Self-sovereign Bitcoin infrastructure')}
               </div>
             </div>
             <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
@@ -257,7 +239,7 @@ export default function SettingsPage() {
             <div className="flex-1 min-w-0">
               <div className="font-medium text-foreground">Anchor Protocol</div>
               <div className="text-sm text-muted-foreground">
-                {t("settings.anchorProtocolDescription", "Bitcoin-native messaging protocol")}
+                {t('settings.anchorProtocolDescription', 'Bitcoin-native messaging protocol')}
               </div>
             </div>
             <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
@@ -275,7 +257,7 @@ export default function SettingsPage() {
             <div className="flex-1 min-w-0">
               <div className="font-medium text-foreground">Documentation</div>
               <div className="text-sm text-muted-foreground">
-                {t("settings.docsDescription", "Learn about Anchor Protocol and SDK")}
+                {t('settings.docsDescription', 'Learn about Anchor Protocol and SDK')}
               </div>
             </div>
             <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
@@ -285,12 +267,10 @@ export default function SettingsPage() {
 
       {/* About */}
       <div className="bg-card border border-border rounded-xl p-6">
-        <h3 className="text-sm font-medium text-foreground mb-2">
-          {t("settings.about")}
-        </h3>
+        <h3 className="text-sm font-medium text-foreground mb-2">{t('settings.about')}</h3>
         <div className="text-sm text-muted-foreground space-y-1">
-          <p>{t("app.version")}: 1.0.0</p>
-          <p>{t("app.tagline")}</p>
+          <p>{t('app.version')}: 1.0.0</p>
+          <p>{t('app.tagline')}</p>
         </div>
       </div>
     </div>

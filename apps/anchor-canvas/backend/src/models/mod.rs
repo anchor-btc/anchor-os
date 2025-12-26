@@ -4,8 +4,8 @@
 //! - `pixel` - Core pixel types and protocol encoding
 //! - `api` - API request/response types
 
-mod pixel;
 mod api;
+mod pixel;
 
-pub use pixel::*;
 pub use api::*;
+pub use pixel::*;

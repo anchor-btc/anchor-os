@@ -45,19 +45,25 @@ impl Database {
 
     /// Get marker replies
     pub async fn get_marker_replies(&self, txid_hex: &str, vout: i32) -> Result<Vec<MarkerReply>> {
-        let rows: Vec<(i32, Vec<u8>, i32, String, Option<i32>, chrono::DateTime<chrono::Utc>)> =
-            sqlx::query_as(
-                r#"
+        let rows: Vec<(
+            i32,
+            Vec<u8>,
+            i32,
+            String,
+            Option<i32>,
+            chrono::DateTime<chrono::Utc>,
+        )> = sqlx::query_as(
+            r#"
                 SELECT id, txid, vout, message, block_height, created_at
                 FROM marker_replies
                 WHERE parent_txid = decode($1, 'hex') AND parent_vout = $2
                 ORDER BY created_at ASC
                 "#,
-            )
-            .bind(txid_hex)
-            .bind(vout)
-            .fetch_all(&self.pool)
-            .await?;
+        )
+        .bind(txid_hex)
+        .bind(vout)
+        .fetch_all(&self.pool)
+        .await?;
 
         Ok(rows
             .into_iter()
@@ -72,4 +78,3 @@ impl Database {
             .collect())
     }
 }
-

@@ -44,39 +44,21 @@ mod types;
 mod wallet;
 
 pub use anchor_core::{
-    AnchorKind,
-    Anchor,
-    ParsedAnchorMessage,
-    AnchorMessageBuilder,
-    parse_anchor_payload,
-    encode_anchor_payload,
-    create_anchor_script,
-    ANCHOR_MAGIC,
+    create_anchor_script, encode_anchor_payload, parse_anchor_payload, Anchor, AnchorKind,
+    AnchorMessageBuilder, ParsedAnchorMessage, ANCHOR_MAGIC,
 };
 
 // Re-export carrier types
 pub use anchor_core::carrier::{
-    Carrier,
-    CarrierError,
-    CarrierInfo,
-    CarrierInput,
-    CarrierOutput,
-    CarrierPreferences,
-    CarrierResult,
-    CarrierSelector,
-    CarrierStatus,
-    CarrierType,
-    OpReturnCarrier,
-    InscriptionCarrier,
-    StampsCarrier,
-    AnnexCarrier,
-    WitnessCarrier,
+    AnnexCarrier, Carrier, CarrierError, CarrierInfo, CarrierInput, CarrierOutput,
+    CarrierPreferences, CarrierResult, CarrierSelector, CarrierStatus, CarrierType,
+    InscriptionCarrier, OpReturnCarrier, StampsCarrier, WitnessCarrier,
 };
 
 pub use config::WalletConfig;
-pub use error::{WalletError, Result};
-pub use transaction::{AnchorTransaction, TransactionBuilder, CarrierData, MAX_OP_RETURN_SIZE};
-pub use types::{Utxo, Balance};
+pub use error::{Result, WalletError};
+pub use transaction::{AnchorTransaction, CarrierData, TransactionBuilder, MAX_OP_RETURN_SIZE};
+pub use types::{Balance, Utxo};
 pub use wallet::AnchorWallet;
 
 /// Protocol version

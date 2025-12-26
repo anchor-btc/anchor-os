@@ -26,12 +26,10 @@ impl Config {
         Ok(Self {
             bitcoin_rpc_url: env::var("BITCOIN_RPC_URL")
                 .unwrap_or_else(|_| "http://127.0.0.1:18443".to_string()),
-            bitcoin_rpc_user: env::var("BITCOIN_RPC_USER")
-                .unwrap_or_else(|_| "anchor".to_string()),
+            bitcoin_rpc_user: env::var("BITCOIN_RPC_USER").unwrap_or_else(|_| "anchor".to_string()),
             bitcoin_rpc_password: env::var("BITCOIN_RPC_PASSWORD")
                 .unwrap_or_else(|_| "anchor".to_string()),
-            database_url: env::var("DATABASE_URL")
-                .context("DATABASE_URL must be set")?,
+            database_url: env::var("DATABASE_URL").context("DATABASE_URL must be set")?,
             poll_interval_secs: env::var("POLL_INTERVAL_SECS")
                 .unwrap_or_else(|_| "5".to_string())
                 .parse()
@@ -43,4 +41,3 @@ impl Config {
         })
     }
 }
-

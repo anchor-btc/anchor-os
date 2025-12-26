@@ -267,10 +267,9 @@ impl Carrier for InscriptionCarrier {
     fn decode(&self, input: &CarrierInput) -> CarrierResult<ParsedAnchorMessage> {
         match input {
             CarrierInput::Witness(witness) => self.parse_envelope(witness),
-            CarrierInput::Bytes(data) => {
-                self.try_parse_script_envelope(data)
-                    .ok_or(CarrierError::NotAnchor)
-            }
+            CarrierInput::Bytes(data) => self
+                .try_parse_script_envelope(data)
+                .ok_or(CarrierError::NotAnchor),
             _ => Err(CarrierError::InvalidInput),
         }
     }

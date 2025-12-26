@@ -21,7 +21,7 @@ export {
   type AnchorResolution,
   type CreateMessageOptions,
   type Network,
-} from "./types.js";
+} from './types.js';
 
 // Encoder
 export {
@@ -35,7 +35,7 @@ export {
   encodeRootMessage,
   encodeReplyMessage,
   maxBodySize,
-} from "./encoder.js";
+} from './encoder.js';
 
 // Parser
 export {
@@ -49,7 +49,7 @@ export {
   getCanonicalParent,
   parseOpReturnScript,
   parseFromOpReturn,
-} from "./parser.js";
+} from './parser.js';
 
 // Transaction builder (works in browser with external signing)
 export {
@@ -60,5 +60,4 @@ export {
   createTransactionBuilder,
   type TransactionBuilderOptions,
   type BuiltTransaction,
-} from "./transaction.js";
-
+} from './transaction.js';

@@ -1,8 +1,7 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from 'react';
 import {
-  Fingerprint,
   Plus,
   Star,
   Globe,
@@ -11,8 +10,6 @@ import {
   Copy,
   Check,
   AlertCircle,
-  Key,
-  Server,
   Radio,
   Zap,
   CloudDownload,
@@ -22,7 +19,7 @@ import {
   Shield,
   Eye,
   EyeOff,
-} from "lucide-react";
+} from 'lucide-react';
 import {
   fetchIdentities,
   fetchIdentityDefaults,
@@ -37,8 +34,8 @@ import {
   IdentityDefaults,
   IdentityType,
   ExportKeyResult,
-} from "@/lib/api";
-import { PublishDnsModal } from "@/components/identity/publish-dns-modal";
+} from '@/lib/api';
+import { PublishDnsModal } from '@/components/identity/publish-dns-modal';
 
 // ============================================================================
 // Identity Card Component
@@ -53,7 +50,14 @@ interface IdentityCardProps {
   onBackup: (identity: Identity) => void;
 }
 
-function IdentityCard({ identity, onSetPrimary, onDelete, onPublishDns, onUpdate, onBackup }: IdentityCardProps) {
+function IdentityCard({
+  identity,
+  onSetPrimary,
+  onDelete,
+  onPublishDns,
+  onUpdate,
+  onBackup,
+}: IdentityCardProps) {
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editLabel, setEditLabel] = useState(identity.label);
@@ -77,14 +81,14 @@ function IdentityCard({ identity, onSetPrimary, onDelete, onPublishDns, onUpdate
       onUpdate();
       setIsEditing(false);
     } catch (e) {
-      console.error("Failed to update label:", e);
+      console.error('Failed to update label:', e);
     } finally {
       setIsSaving(false);
     }
   };
 
   const metadata = identity.metadata;
-  const relaysCount = (metadata as any)?.relays?.length || 0;
+  const relaysCount = metadata.type === 'nostr' ? metadata.relays?.length || 0 : 0;
 
   return (
     <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-5 hover:border-purple-500/30 transition-all">
@@ -102,8 +106,8 @@ function IdentityCard({ identity, onSetPrimary, onDelete, onPublishDns, onUpdate
                   value={editLabel}
                   onChange={(e) => setEditLabel(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") handleSaveLabel();
-                    if (e.key === "Escape") {
+                    if (e.key === 'Enter') handleSaveLabel();
+                    if (e.key === 'Escape') {
                       setIsEditing(false);
                       setEditLabel(identity.label);
                     }
@@ -281,8 +285,8 @@ function BackupKeyModal({ isOpen, onClose, identity }: BackupKeyModalProps) {
     try {
       const data = await exportIdentityKey(identity.id);
       setKeyData(data);
-    } catch (e: any) {
-      setError(e.message || "Failed to export key");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to export key');
     } finally {
       setIsLoading(false);
     }
@@ -329,8 +333,8 @@ function BackupKeyModal({ isOpen, onClose, identity }: BackupKeyModalProps) {
               <div>
                 <p className="font-medium">Never share your private key!</p>
                 <p className="text-red-400/70 text-xs mt-1">
-                  Anyone with this key has full control of your Nostr identity.
-                  Store it securely offline.
+                  Anyone with this key has full control of your Nostr identity. Store it securely
+                  offline.
                 </p>
               </div>
             </div>
@@ -369,7 +373,7 @@ function BackupKeyModal({ isOpen, onClose, identity }: BackupKeyModalProps) {
                     className="text-xs text-slate-400 hover:text-white flex items-center gap-1"
                   >
                     {showKey ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                    {showKey ? "Hide" : "Reveal"}
+                    {showKey ? 'Hide' : 'Reveal'}
                   </button>
                 </div>
                 <div className="p-3 bg-slate-900 rounded-lg relative">
@@ -399,7 +403,7 @@ function BackupKeyModal({ isOpen, onClose, identity }: BackupKeyModalProps) {
                 ) : (
                   <>
                     <Copy className="w-4 h-4" />
-                    {showKey ? "Copy Private Key" : "Reveal key first to copy"}
+                    {showKey ? 'Copy Private Key' : 'Reveal key first to copy'}
                   </>
                 )}
               </button>
@@ -424,33 +428,33 @@ interface AddIdentityModalProps {
 
 function AddIdentityModal({ isOpen, onClose, defaults, onSuccess }: AddIdentityModalProps) {
   const [step, setStep] = useState(1);
-  const [identityType, setIdentityType] = useState<IdentityType>("nostr");
-  const [label, setLabel] = useState("");
-  const [publicKey, setPublicKey] = useState("");
-  const [privateKey, setPrivateKey] = useState("");
+  const [identityType, setIdentityType] = useState<IdentityType>('nostr');
+  const [label, setLabel] = useState('');
+  const [publicKey, setPublicKey] = useState('');
+  const [privateKey, setPrivateKey] = useState('');
   const [selectedRelays, setSelectedRelays] = useState<string[]>([]);
-  const [homeserver, setHomeserver] = useState("");
-  const [inviteToken, setInviteToken] = useState("");
+  const [homeserver, setHomeserver] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [importMode, setImportMode] = useState(false);
-  const [importKey, setImportKey] = useState("");
+  const [importKey, setImportKey] = useState('');
+  const [, setInviteToken] = useState('');
 
   // Reset state when modal opens
   useEffect(() => {
     if (isOpen) {
       setStep(1);
-      setIdentityType("nostr");
-      setLabel("");
-      setPublicKey("");
-      setPrivateKey("");
+      setIdentityType('nostr');
+      setLabel('');
+      setPublicKey('');
+      setPrivateKey('');
       setSelectedRelays(defaults?.nostr.relays || []);
-      setHomeserver(defaults?.pubky.homeservers[0]?.url || "");
-      setInviteToken("");
+      setHomeserver(defaults?.pubky.homeservers[0]?.url || '');
+      setInviteToken('');
       setError(null);
       setImportMode(false);
-      setImportKey("");
+      setImportKey('');
     }
   }, [isOpen, defaults]);
 
@@ -461,8 +465,8 @@ function AddIdentityModal({ isOpen, onClose, defaults, onSuccess }: AddIdentityM
       const keypair = await generateKeypair(identityType);
       setPublicKey(keypair.public_key);
       setPrivateKey(keypair.private_key);
-    } catch (e: any) {
-      setError(e.message || "Failed to generate keypair");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to generate keypair');
     } finally {
       setIsGenerating(false);
     }
@@ -474,19 +478,19 @@ function AddIdentityModal({ isOpen, onClose, defaults, onSuccess }: AddIdentityM
     if (importKey.length === 64) {
       setPrivateKey(importKey);
       // TODO: Derive public key from private key
-      setError("Key imported - public key derivation not yet implemented");
+      setError('Key imported - public key derivation not yet implemented');
     } else {
-      setError("Invalid key format. Please enter a 64-character hex private key.");
+      setError('Invalid key format. Please enter a 64-character hex private key.');
     }
   };
 
   const handleCreate = async () => {
     if (!label.trim()) {
-      setError("Please enter a label for this identity");
+      setError('Please enter a label for this identity');
       return;
     }
     if (!publicKey || !privateKey) {
-      setError("Please generate or import a keypair first");
+      setError('Please generate or import a keypair first');
       return;
     }
 
@@ -499,14 +503,15 @@ function AddIdentityModal({ isOpen, onClose, defaults, onSuccess }: AddIdentityM
         label: label.trim(),
         public_key: publicKey,
         private_key_encrypted: privateKey, // TODO: Encrypt with wallet password
-        metadata: identityType === "nostr"
-          ? { type: "nostr", relays: selectedRelays }
-          : { type: "pubky", homeserver: homeserver || undefined },
+        metadata:
+          identityType === 'nostr'
+            ? { type: 'nostr', relays: selectedRelays }
+            : { type: 'pubky', homeserver: homeserver || undefined },
       });
       onSuccess();
       onClose();
-    } catch (e: any) {
-      setError(e.message || "Failed to create identity");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to create identity');
     } finally {
       setIsCreating(false);
     }
@@ -521,7 +526,7 @@ function AddIdentityModal({ isOpen, onClose, defaults, onSuccess }: AddIdentityM
         <div className="p-4 border-b border-gray-800/50">
           <h2 className="text-lg font-medium text-white">Add Identity</h2>
           <p className="text-xs text-gray-500 mt-0.5">
-            Step {step} of 3 — {step === 1 ? "Choose Type" : step === 2 ? "Configure" : "Confirm"}
+            Step {step} of 3 — {step === 1 ? 'Choose Type' : step === 2 ? 'Configure' : 'Confirm'}
           </p>
         </div>
 
@@ -544,7 +549,8 @@ function AddIdentityModal({ isOpen, onClose, defaults, onSuccess }: AddIdentityM
                   <span className="text-sm font-medium text-white">Nostr Identity</span>
                 </div>
                 <p className="text-xs text-gray-400">
-                  Create a secp256k1 keypair for Nostr protocol. Your npub can be published to DNS for discovery.
+                  Create a secp256k1 keypair for Nostr protocol. Your npub can be published to DNS
+                  for discovery.
                 </p>
               </div>
 
@@ -608,7 +614,7 @@ function AddIdentityModal({ isOpen, onClose, defaults, onSuccess }: AddIdentityM
                 </div>
               )}
 
-              {identityType === "nostr" && (
+              {identityType === 'nostr' && (
                 <div>
                   <label className="block text-xs text-gray-500 mb-1">Relays</label>
                   <div className="space-y-1.5 max-h-40 overflow-y-auto p-2 bg-gray-900 rounded">
@@ -646,7 +652,7 @@ function AddIdentityModal({ isOpen, onClose, defaults, onSuccess }: AddIdentityM
                   type="text"
                   value={label}
                   onChange={(e) => setLabel(e.target.value)}
-                  placeholder={`My ${identityType === "nostr" ? "Nostr" : "Pubky"} Identity`}
+                  placeholder={`My ${identityType === 'nostr' ? 'Nostr' : 'Pubky'} Identity`}
                   className="w-full px-3 py-2 bg-gray-900 border border-gray-800 rounded text-sm text-white placeholder-gray-600 focus:border-blue-500 focus:outline-none"
                 />
               </div>
@@ -660,7 +666,7 @@ function AddIdentityModal({ isOpen, onClose, defaults, onSuccess }: AddIdentityM
                   <span className="text-gray-500">Public Key</span>
                   <code className="text-green-400 font-mono">{publicKey.slice(0, 16)}...</code>
                 </div>
-                {identityType === "nostr" && (
+                {identityType === 'nostr' && (
                   <div className="flex justify-between text-xs">
                     <span className="text-gray-500">Relays</span>
                     <span className="text-white">{selectedRelays.length} selected</span>
@@ -678,7 +684,7 @@ function AddIdentityModal({ isOpen, onClose, defaults, onSuccess }: AddIdentityM
             onClick={() => (step === 1 ? onClose() : setStep(step - 1))}
             className="px-3 py-1.5 text-sm text-gray-500 hover:text-white transition-colors"
           >
-            {step === 1 ? "Cancel" : "Back"}
+            {step === 1 ? 'Cancel' : 'Back'}
           </button>
           {step < 3 ? (
             <button
@@ -726,8 +732,8 @@ export default function IdentitiesPage() {
       ]);
       setIdentities(identitiesRes.identities);
       setDefaults(defaultsRes);
-    } catch (e: any) {
-      setError(e.message || "Failed to load identities");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to load identities');
     } finally {
       setIsLoading(false);
     }
@@ -741,18 +747,18 @@ export default function IdentitiesPage() {
     try {
       await setIdentityPrimary(id);
       loadData();
-    } catch (e: any) {
-      setError(e.message || "Failed to set primary");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to set primary');
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this identity?")) return;
+    if (!confirm('Are you sure you want to delete this identity?')) return;
     try {
       await deleteIdentity(id);
       loadData();
-    } catch (e: any) {
-      setError(e.message || "Failed to delete identity");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to delete identity');
     }
   };
 
@@ -761,7 +767,7 @@ export default function IdentitiesPage() {
   };
 
   const [backupIdentity, setBackupIdentity] = useState<Identity | null>(null);
-  
+
   const handleBackup = (identity: Identity) => {
     setBackupIdentity(identity);
   };
@@ -776,21 +782,23 @@ export default function IdentitiesPage() {
     try {
       const result = await syncIdentitiesFromDns();
       if (result.synced_count > 0) {
-        setSyncMessage(`Synced ${result.synced_count} identity(ies) from ${result.checked_domains} domain(s)`);
+        setSyncMessage(
+          `Synced ${result.synced_count} identity(ies) from ${result.checked_domains} domain(s)`
+        );
         loadData(); // Refresh the list
       } else {
         setSyncMessage(`Checked ${result.checked_domains} domain(s), no new identities found`);
       }
       // Clear message after 5 seconds
       setTimeout(() => setSyncMessage(null), 5000);
-    } catch (e: any) {
-      setError(e.message || "Failed to sync from DNS");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to sync from DNS');
     } finally {
       setIsSyncing(false);
     }
   };
 
-  const nostrCount = identities.filter((i) => i.identity_type === "nostr").length;
+  const nostrCount = identities.filter((i) => i.identity_type === 'nostr').length;
   const publishedCount = identities.filter((i) => i.dns_published).length;
 
   return (
@@ -813,7 +821,7 @@ export default function IdentitiesPage() {
             className="px-3 py-2 text-slate-400 hover:text-green-400 hover:bg-green-500/10 rounded-lg transition-colors flex items-center gap-2 text-sm"
             title="Sync from DNS"
           >
-            <CloudDownload className={`w-4 h-4 ${isSyncing ? "animate-pulse" : ""}`} />
+            <CloudDownload className={`w-4 h-4 ${isSyncing ? 'animate-pulse' : ''}`} />
             <span className="hidden sm:inline">Sync DNS</span>
           </button>
           <button
@@ -821,7 +829,7 @@ export default function IdentitiesPage() {
             className="p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
             title="Refresh"
           >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
           <button
             onClick={() => setShowAddModal(true)}
@@ -854,7 +862,10 @@ export default function IdentitiesPage() {
         <div className="mb-4 p-3 bg-green-500/10 border border-green-500/30 rounded-xl flex items-center gap-2 text-green-400 text-sm">
           <CloudDownload className="w-4 h-4 flex-shrink-0" />
           <span className="flex-1">{syncMessage}</span>
-          <button onClick={() => setSyncMessage(null)} className="text-green-400 hover:text-green-300 p-1">
+          <button
+            onClick={() => setSyncMessage(null)}
+            className="text-green-400 hover:text-green-300 p-1"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -886,7 +897,8 @@ export default function IdentitiesPage() {
           </div>
           <h3 className="text-xl font-bold text-white mb-2">No Nostr Identity Yet</h3>
           <p className="text-slate-400 mb-6 max-w-md mx-auto">
-            Create your first Nostr identity keypair. You can then publish it to DNS using Selfie Records.
+            Create your first Nostr identity keypair. You can then publish it to DNS using Selfie
+            Records.
           </p>
           <button
             onClick={() => setShowAddModal(true)}
@@ -899,10 +911,10 @@ export default function IdentitiesPage() {
       )}
 
       {/* Identity Grid - Only showing Nostr identities for now */}
-      {identities.filter(i => i.identity_type === "nostr").length > 0 && (
+      {identities.filter((i) => i.identity_type === 'nostr').length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {identities
-            .filter((identity) => identity.identity_type === "nostr")
+            .filter((identity) => identity.identity_type === 'nostr')
             .map((identity) => (
               <IdentityCard
                 key={identity.id}
@@ -942,4 +954,3 @@ export default function IdentitiesPage() {
     </main>
   );
 }
-

@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { LucideIcon, CheckCircle2, Activity } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { dsColors, type DSColor } from "./colors";
+import * as React from 'react';
+import { LucideIcon, CheckCircle2, Activity } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { dsColors, type DSColor } from './colors';
 
 export interface FeatureCardProps {
   /** The icon to display */
@@ -60,7 +60,7 @@ export interface FeatureCardProps {
  */
 export function FeatureCard({
   icon: Icon,
-  color = "primary",
+  color = 'primary',
   title,
   subtitle,
   description,
@@ -77,11 +77,9 @@ export function FeatureCard({
   return (
     <div
       className={cn(
-        "relative rounded-xl border-2 transition-all",
-        isActive
-          ? `${colorClasses.bg} ${colorClasses.border}`
-          : "bg-card border-border",
-        onClick && "cursor-pointer hover:border-border/80",
+        'relative rounded-xl border-2 transition-all',
+        isActive ? `${colorClasses.bg} ${colorClasses.border}` : 'bg-card border-border',
+        onClick && 'cursor-pointer hover:border-border/80',
         className
       )}
       onClick={onClick}
@@ -93,15 +91,12 @@ export function FeatureCard({
             {/* Icon container */}
             <div
               className={cn(
-                "w-12 h-12 rounded-xl flex items-center justify-center",
-                isActive ? `${colorClasses.bg}` : "bg-muted"
+                'w-12 h-12 rounded-xl flex items-center justify-center',
+                isActive ? `${colorClasses.bg}` : 'bg-muted'
               )}
             >
               <Icon
-                className={cn(
-                  "w-6 h-6",
-                  isActive ? colorClasses.text : "text-muted-foreground"
-                )}
+                className={cn('w-6 h-6', isActive ? colorClasses.text : 'text-muted-foreground')}
               />
             </div>
 
@@ -112,7 +107,7 @@ export function FeatureCard({
                 {isActive && badge && (
                   <span
                     className={cn(
-                      "text-xs px-2 py-0.5 rounded-full",
+                      'text-xs px-2 py-0.5 rounded-full',
                       colorClasses.bg,
                       colorClasses.text
                     )}
@@ -127,8 +122,8 @@ export function FeatureCard({
                 {subtitle && (
                   <span
                     className={cn(
-                      "inline-flex items-center gap-1 text-xs",
-                      isRunning ? "text-success" : "text-muted-foreground"
+                      'inline-flex items-center gap-1 text-xs',
+                      isRunning ? 'text-success' : 'text-muted-foreground'
                     )}
                   >
                     {isRunning && <Activity className="w-3 h-3 animate-pulse" />}
@@ -146,24 +141,15 @@ export function FeatureCard({
           </div>
 
           {/* Active checkmark */}
-          {isActive && (
-            <CheckCircle2 className={cn("w-5 h-5", colorClasses.text)} />
-          )}
+          {isActive && <CheckCircle2 className={cn('w-5 h-5', colorClasses.text)} />}
         </div>
 
         {/* Description */}
-        {description && (
-          <p className="text-sm text-muted-foreground">{description}</p>
-        )}
+        {description && <p className="text-sm text-muted-foreground">{description}</p>}
       </div>
 
       {/* Actions */}
-      {actions && (
-        <div className="px-6 pb-6 flex gap-2">
-          {actions}
-        </div>
-      )}
+      {actions && <div className="px-6 pb-6 flex gap-2">{actions}</div>}
     </div>
   );
 }
-

@@ -1,11 +1,6 @@
 //! User profile handlers for personalization
 
-use axum::{
-    extract::State,
-    http::StatusCode,
-    response::IntoResponse,
-    Json,
-};
+use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 use serde::{Deserialize, Serialize};
 use sqlx::Row;
 use std::sync::Arc;
@@ -110,7 +105,10 @@ pub async fn update_profile(
         return Err((StatusCode::BAD_REQUEST, "Name cannot be empty".to_string()));
     }
     if name.len() > 100 {
-        return Err((StatusCode::BAD_REQUEST, "Name too long (max 100 characters)".to_string()));
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "Name too long (max 100 characters)".to_string(),
+        ));
     }
 
     let pool = match &state.db_pool {
@@ -133,7 +131,7 @@ pub async fn update_profile(
 
     if exists {
         sqlx::query(
-            "UPDATE user_profile SET name = $1, avatar_url = $2, updated_at = NOW() WHERE id = 1"
+            "UPDATE user_profile SET name = $1, avatar_url = $2, updated_at = NOW() WHERE id = 1",
         )
         .bind(name)
         .bind(&req.avatar_url)
@@ -141,14 +139,12 @@ pub async fn update_profile(
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
     } else {
-        sqlx::query(
-            "INSERT INTO user_profile (id, name, avatar_url) VALUES (1, $1, $2)"
-        )
-        .bind(name)
-        .bind(&req.avatar_url)
-        .execute(pool)
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+        sqlx::query("INSERT INTO user_profile (id, name, avatar_url) VALUES (1, $1, $2)")
+            .bind(name)
+            .bind(&req.avatar_url)
+            .execute(pool)
+            .await
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
     }
 
     info!("Updated user profile: {}", name);

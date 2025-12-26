@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { cn } from "../../utils/cn";
+import * as React from 'react';
+import { cn } from '../../utils/cn';
 
 export interface FullscreenShellProps {
   /**
@@ -24,7 +24,7 @@ export interface FullscreenShellProps {
 
 /**
  * FullscreenShell - Layout component for fullscreen apps like Canvas and Places.
- * 
+ *
  * Features:
  * - Takes full viewport height (h-screen)
  * - Fixed header at top
@@ -42,30 +42,17 @@ export interface FullscreenShellProps {
  * </FullscreenShell>
  * ```
  */
-export function FullscreenShell({
-  header,
-  footer,
-  children,
-  className,
-}: FullscreenShellProps) {
+export function FullscreenShell({ header, footer, children, className }: FullscreenShellProps) {
   return (
-    <div
-      className={cn(
-        "h-screen flex flex-col overflow-hidden bg-background",
-        className
-      )}
-    >
+    <div className={cn('h-screen flex flex-col overflow-hidden bg-background', className)}>
       {/* Header - fixed height */}
       {header}
 
       {/* Main content - fills remaining space */}
-      <div className="flex-1 flex overflow-hidden">
-        {children}
-      </div>
+      <div className="flex-1 flex overflow-hidden">{children}</div>
 
       {/* Footer - optional, fixed height */}
       {footer}
     </div>
   );
 }
-

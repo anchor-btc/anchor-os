@@ -7,10 +7,11 @@ use super::Database;
 impl Database {
     /// Get the last indexed block height
     pub async fn get_last_block_height(&self) -> Result<i32> {
-        let row: (i32,) =
-            sqlx::query_as("SELECT last_block_height FROM anchor_domains_indexer_state WHERE id = 1")
-                .fetch_one(&self.pool)
-                .await?;
+        let row: (i32,) = sqlx::query_as(
+            "SELECT last_block_height FROM anchor_domains_indexer_state WHERE id = 1",
+        )
+        .fetch_one(&self.pool)
+        .await?;
         Ok(row.0)
     }
 
@@ -41,12 +42,13 @@ impl Database {
             .await?;
 
         // Update indexer state
-        sqlx::query("UPDATE anchor_domains_indexer_state SET last_block_height = $1 - 1 WHERE id = 1")
-            .bind(from_height)
-            .execute(&self.pool)
-            .await?;
+        sqlx::query(
+            "UPDATE anchor_domains_indexer_state SET last_block_height = $1 - 1 WHERE id = 1",
+        )
+        .bind(from_height)
+        .execute(&self.pool)
+        .await?;
 
         Ok(result.rows_affected())
     }
 }
-

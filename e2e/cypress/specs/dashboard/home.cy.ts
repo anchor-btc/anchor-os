@@ -6,7 +6,7 @@ describe('Dashboard Home', () => {
   it('should load the dashboard home page', () => {
     // Check page loads successfully
     cy.url().should('include', 'localhost:8000');
-    
+
     // Check main elements are present
     cy.get('body').should('be.visible');
   });
@@ -28,9 +28,7 @@ describe('Dashboard Home', () => {
 
   it('should have working navigation links', () => {
     // Check that main navigation links exist
-    cy.get('a[href*="/wallet"], a[href*="/node"], a[href*="/services"]')
-      .first()
-      .should('exist');
+    cy.get('a[href*="/wallet"], a[href*="/node"], a[href*="/services"]').first().should('exist');
   });
 
   it('should display services status', () => {
@@ -38,4 +36,3 @@ describe('Dashboard Home', () => {
     cy.contains(/services|containers|running/i, { timeout: 15000 }).should('exist');
   });
 });
-

@@ -1,17 +1,9 @@
-"use client";
+'use client';
 
-import { useTranslation } from "react-i18next";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  Zap,
-  Loader2,
-  Link2,
-  Blocks,
-  AlertTriangle,
-  Layers,
-  Star,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useTranslation } from 'react-i18next';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Zap, Loader2, Link2, Blocks, AlertTriangle, Layers, Star } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import {
   fetchContainers,
   fetchContainerLogs,
@@ -20,8 +12,8 @@ import {
   electrumServerAction,
   ElectrumServer,
   ServerInfo,
-} from "@/lib/api";
-import { useState } from "react";
+} from '@/lib/api';
+import { useState } from 'react';
 
 // Import DS components
 import {
@@ -38,7 +30,7 @@ import {
   ModalHeader,
   ModalContent,
   ModalFooter,
-} from "@/components/ds";
+} from '@/components/ds';
 
 export default function ElectrumPage() {
   const { t } = useTranslation();
@@ -52,39 +44,35 @@ export default function ElectrumPage() {
     refetch: refetchStatus,
     isRefetching: statusRefetching,
   } = useQuery({
-    queryKey: ["electrum-status"],
+    queryKey: ['electrum-status'],
     queryFn: fetchElectrumStatus,
     refetchInterval: 5000,
   });
 
-  const {
-    data: containersData,
-    isLoading: containersLoading,
-  } = useQuery({
-    queryKey: ["containers"],
+  const { data: containersData, isLoading: containersLoading } = useQuery({
+    queryKey: ['containers'],
     queryFn: fetchContainers,
     refetchInterval: 5000,
   });
 
   // Get logs from the default server
-  const defaultServer = electrumStatus?.default_server || "electrs";
-  const defaultContainer = defaultServer === "electrs" 
-    ? "anchor-core-electrs" 
-    : "anchor-core-fulcrum";
+  const defaultServer = electrumStatus?.default_server || 'electrs';
+  const defaultContainer =
+    defaultServer === 'electrs' ? 'anchor-core-electrs' : 'anchor-core-fulcrum';
 
   const { data: logsData } = useQuery({
-    queryKey: ["electrum-logs", defaultContainer],
+    queryKey: ['electrum-logs', defaultContainer],
     queryFn: () => fetchContainerLogs(defaultContainer),
     refetchInterval: 5000,
   });
 
   // Server action mutation (start/stop)
   const serverActionMutation = useMutation({
-    mutationFn: ({ server, action }: { server: ElectrumServer; action: "start" | "stop" }) =>
+    mutationFn: ({ server, action }: { server: ElectrumServer; action: 'start' | 'stop' }) =>
       electrumServerAction(server, action),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["electrum-status"] });
-      queryClient.invalidateQueries({ queryKey: ["containers"] });
+      queryClient.invalidateQueries({ queryKey: ['electrum-status'] });
+      queryClient.invalidateQueries({ queryKey: ['containers'] });
     },
   });
 
@@ -92,16 +80,16 @@ export default function ElectrumPage() {
   const setDefaultMutation = useMutation({
     mutationFn: (server: ElectrumServer) => setDefaultElectrumServer(server),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["electrum-status"] });
-      queryClient.invalidateQueries({ queryKey: ["containers"] });
+      queryClient.invalidateQueries({ queryKey: ['electrum-status'] });
+      queryClient.invalidateQueries({ queryKey: ['containers'] });
       setShowConfirmDefault(false);
       setTargetServer(null);
     },
   });
 
   const containers = containersData?.containers || [];
-  const bitcoinContainer = containers.find((c) => c.name === "anchor-core-bitcoin");
-  const bitcoinRunning = bitcoinContainer?.state === "running";
+  const bitcoinContainer = containers.find((c) => c.name === 'anchor-core-bitcoin');
+  const bitcoinRunning = bitcoinContainer?.state === 'running';
 
   const logLines = logsData?.logs || [];
   const recentLogs = logLines.slice(-30);
@@ -122,7 +110,7 @@ export default function ElectrumPage() {
   const handleStartStop = (server: ElectrumServer, isRunning: boolean) => {
     serverActionMutation.mutate({
       server,
-      action: isRunning ? "stop" : "start",
+      action: isRunning ? 'stop' : 'start',
     });
   };
 
@@ -148,14 +136,12 @@ export default function ElectrumPage() {
       <PageHeader
         icon={Zap}
         iconColor="yellow"
-        title={t("electrum.title", "Electrum Servers")}
-        subtitle={t("electrum.subtitle", "Manage your Electrum servers - both can run simultaneously")}
-        actions={
-          <RefreshButton
-            loading={statusRefetching}
-            onClick={() => refetchStatus()}
-          />
-        }
+        title={t('electrum.title', 'Electrum Servers')}
+        subtitle={t(
+          'electrum.subtitle',
+          'Manage your Electrum servers - both can run simultaneously'
+        )}
+        actions={<RefreshButton loading={statusRefetching} onClick={() => refetchStatus()} />}
       />
 
       {/* Server Cards */}
@@ -164,11 +150,11 @@ export default function ElectrumPage() {
         <ServerCard
           info={electrs}
           name="Electrs"
-          description={t("electrum.electrsDesc", "Lightweight, fast sync, lower resource usage")}
+          description={t('electrum.electrsDesc', 'Lightweight, fast sync, lower resource usage')}
           icon={Zap}
           color="yellow"
-          onSetDefault={() => handleSetDefaultClick("electrs")}
-          onStartStop={(isRunning) => handleStartStop("electrs", isRunning)}
+          onSetDefault={() => handleSetDefaultClick('electrs')}
+          onStartStop={(isRunning) => handleStartStop('electrs', isRunning)}
           isActionPending={serverActionMutation.isPending}
           isSetDefaultPending={setDefaultMutation.isPending}
           t={t}
@@ -178,11 +164,11 @@ export default function ElectrumPage() {
         <ServerCard
           info={fulcrum}
           name="Fulcrum"
-          description={t("electrum.fulcrumDesc", "High-performance, faster queries, more features")}
+          description={t('electrum.fulcrumDesc', 'High-performance, faster queries, more features')}
           icon={Layers}
           color="emerald"
-          onSetDefault={() => handleSetDefaultClick("fulcrum")}
-          onStartStop={(isRunning) => handleStartStop("fulcrum", isRunning)}
+          onSetDefault={() => handleSetDefaultClick('fulcrum')}
+          onStartStop={(isRunning) => handleStartStop('fulcrum', isRunning)}
           isActionPending={serverActionMutation.isPending}
           isSetDefaultPending={setDefaultMutation.isPending}
           t={t}
@@ -194,36 +180,39 @@ export default function ElectrumPage() {
         <SectionHeader
           icon={Link2}
           iconColor="yellow"
-          title={t("electrum.connectionInfo", "Connection Information")}
-          subtitle={t("electrum.connectionDesc", "Use these details to connect to Electrum servers")}
+          title={t('electrum.connectionInfo', 'Connection Information')}
+          subtitle={t(
+            'electrum.connectionDesc',
+            'Use these details to connect to Electrum servers'
+          )}
         />
 
         <Grid cols={{ default: 1, md: 2, lg: 4 }} gap="md">
           <ConfigValue
-            label={t("electrum.electrsHost", "Electrs (Docker)")}
+            label={t('electrum.electrsHost', 'Electrs (Docker)')}
             value="core-electrs:50001"
-            isDefault={defaultServer === "electrs"}
+            isDefault={defaultServer === 'electrs'}
             mono
             copyable
           />
           <ConfigValue
-            label={t("electrum.electrsExternal", "Electrs (External)")}
+            label={t('electrum.electrsExternal', 'Electrs (External)')}
             value="localhost:50001"
-            isDefault={defaultServer === "electrs"}
+            isDefault={defaultServer === 'electrs'}
             mono
             copyable
           />
           <ConfigValue
-            label={t("electrum.fulcrumHost", "Fulcrum (Docker)")}
+            label={t('electrum.fulcrumHost', 'Fulcrum (Docker)')}
             value="core-fulcrum:50002"
-            isDefault={defaultServer === "fulcrum"}
+            isDefault={defaultServer === 'fulcrum'}
             mono
             copyable
           />
           <ConfigValue
-            label={t("electrum.fulcrumExternal", "Fulcrum (External)")}
+            label={t('electrum.fulcrumExternal', 'Fulcrum (External)')}
             value="localhost:50002"
-            isDefault={defaultServer === "fulcrum"}
+            isDefault={defaultServer === 'fulcrum'}
             mono
             copyable
           />
@@ -233,25 +222,32 @@ export default function ElectrumPage() {
           <div className="flex items-center gap-2">
             <Blocks className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm text-muted-foreground">
-              {t("electrum.bitcoinNode", "Bitcoin Node")}:
+              {t('electrum.bitcoinNode', 'Bitcoin Node')}:
             </span>
-            <span className={cn(
-              "text-sm font-medium",
-              bitcoinRunning ? "text-success" : "text-destructive"
-            )}>
-              {bitcoinRunning ? t("electrum.connected", "Connected") : t("electrum.disconnected", "Disconnected")}
+            <span
+              className={cn(
+                'text-sm font-medium',
+                bitcoinRunning ? 'text-success' : 'text-destructive'
+              )}
+            >
+              {bitcoinRunning
+                ? t('electrum.connected', 'Connected')
+                : t('electrum.disconnected', 'Disconnected')}
             </span>
           </div>
         </div>
       </Section>
 
       {/* Default Server Info */}
-      <InfoBox variant="info" icon={Star} title={t("electrum.defaultServer", "Default Server")}>
+      <InfoBox variant="info" icon={Star} title={t('electrum.defaultServer', 'Default Server')}>
         <span className="text-primary font-medium">
-          {defaultServer === "electrs" ? "Electrs" : "Fulcrum"}
+          {defaultServer === 'electrs' ? 'Electrs' : 'Fulcrum'}
         </span>
-        {" - "}
-        {t("electrum.defaultDesc", "Dependent services (Mempool, BTC RPC Explorer) use the default server.")}
+        {' - '}
+        {t(
+          'electrum.defaultDesc',
+          'Dependent services (Mempool, BTC RPC Explorer) use the default server.'
+        )}
       </InfoBox>
 
       {/* Recent Logs */}
@@ -259,10 +255,11 @@ export default function ElectrumPage() {
         <Section>
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold text-foreground">
-              {t("electrum.recentLogs", "Recent Logs")} ({defaultServer === "electrs" ? "Electrs" : "Fulcrum"})
+              {t('electrum.recentLogs', 'Recent Logs')} (
+              {defaultServer === 'electrs' ? 'Electrs' : 'Fulcrum'})
             </h2>
             <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
-              {t("electrum.defaultLabel", "Default Server")}
+              {t('electrum.defaultLabel', 'Default Server')}
             </span>
           </div>
           <div className="bg-muted/50 rounded-lg p-4 max-h-48 overflow-y-auto font-mono text-xs">
@@ -280,12 +277,12 @@ export default function ElectrumPage() {
         <ModalHeader
           icon={AlertTriangle}
           iconColor="warning"
-          title={t("electrum.confirmDefault", "Change Default Server?")}
+          title={t('electrum.confirmDefault', 'Change Default Server?')}
         />
         <ModalContent>
           {t(
-            "electrum.confirmDefaultDesc",
-            "This will restart dependent services (Mempool, BTC RPC Explorer) to use the new server. The target server must be running."
+            'electrum.confirmDefaultDesc',
+            'This will restart dependent services (Mempool, BTC RPC Explorer) to use the new server. The target server must be running.'
           )}
         </ModalContent>
         <ModalFooter>
@@ -293,7 +290,7 @@ export default function ElectrumPage() {
             onClick={handleCloseModal}
             className="flex-1 px-4 py-2 bg-muted hover:bg-muted/80 rounded-lg text-sm font-medium transition-colors"
           >
-            {t("common.cancel", "Cancel")}
+            {t('common.cancel', 'Cancel')}
           </button>
           <button
             onClick={confirmSetDefault}
@@ -305,7 +302,7 @@ export default function ElectrumPage() {
             ) : (
               <Star className="w-4 h-4" />
             )}
-            {t("electrum.setDefault", "Set as Default")}
+            {t('electrum.setDefault', 'Set as Default')}
           </button>
         </ModalFooter>
       </Modal>
@@ -314,8 +311,8 @@ export default function ElectrumPage() {
 }
 
 // Server Card Component (using FeatureCard internally)
-import { LucideIcon } from "lucide-react";
-import { TFunction } from "i18next";
+import { LucideIcon } from 'lucide-react';
+import { TFunction } from 'i18next';
 
 function ServerCard({
   info,
@@ -333,14 +330,14 @@ function ServerCard({
   name: string;
   description: string;
   icon: LucideIcon;
-  color: "yellow" | "emerald";
+  color: 'yellow' | 'emerald';
   onSetDefault: () => void;
   onStartStop: (isRunning: boolean) => void;
   isActionPending: boolean;
   isSetDefaultPending: boolean;
   t: TFunction;
 }) {
-  const isRunning = info?.status === "running";
+  const isRunning = info?.status === 'running';
   const isDefault = info?.is_default || false;
 
   return (
@@ -348,16 +345,16 @@ function ServerCard({
       icon={icon}
       color={color}
       title={name}
-      subtitle={info?.status || "stopped"}
+      subtitle={info?.status || 'stopped'}
       description={description}
       isActive={isDefault}
-      badge={t("electrum.default", "Default")}
+      badge={t('electrum.default', 'Default')}
       isRunning={isRunning}
-      info={`Port ${info?.port || (color === "yellow" ? "50001" : "50002")}`}
+      info={`Port ${info?.port || (color === 'yellow' ? '50001' : '50002')}`}
       actions={
         <>
           <ActionButton
-            variant={isRunning ? "stop" : "start"}
+            variant={isRunning ? 'stop' : 'start'}
             loading={isActionPending}
             onClick={() => onStartStop(isRunning)}
             fullWidth
@@ -367,15 +364,15 @@ function ServerCard({
               onClick={onSetDefault}
               disabled={isSetDefaultPending || !isRunning}
               className={cn(
-                "flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2",
+                'flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2',
                 isRunning
-                  ? "bg-primary/10 hover:bg-primary/20 text-primary"
-                  : "bg-muted text-muted-foreground cursor-not-allowed"
+                  ? 'bg-primary/10 hover:bg-primary/20 text-primary'
+                  : 'bg-muted text-muted-foreground cursor-not-allowed'
               )}
-              title={!isRunning ? t("electrum.startFirst", "Start the server first") : ""}
+              title={!isRunning ? t('electrum.startFirst', 'Start the server first') : ''}
             >
               <Star className="w-4 h-4" />
-              {t("electrum.setDefault", "Set Default")}
+              {t('electrum.setDefault', 'Set Default')}
             </button>
           )}
         </>

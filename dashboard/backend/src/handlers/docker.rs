@@ -6,7 +6,10 @@ use axum::{
     response::IntoResponse,
     Json,
 };
-use bollard::container::{ListContainersOptions, RestartContainerOptions, StartContainerOptions, StopContainerOptions, StatsOptions};
+use bollard::container::{
+    ListContainersOptions, RestartContainerOptions, StartContainerOptions, StatsOptions,
+    StopContainerOptions,
+};
 use futures::StreamExt;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -144,52 +147,61 @@ pub async fn start_container(
         })),
         Err(e) => {
             let error_str = e.to_string();
-            
+
             // If container doesn't exist (404), try to create it via docker compose
             if error_str.contains("404") || error_str.contains("No such container") {
-                info!("Container {} doesn't exist, trying to create via docker compose...", id);
-                
+                info!(
+                    "Container {} doesn't exist, trying to create via docker compose...",
+                    id
+                );
+
                 // Extract service name from container name (e.g., "anchor-app-threads-backend" -> "app-threads")
                 let service_name = extract_service_from_container(&id);
-                
+
                 if let Some(profile) = service_name {
                     info!("Creating container with profile: {}", profile);
-                    
+
                     // Get all required profiles (service + its dependencies)
                     let profiles = get_required_profiles(&profile);
                     info!("Using profiles: {:?}", profiles);
-                    
+
                     let output = tokio::task::spawn_blocking(move || {
                         let mut cmd = std::process::Command::new("docker");
                         cmd.current_dir("/anchor-project");
                         cmd.arg("compose");
-                        
+
                         // Add all required profiles
                         for p in &profiles {
                             cmd.arg("--profile").arg(p);
                         }
-                        
+
                         cmd.args(["up", "-d"]);
                         cmd.output()
                     })
                     .await
                     .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
                     .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-                    
+
                     if output.status.success() {
                         return Ok(Json(ContainerActionResponse {
                             success: true,
-                            message: format!("Container {} created and started via docker compose", id),
+                            message: format!(
+                                "Container {} created and started via docker compose",
+                                id
+                            ),
                             container_id: id,
                         }));
                     } else {
                         let stderr = String::from_utf8_lossy(&output.stderr);
                         error!("Docker compose failed: {}", stderr);
-                        return Err((StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to create container: {}", stderr)));
+                        return Err((
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                            format!("Failed to create container: {}", stderr),
+                        ));
                     }
                 }
             }
-            
+
             error!("Failed to start container {}: {}", id, e);
             Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
         }
@@ -199,10 +211,7 @@ pub async fn start_container(
 /// Get all required profiles for a service (including dependencies)
 fn get_required_profiles(service: &str) -> Vec<String> {
     // Base profiles that are always needed for most services
-    let mut all_profiles = vec![
-        "core-bitcoin".to_string(),
-        "core-postgres".to_string(),
-    ];
+    let mut all_profiles = vec!["core-bitcoin".to_string(), "core-postgres".to_string()];
 
     // Service-specific dependencies (including ALL required deps)
     let service_deps: Vec<String> = match service {
@@ -210,25 +219,29 @@ fn get_required_profiles(service: &str) -> Vec<String> {
         "app-threads" => vec!["core-wallet".to_string(), "app-threads".to_string()],
         "app-canvas" | "app-places" | "app-domains" | "app-proof" | "app-tokens" => {
             vec!["core-wallet".to_string(), service.to_string()]
-        },
+        }
         // Oracles has its own postgres
         "app-oracles" => vec!["core-wallet".to_string(), "app-oracles".to_string()],
         // Lottery depends on oracles
         "app-predictions" => vec![
             "core-wallet".to_string(),
-            "app-oracles".to_string(),  // Lottery depends on oracles!
+            "app-oracles".to_string(), // Lottery depends on oracles!
             "app-predictions".to_string(),
         ],
         // Core services
         "core-wallet" => vec!["core-wallet".to_string()],
         "core-indexer" => vec!["core-indexer".to_string()],
-        "core-testnet" => vec!["core-wallet".to_string(), "core-indexer".to_string(), "core-testnet".to_string()],
+        "core-testnet" => vec![
+            "core-wallet".to_string(),
+            "core-indexer".to_string(),
+            "core-testnet".to_string(),
+        ],
         "core-fulcrum" => vec!["core-fulcrum".to_string()],
         "core-electrs" => vec!["core-electrs".to_string()],
         // Explorers - mempool needs electrs!
         "explorer-btc-rpc" => vec!["explorer-btc-rpc".to_string()],
         "explorer-mempool" => vec![
-            "core-electrs".to_string(),  // Mempool depends on electrs!
+            "core-electrs".to_string(), // Mempool depends on electrs!
             "explorer-mempool".to_string(),
         ],
         "explorer-bitfeed" => vec!["explorer-bitfeed".to_string()],
@@ -257,7 +270,7 @@ fn extract_service_from_container(container_name: &str) -> Option<String> {
     // Container names like "anchor-app-threads-backend" -> profile "app-threads"
     // Container names like "anchor-core-fulcrum" -> profile "core-fulcrum"
     let name = container_name.trim_start_matches("anchor-");
-    
+
     // Known patterns
     let patterns = [
         ("app-threads-backend", "app-threads"),
@@ -293,13 +306,13 @@ fn extract_service_from_container(container_name: &str) -> Option<String> {
         ("networking-cloudflare", "networking-cloudflare"),
         ("monitoring-netdata", "monitoring-netdata"),
     ];
-    
+
     for (pattern, profile) in patterns {
         if name == pattern || name.starts_with(&format!("{}-", pattern)) {
             return Some(profile.to_string());
         }
     }
-    
+
     // Fallback: use the name as-is
     Some(name.to_string())
 }
@@ -396,10 +409,7 @@ pub async fn shutdown_all(
     info!("Shutting down all Anchor OS containers...");
 
     // Containers that must stay running for the dashboard to work
-    let essential_containers = [
-        "anchor-dashboard-backend",
-        "anchor-dashboard-frontend",
-    ];
+    let essential_containers = ["anchor-dashboard-backend", "anchor-dashboard-frontend"];
 
     // List all anchor-* containers
     let mut filters = HashMap::new();
@@ -474,10 +484,7 @@ pub async fn restart_all(
     info!("Restarting all Anchor OS containers...");
 
     // Containers that should not be restarted
-    let skip_containers = [
-        "anchor-dashboard-backend",
-        "anchor-dashboard-frontend",
-    ];
+    let skip_containers = ["anchor-dashboard-backend", "anchor-dashboard-frontend"];
 
     // List all anchor-* containers
     let mut filters = HashMap::new();
@@ -643,7 +650,7 @@ pub async fn exec_container(
 
     // Parse command - split by spaces but respect quotes
     let cmd: Vec<&str> = req.command.split_whitespace().collect();
-    
+
     if cmd.is_empty() {
         return Err((StatusCode::BAD_REQUEST, "Empty command".to_string()));
     }
@@ -675,7 +682,10 @@ pub async fn exec_container(
 
     let mut output = String::new();
 
-    if let StartExecResults::Attached { output: mut stream, .. } = start_result {
+    if let StartExecResults::Attached {
+        output: mut stream, ..
+    } = start_result
+    {
         while let Some(result) = stream.next().await {
             match result {
                 Ok(chunk) => {
@@ -791,7 +801,7 @@ pub async fn get_docker_stats(
         });
 
         let mut stats_stream = state.docker.stats(&id, stats_options);
-        
+
         if let Some(Ok(stats)) = stats_stream.next().await {
             // Calculate CPU percentage
             let cpu_delta = stats.cpu_stats.cpu_usage.total_usage as f64
@@ -799,7 +809,7 @@ pub async fn get_docker_stats(
             let system_delta = stats.cpu_stats.system_cpu_usage.unwrap_or(0) as f64
                 - stats.precpu_stats.system_cpu_usage.unwrap_or(0) as f64;
             let num_cpus = stats.cpu_stats.online_cpus.unwrap_or(1) as f64;
-            
+
             let cpu_percent = if system_delta > 0.0 && cpu_delta > 0.0 {
                 (cpu_delta / system_delta) * num_cpus * 100.0
             } else {
@@ -917,7 +927,10 @@ pub async fn rebuild_container(
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     use std::process::Command;
 
-    info!("Rebuilding container: {} with args: {:?}", req.service, req.build_args);
+    info!(
+        "Rebuilding container: {} with args: {:?}",
+        req.service, req.build_args
+    );
 
     // Build the docker compose command
     let mut build_cmd = Command::new("docker");
@@ -925,7 +938,9 @@ pub async fn rebuild_container(
 
     // Add build args
     for (key, value) in &req.build_args {
-        build_cmd.arg("--build-arg").arg(format!("{}={}", key, value));
+        build_cmd
+            .arg("--build-arg")
+            .arg(format!("{}={}", key, value));
     }
 
     build_cmd.arg(&req.service);
@@ -933,7 +948,10 @@ pub async fn rebuild_container(
     // Execute build
     let build_output = build_cmd.output().map_err(|e| {
         error!("Failed to execute docker compose build: {}", e);
-        (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to build: {}", e))
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Failed to build: {}", e),
+        )
     })?;
 
     let build_stdout = String::from_utf8_lossy(&build_output.stdout);
@@ -960,7 +978,10 @@ pub async fn rebuild_container(
         .output()
         .map_err(|e| {
             error!("Failed to restart container: {}", e);
-            (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to restart: {}", e))
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Failed to restart: {}", e),
+            )
         })?;
 
     let restart_stdout = String::from_utf8_lossy(&restart_output.stdout);
@@ -978,9 +999,14 @@ pub async fn rebuild_container(
 
     Ok(Json(RebuildContainerResponse {
         success: true,
-        message: format!("Container {} rebuilt and restarted successfully", req.service),
+        message: format!(
+            "Container {} rebuilt and restarted successfully",
+            req.service
+        ),
         service: req.service,
-        output: format!("{}\n{}\n{}\n{}", build_stdout, build_stderr, restart_stdout, restart_stderr),
+        output: format!(
+            "{}\n{}\n{}\n{}",
+            build_stdout, build_stderr, restart_stdout, restart_stderr
+        ),
     }))
 }
-

@@ -2,10 +2,11 @@
  * Anchor Places API Client
  */
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3301";
-const WALLET_URL = process.env.NEXT_PUBLIC_WALLET_URL || "http://localhost:8001";
-const DASHBOARD_API_URL = process.env.NEXT_PUBLIC_DASHBOARD_API_URL || "http://localhost:8000";
-const DEFAULT_BLOCK_EXPLORER_URL = process.env.NEXT_PUBLIC_BLOCK_EXPLORER_URL || "http://localhost:4000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3301';
+const WALLET_URL = process.env.NEXT_PUBLIC_WALLET_URL || 'http://localhost:8001';
+const DASHBOARD_API_URL = process.env.NEXT_PUBLIC_DASHBOARD_API_URL || 'http://localhost:8000';
+const DEFAULT_BLOCK_EXPLORER_URL =
+  process.env.NEXT_PUBLIC_BLOCK_EXPLORER_URL || 'http://localhost:4000';
 
 // Explorer cache
 let cachedExplorerUrl: string | null = null;
@@ -21,7 +22,7 @@ async function fetchDefaultExplorerUrl(): Promise<string> {
       return data.base_url;
     }
   } catch (e) {
-    console.warn("Failed to fetch default explorer, using fallback:", e);
+    console.warn('Failed to fetch default explorer, using fallback:', e);
   }
   return DEFAULT_BLOCK_EXPLORER_URL;
 }
@@ -29,16 +30,16 @@ async function fetchDefaultExplorerUrl(): Promise<string> {
 // Get the explorer URL (with caching)
 export async function getExplorerBaseUrl(): Promise<string> {
   if (cachedExplorerUrl) return cachedExplorerUrl;
-  
+
   if (!explorerFetchPromise) {
     explorerFetchPromise = fetchDefaultExplorerUrl();
   }
-  
+
   return explorerFetchPromise;
 }
 
 // Initialize explorer URL on module load (for sync access)
-if (typeof window !== "undefined") {
+if (typeof window !== 'undefined') {
   fetchDefaultExplorerUrl();
 }
 
@@ -120,9 +121,9 @@ export interface CarrierType {
 }
 
 export const CARRIERS: CarrierType[] = [
-  { id: 0, name: "OP_RETURN", description: "Standard, low cost", icon: "zap", maxSize: 80 },
-  { id: 1, name: "Inscription", description: "Ordinal inscription", icon: "gem", maxSize: 400000 },
-  { id: 2, name: "Stamps", description: "Bitcoin Stamps", icon: "stamp", maxSize: 10000 },
+  { id: 0, name: 'OP_RETURN', description: 'Standard, low cost', icon: 'zap', maxSize: 80 },
+  { id: 1, name: 'Inscription', description: 'Ordinal inscription', icon: 'gem', maxSize: 400000 },
+  { id: 2, name: 'Stamps', description: 'Bitcoin Stamps', icon: 'stamp', maxSize: 10000 },
 ];
 
 export interface WalletBalance {
@@ -133,30 +134,30 @@ export interface WalletBalance {
 
 // Category definitions (matching backend)
 export const CATEGORIES: Category[] = [
-  { id: 0, name: "General", icon: "map-pin", color: "#FF6B35" },
-  { id: 1, name: "Tourism", icon: "camera", color: "#3B82F6" },
-  { id: 2, name: "Commerce", icon: "shopping-bag", color: "#10B981" },
-  { id: 3, name: "Event", icon: "calendar", color: "#8B5CF6" },
-  { id: 4, name: "Warning", icon: "alert-triangle", color: "#EF4444" },
-  { id: 5, name: "Historic", icon: "landmark", color: "#F59E0B" },
+  { id: 0, name: 'General', icon: 'map-pin', color: '#FF6B35' },
+  { id: 1, name: 'Tourism', icon: 'camera', color: '#3B82F6' },
+  { id: 2, name: 'Commerce', icon: 'shopping-bag', color: '#10B981' },
+  { id: 3, name: 'Event', icon: 'calendar', color: '#8B5CF6' },
+  { id: 4, name: 'Warning', icon: 'alert-triangle', color: '#EF4444' },
+  { id: 5, name: 'Historic', icon: 'landmark', color: '#F59E0B' },
 ];
 
 // API Functions
 export async function fetchStats(): Promise<MapStats> {
   const res = await fetch(`${API_URL}/stats`);
-  if (!res.ok) throw new Error("Failed to fetch stats");
+  if (!res.ok) throw new Error('Failed to fetch stats');
   return res.json();
 }
 
 export async function fetchCategories(): Promise<Category[]> {
   const res = await fetch(`${API_URL}/categories`);
-  if (!res.ok) throw new Error("Failed to fetch categories");
+  if (!res.ok) throw new Error('Failed to fetch categories');
   return res.json();
 }
 
 export async function fetchMarkers(limit = 100): Promise<Marker[]> {
   const res = await fetch(`${API_URL}/markers?per_page=${limit}`);
-  if (!res.ok) throw new Error("Failed to fetch markers");
+  if (!res.ok) throw new Error('Failed to fetch markers');
   return res.json();
 }
 
@@ -167,41 +168,34 @@ export async function fetchMarkersInBounds(params: BoundsParams): Promise<Marker
     lng_min: params.lng_min.toString(),
     lng_max: params.lng_max.toString(),
   });
-  
+
   if (params.category !== undefined) {
-    query.set("category", params.category.toString());
+    query.set('category', params.category.toString());
   }
   if (params.limit !== undefined) {
-    query.set("limit", params.limit.toString());
+    query.set('limit', params.limit.toString());
   }
 
   const res = await fetch(`${API_URL}/markers/bounds?${query}`);
-  if (!res.ok) throw new Error("Failed to fetch markers in bounds");
+  if (!res.ok) throw new Error('Failed to fetch markers in bounds');
   return res.json();
 }
 
-export async function searchMarkers(
-  q: string,
-  category?: number,
-  limit = 100
-): Promise<Marker[]> {
+export async function searchMarkers(q: string, category?: number, limit = 100): Promise<Marker[]> {
   const query = new URLSearchParams({ q });
   if (category !== undefined) {
-    query.set("category", category.toString());
+    query.set('category', category.toString());
   }
-  query.set("limit", limit.toString());
+  query.set('limit', limit.toString());
 
   const res = await fetch(`${API_URL}/markers/search?${query}`);
-  if (!res.ok) throw new Error("Failed to search markers");
+  if (!res.ok) throw new Error('Failed to search markers');
   return res.json();
 }
 
-export async function fetchMarkerDetail(
-  txid: string,
-  vout: number
-): Promise<MarkerDetail> {
+export async function fetchMarkerDetail(txid: string, vout: number): Promise<MarkerDetail> {
   const res = await fetch(`${API_URL}/markers/${txid}/${vout}`);
-  if (!res.ok) throw new Error("Failed to fetch marker detail");
+  if (!res.ok) throw new Error('Failed to fetch marker detail');
   return res.json();
 }
 
@@ -212,12 +206,12 @@ export async function fetchMyMarkers(
 ): Promise<Marker[]> {
   const query = new URLSearchParams({ address });
   if (category !== undefined) {
-    query.set("category", category.toString());
+    query.set('category', category.toString());
   }
-  query.set("limit", limit.toString());
+  query.set('limit', limit.toString());
 
   const res = await fetch(`${API_URL}/markers/my?${query}`);
-  if (!res.ok) throw new Error("Failed to fetch my markers");
+  if (!res.ok) throw new Error('Failed to fetch my markers');
   return res.json();
 }
 
@@ -232,9 +226,9 @@ export async function fetchMyMarkersForAddresses(
   const promises = addresses.map(async (address) => {
     const query = new URLSearchParams({ address });
     if (category !== undefined) {
-      query.set("category", category.toString());
+      query.set('category', category.toString());
     }
-    query.set("limit", limit.toString());
+    query.set('limit', limit.toString());
 
     try {
       const res = await fetch(`${API_URL}/markers/my?${query}`);
@@ -246,12 +240,12 @@ export async function fetchMyMarkersForAddresses(
   });
 
   const results = await Promise.all(promises);
-  
+
   // Flatten and deduplicate by txid+vout
   const allMarkers = results.flat();
   const seen = new Set<string>();
   const unique: Marker[] = [];
-  
+
   for (const marker of allMarkers) {
     const key = `${marker.txid}-${marker.vout}`;
     if (!seen.has(key)) {
@@ -266,18 +260,16 @@ export async function fetchMyMarkersForAddresses(
   return unique.slice(0, limit);
 }
 
-export async function createMarker(
-  request: CreateMarkerRequest
-): Promise<CreateMarkerResponse> {
+export async function createMarker(request: CreateMarkerRequest): Promise<CreateMarkerResponse> {
   const res = await fetch(`${API_URL}/markers`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(request),
   });
 
   if (!res.ok) {
     const error = await res.text();
-    throw new Error(error || "Failed to create marker");
+    throw new Error(error || 'Failed to create marker');
   }
 
   return res.json();
@@ -289,14 +281,14 @@ export async function createReply(
   message: string
 ): Promise<CreateMarkerResponse> {
   const res = await fetch(`${API_URL}/markers/${parentTxid}/${parentVout}/reply`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ message }),
   });
 
   if (!res.ok) {
     const error = await res.text();
-    throw new Error(error || "Failed to create reply");
+    throw new Error(error || 'Failed to create reply');
   }
 
   return res.json();
@@ -305,31 +297,31 @@ export async function createReply(
 // Wallet API
 export async function fetchWalletBalance(): Promise<WalletBalance> {
   const res = await fetch(`${WALLET_URL}/wallet/balance`);
-  if (!res.ok) throw new Error("Failed to fetch balance");
+  if (!res.ok) throw new Error('Failed to fetch balance');
   return res.json();
 }
 
 export async function fetchWalletAddress(): Promise<string> {
   const res = await fetch(`${WALLET_URL}/wallet/address`);
-  if (!res.ok) throw new Error("Failed to fetch wallet address");
+  if (!res.ok) throw new Error('Failed to fetch wallet address');
   const data = await res.json();
   return data.address;
 }
 
 export async function fetchWalletAddresses(): Promise<string[]> {
   const res = await fetch(`${WALLET_URL}/wallet/addresses`);
-  if (!res.ok) throw new Error("Failed to fetch wallet addresses");
+  if (!res.ok) throw new Error('Failed to fetch wallet addresses');
   const data = await res.json();
   return data.addresses || [];
 }
 
 export async function mineBlocks(count = 1): Promise<{ blocks: string[] }> {
   const res = await fetch(`${WALLET_URL}/wallet/mine`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ count }),
   });
-  if (!res.ok) throw new Error("Failed to mine blocks");
+  if (!res.ok) throw new Error('Failed to mine blocks');
   return res.json();
 }
 
@@ -365,12 +357,11 @@ export function formatNumber(n: number): string {
 
 export function formatDate(dateStr: string): string {
   const date = new Date(dateStr);
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
   });
 }
-

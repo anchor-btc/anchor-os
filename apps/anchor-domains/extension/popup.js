@@ -3,39 +3,39 @@
  */
 
 // Supported TLDs
-const SUPPORTED_TLDS = [".btc", ".sat", ".anchor", ".anc", ".bit"];
+const SUPPORTED_TLDS = ['.btc', '.sat', '.anchor', '.anc', '.bit'];
 
-const DEFAULT_API_URL = "http://localhost:3401";
+const DEFAULT_API_URL = 'http://localhost:3401';
 
 // DOM Elements
-const domainInput = document.getElementById("domainInput");
-const resolveBtn = document.getElementById("resolveBtn");
-const resultDiv = document.getElementById("result");
-const resolvedCount = document.getElementById("resolvedCount");
-const domainCount = document.getElementById("domainCount");
-const recentList = document.getElementById("recentList");
-const apiUrlInput = document.getElementById("apiUrl");
-const saveBtn = document.getElementById("saveBtn");
-const clearCacheBtn = document.getElementById("clearCacheBtn");
+const domainInput = document.getElementById('domainInput');
+const resolveBtn = document.getElementById('resolveBtn');
+const resultDiv = document.getElementById('result');
+const resolvedCount = document.getElementById('resolvedCount');
+const domainCount = document.getElementById('domainCount');
+const recentList = document.getElementById('recentList');
+const apiUrlInput = document.getElementById('apiUrl');
+const saveBtn = document.getElementById('saveBtn');
+const clearCacheBtn = document.getElementById('clearCacheBtn');
 
 /**
  * Initialize the popup
  */
 async function init() {
   // Load settings
-  const settings = await chrome.storage.local.get(["apiUrl"]);
+  const settings = await chrome.storage.local.get(['apiUrl']);
   apiUrlInput.value = settings.apiUrl || DEFAULT_API_URL;
 
   // Load stats
   await loadStats();
 
   // Set up event listeners
-  resolveBtn.addEventListener("click", handleResolve);
-  domainInput.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") handleResolve();
+  resolveBtn.addEventListener('click', handleResolve);
+  domainInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') handleResolve();
   });
-  saveBtn.addEventListener("click", handleSave);
-  clearCacheBtn.addEventListener("click", handleClearCache);
+  saveBtn.addEventListener('click', handleSave);
+  clearCacheBtn.addEventListener('click', handleClearCache);
 }
 
 /**
@@ -43,7 +43,7 @@ async function init() {
  */
 function hasSupportedTld(domain) {
   const lowerDomain = domain.toLowerCase();
-  return SUPPORTED_TLDS.some(tld => lowerDomain.endsWith(tld));
+  return SUPPORTED_TLDS.some((tld) => lowerDomain.endsWith(tld));
 }
 
 /**
@@ -55,41 +55,41 @@ async function handleResolve() {
 
   // Add .btc if no supported TLD is present
   if (!hasSupportedTld(domain)) {
-    domain += ".btc";
+    domain += '.btc';
   }
 
   resolveBtn.disabled = true;
-  resolveBtn.textContent = "...";
-  resultDiv.style.display = "none";
+  resolveBtn.textContent = '...';
+  resultDiv.style.display = 'none';
 
   try {
     const response = await chrome.runtime.sendMessage({
-      type: "resolve",
+      type: 'resolve',
       domain,
     });
 
-    resultDiv.style.display = "block";
+    resultDiv.style.display = 'block';
 
     if (response.ip) {
-      resultDiv.className = "result success";
+      resultDiv.className = 'result success';
       resultDiv.innerHTML = `
         <strong>${domain}</strong><br>
         → ${response.ip}
       `;
     } else {
-      resultDiv.className = "result error";
+      resultDiv.className = 'result error';
       resultDiv.textContent = `Domain not found: ${domain}`;
     }
 
     // Reload stats
     await loadStats();
   } catch (error) {
-    resultDiv.style.display = "block";
-    resultDiv.className = "result error";
+    resultDiv.style.display = 'block';
+    resultDiv.className = 'result error';
     resultDiv.textContent = `Error: ${error.message}`;
   } finally {
     resolveBtn.disabled = false;
-    resolveBtn.textContent = "Resolve";
+    resolveBtn.textContent = 'Resolve';
   }
 }
 
@@ -98,7 +98,7 @@ async function handleResolve() {
  */
 async function loadStats() {
   try {
-    const stats = await chrome.runtime.sendMessage({ type: "getStats" });
+    const stats = await chrome.runtime.sendMessage({ type: 'getStats' });
 
     resolvedCount.textContent = stats.resolved || 0;
     domainCount.textContent = Object.keys(stats.domains || {}).length;
@@ -119,7 +119,7 @@ async function loadStats() {
           </div>
         `
         )
-        .join("");
+        .join('');
     } else {
       recentList.innerHTML = `
         <div class="recent-item">
@@ -128,7 +128,7 @@ async function loadStats() {
       `;
     }
   } catch (error) {
-    console.error("Failed to load stats:", error);
+    console.error('Failed to load stats:', error);
   }
 }
 
@@ -140,9 +140,9 @@ async function handleSave() {
 
   await chrome.storage.local.set({ apiUrl });
 
-  saveBtn.textContent = "Saved!";
+  saveBtn.textContent = 'Saved!';
   setTimeout(() => {
-    saveBtn.textContent = "Save";
+    saveBtn.textContent = 'Save';
   }, 1500);
 }
 
@@ -150,16 +150,16 @@ async function handleSave() {
  * Handle cache clear
  */
 async function handleClearCache() {
-  await chrome.runtime.sendMessage({ type: "clearCache" });
+  await chrome.runtime.sendMessage({ type: 'clearCache' });
   await chrome.storage.local.set({ stats: { resolved: 0, domains: {} } });
 
-  clearCacheBtn.textContent = "Cleared!";
+  clearCacheBtn.textContent = 'Cleared!';
   await loadStats();
 
   setTimeout(() => {
-    clearCacheBtn.textContent = "Clear Cache";
+    clearCacheBtn.textContent = 'Clear Cache';
   }, 1500);
 }
 
 // Initialize when DOM is ready
-document.addEventListener("DOMContentLoaded", init);
+document.addEventListener('DOMContentLoaded', init);

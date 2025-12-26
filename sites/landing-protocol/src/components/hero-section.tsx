@@ -1,29 +1,29 @@
-"use client";
+'use client';
 
-import { motion } from "framer-motion";
+import { motion } from 'framer-motion';
 
 export function HeroSection() {
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden">
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-radial from-accent/5 via-transparent to-transparent" />
-      
+
       {/* Animated grid pattern */}
-      <div 
+      <div
         className="absolute inset-0 opacity-[0.02]"
         style={{
           backgroundImage: `linear-gradient(rgba(245,158,11,0.3) 1px, transparent 1px),
                            linear-gradient(90deg, rgba(245,158,11,0.3) 1px, transparent 1px)`,
-          backgroundSize: "60px 60px",
+          backgroundSize: '60px 60px',
         }}
       />
-      
+
       <div className="relative z-10 max-w-4xl mx-auto text-center">
         {/* Anchor Logo */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
           className="mb-8"
         >
           <div className="inline-flex items-center justify-center w-24 h-24 rounded-2xl bg-gradient-to-br from-accent/20 to-orange-500/10 border border-accent/20 glow-accent">
@@ -47,7 +47,7 @@ export function HeroSection() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
+          transition={{ duration: 0.8, delay: 0.1, ease: 'easeOut' }}
           className="mb-6"
         >
           <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-sm font-mono">
@@ -60,7 +60,7 @@ export function HeroSection() {
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+          transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
           className="text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight mb-6"
         >
           <span className="text-foreground">Messages on Bitcoin.</span>
@@ -72,18 +72,18 @@ export function HeroSection() {
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
+          transition={{ duration: 0.8, delay: 0.3, ease: 'easeOut' }}
           className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-12"
         >
-          A Bitcoin-native messaging protocol for embedding structured, immutable data 
-          directly on the blockchain. Censorship-resistant. Cryptographically timestamped.
+          A Bitcoin-native messaging protocol for embedding structured, immutable data directly on
+          the blockchain. Censorship-resistant. Cryptographically timestamped.
         </motion.p>
 
         {/* CTA Buttons */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
+          transition={{ duration: 0.8, delay: 0.4, ease: 'easeOut' }}
           className="flex flex-col sm:flex-row items-center justify-center gap-4"
         >
           <a
@@ -97,7 +97,12 @@ export function HeroSection() {
               viewBox="0 0 24 24"
               stroke="currentColor"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 8l4 4m0 0l-4 4m4-4H3"
+              />
             </svg>
           </a>
           <a
@@ -135,21 +140,20 @@ export function HeroSection() {
       >
         <motion.div
           animate={{ y: [0, 8, 0] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
           className="flex flex-col items-center gap-2 text-muted-foreground"
         >
           <span className="text-xs font-mono uppercase tracking-widest">Scroll</span>
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 14l-7 7m0 0l-7-7m7 7V3"
+            />
           </svg>
         </motion.div>
       </motion.div>
     </section>
   );
 }
-

@@ -267,4 +267,3 @@ mod tests {
         assert_eq!(response.total_pages, 10);
     }
 }
-

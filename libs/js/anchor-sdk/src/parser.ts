@@ -15,8 +15,8 @@ import {
   type Anchor,
   type AnchorMessage,
   type TextMessage,
-} from "./types.js";
-import { bytesToHex } from "./encoder.js";
+} from './types.js';
+import { bytesToHex } from './encoder.js';
 
 /**
  * Check if bytes match ANCHOR magic
@@ -40,7 +40,7 @@ export function parseAnchorPayload(data: Uint8Array): AnchorMessage {
   if (data.length < MIN_PAYLOAD_SIZE) {
     throw new AnchorError(
       AnchorErrorCode.PayloadTooShort,
-      `Payload too short: ${data.length} bytes (min ${MIN_PAYLOAD_SIZE})`,
+      `Payload too short: ${data.length} bytes (min ${MIN_PAYLOAD_SIZE})`
     );
   }
 
@@ -48,7 +48,7 @@ export function parseAnchorPayload(data: Uint8Array): AnchorMessage {
   if (!isAnchorPayload(data)) {
     throw new AnchorError(
       AnchorErrorCode.InvalidMagic,
-      `Invalid magic bytes: expected ${bytesToHex(ANCHOR_MAGIC)}, got ${bytesToHex(data.slice(0, 4))}`,
+      `Invalid magic bytes: expected ${bytesToHex(ANCHOR_MAGIC)}, got ${bytesToHex(data.slice(0, 4))}`
     );
   }
 
@@ -66,7 +66,7 @@ export function parseAnchorPayload(data: Uint8Array): AnchorMessage {
   if (data.length < offset + expectedAnchorBytes) {
     throw new AnchorError(
       AnchorErrorCode.TruncatedAnchors,
-      `Truncated anchors: expected ${expectedAnchorBytes} bytes, have ${data.length - offset}`,
+      `Truncated anchors: expected ${expectedAnchorBytes} bytes, have ${data.length - offset}`
     );
   }
 
@@ -120,7 +120,7 @@ export function getMessageText(message: AnchorMessage): string | null {
  */
 export function anchorMatchesTxid(anchor: Anchor, txid: string): boolean {
   const txidBytes = new Uint8Array(32);
-  const hex = txid.startsWith("0x") ? txid.slice(2) : txid;
+  const hex = txid.startsWith('0x') ? txid.slice(2) : txid;
 
   for (let i = 0; i < 32; i++) {
     txidBytes[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
@@ -209,4 +209,3 @@ export function parseFromOpReturn(script: Uint8Array): AnchorMessage | null {
     return null;
   }
 }
-

@@ -1,15 +1,15 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from 'react';
 import {
   WidgetConfig,
   WidgetType,
   WidgetSize,
   DEFAULT_WIDGETS,
   WIDGET_DEFINITIONS,
-} from "@/types/widgets";
+} from '@/types/widgets';
 
-const STORAGE_KEY = "anchor-dashboard-widgets";
+const STORAGE_KEY = 'anchor-dashboard-widgets';
 
 function generateId(): string {
   return `widget-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -44,25 +44,26 @@ export function useWidgetConfig() {
   }, [widgets, isLoaded]);
 
   // Get enabled widgets sorted by order
-  const enabledWidgets = widgets
-    .filter((w) => w.enabled)
-    .sort((a, b) => a.order - b.order);
+  const enabledWidgets = widgets.filter((w) => w.enabled).sort((a, b) => a.order - b.order);
 
   // Add a new widget
-  const addWidget = useCallback((type: WidgetType) => {
-    const definition = WIDGET_DEFINITIONS.find((d) => d.type === type);
-    if (!definition) return;
+  const addWidget = useCallback(
+    (type: WidgetType) => {
+      const definition = WIDGET_DEFINITIONS.find((d) => d.type === type);
+      if (!definition) return;
 
-    const newWidget: WidgetConfig = {
-      id: generateId(),
-      type,
-      size: definition.defaultSize,
-      enabled: true,
-      order: widgets.length,
-    };
+      const newWidget: WidgetConfig = {
+        id: generateId(),
+        type,
+        size: definition.defaultSize,
+        enabled: true,
+        order: widgets.length,
+      };
 
-    setWidgets((prev) => [...prev, newWidget]);
-  }, [widgets.length]);
+      setWidgets((prev) => [...prev, newWidget]);
+    },
+    [widgets.length]
+  );
 
   // Remove a widget
   const removeWidget = useCallback((id: string) => {
@@ -71,16 +72,12 @@ export function useWidgetConfig() {
 
   // Toggle widget enabled state
   const toggleWidget = useCallback((id: string) => {
-    setWidgets((prev) =>
-      prev.map((w) => (w.id === id ? { ...w, enabled: !w.enabled } : w))
-    );
+    setWidgets((prev) => prev.map((w) => (w.id === id ? { ...w, enabled: !w.enabled } : w)));
   }, []);
 
   // Change widget size
   const changeSize = useCallback((id: string, size: WidgetSize) => {
-    setWidgets((prev) =>
-      prev.map((w) => (w.id === id ? { ...w, size } : w))
-    );
+    setWidgets((prev) => prev.map((w) => (w.id === id ? { ...w, size } : w)));
   }, []);
 
   // Reorder widgets (called after drag-and-drop)

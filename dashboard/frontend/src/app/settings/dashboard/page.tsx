@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useTranslation } from "react-i18next";
-import { LayoutGrid, RotateCcw, GripVertical } from "lucide-react";
-import { WIDGET_DEFINITIONS } from "@/types/widgets";
+import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { LayoutGrid, RotateCcw, GripVertical } from 'lucide-react';
+import { WIDGET_DEFINITIONS } from '@/types/widgets';
 
-const WIDGET_STORAGE_KEY = "anchor-dashboard-widgets";
+const WIDGET_STORAGE_KEY = 'anchor-dashboard-widgets';
 
 interface WidgetConfig {
   id: string;
@@ -32,16 +32,12 @@ export default function DashboardSettingsPage() {
   }, []);
 
   const handleToggleWidget = (widgetId: string) => {
-    setWidgets((prev) =>
-      prev.map((w) =>
-        w.id === widgetId ? { ...w, enabled: !w.enabled } : w
-      )
-    );
+    setWidgets((prev) => prev.map((w) => (w.id === widgetId ? { ...w, enabled: !w.enabled } : w)));
     setHasChanges(true);
   };
 
   const handleResetWidgets = () => {
-    if (confirm(t("data.resetConfirm"))) {
+    if (confirm(t('data.resetConfirm'))) {
       localStorage.removeItem(WIDGET_STORAGE_KEY);
       setWidgets([]);
       setHasChanges(false);
@@ -66,11 +62,9 @@ export default function DashboardSettingsPage() {
             </div>
             <div>
               <h2 className="text-lg font-semibold text-foreground">
-                {t("dashboardSettings.title")}
+                {t('dashboardSettings.title')}
               </h2>
-              <p className="text-sm text-muted-foreground">
-                {t("dashboardSettings.description")}
-              </p>
+              <p className="text-sm text-muted-foreground">{t('dashboardSettings.description')}</p>
             </div>
           </div>
           <button
@@ -78,23 +72,21 @@ export default function DashboardSettingsPage() {
             className="px-4 py-2 border border-border rounded-lg text-sm font-medium hover:bg-secondary transition-colors flex items-center gap-2"
           >
             <RotateCcw className="w-4 h-4" />
-            {t("dashboardSettings.resetToDefault")}
+            {t('dashboardSettings.resetToDefault')}
           </button>
         </div>
 
         <div className="mb-4 p-4 bg-secondary/50 rounded-lg">
           <div className="text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">{enabledCount}</span>{" "}
-            {t("dashboardSettings.widgetsEnabled")}
+            <span className="font-medium text-foreground">{enabledCount}</span>{' '}
+            {t('dashboardSettings.widgetsEnabled')}
           </div>
         </div>
 
         <div className="space-y-2">
           {widgets.length > 0 ? (
             widgets.map((widget) => {
-              const definition = WIDGET_DEFINITIONS.find(
-                (d) => d.type === widget.type
-              );
+              const definition = WIDGET_DEFINITIONS.find((d) => d.type === widget.type);
               return (
                 <div
                   key={widget.id}
@@ -107,7 +99,9 @@ export default function DashboardSettingsPage() {
                         {definition ? t(definition.nameKey, definition.name) : widget.type}
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        {definition ? t(definition.descriptionKey, definition.description) : "Widget"}
+                        {definition
+                          ? t(definition.descriptionKey, definition.description)
+                          : 'Widget'}
                       </div>
                     </div>
                   </div>
@@ -115,13 +109,13 @@ export default function DashboardSettingsPage() {
                     onClick={() => handleToggleWidget(widget.id)}
                     className={`
                       relative w-12 h-6 rounded-full transition-colors
-                      ${widget.enabled ? "bg-primary" : "bg-muted"}
+                      ${widget.enabled ? 'bg-primary' : 'bg-muted'}
                     `}
                   >
                     <div
                       className={`
                         absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm transition-transform
-                        ${widget.enabled ? "translate-x-7" : "translate-x-1"}
+                        ${widget.enabled ? 'translate-x-7' : 'translate-x-1'}
                       `}
                     />
                   </button>
@@ -130,10 +124,8 @@ export default function DashboardSettingsPage() {
             })
           ) : (
             <div className="text-center py-8 text-muted-foreground">
-              <p>{t("dashboardSettings.noConfig")}</p>
-              <p className="text-sm mt-1">
-                {t("dashboardSettings.visitDashboard")}
-              </p>
+              <p>{t('dashboardSettings.noConfig')}</p>
+              <p className="text-sm mt-1">{t('dashboardSettings.visitDashboard')}</p>
             </div>
           )}
         </div>
@@ -144,7 +136,7 @@ export default function DashboardSettingsPage() {
               onClick={handleSave}
               className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
             >
-              {t("common.save")}
+              {t('common.save')}
             </button>
           </div>
         )}
@@ -152,14 +144,11 @@ export default function DashboardSettingsPage() {
 
       <div className="bg-card border border-border rounded-xl p-6">
         <h3 className="text-sm font-medium text-foreground mb-4">
-          {t("dashboardSettings.availableWidgets")}
+          {t('dashboardSettings.availableWidgets')}
         </h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {WIDGET_DEFINITIONS.map((widget) => (
-            <div
-              key={widget.type}
-              className="p-3 rounded-lg border border-border bg-secondary/30"
-            >
+            <div key={widget.type} className="p-3 rounded-lg border border-border bg-secondary/30">
               <div className="text-sm font-medium text-foreground">
                 {t(widget.nameKey, widget.name)}
               </div>
@@ -173,9 +162,3 @@ export default function DashboardSettingsPage() {
     </div>
   );
 }
-
-
-
-
-
-

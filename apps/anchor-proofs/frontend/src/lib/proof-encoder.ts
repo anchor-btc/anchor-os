@@ -59,11 +59,11 @@ export function getHashSize(algo: HashAlgorithm): number {
 export function getAlgorithmName(algo: HashAlgorithm): string {
   switch (algo) {
     case HashAlgorithm.SHA256:
-      return "SHA-256";
+      return 'SHA-256';
     case HashAlgorithm.SHA512:
-      return "SHA-512";
+      return 'SHA-512';
     default:
-      return "UNKNOWN";
+      return 'UNKNOWN';
   }
 }
 
@@ -73,13 +73,13 @@ export function getAlgorithmName(algo: HashAlgorithm): string {
 export function getOperationName(op: ProofOperation): string {
   switch (op) {
     case ProofOperation.STAMP:
-      return "STAMP";
+      return 'STAMP';
     case ProofOperation.REVOKE:
-      return "REVOKE";
+      return 'REVOKE';
     case ProofOperation.BATCH:
-      return "BATCH";
+      return 'BATCH';
     default:
-      return "UNKNOWN";
+      return 'UNKNOWN';
   }
 }
 
@@ -132,18 +132,14 @@ function encodeMetadata(metadata?: ProofMetadata): Uint8Array {
   const parts: Uint8Array[] = [];
 
   // Filename (length-prefixed)
-  const filenameBytes = metadata.filename
-    ? encoder.encode(metadata.filename)
-    : new Uint8Array(0);
+  const filenameBytes = metadata.filename ? encoder.encode(metadata.filename) : new Uint8Array(0);
   parts.push(new Uint8Array([Math.min(filenameBytes.length, 255)]));
   if (filenameBytes.length > 0) {
     parts.push(filenameBytes.slice(0, 255));
   }
 
   // MIME type (length-prefixed)
-  const mimeBytes = metadata.mimeType
-    ? encoder.encode(metadata.mimeType)
-    : new Uint8Array(0);
+  const mimeBytes = metadata.mimeType ? encoder.encode(metadata.mimeType) : new Uint8Array(0);
   parts.push(new Uint8Array([Math.min(mimeBytes.length, 255)]));
   if (mimeBytes.length > 0) {
     parts.push(mimeBytes.slice(0, 255));
@@ -156,9 +152,7 @@ function encodeMetadata(metadata?: ProofMetadata): Uint8Array {
   parts.push(sizeBytes);
 
   // Description (length-prefixed)
-  const descBytes = metadata.description
-    ? encoder.encode(metadata.description)
-    : new Uint8Array(0);
+  const descBytes = metadata.description ? encoder.encode(metadata.description) : new Uint8Array(0);
   parts.push(new Uint8Array([Math.min(descBytes.length, 255)]));
   if (descBytes.length > 0) {
     parts.push(descBytes.slice(0, 255));
@@ -201,8 +195,7 @@ function decodeMetadata(
   if (bytes.length < pos + 1) return null;
   const mimeLen = bytes[pos++];
   if (bytes.length < pos + mimeLen) return null;
-  const mimeType =
-    mimeLen > 0 ? decoder.decode(bytes.slice(pos, pos + mimeLen)) : undefined;
+  const mimeType = mimeLen > 0 ? decoder.decode(bytes.slice(pos, pos + mimeLen)) : undefined;
   pos += mimeLen;
 
   // File size
@@ -215,8 +208,7 @@ function decodeMetadata(
   if (bytes.length < pos + 1) return null;
   const descLen = bytes[pos++];
   if (bytes.length < pos + descLen) return null;
-  const description =
-    descLen > 0 ? decoder.decode(bytes.slice(pos, pos + descLen)) : undefined;
+  const description = descLen > 0 ? decoder.decode(bytes.slice(pos, pos + descLen)) : undefined;
   pos += descLen;
 
   return {
@@ -266,8 +258,7 @@ export function encodeProofPayload(payload: AnchorProofsPayload): Uint8Array {
     const entries = batchPayload.entries.map((e) =>
       encodeProofEntry(e.algorithm, e.hash, e.metadata)
     );
-    const totalSize =
-      2 + entries.reduce((sum, arr) => sum + arr.length, 0);
+    const totalSize = 2 + entries.reduce((sum, arr) => sum + arr.length, 0);
     const result = new Uint8Array(totalSize);
 
     let offset = 0;
@@ -307,7 +298,7 @@ export function decodeProofPayload(bytes: Uint8Array): AnchorProofsPayload | nul
 
   if (operation === ProofOperation.BATCH) {
     const count = bytes[1];
-    const entries: BatchProofPayload["entries"] = [];
+    const entries: BatchProofPayload['entries'] = [];
     let offset = 2;
 
     for (let i = 0; i < count; i++) {
@@ -400,17 +391,17 @@ export function createAnchorProofsMessage(
  */
 export function bytesToHex(bytes: Uint8Array): string {
   return Array.from(bytes)
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
 }
 
 /**
  * Convert hex string to Uint8Array
  */
 export function hexToBytes(hex: string): Uint8Array {
-  const cleanHex = hex.startsWith("0x") ? hex.slice(2) : hex;
+  const cleanHex = hex.startsWith('0x') ? hex.slice(2) : hex;
   if (cleanHex.length % 2 !== 0) {
-    throw new Error("Invalid hex string length");
+    throw new Error('Invalid hex string length');
   }
   const bytes = new Uint8Array(cleanHex.length / 2);
   for (let i = 0; i < bytes.length; i++) {
@@ -424,7 +415,7 @@ export function hexToBytes(hex: string): Uint8Array {
  */
 export function isValidHash(hash: string, algorithm: HashAlgorithm): boolean {
   const expectedLen = getHashSize(algorithm) * 2; // hex chars
-  return new RegExp(`^[a-f0-9]{${expectedLen}}$`, "i").test(hash);
+  return new RegExp(`^[a-f0-9]{${expectedLen}}$`, 'i').test(hash);
 }
 
 /**
@@ -465,18 +456,18 @@ export function estimateFee(payload: AnchorProofsPayload, feeRate = 1): number {
  * Format file size for display
  */
 export function formatFileSize(bytes: number): string {
-  if (bytes === 0) return "0 B";
+  if (bytes === 0) return '0 B';
   const k = 1024;
-  const sizes = ["B", "KB", "MB", "GB", "TB"];
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
 /**
  * Get MIME type category
  */
 export function getMimeCategory(mimeType?: string): string {
-  if (!mimeType) return "unknown";
-  const [category] = mimeType.split("/");
-  return category || "unknown";
+  if (!mimeType) return 'unknown';
+  const [category] = mimeType.split('/');
+  return category || 'unknown';
 }

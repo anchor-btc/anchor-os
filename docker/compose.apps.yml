@@ -13,7 +13,7 @@ services:
       dockerfile: ./apps/anchor-threads/backend/Dockerfile
     container_name: anchor-app-threads-backend
     ports:
-      - "3101:3101"
+      - '3101:3101'
     environment:
       HOST: 0.0.0.0
       PORT: 3101
@@ -40,7 +40,7 @@ services:
         NEXT_PUBLIC_BTC_EXPLORER_URL: http://localhost:4000
     container_name: anchor-app-threads-frontend
     ports:
-      - "3100:3100"
+      - '3100:3100'
     depends_on:
       - app-threads-backend
       - core-wallet
@@ -61,7 +61,7 @@ services:
       dockerfile: apps/anchor-canvas/backend/Dockerfile
     container_name: anchor-app-canvas-backend
     ports:
-      - "3201:3201"
+      - '3201:3201'
     environment:
       HOST: 0.0.0.0
       PORT: 3201
@@ -82,7 +82,7 @@ services:
     networks:
       - anchor-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3201/health"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:3201/health']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -100,7 +100,7 @@ services:
         NEXT_PUBLIC_WALLET_URL: http://localhost:8001
     container_name: anchor-app-canvas-frontend
     ports:
-      - "3200:3200"
+      - '3200:3200'
     depends_on:
       app-canvas-backend:
         condition: service_healthy
@@ -120,7 +120,7 @@ services:
       dockerfile: apps/anchor-places/backend/Dockerfile
     container_name: anchor-app-places-backend
     ports:
-      - "3301:3301"
+      - '3301:3301'
     environment:
       HOST: 0.0.0.0
       PORT: 3301
@@ -141,7 +141,7 @@ services:
     networks:
       - anchor-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3301/health"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:3301/health']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -160,7 +160,7 @@ services:
         NEXT_PUBLIC_BLOCK_EXPLORER_URL: http://localhost:4000
     container_name: anchor-app-places-frontend
     ports:
-      - "3300:3300"
+      - '3300:3300'
     depends_on:
       app-places-backend:
         condition: service_healthy
@@ -180,7 +180,7 @@ services:
       dockerfile: apps/anchor-domains/backend/Dockerfile
     container_name: anchor-app-domains-backend
     ports:
-      - "3401:3401"
+      - '3401:3401'
     environment:
       HOST: 0.0.0.0
       PORT: 3401
@@ -201,7 +201,7 @@ services:
     networks:
       - anchor-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3401/health"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:3401/health']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -219,7 +219,7 @@ services:
         NEXT_PUBLIC_WALLET_URL: http://localhost:8001
     container_name: anchor-app-domains-frontend
     ports:
-      - "3400:3400"
+      - '3400:3400'
     depends_on:
       app-domains-backend:
         condition: service_healthy
@@ -239,7 +239,7 @@ services:
       dockerfile: apps/anchor-proofs/backend/Dockerfile
     container_name: anchor-app-proofs-backend
     ports:
-      - "3501:3501"
+      - '3501:3501'
     environment:
       HOST: 0.0.0.0
       PORT: 3501
@@ -260,7 +260,7 @@ services:
     networks:
       - anchor-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3501/api/health"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:3501/api/health']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -278,7 +278,7 @@ services:
         NEXT_PUBLIC_WALLET_URL: http://localhost:8001
     container_name: anchor-app-proofs-frontend
     ports:
-      - "3500:3500"
+      - '3500:3500'
     depends_on:
       app-proofs-backend:
         condition: service_healthy
@@ -298,7 +298,7 @@ services:
       dockerfile: apps/anchor-tokens/backend/Dockerfile
     container_name: anchor-app-tokens-backend
     ports:
-      - "3601:3601"
+      - '3601:3601'
     environment:
       HOST: 0.0.0.0
       PORT: 3601
@@ -319,7 +319,7 @@ services:
     networks:
       - anchor-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3601/health"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:3601/health']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -337,7 +337,7 @@ services:
         NEXT_PUBLIC_WALLET_URL: http://localhost:8001
     container_name: anchor-app-tokens-frontend
     ports:
-      - "3600:3600"
+      - '3600:3600'
     depends_on:
       app-tokens-backend:
         condition: service_healthy
@@ -362,7 +362,7 @@ services:
       - oracles-postgres-data:/var/lib/postgresql/data
       - ../apps/anchor-oracles/backend/migrations/0020_oracles_schema.sql:/docker-entrypoint-initdb.d/01-init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U anchor -d anchor_oracles"]
+      test: ['CMD-SHELL', 'pg_isready -U anchor -d anchor_oracles']
       interval: 5s
       timeout: 5s
       retries: 5
@@ -379,7 +379,7 @@ services:
       dockerfile: apps/anchor-oracles/backend/Dockerfile
     container_name: anchor-app-oracles-backend
     ports:
-      - "3701:3701"
+      - '3701:3701'
     environment:
       HOST: 0.0.0.0
       PORT: 3701
@@ -397,7 +397,7 @@ services:
     networks:
       - anchor-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3701/health"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:3701/health']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -414,7 +414,7 @@ services:
         NEXT_PUBLIC_API_URL: http://localhost:3701
     container_name: anchor-app-oracles-frontend
     ports:
-      - "3700:3700"
+      - '3700:3700'
     depends_on:
       app-oracles-backend:
         condition: service_healthy
@@ -439,7 +439,7 @@ services:
       - lottery-postgres-data:/var/lib/postgresql/data
       - ../apps/anchor-predictions/backend/migrations/0021_predictions_schema.sql:/docker-entrypoint-initdb.d/01-init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U anchor -d anchor_lottery"]
+      test: ['CMD-SHELL', 'pg_isready -U anchor -d anchor_lottery']
       interval: 5s
       timeout: 5s
       retries: 5
@@ -456,7 +456,7 @@ services:
       dockerfile: apps/anchor-predictions/backend/Dockerfile
     container_name: anchor-app-predictions-backend
     ports:
-      - "3801:3801"
+      - '3801:3801'
     environment:
       HOST: 0.0.0.0
       PORT: 3801
@@ -479,7 +479,7 @@ services:
     networks:
       - anchor-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3801/health"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:3801/health']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -496,7 +496,7 @@ services:
         NEXT_PUBLIC_API_URL: http://localhost:3801
     container_name: anchor-app-predictions-frontend
     ports:
-      - "3800:3800"
+      - '3800:3800'
     depends_on:
       app-predictions-backend:
         condition: service_healthy
@@ -506,4 +506,3 @@ services:
     profiles:
       - full
       - app-predictions
-

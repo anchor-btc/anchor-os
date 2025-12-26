@@ -106,11 +106,7 @@ impl WitnessCarrier {
         let mut chunks = vec![Self::MARKER.to_vec()];
 
         // Split payload into chunks
-        chunks.extend(
-            payload
-                .chunks(self.chunk_size)
-                .map(|c| c.to_vec())
-        );
+        chunks.extend(payload.chunks(self.chunk_size).map(|c| c.to_vec()));
 
         chunks
     }
@@ -321,7 +317,10 @@ mod tests {
 
         // Should contain ANCHOR marker
         let script_str = String::from_utf8_lossy(script_bytes);
-        assert!(script_str.contains("ANCHOR") || script_bytes.windows(6).any(|w| w == WitnessCarrier::MARKER));
+        assert!(
+            script_str.contains("ANCHOR")
+                || script_bytes.windows(6).any(|w| w == WitnessCarrier::MARKER)
+        );
     }
 
     #[test]

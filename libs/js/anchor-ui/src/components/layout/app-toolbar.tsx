@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { cn } from "../../utils/cn";
+import * as React from 'react';
+import { cn } from '../../utils/cn';
 
 export interface AppToolbarProps {
   /**
@@ -11,7 +11,7 @@ export interface AppToolbarProps {
   /**
    * Position of the toolbar
    */
-  position?: "top" | "bottom";
+  position?: 'top' | 'bottom';
   /**
    * Additional CSS classes
    */
@@ -20,7 +20,7 @@ export interface AppToolbarProps {
 
 /**
  * AppToolbar - Horizontal toolbar component for fullscreen apps.
- * 
+ *
  * Features:
  * - Glassmorphism styling with subtle border
  * - Configurable position (top/bottom of content area)
@@ -36,19 +36,13 @@ export interface AppToolbarProps {
  * </AppToolbar>
  * ```
  */
-export function AppToolbar({
-  children,
-  position = "top",
-  className,
-}: AppToolbarProps) {
+export function AppToolbar({ children, position = 'top', className }: AppToolbarProps) {
   return (
     <div
       className={cn(
-        "px-4 py-3",
-        "bg-white/[0.02] backdrop-blur-sm",
-        position === "top" 
-          ? "border-b border-white/[0.06]" 
-          : "border-t border-white/[0.06]",
+        'px-4 py-3',
+        'bg-white/[0.02] backdrop-blur-sm',
+        position === 'top' ? 'border-b border-white/[0.06]' : 'border-t border-white/[0.06]',
         className
       )}
     >
@@ -65,15 +59,8 @@ export interface AppToolbarGroupProps {
   className?: string;
 }
 
-export function AppToolbarGroup({
-  children,
-  className,
-}: AppToolbarGroupProps) {
-  return (
-    <div className={cn("flex items-center gap-1", className)}>
-      {children}
-    </div>
-  );
+export function AppToolbarGroup({ children, className }: AppToolbarGroupProps) {
+  return <div className={cn('flex items-center gap-1', className)}>{children}</div>;
 }
 
 /**
@@ -109,13 +96,11 @@ export function AppToolbarButton({
       disabled={disabled}
       title={title}
       className={cn(
-        "w-9 h-9 flex items-center justify-center rounded-lg",
-        "transition-all duration-150",
-        "text-white/60 hover:text-white",
-        active
-          ? "bg-app-accent/20 text-app-accent"
-          : "hover:bg-white/[0.08]",
-        disabled && "opacity-40 cursor-not-allowed",
+        'w-9 h-9 flex items-center justify-center rounded-lg',
+        'transition-all duration-150',
+        'text-white/60 hover:text-white',
+        active ? 'bg-app-accent/20 text-app-accent' : 'hover:bg-white/[0.08]',
+        disabled && 'opacity-40 cursor-not-allowed',
         className
       )}
     >
@@ -123,4 +108,3 @@ export function AppToolbarButton({
     </button>
   );
 }
-

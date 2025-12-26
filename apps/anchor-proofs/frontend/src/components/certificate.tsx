@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { FileCheck, Printer } from "lucide-react";
-import type { Proof } from "@/lib/api";
-import { formatFileSize } from "@/lib/hash";
+import { FileCheck, Printer } from 'lucide-react';
+import type { Proof } from '@/lib/api';
+import { formatFileSize } from '@/lib/hash';
 
 interface CertificateProps {
   proof: Proof;
@@ -40,9 +40,7 @@ export function Certificate({ proof }: CertificateProps) {
               <FileCheck className="w-8 h-8 text-emerald-600" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">
-            Certificate of Proof
-          </h1>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">Certificate of Proof</h1>
           <p className="text-lg text-slate-600">Proof of Existence on Bitcoin</p>
         </div>
 
@@ -51,44 +49,38 @@ export function Certificate({ proof }: CertificateProps) {
           {/* Statement */}
           <div className="text-center bg-emerald-50 rounded-lg p-4">
             <p className="text-slate-700">
-              This certifies that the file identified below was timestamped on the
-              Bitcoin blockchain on:
+              This certifies that the file identified below was timestamped on the Bitcoin
+              blockchain on:
             </p>
             <p className="text-2xl font-bold text-slate-900 mt-2">
-              {timestamp.toLocaleDateString("en-US", {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
+              {timestamp.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
               })}
             </p>
-            <p className="text-slate-600">
-              at {timestamp.toLocaleTimeString("en-US")} UTC
-            </p>
+            <p className="text-slate-600">at {timestamp.toLocaleTimeString('en-US')} UTC</p>
           </div>
 
           {/* File Details */}
           <div className="border border-slate-200 rounded-lg p-4">
-            <h2 className="text-sm font-bold text-slate-500 uppercase mb-3">
-              File Information
-            </h2>
+            <h2 className="text-sm font-bold text-slate-500 uppercase mb-3">File Information</h2>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-slate-500">Filename:</span>
-                <p className="font-medium text-slate-900">
-                  {proof.filename || "Unnamed file"}
-                </p>
+                <p className="font-medium text-slate-900">{proof.filename || 'Unnamed file'}</p>
               </div>
               <div>
                 <span className="text-slate-500">File Size:</span>
                 <p className="font-medium text-slate-900">
-                  {proof.file_size ? formatFileSize(proof.file_size) : "Unknown"}
+                  {proof.file_size ? formatFileSize(proof.file_size) : 'Unknown'}
                 </p>
               </div>
               <div>
                 <span className="text-slate-500">MIME Type:</span>
                 <p className="font-medium text-slate-900">
-                  {proof.mime_type || "application/octet-stream"}
+                  {proof.mime_type || 'application/octet-stream'}
                 </p>
               </div>
               <div>
@@ -110,9 +102,7 @@ export function Certificate({ proof }: CertificateProps) {
 
           {/* Transaction */}
           <div className="border border-slate-200 rounded-lg p-4">
-            <h2 className="text-sm font-bold text-slate-500 uppercase mb-3">
-              Bitcoin Transaction
-            </h2>
+            <h2 className="text-sm font-bold text-slate-500 uppercase mb-3">Bitcoin Transaction</h2>
             <div className="space-y-2">
               <div>
                 <span className="text-sm text-slate-500">Transaction ID:</span>
@@ -124,7 +114,7 @@ export function Certificate({ proof }: CertificateProps) {
                 <div>
                   <span className="text-slate-500">Block Height:</span>
                   <p className="font-medium text-slate-900">
-                    {proof.block_height?.toLocaleString() || "Pending"}
+                    {proof.block_height?.toLocaleString() || 'Pending'}
                   </p>
                 </div>
                 <div>
@@ -138,13 +128,9 @@ export function Certificate({ proof }: CertificateProps) {
           {/* Status */}
           {proof.is_revoked && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-red-700 font-medium">
-                ⚠️ This proof has been revoked
-              </p>
+              <p className="text-red-700 font-medium">⚠️ This proof has been revoked</p>
               {proof.revoked_txid && (
-                <p className="text-sm text-red-600 mt-1">
-                  Revocation TX: {proof.revoked_txid}
-                </p>
+                <p className="text-sm text-red-600 mt-1">Revocation TX: {proof.revoked_txid}</p>
               )}
             </div>
           )}
@@ -155,9 +141,7 @@ export function Certificate({ proof }: CertificateProps) {
             <ol className="list-decimal list-inside space-y-1 text-slate-600">
               <li>Compute the {proof.hash_algo_name} hash of your file</li>
               <li>Compare it with the hash shown above</li>
-              <li>
-                Verify the transaction exists on a Bitcoin blockchain explorer
-              </li>
+              <li>Verify the transaction exists on a Bitcoin blockchain explorer</li>
               <li>Confirm the block timestamp matches the certified date</li>
             </ol>
           </div>
@@ -166,15 +150,11 @@ export function Certificate({ proof }: CertificateProps) {
         {/* Footer */}
         <div className="mt-8 pt-6 border-t-2 border-slate-200 text-center text-sm text-slate-500">
           <p>
-            Certified by{" "}
-            <span className="font-medium text-emerald-600">Anchor Proofs</span>
+            Certified by <span className="font-medium text-emerald-600">Anchor Proofs</span>
           </p>
-          <p className="mt-1">
-            Using the Anchor Protocol on Bitcoin
-          </p>
+          <p className="mt-1">Using the Anchor Protocol on Bitcoin</p>
           <p className="mt-2 text-xs">
-            Certificate ID: {proof.id} | Generated on{" "}
-            {new Date().toLocaleDateString()}
+            Certificate ID: {proof.id} | Generated on {new Date().toLocaleDateString()}
           </p>
         </div>
       </div>

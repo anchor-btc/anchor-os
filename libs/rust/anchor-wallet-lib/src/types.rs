@@ -27,4 +27,3 @@ pub struct Balance {
     /// Total balance in satoshis
     pub total: u64,
 }
-

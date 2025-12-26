@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useParams } from "next/navigation";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import Link from "next/link";
+import { useParams } from 'next/navigation';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import Link from 'next/link';
 import {
   ArrowLeft,
   Coins,
@@ -17,42 +17,49 @@ import {
   TrendingUp,
   BarChart3,
   Clock,
-} from "lucide-react";
-import { useState } from "react";
-import { MintForm } from "@/components/mint-form";
-import { TransferForm } from "@/components/transfer-form";
-import { getToken, getTokenHolders, getTokenHistory } from "@/lib/api";
-import { truncateMiddle, copyToClipboard, formatTokenAmount, formatPercentage, formatRelativeTime } from "@/lib/utils";
+} from 'lucide-react';
+import { useState } from 'react';
+import { MintForm } from '@/components/mint-form';
+import { TransferForm } from '@/components/transfer-form';
+import { getToken, getTokenHolders, getTokenHistory } from '@/lib/api';
+import {
+  truncateMiddle,
+  copyToClipboard,
+  formatTokenAmount,
+  formatRelativeTime,
+} from '@/lib/utils';
 
 export default function TokenPage() {
   const params = useParams();
   const ticker = params.ticker as string;
   const queryClient = useQueryClient();
   const [copied, setCopied] = useState(false);
-  const [activeTab, setActiveTab] = useState<"holders" | "history" | "mint" | "transfer">("history");
+  const [activeTab, setActiveTab] = useState<'holders' | 'history' | 'mint' | 'transfer'>(
+    'history'
+  );
 
   const refetchAll = () => {
-    queryClient.invalidateQueries({ queryKey: ["token", ticker] });
-    queryClient.invalidateQueries({ queryKey: ["tokenHolders", ticker] });
-    queryClient.invalidateQueries({ queryKey: ["tokenHistory", ticker] });
+    queryClient.invalidateQueries({ queryKey: ['token', ticker] });
+    queryClient.invalidateQueries({ queryKey: ['tokenHolders', ticker] });
+    queryClient.invalidateQueries({ queryKey: ['tokenHistory', ticker] });
   };
 
   const { data: token, isLoading } = useQuery({
-    queryKey: ["token", ticker],
+    queryKey: ['token', ticker],
     queryFn: () => getToken(ticker),
     enabled: !!ticker,
   });
 
   const { data: holders } = useQuery({
-    queryKey: ["tokenHolders", ticker],
+    queryKey: ['tokenHolders', ticker],
     queryFn: () => getTokenHolders(ticker),
-    enabled: !!ticker && activeTab === "holders",
+    enabled: !!ticker && activeTab === 'holders',
   });
 
   const { data: history } = useQuery({
-    queryKey: ["tokenHistory", ticker],
+    queryKey: ['tokenHistory', ticker],
     queryFn: () => getTokenHistory(ticker),
-    enabled: !!ticker && activeTab === "history",
+    enabled: !!ticker && activeTab === 'history',
   });
 
   const handleCopy = async (text: string) => {
@@ -99,9 +106,7 @@ export default function TokenPage() {
   const burnedSupply = BigInt(token.burnedSupply);
   const circulatingSupply = BigInt(token.circulatingSupply);
   const remainingSupply = maxSupply - mintedSupply;
-  const mintProgress = maxSupply > 0n 
-    ? Number((mintedSupply * 10000n) / maxSupply) / 100 
-    : 0;
+  const mintProgress = maxSupply > 0n ? Number((mintedSupply * 10000n) / maxSupply) / 100 : 0;
 
   return (
     <main className="max-w-5xl mx-auto px-4 py-8">
@@ -121,13 +126,9 @@ export default function TokenPage() {
               {token.ticker.substring(0, 2)}
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-white mb-1">
-                {token.ticker}
-              </h1>
+              <h1 className="text-3xl font-bold text-white mb-1">{token.ticker}</h1>
               <div className="flex items-center gap-2 text-gray-400">
-                <span className="font-mono text-sm">
-                  {truncateMiddle(token.deployTxid, 8, 8)}
-                </span>
+                <span className="font-mono text-sm">{truncateMiddle(token.deployTxid, 8, 8)}</span>
                 <button
                   onClick={() => handleCopy(token.deployTxid)}
                   className="p-1 hover:text-white transition-colors"
@@ -167,7 +168,7 @@ export default function TokenPage() {
             <span className="font-medium text-white">{mintProgress.toFixed(2)}%</span>
           </div>
           <div className="h-3 bg-gray-700 rounded-full overflow-hidden">
-            <div 
+            <div
               className="h-full bg-gradient-to-r from-orange-500 to-orange-400 rounded-full transition-all duration-500"
               style={{ width: `${Math.min(mintProgress, 100)}%` }}
             />
@@ -220,15 +221,15 @@ export default function TokenPage() {
       {/* Tabs */}
       <div className="flex flex-wrap gap-2 mb-6">
         <TabButton
-          active={activeTab === "history"}
-          onClick={() => setActiveTab("history")}
+          active={activeTab === 'history'}
+          onClick={() => setActiveTab('history')}
           icon={<Activity className="w-4 h-4" />}
           label="History"
           color="orange"
         />
         <TabButton
-          active={activeTab === "holders"}
-          onClick={() => setActiveTab("holders")}
+          active={activeTab === 'holders'}
+          onClick={() => setActiveTab('holders')}
           icon={<Users className="w-4 h-4" />}
           label="Holders"
           badge={token.holderCount > 0 ? token.holderCount.toString() : undefined}
@@ -236,16 +237,16 @@ export default function TokenPage() {
         />
         {token.isOpenMint && remainingSupply > 0n && (
           <TabButton
-            active={activeTab === "mint"}
-            onClick={() => setActiveTab("mint")}
+            active={activeTab === 'mint'}
+            onClick={() => setActiveTab('mint')}
             icon={<Plus className="w-4 h-4" />}
             label="Mint"
             color="green"
           />
         )}
         <TabButton
-          active={activeTab === "transfer"}
-          onClick={() => setActiveTab("transfer")}
+          active={activeTab === 'transfer'}
+          onClick={() => setActiveTab('transfer')}
           icon={<Send className="w-4 h-4" />}
           label="Transfer"
           color="blue"
@@ -254,39 +255,35 @@ export default function TokenPage() {
 
       {/* Tab Content */}
       <div className="bg-gray-800/50 rounded-2xl border border-gray-700/50 overflow-hidden">
-        {activeTab === "holders" && (
+        {activeTab === 'holders' && (
           <HoldersTab holders={holders?.data} decimals={token.decimals} />
         )}
 
-        {activeTab === "history" && (
+        {activeTab === 'history' && (
           <HistoryTab history={history?.data} decimals={token.decimals} />
         )}
 
-        {activeTab === "mint" && (
+        {activeTab === 'mint' && (
           <div className="p-6 md:p-8 max-w-lg mx-auto">
             <div className="text-center mb-6">
               <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center mx-auto mb-3">
                 <Coins className="w-6 h-6 text-green-400" />
               </div>
               <h2 className="text-xl font-semibold mb-1">Mint {token.ticker}</h2>
-              <p className="text-gray-400 text-sm">
-                Create new tokens and add them to your wallet
-              </p>
+              <p className="text-gray-400 text-sm">Create new tokens and add them to your wallet</p>
             </div>
             <MintForm token={token} onSuccess={refetchAll} />
           </div>
         )}
 
-        {activeTab === "transfer" && (
+        {activeTab === 'transfer' && (
           <div className="p-6 md:p-8 max-w-lg mx-auto">
             <div className="text-center mb-6">
               <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center mx-auto mb-3">
                 <Send className="w-6 h-6 text-blue-400" />
               </div>
               <h2 className="text-xl font-semibold mb-1">Transfer {token.ticker}</h2>
-              <p className="text-gray-400 text-sm">
-                Send tokens to one or more recipients
-              </p>
+              <p className="text-gray-400 text-sm">Send tokens to one or more recipients</p>
             </div>
             <TransferForm token={token} onSuccess={refetchAll} />
           </div>
@@ -297,15 +294,15 @@ export default function TokenPage() {
 }
 
 // Stat Card Component
-function StatCard({ 
-  icon, 
-  iconColor, 
-  label, 
-  value 
-}: { 
-  icon: React.ReactNode; 
-  iconColor: string; 
-  label: string; 
+function StatCard({
+  icon,
+  iconColor,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  iconColor: string;
+  label: string;
   value: string;
 }) {
   return (
@@ -333,13 +330,21 @@ function TabButton({
   icon: React.ReactNode;
   label: string;
   badge?: string;
-  color: "orange" | "purple" | "green" | "blue";
+  color: 'orange' | 'purple' | 'green' | 'blue';
 }) {
   const colorClasses = {
-    orange: active ? "bg-orange-500 text-white" : "bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700",
-    purple: active ? "bg-purple-500 text-white" : "bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700",
-    green: active ? "bg-green-500 text-white" : "bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700",
-    blue: active ? "bg-blue-500 text-white" : "bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700",
+    orange: active
+      ? 'bg-orange-500 text-white'
+      : 'bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700',
+    purple: active
+      ? 'bg-purple-500 text-white'
+      : 'bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700',
+    green: active
+      ? 'bg-green-500 text-white'
+      : 'bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700',
+    blue: active
+      ? 'bg-blue-500 text-white'
+      : 'bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700',
   };
 
   return (
@@ -350,9 +355,9 @@ function TabButton({
       {icon}
       {label}
       {badge && (
-        <span className={`px-1.5 py-0.5 text-xs rounded-full ${
-          active ? "bg-white/20" : "bg-gray-700"
-        }`}>
+        <span
+          className={`px-1.5 py-0.5 text-xs rounded-full ${active ? 'bg-white/20' : 'bg-gray-700'}`}
+        >
           {badge}
         </span>
       )}
@@ -361,14 +366,14 @@ function TabButton({
 }
 
 // Holders Tab Component
-function HoldersTab({ 
-  holders, 
-  decimals 
-}: { 
-  holders?: Array<{ 
-    address: string; 
-    balance: string; 
-    percentage: number; 
+function HoldersTab({
+  holders,
+  decimals,
+}: {
+  holders?: Array<{
+    address: string;
+    balance: string;
+    percentage: number;
     utxoCount: number;
     txid?: string;
     vout?: number;
@@ -376,16 +381,14 @@ function HoldersTab({
   decimals: number;
 }) {
   // Get explorer URL from environment or use default
-  const explorerUrl = process.env.NEXT_PUBLIC_BTC_EXPLORER_URL || "http://localhost:4000";
+  const explorerUrl = process.env.NEXT_PUBLIC_BTC_EXPLORER_URL || 'http://localhost:4000';
 
   if (!holders?.length) {
     return (
       <div className="p-12 text-center">
         <Users className="w-12 h-12 text-gray-600 mx-auto mb-4" />
         <p className="text-gray-400 mb-2">No holders yet</p>
-        <p className="text-gray-500 text-sm">
-          Mint or transfer tokens to see holder distribution
-        </p>
+        <p className="text-gray-500 text-sm">Mint or transfer tokens to see holder distribution</p>
       </div>
     );
   }
@@ -399,13 +402,16 @@ function HoldersTab({
       </div>
       <div className="divide-y divide-gray-700/30">
         {holders.map((holder, i) => (
-          <div key={holder.txid ? `${holder.txid}:${holder.vout}` : holder.address} className="flex items-center gap-4 p-4 hover:bg-gray-700/20 transition-colors">
+          <div
+            key={holder.txid ? `${holder.txid}:${holder.vout}` : holder.address}
+            className="flex items-center gap-4 p-4 hover:bg-gray-700/20 transition-colors"
+          >
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-sm font-bold">
               {i + 1}
             </div>
             <div className="flex-1 min-w-0">
               {holder.txid ? (
-                <a 
+                <a
                   href={`${explorerUrl}/tx/${holder.txid}#output-${holder.vout}`}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -419,10 +425,14 @@ function HoldersTab({
               ) : (
                 <p className="font-mono text-sm truncate">{holder.address}</p>
               )}
-              <p className="text-xs text-gray-500">{holder.utxoCount} UTXO{holder.utxoCount !== 1 ? 's' : ''}</p>
+              <p className="text-xs text-gray-500">
+                {holder.utxoCount} UTXO{holder.utxoCount !== 1 ? 's' : ''}
+              </p>
             </div>
             <div className="text-right">
-              <p className="font-mono font-medium">{formatTokenAmount(holder.balance, decimals, 4)}</p>
+              <p className="font-mono font-medium">
+                {formatTokenAmount(holder.balance, decimals, 4)}
+              </p>
               <p className="text-xs text-gray-500">{holder.percentage.toFixed(2)}%</p>
             </div>
           </div>
@@ -433,10 +443,10 @@ function HoldersTab({
 }
 
 // History Tab Component
-function HistoryTab({ 
+function HistoryTab({
   history,
   decimals,
-}: { 
+}: {
   history?: Array<{
     id: number;
     operation: string;
@@ -458,25 +468,25 @@ function HistoryTab({
   }
 
   const opStyles: Record<string, { bg: string; text: string; icon: React.ReactNode }> = {
-    DEPLOY: { 
-      bg: "bg-purple-500/20", 
-      text: "text-purple-400",
-      icon: <Coins className="w-3 h-3" />
+    DEPLOY: {
+      bg: 'bg-purple-500/20',
+      text: 'text-purple-400',
+      icon: <Coins className="w-3 h-3" />,
     },
-    MINT: { 
-      bg: "bg-green-500/20", 
-      text: "text-green-400",
-      icon: <Plus className="w-3 h-3" />
+    MINT: {
+      bg: 'bg-green-500/20',
+      text: 'text-green-400',
+      icon: <Plus className="w-3 h-3" />,
     },
-    TRANSFER: { 
-      bg: "bg-blue-500/20", 
-      text: "text-blue-400",
-      icon: <Send className="w-3 h-3" />
+    TRANSFER: {
+      bg: 'bg-blue-500/20',
+      text: 'text-blue-400',
+      icon: <Send className="w-3 h-3" />,
     },
-    BURN: { 
-      bg: "bg-red-500/20", 
-      text: "text-red-400",
-      icon: <Flame className="w-3 h-3" />
+    BURN: {
+      bg: 'bg-red-500/20',
+      text: 'text-red-400',
+      icon: <Flame className="w-3 h-3" />,
     },
   };
 
@@ -489,21 +499,33 @@ function HistoryTab({
       </div>
       <div className="divide-y divide-gray-700/30">
         {history.map((op) => {
-          const style = opStyles[op.operation] || { bg: "bg-gray-500/20", text: "text-gray-400", icon: null };
-          
+          const style = opStyles[op.operation] || {
+            bg: 'bg-gray-500/20',
+            text: 'text-gray-400',
+            icon: null,
+          };
+
           return (
-            <div key={op.id} className="flex items-center gap-4 p-4 hover:bg-gray-700/20 transition-colors">
-              <div className={`w-10 h-10 rounded-xl ${style.bg} flex items-center justify-center ${style.text}`}>
+            <div
+              key={op.id}
+              className="flex items-center gap-4 p-4 hover:bg-gray-700/20 transition-colors"
+            >
+              <div
+                className={`w-10 h-10 rounded-xl ${style.bg} flex items-center justify-center ${style.text}`}
+              >
                 {style.icon}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${style.bg} ${style.text}`}>
+                  <span
+                    className={`px-2 py-0.5 rounded text-xs font-medium ${style.bg} ${style.text}`}
+                  >
                     {op.operation}
                   </span>
                   {op.amount && (
                     <span className="font-mono text-sm">
-                      {op.operation === "BURN" ? "-" : "+"}{formatTokenAmount(op.amount, decimals, 4)}
+                      {op.operation === 'BURN' ? '-' : '+'}
+                      {formatTokenAmount(op.amount, decimals, 4)}
                     </span>
                   )}
                 </div>

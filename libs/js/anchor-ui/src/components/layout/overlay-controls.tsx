@@ -1,15 +1,15 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { cn } from "../../utils/cn";
+import * as React from 'react';
+import { cn } from '../../utils/cn';
 
-export type OverlayPosition = 
-  | "top-left" 
-  | "top-right" 
-  | "bottom-left" 
-  | "bottom-right"
-  | "top-center"
-  | "bottom-center";
+export type OverlayPosition =
+  | 'top-left'
+  | 'top-right'
+  | 'bottom-left'
+  | 'bottom-right'
+  | 'top-center'
+  | 'bottom-center';
 
 export interface OverlayControlsProps {
   /**
@@ -31,17 +31,17 @@ export interface OverlayControlsProps {
 }
 
 const positionClasses: Record<OverlayPosition, string> = {
-  "top-left": "top-4 left-4",
-  "top-right": "top-4 right-4",
-  "bottom-left": "bottom-4 left-4",
-  "bottom-right": "bottom-4 right-4",
-  "top-center": "top-4 left-1/2 -translate-x-1/2",
-  "bottom-center": "bottom-4 left-1/2 -translate-x-1/2",
+  'top-left': 'top-4 left-4',
+  'top-right': 'top-4 right-4',
+  'bottom-left': 'bottom-4 left-4',
+  'bottom-right': 'bottom-4 right-4',
+  'top-center': 'top-4 left-1/2 -translate-x-1/2',
+  'bottom-center': 'bottom-4 left-1/2 -translate-x-1/2',
 };
 
 /**
  * OverlayControls - Container for controls that overlay content (maps, canvas).
- * 
+ *
  * Features:
  * - Configurable position (corners and center)
  * - High z-index for map compatibility
@@ -53,7 +53,7 @@ const positionClasses: Record<OverlayPosition, string> = {
  *   <SearchBox />
  *   <CategoryFilter />
  * </OverlayControls>
- * 
+ *
  * <OverlayControls position="bottom-right">
  *   <ZoomControls />
  * </OverlayControls>
@@ -67,16 +67,10 @@ export function OverlayControls({
 }: OverlayControlsProps) {
   return (
     <div
-      className={cn(
-        "absolute pointer-events-none",
-        positionClasses[position],
-        className
-      )}
+      className={cn('absolute pointer-events-none', positionClasses[position], className)}
       style={{ zIndex }}
     >
-      <div className="pointer-events-auto">
-        {children}
-      </div>
+      <div className="pointer-events-auto">{children}</div>
     </div>
   );
 }
@@ -86,20 +80,20 @@ export function OverlayControls({
  */
 export interface OverlayControlsGroupProps {
   children: React.ReactNode;
-  direction?: "horizontal" | "vertical";
+  direction?: 'horizontal' | 'vertical';
   className?: string;
 }
 
 export function OverlayControlsGroup({
   children,
-  direction = "horizontal",
+  direction = 'horizontal',
   className,
 }: OverlayControlsGroupProps) {
   return (
     <div
       className={cn(
-        "flex gap-3",
-        direction === "vertical" ? "flex-col" : "flex-row items-center",
+        'flex gap-3',
+        direction === 'vertical' ? 'flex-col' : 'flex-row items-center',
         className
       )}
     >
@@ -107,4 +101,3 @@ export function OverlayControlsGroup({
     </div>
   );
 }
-

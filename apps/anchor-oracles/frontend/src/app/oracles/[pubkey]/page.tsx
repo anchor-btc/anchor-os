@@ -1,31 +1,36 @@
-"use client";
+'use client';
 
-import { useQuery } from "@tanstack/react-query";
-import { useParams } from "next/navigation";
-import { Star, CheckCircle, AlertCircle, Coins, ArrowLeft, ExternalLink } from "lucide-react";
-import Link from "next/link";
-import { fetchOracle, fetchOracleAttestations, fetchDefaultExplorer, buildExplorerTxUrl } from "@/lib/api";
-import { shortenPubkey, formatSats } from "@/lib/utils";
-import { formatDistanceToNow } from "date-fns";
+import { useQuery } from '@tanstack/react-query';
+import { useParams } from 'next/navigation';
+import { Star, CheckCircle, AlertCircle, Coins, ArrowLeft, ExternalLink } from 'lucide-react';
+import Link from 'next/link';
+import {
+  fetchOracle,
+  fetchOracleAttestations,
+  fetchDefaultExplorer,
+  buildExplorerTxUrl,
+} from '@/lib/api';
+import { shortenPubkey, formatSats } from '@/lib/utils';
+import { formatDistanceToNow } from 'date-fns';
 
 export default function OracleDetailPage() {
   const params = useParams();
   const pubkey = params.pubkey as string;
 
   const { data: oracle, isLoading: loadingOracle } = useQuery({
-    queryKey: ["oracle", pubkey],
+    queryKey: ['oracle', pubkey],
     queryFn: () => fetchOracle(pubkey),
     enabled: !!pubkey,
   });
 
   const { data: attestations } = useQuery({
-    queryKey: ["oracle-attestations", pubkey],
+    queryKey: ['oracle-attestations', pubkey],
     queryFn: () => fetchOracleAttestations(pubkey, 20),
     enabled: !!pubkey,
   });
 
   const { data: explorer } = useQuery({
-    queryKey: ["default-explorer"],
+    queryKey: ['default-explorer'],
     queryFn: fetchDefaultExplorer,
     staleTime: 1000 * 60 * 5,
   });
@@ -45,9 +50,10 @@ export default function OracleDetailPage() {
     );
   }
 
-  const successRate = oracle.total_attestations > 0
-    ? Math.round((oracle.successful_attestations / oracle.total_attestations) * 100)
-    : 100;
+  const successRate =
+    oracle.total_attestations > 0
+      ? Math.round((oracle.successful_attestations / oracle.total_attestations) * 100)
+      : 100;
 
   return (
     <div className="space-y-6">
@@ -66,16 +72,18 @@ export default function OracleDetailPage() {
             <h1 className="text-3xl font-bold text-white">{oracle.name}</h1>
             <p className="text-gray-500 font-mono text-sm mt-1">{oracle.pubkey}</p>
           </div>
-          <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-            oracle.status === "active" ? "bg-green-500/20 text-green-400" : "bg-gray-500/20 text-gray-400"
-          }`}>
+          <div
+            className={`px-3 py-1 rounded-full text-sm font-medium ${
+              oracle.status === 'active'
+                ? 'bg-green-500/20 text-green-400'
+                : 'bg-gray-500/20 text-gray-400'
+            }`}
+          >
             {oracle.status}
           </div>
         </div>
 
-        {oracle.description && (
-          <p className="text-gray-400 mt-4">{oracle.description}</p>
-        )}
+        {oracle.description && <p className="text-gray-400 mt-4">{oracle.description}</p>}
 
         <div className="flex flex-wrap gap-2 mt-4">
           {oracle.category_names.map((cat) => (
@@ -153,17 +161,17 @@ export default function OracleDetailPage() {
                   {att.event_description || shortenPubkey(att.event_id, 8)}
                 </td>
                 <td className="px-4 py-3">
-                  <span className={`px-2 py-0.5 rounded text-xs ${
-                    att.status === "valid"
-                      ? "bg-green-500/20 text-green-400"
-                      : "bg-yellow-500/20 text-yellow-400"
-                  }`}>
+                  <span
+                    className={`px-2 py-0.5 rounded text-xs ${
+                      att.status === 'valid'
+                        ? 'bg-green-500/20 text-green-400'
+                        : 'bg-yellow-500/20 text-yellow-400'
+                    }`}
+                  >
                     {att.status}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-gray-500">
-                  {att.block_height ?? "-"}
-                </td>
+                <td className="px-4 py-3 text-gray-500">{att.block_height ?? '-'}</td>
                 <td className="px-4 py-3 text-gray-500">
                   {formatDistanceToNow(new Date(att.created_at), { addSuffix: true })}
                 </td>
@@ -194,4 +202,3 @@ export default function OracleDetailPage() {
     </div>
   );
 }
-

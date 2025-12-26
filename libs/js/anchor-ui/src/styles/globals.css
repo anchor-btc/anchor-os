@@ -19,8 +19,8 @@
     --radius: 0.5rem;
 
     /* Font families (can be overridden per app) */
-    --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+    --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
 
     /* ===== Light Theme ===== */
     --background: 0 0% 100%;
@@ -109,7 +109,9 @@
 
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings:
+      'rlig' 1,
+      'calt' 1;
   }
 }
 
@@ -120,7 +122,8 @@
   }
 
   @keyframes anchor-bob {
-    0%, 100% {
+    0%,
+    100% {
       transform: translateY(0) rotate(0deg);
     }
     25% {
@@ -149,7 +152,7 @@
    * Only the hero section gets entrance animations - everything else is static
    * Uses Apple's signature cubic-bezier(0.16, 1, 0.3, 1) easing
    * ============================================================================ */
-  
+
   /* Hero-specific fade-in-up animation - refined timing */
   @keyframes hero-fade-in {
     from {
@@ -187,8 +190,12 @@
 
   /* Simple fade - for subtle reveals */
   @keyframes fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
 
   .animate-fade-in {
@@ -241,12 +248,7 @@
 
   .animate-shimmer {
     animation: shimmer 1.5s infinite;
-    background: linear-gradient(
-      90deg, 
-      transparent, 
-      rgba(255, 255, 255, 0.04), 
-      transparent
-    );
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.04), transparent);
   }
 
   /* Shimmer skeleton - combines glass effect with shimmer */
@@ -259,12 +261,7 @@
     position: absolute;
     inset: 0;
     animation: shimmer 1.5s infinite;
-    background: linear-gradient(
-      90deg, 
-      transparent, 
-      rgba(255, 255, 255, 0.05), 
-      transparent
-    );
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
   }
 
   /* ============================================================================
@@ -330,4 +327,3 @@
            focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900;
   }
 }
-

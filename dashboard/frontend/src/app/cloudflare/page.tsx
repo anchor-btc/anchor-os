@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   fetchCloudflareStatus,
   connectCloudflare,
   disconnectCloudflare,
   fetchExposableServices,
-} from "@/lib/api";
+} from '@/lib/api';
 import {
   Loader2,
   Cloud,
@@ -22,8 +22,8 @@ import {
   Play,
   Copy,
   Check,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 // Import DS components
 import {
@@ -34,22 +34,27 @@ import {
   Grid,
   ActionButton,
   InfoBox,
-} from "@/components/ds";
+} from '@/components/ds';
 
 export default function CloudflarePage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const [token, setToken] = useState("");
+  const [token, setToken] = useState('');
   const [copied, setCopied] = useState<string | null>(null);
 
-  const { data: status, isLoading, refetch, isRefetching } = useQuery({
-    queryKey: ["cloudflare-status"],
+  const {
+    data: status,
+    isLoading,
+    refetch,
+    isRefetching,
+  } = useQuery({
+    queryKey: ['cloudflare-status'],
     queryFn: fetchCloudflareStatus,
     refetchInterval: 5000,
   });
 
   const { data: servicesData } = useQuery({
-    queryKey: ["cloudflare-services"],
+    queryKey: ['cloudflare-services'],
     queryFn: fetchExposableServices,
   });
 
@@ -57,16 +62,16 @@ export default function CloudflarePage() {
     mutationFn: connectCloudflare,
     onSuccess: (data) => {
       if (data.success) {
-        setToken("");
+        setToken('');
       }
-      queryClient.invalidateQueries({ queryKey: ["cloudflare-status"] });
+      queryClient.invalidateQueries({ queryKey: ['cloudflare-status'] });
     },
   });
 
   const disconnectMutation = useMutation({
     mutationFn: disconnectCloudflare,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["cloudflare-status"] });
+      queryClient.invalidateQueries({ queryKey: ['cloudflare-status'] });
     },
   });
 
@@ -102,32 +107,32 @@ export default function CloudflarePage() {
       <PageHeader
         icon={Cloud}
         iconColor="orange"
-        title={t("cloudflare.title")}
-        subtitle={t("cloudflare.subtitle")}
-        actions={
-          <RefreshButton loading={isRefetching} onClick={() => refetch()} />
-        }
+        title={t('cloudflare.title')}
+        subtitle={t('cloudflare.subtitle')}
+        actions={<RefreshButton loading={isRefetching} onClick={() => refetch()} />}
       />
 
       {/* Status Card */}
       <Section>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-foreground">{t("cloudflare.connectionStatus")}</h2>
+          <h2 className="text-lg font-semibold text-foreground">
+            {t('cloudflare.connectionStatus')}
+          </h2>
           <div className="flex items-center gap-2">
             {isConnected ? (
               <span className="flex items-center gap-2 text-sm text-success">
                 <CheckCircle2 className="w-4 h-4" />
-                {t("cloudflare.connected")}
+                {t('cloudflare.connected')}
               </span>
             ) : isRunning ? (
               <span className="flex items-center gap-2 text-sm text-warning">
                 <AlertCircle className="w-4 h-4" />
-                {t("cloudflare.connecting")}
+                {t('cloudflare.connecting')}
               </span>
             ) : (
               <span className="flex items-center gap-2 text-sm text-muted-foreground">
                 <XCircle className="w-4 h-4" />
-                {t("cloudflare.notRunning")}
+                {t('cloudflare.notRunning')}
               </span>
             )}
           </div>
@@ -138,44 +143,51 @@ export default function CloudflarePage() {
           <div className="bg-muted/50 rounded-xl p-4">
             <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
               <Server className="w-4 h-4" />
-              {t("cloudflare.container")}
+              {t('cloudflare.container')}
             </div>
-            <div className={cn(
-              "font-medium",
-              isRunning ? "text-success" : "text-muted-foreground"
-            )}>
-              {isRunning ? t("cloudflare.running") : t("cloudflare.stopped")}
+            <div
+              className={cn('font-medium', isRunning ? 'text-success' : 'text-muted-foreground')}
+            >
+              {isRunning ? t('cloudflare.running') : t('cloudflare.stopped')}
             </div>
           </div>
 
           <div className="bg-muted/50 rounded-xl p-4">
             <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
               <Cloud className="w-4 h-4" />
-              {t("cloudflare.tunnel")}
+              {t('cloudflare.tunnel')}
             </div>
-            <div className={cn(
-              "font-medium",
-              isConnected ? "text-success" : "text-muted-foreground"
-            )}>
-              {isConnected ? t("cloudflare.connected") : isRunning ? t("cloudflare.connecting") : t("cloudflare.disconnected")}
+            <div
+              className={cn('font-medium', isConnected ? 'text-success' : 'text-muted-foreground')}
+            >
+              {isConnected
+                ? t('cloudflare.connected')
+                : isRunning
+                  ? t('cloudflare.connecting')
+                  : t('cloudflare.disconnected')}
             </div>
           </div>
 
           <div className="bg-muted/50 rounded-xl p-4">
             <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
               <Globe className="w-4 h-4" />
-              {t("cloudflare.status")}
+              {t('cloudflare.status')}
             </div>
             <div className="font-medium text-foreground text-sm">
-              {status?.container_status || "-"}
+              {status?.container_status || '-'}
             </div>
           </div>
         </Grid>
 
         {/* Info when connected */}
         {isConnected && (
-          <InfoBox variant="success" icon={CheckCircle2} title={t("cloudflare.tunnelConnected")} className="mb-6">
-            {status?.tunnel_info || t("cloudflare.tunnelInfo")}
+          <InfoBox
+            variant="success"
+            icon={CheckCircle2}
+            title={t('cloudflare.tunnelConnected')}
+            className="mb-6"
+          >
+            {status?.tunnel_info || t('cloudflare.tunnelInfo')}
           </InfoBox>
         )}
 
@@ -185,7 +197,7 @@ export default function CloudflarePage() {
             variant="stop"
             loading={disconnectMutation.isPending}
             onClick={handleDisconnect}
-            label={t("cloudflare.stopTunnel")}
+            label={t('cloudflare.stopTunnel')}
           />
         )}
       </Section>
@@ -196,13 +208,13 @@ export default function CloudflarePage() {
           <SectionHeader
             icon={Key}
             iconColor="orange"
-            title={t("cloudflare.connectToCloudflare")}
+            title={t('cloudflare.connectToCloudflare')}
           />
 
           <div className="space-y-4 mt-4">
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                {t("cloudflare.tunnelToken")}
+                {t('cloudflare.tunnelToken')}
               </label>
               <input
                 type="password"
@@ -212,29 +224,25 @@ export default function CloudflarePage() {
                 className="w-full px-4 py-3 bg-muted border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 font-mono text-sm"
               />
               <p className="text-xs text-muted-foreground mt-2">
-                {t("cloudflare.getToken")}{" "}
+                {t('cloudflare.getToken')}{' '}
                 <a
                   href="https://one.dash.cloudflare.com/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-orange-500 hover:underline inline-flex items-center gap-1"
                 >
-                  {t("cloudflare.zeroTrustDashboard")}
+                  {t('cloudflare.zeroTrustDashboard')}
                   <ExternalLink className="w-3 h-3" />
                 </a>
               </p>
             </div>
 
             {connectMutation.isError && (
-              <InfoBox variant="error">
-                {t("cloudflare.connectError")}
-              </InfoBox>
+              <InfoBox variant="error">{t('cloudflare.connectError')}</InfoBox>
             )}
 
             {connectMutation.data && !connectMutation.data.success && (
-              <InfoBox variant="error">
-                {connectMutation.data.message}
-              </InfoBox>
+              <InfoBox variant="error">{connectMutation.data.message}</InfoBox>
             )}
 
             <ActionButton
@@ -243,7 +251,9 @@ export default function CloudflarePage() {
               onClick={handleConnect}
               disabled={!token.trim() || connectMutation.isPending}
               icon={Play}
-              label={connectMutation.isPending ? t("cloudflare.connecting") : t("cloudflare.startTunnel")}
+              label={
+                connectMutation.isPending ? t('cloudflare.connecting') : t('cloudflare.startTunnel')
+              }
               fullWidth
             />
           </div>
@@ -255,19 +265,19 @@ export default function CloudflarePage() {
         <SectionHeader
           icon={Server}
           iconColor="muted"
-          title={t("cloudflare.availableServices")}
+          title={t('cloudflare.availableServices')}
           subtitle={
             <>
-              {t("cloudflare.configureHostnames")}{" "}
+              {t('cloudflare.configureHostnames')}{' '}
               <a
                 href="https://one.dash.cloudflare.com/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-orange-500 hover:underline"
               >
-                {t("cloudflare.cloudflareDashboard")}
+                {t('cloudflare.cloudflareDashboard')}
               </a>
-              . {t("cloudflare.useInternalUrls")}
+              . {t('cloudflare.useInternalUrls')}
             </>
           }
         />
@@ -289,7 +299,7 @@ export default function CloudflarePage() {
                 <button
                   onClick={() => copyToClipboard(service.local_url, service.name)}
                   className="p-1.5 hover:bg-muted rounded transition-colors"
-                  title={t("cloudflare.copyUrl")}
+                  title={t('cloudflare.copyUrl')}
                 >
                   {copied === service.name ? (
                     <Check className="w-3.5 h-3.5 text-success" />
@@ -305,14 +315,24 @@ export default function CloudflarePage() {
 
       {/* Help Section */}
       <Section className="bg-muted/30">
-        <h3 className="font-semibold text-foreground mb-3">{t("cloudflare.howToUse")}</h3>
+        <h3 className="font-semibold text-foreground mb-3">{t('cloudflare.howToUse')}</h3>
         <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
-          <li>{t("cloudflare.step1")} <a href="https://one.dash.cloudflare.com/" target="_blank" rel="noopener noreferrer" className="text-orange-500 hover:underline">{t("cloudflare.zeroTrustDashboard")}</a></li>
-          <li>{t("cloudflare.step2")}</li>
-          <li>{t("cloudflare.step3")}</li>
-          <li>{t("cloudflare.step4")}</li>
-          <li>{t("cloudflare.step5")}</li>
-          <li>{t("cloudflare.step6")}</li>
+          <li>
+            {t('cloudflare.step1')}{' '}
+            <a
+              href="https://one.dash.cloudflare.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-orange-500 hover:underline"
+            >
+              {t('cloudflare.zeroTrustDashboard')}
+            </a>
+          </li>
+          <li>{t('cloudflare.step2')}</li>
+          <li>{t('cloudflare.step3')}</li>
+          <li>{t('cloudflare.step4')}</li>
+          <li>{t('cloudflare.step5')}</li>
+          <li>{t('cloudflare.step6')}</li>
         </ol>
       </Section>
     </div>

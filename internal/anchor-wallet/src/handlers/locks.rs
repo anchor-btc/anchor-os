@@ -143,15 +143,24 @@ pub async fn list_locked_utxos(
         .map(|u| {
             let (reason_str, asset_type, asset_id) = match &u.reason {
                 LockReason::Manual => ("manual".to_string(), None, None),
-                LockReason::Domain { name } => {
-                    ("domain".to_string(), Some("domain".to_string()), Some(name.clone()))
-                }
-                LockReason::Token { ticker, amount } => {
-                    ("token".to_string(), Some("token".to_string()), Some(format!("{} {}", amount, ticker)))
-                }
-                LockReason::Asset { asset_type, asset_id } => {
-                    ("asset".to_string(), Some(asset_type.clone()), Some(asset_id.clone()))
-                }
+                LockReason::Domain { name } => (
+                    "domain".to_string(),
+                    Some("domain".to_string()),
+                    Some(name.clone()),
+                ),
+                LockReason::Token { ticker, amount } => (
+                    "token".to_string(),
+                    Some("token".to_string()),
+                    Some(format!("{} {}", amount, ticker)),
+                ),
+                LockReason::Asset {
+                    asset_type,
+                    asset_id,
+                } => (
+                    "asset".to_string(),
+                    Some(asset_type.clone()),
+                    Some(asset_id.clone()),
+                ),
             };
             LockedUtxoResponse {
                 txid: u.txid,
@@ -186,7 +195,10 @@ pub async fn lock_utxos(
     let mut locked_count = 0;
 
     for utxo in req.utxos {
-        match state.lock_manager.lock(utxo.txid.clone(), utxo.vout, LockReason::Manual) {
+        match state
+            .lock_manager
+            .lock(utxo.txid.clone(), utxo.vout, LockReason::Manual)
+        {
             Ok(true) => locked_count += 1,
             Ok(false) => {} // Already locked
             Err(e) => {
@@ -277,11 +289,11 @@ pub async fn sync_locks(
     // Query Anchor Domains backend
     let domains_url = format!("{}/my-domains", state.config.domains_url);
     let utxo_txids: Vec<String> = wallet_utxos.iter().map(|u| u.txid.clone()).collect();
-    
+
     if !utxo_txids.is_empty() {
         let params = format!("owner_txids={}", utxo_txids.join(","));
         let full_url = format!("{}?{}", domains_url, params);
-        
+
         match reqwest::get(&full_url).await {
             Ok(resp) if resp.status().is_success() => {
                 if let Ok(data) = resp.json::<serde_json::Value>().await {
@@ -297,7 +309,9 @@ pub async fn sync_locks(
                                     new_locks.push((
                                         txid.to_string(),
                                         0,
-                                        LockReason::Domain { name: name.to_string() },
+                                        LockReason::Domain {
+                                            name: name.to_string(),
+                                        },
                                     ));
                                 }
                             }
@@ -502,7 +516,10 @@ pub async fn get_locked_assets(
                 tokens_sats += amount_sats;
                 ("token".to_string(), Some(format!("{} {}", amount, ticker)))
             }
-            LockReason::Asset { asset_type, asset_id } => {
+            LockReason::Asset {
+                asset_type,
+                asset_id,
+            } => {
                 // Treat other assets as manual
                 manual_count += 1;
                 manual_sats += amount_sats;
@@ -555,4 +572,3 @@ pub async fn get_locked_assets(
 
     Ok(Json(LockedAssetsOverview { summary, items }))
 }
-

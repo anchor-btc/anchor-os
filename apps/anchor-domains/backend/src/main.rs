@@ -202,7 +202,10 @@ async fn main() -> anyhow::Result<()> {
     // Start server
     let addr = SocketAddr::from(([0, 0, 0, 0], config.port));
     info!("Listening on {}", addr);
-    info!("API docs available at http://localhost:{}/docs", config.port);
+    info!(
+        "API docs available at http://localhost:{}/docs",
+        config.port
+    );
 
     let listener = tokio::net::TcpListener::bind(addr).await?;
     axum::serve(listener, app).await?;
@@ -233,9 +236,18 @@ fn build_router(state: Arc<AppState>) -> Router {
         .route("/pending", get(handlers::list_pending_transactions))
         .route("/pending/:name", get(handlers::get_pending_status))
         // Identity DNS (Selfie Records)
-        .route("/domains/:name/identities", get(handlers::list_domain_identities))
-        .route("/domains/:name/identities", post(handlers::publish_domain_identity))
-        .route("/domains/:name/identities/:identity_type", axum::routing::delete(handlers::remove_domain_identity))
+        .route(
+            "/domains/:name/identities",
+            get(handlers::list_domain_identities),
+        )
+        .route(
+            "/domains/:name/identities",
+            post(handlers::publish_domain_identity),
+        )
+        .route(
+            "/domains/:name/identities/:identity_type",
+            axum::routing::delete(handlers::remove_domain_identity),
+        )
         .route("/identities/resolve", get(handlers::resolve_identity))
         // Swagger UI
         .merge(SwaggerUi::new("/docs").url("/api-doc/openapi.json", ApiDoc::openapi()))

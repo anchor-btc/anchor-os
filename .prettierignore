@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+.next/
+out/
+dist/
+build/
+target/
+
+# Package manager
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# Generated files
+*.min.js
+*.min.css
+*.d.ts
+
+# Rust
+*.rs
+Cargo.lock
+Cargo.toml
+
+# Docker
+Dockerfile
+docker-compose*.yml
+
+# Config files that should keep their format
+.github/
+*.md
+*.json
+!.prettierrc
+!tsconfig*.json
+!package.json
+

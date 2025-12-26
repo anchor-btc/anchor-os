@@ -1,10 +1,19 @@
-"use client";
+'use client';
 
-import { useQuery } from "@tanstack/react-query";
-import { useParams } from "next/navigation";
-import { fetchMessage, fetchReplies, truncateTxid, formatBlockHeight, hexToImageDataUrl, CARRIER_INFO, getExplorerTxUrl } from "@/lib/api";
-import { MessageCard } from "@/components/message-card";
-import { Button, Card, Container } from "@AnchorProtocol/ui";
+import { useQuery } from '@tanstack/react-query';
+import { useParams } from 'next/navigation';
+import {
+  fetchMessage,
+  fetchReplies,
+  truncateTxid,
+  formatBlockHeight,
+  hexToImageDataUrl,
+  CARRIER_INFO,
+  getExplorerTxUrl,
+  BTC_EXPLORER_URL,
+} from '@/lib/api';
+import { MessageCard } from '@/components/message-card';
+import { Button, Card, Container } from '@AnchorProtocol/ui';
 import {
   Loader2,
   MessageSquare,
@@ -30,11 +39,11 @@ import {
   Package,
   BookOpen,
   ArrowRight,
-} from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
-import Link from "next/link";
-import { useState } from "react";
-import { TxStructure } from "@/components/tx-structure";
+} from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import Link from 'next/link';
+import { useState } from 'react';
+import { TxStructure } from '@/components/tx-structure';
 
 export default function MessagePage() {
   const params = useParams();
@@ -43,15 +52,21 @@ export default function MessagePage() {
   const [copied, setCopied] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [showTechnical, setShowTechnical] = useState(false);
-  const [activeTab, setActiveTab] = useState<"overview" | "payload" | "carrier" | "structure" | "anchors">("overview");
+  const [activeTab, setActiveTab] = useState<
+    'overview' | 'payload' | 'carrier' | 'structure' | 'anchors'
+  >('overview');
 
-  const { data: message, isLoading, error } = useQuery({
-    queryKey: ["message", txid, vout],
+  const {
+    data: message,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ['message', txid, vout],
     queryFn: () => fetchMessage(txid, vout),
   });
 
   const { data: replies } = useQuery({
-    queryKey: ["replies", txid, vout],
+    queryKey: ['replies', txid, vout],
     queryFn: () => fetchReplies(txid, vout),
     enabled: !!message,
     refetchInterval: 5000,
@@ -82,41 +97,42 @@ export default function MessagePage() {
       <Container className="text-center py-20">
         <AlertTriangle className="h-12 w-12 text-warning mx-auto mb-4" />
         <h1 className="text-2xl font-bold mb-2 text-foreground">Message Not Found</h1>
-        <p className="text-muted-foreground">
-          The requested message could not be found.
-        </p>
+        <p className="text-muted-foreground">The requested message could not be found.</p>
       </Container>
     );
   }
 
   const hasText = message.body_text && message.body_text.trim().length > 0;
   const parentAnchor = message.anchors.find((a) => a.index === 0);
-  
+
   // Check if this is an image message
-  const isImage = message.kind === 4 || message.kind_name === "Image";
+  const isImage = message.kind === 4 || message.kind_name === 'Image';
   const imageDataUrl = isImage ? hexToImageDataUrl(message.body_hex) : null;
-  
+
   // Calculate technical details
   const bodySize = message.body_hex ? message.body_hex.length / 2 : 0;
   const anchorsSize = message.anchors.length * 9;
   const payloadSize = 4 + 1 + 1 + anchorsSize + bodySize;
-  
+
   // Build ANCHOR payload hex
-  const magicHex = "a11c0001";
-  const kindHex = message.kind.toString(16).padStart(2, "0");
-  const anchorCountHex = message.anchors.length.toString(16).padStart(2, "0");
+  const magicHex = 'a11c0001';
+  const kindHex = message.kind.toString(16).padStart(2, '0');
+  const anchorCountHex = message.anchors.length.toString(16).padStart(2, '0');
   const anchorsHex = message.anchors
-    .map((a) => a.txid_prefix + a.vout.toString(16).padStart(2, "0"))
-    .join("");
+    .map((a) => a.txid_prefix + a.vout.toString(16).padStart(2, '0'))
+    .join('');
   const fullPayloadHex = magicHex + kindHex + anchorCountHex + anchorsHex + message.body_hex;
 
   // Build OP_RETURN script
-  const pushSize = payloadSize <= 75 
-    ? payloadSize.toString(16).padStart(2, "0")
-    : payloadSize <= 255 
-      ? "4c" + payloadSize.toString(16).padStart(2, "0")
-      : "4d" + (payloadSize & 0xff).toString(16).padStart(2, "0") + ((payloadSize >> 8) & 0xff).toString(16).padStart(2, "0");
-  const opReturnScript = "6a" + pushSize + fullPayloadHex;
+  const pushSize =
+    payloadSize <= 75
+      ? payloadSize.toString(16).padStart(2, '0')
+      : payloadSize <= 255
+        ? '4c' + payloadSize.toString(16).padStart(2, '0')
+        : '4d' +
+          (payloadSize & 0xff).toString(16).padStart(2, '0') +
+          ((payloadSize >> 8) & 0xff).toString(16).padStart(2, '0');
+  const opReturnScript = '6a' + pushSize + fullPayloadHex;
 
   return (
     <Container className="space-y-8">
@@ -126,29 +142,22 @@ export default function MessagePage() {
           <h1 className="text-2xl font-bold mb-2 text-foreground">Message Details</h1>
           <div className="flex items-center gap-2 text-muted-foreground">
             <span className="font-mono text-sm">{truncateTxid(txid, 12)}</span>
-            <button
-              onClick={handleCopy}
-              className="p-1 hover:text-primary transition-colors"
-            >
-              {copied ? (
-                <Check className="h-4 w-4" />
-              ) : (
-                <Copy className="h-4 w-4" />
-              )}
+            <button onClick={handleCopy} className="p-1 hover:text-primary transition-colors">
+              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
             </button>
           </div>
         </div>
         <div className="flex items-center gap-3">
           <Button asChild variant="ghost" size="sm">
-          <a
-            href={`${BTC_EXPLORER_URL}/tx/${txid}`}
-            target="_blank"
-            rel="noopener noreferrer"
+            <a
+              href={`${BTC_EXPLORER_URL}/tx/${txid}`}
+              target="_blank"
+              rel="noopener noreferrer"
               className="flex items-center gap-2"
-          >
-            <ExternalLink className="h-4 w-4" />
-            BTC Explorer
-          </a>
+            >
+              <ExternalLink className="h-4 w-4" />
+              BTC Explorer
+            </a>
           </Button>
           <Button asChild variant="ghost" size="sm">
             <a
@@ -163,9 +172,9 @@ export default function MessagePage() {
           </Button>
           <Button asChild variant="link">
             <Link href={`/thread/${txid}/${vout}`} className="flex items-center gap-2">
-            <MessageSquare className="h-4 w-4" />
-            View Thread
-          </Link>
+              <MessageSquare className="h-4 w-4" />
+              View Thread
+            </Link>
           </Button>
         </div>
       </div>
@@ -231,7 +240,9 @@ export default function MessagePage() {
                     src={imageDataUrl}
                     alt="ANCHOR Image"
                     className="max-w-full max-h-96 object-contain"
-                    style={{ imageRendering: message.body_hex.length < 1000 ? "pixelated" : "auto" }}
+                    style={{
+                      imageRendering: message.body_hex.length < 1000 ? 'pixelated' : 'auto',
+                    }}
                   />
                 </div>
                 <a
@@ -245,7 +256,9 @@ export default function MessagePage() {
               </div>
             </div>
           ) : hasText ? (
-            <p className="text-lg whitespace-pre-wrap break-words text-foreground">{message.body_text}</p>
+            <p className="text-lg whitespace-pre-wrap break-words text-foreground">
+              {message.body_text}
+            </p>
           ) : (
             <div>
               <p className="text-sm text-muted-foreground mb-2">Binary Data:</p>
@@ -279,35 +292,35 @@ export default function MessagePage() {
             {/* Tabs */}
             <div className="flex border-b border-border bg-secondary/50 overflow-x-auto">
               <TabButton
-                active={activeTab === "overview"}
-                onClick={() => setActiveTab("overview")}
+                active={activeTab === 'overview'}
+                onClick={() => setActiveTab('overview')}
                 icon={<Database className="h-4 w-4" />}
                 label="Overview"
               />
               <TabButton
-                active={activeTab === "payload"}
-                onClick={() => setActiveTab("payload")}
+                active={activeTab === 'payload'}
+                onClick={() => setActiveTab('payload')}
                 icon={<FileCode className="h-4 w-4" />}
                 label="Payload"
               />
               {message.carrier !== undefined && CARRIER_INFO[message.carrier] && (
                 <TabButton
-                  active={activeTab === "carrier"}
-                  onClick={() => setActiveTab("carrier")}
+                  active={activeTab === 'carrier'}
+                  onClick={() => setActiveTab('carrier')}
                   icon={<Package className="h-4 w-4" />}
                   label="Carrier"
                 />
               )}
               <TabButton
-                active={activeTab === "structure"}
-                onClick={() => setActiveTab("structure")}
+                active={activeTab === 'structure'}
+                onClick={() => setActiveTab('structure')}
                 icon={<Layers className="h-4 w-4" />}
                 label="TX Anatomy"
               />
               {message.anchors.length > 0 && (
                 <TabButton
-                  active={activeTab === "anchors"}
-                  onClick={() => setActiveTab("anchors")}
+                  active={activeTab === 'anchors'}
+                  onClick={() => setActiveTab('anchors')}
                   icon={<Link2 className="h-4 w-4" />}
                   label={`Anchors (${message.anchors.length})`}
                 />
@@ -316,7 +329,7 @@ export default function MessagePage() {
 
             {/* Tab Content */}
             <div className="p-5">
-              {activeTab === "overview" && (
+              {activeTab === 'overview' && (
                 <div className="space-y-6">
                   {/* Stats Grid */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -357,8 +370,8 @@ export default function MessagePage() {
                       value={txid}
                       mono
                       copyable
-                      onCopy={() => handleCopyField("txid", txid)}
-                      copied={copiedField === "txid"}
+                      onCopy={() => handleCopyField('txid', txid)}
+                      copied={copiedField === 'txid'}
                     />
                     <InfoRow
                       icon={<Layers className="h-4 w-4" />}
@@ -368,7 +381,7 @@ export default function MessagePage() {
                     <InfoRow
                       icon={<Box className="h-4 w-4" />}
                       label="Block Height"
-                      value={message.block_height?.toLocaleString() ?? "Unconfirmed"}
+                      value={message.block_height?.toLocaleString() ?? 'Unconfirmed'}
                     />
                     <InfoRow
                       icon={<Fingerprint className="h-4 w-4" />}
@@ -381,17 +394,29 @@ export default function MessagePage() {
 
                   {/* External Links */}
                   <div className="pt-4 border-t border-border">
-                    <p className="text-sm font-medium mb-3 text-muted-foreground">View on Block Explorer</p>
+                    <p className="text-sm font-medium mb-3 text-muted-foreground">
+                      View on Block Explorer
+                    </p>
                     <div className="flex flex-wrap gap-2">
-                      <ExplorerLink href={getExplorerTxUrl(txid)} label="Default Explorer" highlight />
-                      <ExplorerLink href={`https://mempool.space/tx/${txid}`} label="mempool.space" />
-                      <ExplorerLink href={`https://blockstream.info/tx/${txid}`} label="blockstream.info" />
+                      <ExplorerLink
+                        href={getExplorerTxUrl(txid)}
+                        label="Default Explorer"
+                        highlight
+                      />
+                      <ExplorerLink
+                        href={`https://mempool.space/tx/${txid}`}
+                        label="mempool.space"
+                      />
+                      <ExplorerLink
+                        href={`https://blockstream.info/tx/${txid}`}
+                        label="blockstream.info"
+                      />
                     </div>
                   </div>
                 </div>
               )}
 
-              {activeTab === "payload" && (
+              {activeTab === 'payload' && (
                 <div className="space-y-6">
                   {/* ANCHOR Payload */}
                   <div>
@@ -401,16 +426,24 @@ export default function MessagePage() {
                         ANCHOR Payload
                       </h3>
                       <CopyButton
-                        onCopy={() => handleCopyField("payload", fullPayloadHex)}
-                        copied={copiedField === "payload"}
+                        onCopy={() => handleCopyField('payload', fullPayloadHex)}
+                        copied={copiedField === 'payload'}
                       />
                     </div>
                     <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-5 overflow-x-auto shadow-inner">
                       <code className="text-sm font-mono break-all leading-relaxed">
-                        <span className="text-orange-400 bg-orange-400/20 px-1 rounded">{magicHex}</span>
+                        <span className="text-orange-400 bg-orange-400/20 px-1 rounded">
+                          {magicHex}
+                        </span>
                         <span className="text-blue-400 bg-blue-400/20 px-1 rounded">{kindHex}</span>
-                        <span className="text-purple-400 bg-purple-400/20 px-1 rounded">{anchorCountHex}</span>
-                        {anchorsHex && <span className="text-emerald-400 bg-emerald-400/20 px-1 rounded">{anchorsHex}</span>}
+                        <span className="text-purple-400 bg-purple-400/20 px-1 rounded">
+                          {anchorCountHex}
+                        </span>
+                        {anchorsHex && (
+                          <span className="text-emerald-400 bg-emerald-400/20 px-1 rounded">
+                            {anchorsHex}
+                          </span>
+                        )}
                         <span className="text-gray-400">{message.body_hex}</span>
                       </code>
                     </div>
@@ -418,7 +451,12 @@ export default function MessagePage() {
                       <Legend color="orange" label="Magic (4B)" />
                       <Legend color="blue" label="Kind (1B)" />
                       <Legend color="purple" label="Count (1B)" />
-                      {anchorsHex && <Legend color="emerald" label={`Anchors (${message.anchors.length * 9}B)`} />}
+                      {anchorsHex && (
+                        <Legend
+                          color="emerald"
+                          label={`Anchors (${message.anchors.length * 9}B)`}
+                        />
+                      )}
                       <Legend color="gray" label={`Body (${bodySize}B)`} />
                     </div>
                   </div>
@@ -432,14 +470,16 @@ export default function MessagePage() {
                           OP_RETURN Script
                         </h3>
                         <CopyButton
-                          onCopy={() => handleCopyField("script", opReturnScript)}
-                          copied={copiedField === "script"}
+                          onCopy={() => handleCopyField('script', opReturnScript)}
+                          copied={copiedField === 'script'}
                         />
                       </div>
                       <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-5 overflow-x-auto shadow-inner">
                         <code className="text-sm font-mono break-all leading-relaxed">
                           <span className="text-red-400 bg-red-400/20 px-1 rounded">6a</span>
-                          <span className="text-yellow-400 bg-yellow-400/20 px-1 rounded">{pushSize}</span>
+                          <span className="text-yellow-400 bg-yellow-400/20 px-1 rounded">
+                            {pushSize}
+                          </span>
                           <span className="text-gray-400">{fullPayloadHex}</span>
                         </code>
                       </div>
@@ -449,7 +489,8 @@ export default function MessagePage() {
                         <Legend color="gray" label="Payload" />
                       </div>
                       <p className="mt-3 text-xs text-muted-foreground">
-                        Data stored in a prunable OP_RETURN output. Nodes can discard this data after validation.
+                        Data stored in a prunable OP_RETURN output. Nodes can discard this data
+                        after validation.
                       </p>
                     </div>
                   )}
@@ -466,9 +507,13 @@ export default function MessagePage() {
                         <code className="text-sm font-mono break-all leading-relaxed">
                           <span className="text-red-400 bg-red-400/20 px-1 rounded">00</span>
                           <span className="text-yellow-400 bg-yellow-400/20 px-1 rounded">63</span>
-                          <span className="text-cyan-400 bg-cyan-400/20 px-1 rounded">06616e63686f72</span>
+                          <span className="text-cyan-400 bg-cyan-400/20 px-1 rounded">
+                            06616e63686f72
+                          </span>
                           <span className="text-blue-400 bg-blue-400/20 px-1 rounded">51</span>
-                          <span className="text-purple-400 bg-purple-400/20 px-1 rounded">[content-type]</span>
+                          <span className="text-purple-400 bg-purple-400/20 px-1 rounded">
+                            [content-type]
+                          </span>
                           <span className="text-pink-400 bg-pink-400/20 px-1 rounded">00</span>
                           <span className="text-gray-400">[payload]</span>
                           <span className="text-orange-400 bg-orange-400/20 px-1 rounded">68</span>
@@ -501,8 +546,8 @@ export default function MessagePage() {
                           Body Data ({bodySize} bytes)
                         </h3>
                         <CopyButton
-                          onCopy={() => handleCopyField("body", message.body_hex)}
-                          copied={copiedField === "body"}
+                          onCopy={() => handleCopyField('body', message.body_hex)}
+                          copied={copiedField === 'body'}
                         />
                       </div>
                       <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-5 overflow-x-auto shadow-inner">
@@ -520,85 +565,101 @@ export default function MessagePage() {
                 </div>
               )}
 
-              {activeTab === "carrier" && message.carrier !== undefined && CARRIER_INFO[message.carrier] && (
-                <div className="space-y-6">
-                  {/* Carrier Header */}
-                  <div className={`rounded-xl overflow-hidden border ${CARRIER_INFO[message.carrier].borderColor}`}>
-                    <div className={`p-5 ${CARRIER_INFO[message.carrier].bgColor}`}>
-                      <div className="flex items-start gap-3 mb-4">
-                        <div className={`w-12 h-12 rounded-xl ${CARRIER_INFO[message.carrier].color} flex items-center justify-center text-2xl text-white`}>
-                          {CARRIER_INFO[message.carrier].icon}
-                        </div>
-                        <div>
-                          <h3 className={`text-lg font-semibold ${CARRIER_INFO[message.carrier].textColor}`}>
-                            {CARRIER_INFO[message.carrier].label} Carrier
-                          </h3>
-                          <p className="text-sm text-muted-foreground">
-                            Data embedding method used for this message
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <p className="text-sm text-muted-foreground mb-4">
-                        {CARRIER_INFO[message.carrier].description}
-                      </p>
-                      
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        {CARRIER_INFO[message.carrier].properties.map((prop, i) => (
-                          <div key={i} className="bg-background/80 rounded-lg p-3 border border-border">
-                            <p className="text-xs text-muted-foreground mb-1">{prop.label}</p>
-                            <p className={`text-sm font-medium ${CARRIER_INFO[message.carrier].textColor}`}>
-                              {prop.value}
+              {activeTab === 'carrier' &&
+                message.carrier !== undefined &&
+                CARRIER_INFO[message.carrier] && (
+                  <div className="space-y-6">
+                    {/* Carrier Header */}
+                    <div
+                      className={`rounded-xl overflow-hidden border ${CARRIER_INFO[message.carrier].borderColor}`}
+                    >
+                      <div className={`p-5 ${CARRIER_INFO[message.carrier].bgColor}`}>
+                        <div className="flex items-start gap-3 mb-4">
+                          <div
+                            className={`w-12 h-12 rounded-xl ${CARRIER_INFO[message.carrier].color} flex items-center justify-center text-2xl text-white`}
+                          >
+                            {CARRIER_INFO[message.carrier].icon}
+                          </div>
+                          <div>
+                            <h3
+                              className={`text-lg font-semibold ${CARRIER_INFO[message.carrier].textColor}`}
+                            >
+                              {CARRIER_INFO[message.carrier].label} Carrier
+                            </h3>
+                            <p className="text-sm text-muted-foreground">
+                              Data embedding method used for this message
                             </p>
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* How This Carrier Works */}
-                  <div className="bg-primary/5 border border-primary/20 rounded-xl p-5 space-y-4">
-                    <h4 className="font-medium flex items-center gap-2 text-foreground">
-                      <BookOpen className="h-4 w-4 text-primary" />
-                      How {CARRIER_INFO[message.carrier].label} Works
-                    </h4>
-                    <CarrierExplanation carrier={message.carrier} />
-                  </div>
-
-                  {/* UTXO Model Explanation */}
-                  <div className="bg-secondary/50 border border-border rounded-xl p-5">
-                    <h4 className="font-medium flex items-center gap-2 mb-3 text-foreground">
-                      <Layers className="h-4 w-4 text-primary" />
-                      Understanding UTXOs
-                    </h4>
-                    <p className="text-sm text-muted-foreground">
-                      Bitcoin uses an <strong className="text-foreground">Unspent Transaction Output (UTXO)</strong> model.
-                      Each transaction consumes previous outputs (inputs) and creates new ones.
-                      ANCHOR messages are embedded in these outputs or the witness data.
-                    </p>
-                    <div className="mt-4 flex items-center justify-center gap-3 text-xs flex-wrap">
-                      <div className="px-3 py-2 bg-success/10 border border-success/30 rounded font-mono">
-                        UTXO (input)
-                      </div>
-                      <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                      <div className="px-4 py-2 bg-primary/10 border border-primary/30 rounded font-medium">
-                        Transaction
-                      </div>
-                      <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                      <div className="flex flex-col gap-1">
-                        <div className="px-3 py-1 bg-blue-500/10 border border-blue-500/30 rounded font-mono text-xs">
-                          New UTXO
                         </div>
-                        <div className="px-3 py-1 bg-destructive/10 border border-destructive/30 rounded font-mono text-xs">
-                          ⚓ ANCHOR
+
+                        <p className="text-sm text-muted-foreground mb-4">
+                          {CARRIER_INFO[message.carrier].description}
+                        </p>
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                          {CARRIER_INFO[message.carrier].properties.map((prop, i) => (
+                            <div
+                              key={i}
+                              className="bg-background/80 rounded-lg p-3 border border-border"
+                            >
+                              <p className="text-xs text-muted-foreground mb-1">{prop.label}</p>
+                              <p
+                                className={`text-sm font-medium ${CARRIER_INFO[message.carrier].textColor}`}
+                              >
+                                {prop.value}
+                              </p>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              )}
 
-              {activeTab === "structure" && (
+                    {/* How This Carrier Works */}
+                    <div className="bg-primary/5 border border-primary/20 rounded-xl p-5 space-y-4">
+                      <h4 className="font-medium flex items-center gap-2 text-foreground">
+                        <BookOpen className="h-4 w-4 text-primary" />
+                        How {CARRIER_INFO[message.carrier].label} Works
+                      </h4>
+                      <CarrierExplanation carrier={message.carrier} />
+                    </div>
+
+                    {/* UTXO Model Explanation */}
+                    <div className="bg-secondary/50 border border-border rounded-xl p-5">
+                      <h4 className="font-medium flex items-center gap-2 mb-3 text-foreground">
+                        <Layers className="h-4 w-4 text-primary" />
+                        Understanding UTXOs
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        Bitcoin uses an{' '}
+                        <strong className="text-foreground">
+                          Unspent Transaction Output (UTXO)
+                        </strong>{' '}
+                        model. Each transaction consumes previous outputs (inputs) and creates new
+                        ones. ANCHOR messages are embedded in these outputs or the witness data.
+                      </p>
+                      <div className="mt-4 flex items-center justify-center gap-3 text-xs flex-wrap">
+                        <div className="px-3 py-2 bg-success/10 border border-success/30 rounded font-mono">
+                          UTXO (input)
+                        </div>
+                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                        <div className="px-4 py-2 bg-primary/10 border border-primary/30 rounded font-medium">
+                          Transaction
+                        </div>
+                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                        <div className="flex flex-col gap-1">
+                          <div className="px-3 py-1 bg-blue-500/10 border border-blue-500/30 rounded font-mono text-xs">
+                            New UTXO
+                          </div>
+                          <div className="px-3 py-1 bg-destructive/10 border border-destructive/30 rounded font-mono text-xs">
+                            ⚓ ANCHOR
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+              {activeTab === 'structure' && (
                 <TxStructure
                   txid={txid}
                   vout={vout}
@@ -613,7 +674,7 @@ export default function MessagePage() {
                 />
               )}
 
-              {activeTab === "anchors" && message.anchors.length > 0 && (
+              {activeTab === 'anchors' && message.anchors.length > 0 && (
                 <div className="space-y-4">
                   {message.anchors.map((anchor, i) => (
                     <div
@@ -622,39 +683,55 @@ export default function MessagePage() {
                     >
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                            i === 0 ? "bg-primary/10 text-primary" : "bg-secondary text-muted-foreground"
-                          }`}>
+                          <div
+                            className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                              i === 0
+                                ? 'bg-primary/10 text-primary'
+                                : 'bg-secondary text-muted-foreground'
+                            }`}
+                          >
                             <span className="text-lg font-bold">#{i}</span>
                           </div>
                           <div>
                             <p className="font-medium text-foreground">
-                              {i === 0 ? "Canonical Parent" : `Reference #${i}`}
+                              {i === 0 ? 'Canonical Parent' : `Reference #${i}`}
                             </p>
-                            <p className="text-xs text-muted-foreground">
-                              9 bytes per anchor
-                            </p>
+                            <p className="text-xs text-muted-foreground">9 bytes per anchor</p>
                           </div>
                         </div>
                         <StatusBadge
-                          status={anchor.is_orphan ? "orphan" : anchor.is_ambiguous ? "ambiguous" : "resolved"}
+                          status={
+                            anchor.is_orphan
+                              ? 'orphan'
+                              : anchor.is_ambiguous
+                                ? 'ambiguous'
+                                : 'resolved'
+                          }
                         />
                       </div>
 
                       <div className="grid md:grid-cols-2 gap-4">
                         <div className="bg-secondary/50 rounded-lg p-3">
-                          <p className="text-xs text-muted-foreground mb-1">TxID Prefix (8 bytes)</p>
-                          <p className="font-mono text-sm text-cyan-600 font-medium">{anchor.txid_prefix}</p>
+                          <p className="text-xs text-muted-foreground mb-1">
+                            TxID Prefix (8 bytes)
+                          </p>
+                          <p className="font-mono text-sm text-cyan-600 font-medium">
+                            {anchor.txid_prefix}
+                          </p>
                         </div>
                         <div className="bg-secondary/50 rounded-lg p-3">
                           <p className="text-xs text-muted-foreground mb-1">Output Index</p>
-                          <p className="font-mono text-sm text-pink-600 font-medium">{anchor.vout}</p>
+                          <p className="font-mono text-sm text-pink-600 font-medium">
+                            {anchor.vout}
+                          </p>
                         </div>
                       </div>
 
                       {anchor.resolved_txid && (
                         <div className="mt-4 bg-success/10 rounded-lg p-3 border border-success/20">
-                          <p className="text-xs text-success mb-1 font-medium">✓ Resolved Transaction</p>
+                          <p className="text-xs text-success mb-1 font-medium">
+                            ✓ Resolved Transaction
+                          </p>
                           <Link
                             href={`/message/${anchor.resolved_txid}/${anchor.vout}`}
                             className="font-mono text-sm text-primary hover:underline break-all"
@@ -681,9 +758,9 @@ export default function MessagePage() {
           </h2>
           <Button asChild variant="accent">
             <Link href={`/compose?parent=${txid}&vout=${vout}`} className="flex items-center gap-2">
-            <MessageSquare className="h-4 w-4" />
-            Reply
-          </Link>
+              <MessageSquare className="h-4 w-4" />
+              Reply
+            </Link>
           </Button>
         </div>
 
@@ -724,15 +801,13 @@ function TabButton({
       onClick={onClick}
       className={`flex items-center gap-2 px-5 py-3 text-sm font-medium transition-colors relative ${
         active
-          ? "text-primary bg-background"
-          : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+          ? 'text-primary bg-background'
+          : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
       }`}
     >
       {icon}
       {label}
-      {active && (
-        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-      )}
+      {active && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
     </button>
   );
 }
@@ -749,13 +824,13 @@ function StatCard({
   value: string;
   unit?: string;
   label: string;
-  color: "orange" | "blue" | "green" | "purple";
+  color: 'orange' | 'blue' | 'green' | 'purple';
 }) {
   const colors = {
-    orange: "bg-orange-50 text-orange-600 border-orange-100",
-    blue: "bg-blue-50 text-blue-600 border-blue-100",
-    green: "bg-green-50 text-green-600 border-green-100",
-    purple: "bg-purple-50 text-purple-600 border-purple-100",
+    orange: 'bg-orange-50 text-orange-600 border-orange-100',
+    blue: 'bg-blue-50 text-blue-600 border-blue-100',
+    green: 'bg-green-50 text-green-600 border-green-100',
+    purple: 'bg-purple-50 text-purple-600 border-purple-100',
   };
 
   return (
@@ -802,7 +877,9 @@ function InfoRow({
         )}
       </div>
       <div className="flex items-center gap-2">
-        <span className={`text-sm ${mono ? "font-mono" : ""} text-right truncate max-w-[200px] md:max-w-[400px]`}>
+        <span
+          className={`text-sm ${mono ? 'font-mono' : ''} text-right truncate max-w-[200px] md:max-w-[400px]`}
+        >
           {value}
         </span>
         {copyable && onCopy && (
@@ -826,8 +903,8 @@ function CopyButton({ onCopy, copied }: { onCopy: () => void; copied: boolean })
       onClick={onCopy}
       className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
         copied
-          ? "bg-success/10 text-success"
-          : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+          ? 'bg-success/10 text-success'
+          : 'bg-secondary text-muted-foreground hover:bg-secondary/80'
       }`}
     >
       {copied ? (
@@ -848,16 +925,16 @@ function CopyButton({ onCopy, copied }: { onCopy: () => void; copied: boolean })
 // Legend Component
 function Legend({ color, label }: { color: string; label: string }) {
   const colors: Record<string, string> = {
-    orange: "bg-orange-400",
-    blue: "bg-blue-400",
-    purple: "bg-purple-400",
-    emerald: "bg-emerald-400",
-    gray: "bg-gray-400",
-    red: "bg-red-400",
-    yellow: "bg-yellow-400",
-    cyan: "bg-cyan-400",
-    pink: "bg-pink-400",
-    green: "bg-green-400",
+    orange: 'bg-orange-400',
+    blue: 'bg-blue-400',
+    purple: 'bg-purple-400',
+    emerald: 'bg-emerald-400',
+    gray: 'bg-gray-400',
+    red: 'bg-red-400',
+    yellow: 'bg-yellow-400',
+    cyan: 'bg-cyan-400',
+    pink: 'bg-pink-400',
+    green: 'bg-green-400',
   };
 
   return (
@@ -869,17 +946,17 @@ function Legend({ color, label }: { color: string; label: string }) {
 }
 
 // Status Badge Component
-function StatusBadge({ status }: { status: "resolved" | "orphan" | "ambiguous" }) {
+function StatusBadge({ status }: { status: 'resolved' | 'orphan' | 'ambiguous' }) {
   const styles = {
-    resolved: "bg-success/10 text-success border-success/20",
-    orphan: "bg-warning/10 text-warning border-warning/20",
-    ambiguous: "bg-primary/10 text-primary border-primary/20",
+    resolved: 'bg-success/10 text-success border-success/20',
+    orphan: 'bg-warning/10 text-warning border-warning/20',
+    ambiguous: 'bg-primary/10 text-primary border-primary/20',
   };
 
   const labels = {
-    resolved: "✓ Resolved",
-    orphan: "⚠ Orphan",
-    ambiguous: "⚠ Ambiguous",
+    resolved: '✓ Resolved',
+    orphan: '⚠ Orphan',
+    ambiguous: '⚠ Ambiguous',
   };
 
   return (
@@ -890,7 +967,15 @@ function StatusBadge({ status }: { status: "resolved" | "orphan" | "ambiguous" }
 }
 
 // Explorer Link Component
-function ExplorerLink({ href, label, highlight }: { href: string; label: string; highlight?: boolean }) {
+function ExplorerLink({
+  href,
+  label,
+  highlight,
+}: {
+  href: string;
+  label: string;
+  highlight?: boolean;
+}) {
   return (
     <a
       href={href}
@@ -898,8 +983,8 @@ function ExplorerLink({ href, label, highlight }: { href: string; label: string;
       rel="noopener noreferrer"
       className={`flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg transition-colors ${
         highlight
-          ? "bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20"
-          : "bg-secondary hover:bg-secondary/80 text-muted-foreground"
+          ? 'bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20'
+          : 'bg-secondary hover:bg-secondary/80 text-muted-foreground'
       }`}
     >
       <ExternalLink className="h-3.5 w-3.5" />
@@ -914,65 +999,98 @@ function CarrierExplanation({ carrier }: { carrier: number }) {
     0: (
       <>
         <p className="text-sm text-muted-foreground">
-          <strong className="text-foreground">OP_RETURN</strong> is Bitcoin&apos;s native data carrier. 
-          It creates a provably unspendable output that can store up to 80 bytes of arbitrary data.
+          <strong className="text-foreground">OP_RETURN</strong> is Bitcoin&apos;s native data
+          carrier. It creates a provably unspendable output that can store up to 80 bytes of
+          arbitrary data.
         </p>
         <ul className="list-none space-y-1 ml-2 text-sm text-muted-foreground">
-          <li><span className="text-success">✓</span> Prunable: Nodes can discard after validation</li>
-          <li><span className="text-success">✓</span> No UTXO bloat: Doesn&apos;t create spendable outputs</li>
-          <li><span className="text-success">✓</span> Standard: Relayed by all Bitcoin nodes</li>
+          <li>
+            <span className="text-success">✓</span> Prunable: Nodes can discard after validation
+          </li>
+          <li>
+            <span className="text-success">✓</span> No UTXO bloat: Doesn&apos;t create spendable
+            outputs
+          </li>
+          <li>
+            <span className="text-success">✓</span> Standard: Relayed by all Bitcoin nodes
+          </li>
         </ul>
       </>
     ),
     1: (
       <>
         <p className="text-sm text-muted-foreground">
-          <strong className="text-foreground">Inscriptions</strong> (Ordinals-style) embed data in Taproot witness
-          using an envelope pattern. The data is revealed in a script-path spend.
+          <strong className="text-foreground">Inscriptions</strong> (Ordinals-style) embed data in
+          Taproot witness using an envelope pattern. The data is revealed in a script-path spend.
         </p>
         <ul className="list-none space-y-1 ml-2 text-sm text-muted-foreground">
-          <li><span className="text-success">✓</span> 75% fee discount (witness data)</li>
-          <li><span className="text-success">✓</span> Up to ~4MB of data per transaction</li>
-          <li><span className="text-warning">!</span> Requires commit+reveal transaction pattern</li>
+          <li>
+            <span className="text-success">✓</span> 75% fee discount (witness data)
+          </li>
+          <li>
+            <span className="text-success">✓</span> Up to ~4MB of data per transaction
+          </li>
+          <li>
+            <span className="text-warning">!</span> Requires commit+reveal transaction pattern
+          </li>
         </ul>
       </>
     ),
     2: (
       <>
         <p className="text-sm text-muted-foreground">
-          <strong className="text-foreground">Stamps</strong> encode data in bare multisig scripts. 
+          <strong className="text-foreground">Stamps</strong> encode data in bare multisig scripts.
           The &quot;public keys&quot; are actually data chunks, making the data permanent.
         </p>
         <ul className="list-none space-y-1 ml-2 text-sm text-muted-foreground">
-          <li><span className="text-destructive">⚠</span> Creates permanent UTXOs that cannot be pruned</li>
-          <li><span className="text-destructive">⚠</span> Increases node storage forever</li>
-          <li><span className="text-warning">!</span> Most expensive, but truly permanent</li>
+          <li>
+            <span className="text-destructive">⚠</span> Creates permanent UTXOs that cannot be
+            pruned
+          </li>
+          <li>
+            <span className="text-destructive">⚠</span> Increases node storage forever
+          </li>
+          <li>
+            <span className="text-warning">!</span> Most expensive, but truly permanent
+          </li>
         </ul>
       </>
     ),
     3: (
       <>
         <p className="text-sm text-muted-foreground">
-          <strong className="text-foreground">Taproot Annex</strong> is a reserved field in BIP-341. 
+          <strong className="text-foreground">Taproot Annex</strong> is a reserved field in BIP-341.
           It&apos;s the last element of the witness stack, prefixed with 0x50.
         </p>
         <ul className="list-none space-y-1 ml-2 text-sm text-muted-foreground">
-          <li><span className="text-success">✓</span> Part of the signature hash</li>
-          <li><span className="text-warning">!</span> Not relayed by standard nodes</li>
-          <li><span className="text-warning">!</span> Requires libre relay or direct miner</li>
+          <li>
+            <span className="text-success">✓</span> Part of the signature hash
+          </li>
+          <li>
+            <span className="text-warning">!</span> Not relayed by standard nodes
+          </li>
+          <li>
+            <span className="text-warning">!</span> Requires libre relay or direct miner
+          </li>
         </ul>
       </>
     ),
     4: (
       <>
         <p className="text-sm text-muted-foreground">
-          <strong className="text-foreground">Witness Data</strong> embeds data in a Tapscript that drops all
-          pushed data and returns true, making it always spendable.
+          <strong className="text-foreground">Witness Data</strong> embeds data in a Tapscript that
+          drops all pushed data and returns true, making it always spendable.
         </p>
         <ul className="list-none space-y-1 ml-2 text-sm text-muted-foreground">
-          <li><span className="text-success">✓</span> 75% fee discount (witness data)</li>
-          <li><span className="text-success">✓</span> Up to ~4MB of data per transaction</li>
-          <li><span className="text-success">✓</span> Prunable after validation</li>
+          <li>
+            <span className="text-success">✓</span> 75% fee discount (witness data)
+          </li>
+          <li>
+            <span className="text-success">✓</span> Up to ~4MB of data per transaction
+          </li>
+          <li>
+            <span className="text-success">✓</span> Prunable after validation
+          </li>
         </ul>
       </>
     ),
@@ -980,7 +1098,9 @@ function CarrierExplanation({ carrier }: { carrier: number }) {
 
   return (
     <div className="space-y-3">
-      {explanations[carrier] || <p className="text-sm text-muted-foreground">Unknown carrier type.</p>}
+      {explanations[carrier] || (
+        <p className="text-sm text-muted-foreground">Unknown carrier type.</p>
+      )}
     </div>
   );
 }

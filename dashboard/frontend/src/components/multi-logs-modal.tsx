@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { fetchContainerLogs } from "@/lib/api";
-import { apps } from "@/lib/apps";
-import { Loader2, Terminal, X, RefreshCw } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useState, useEffect, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { fetchContainerLogs } from '@/lib/api';
+import { apps } from '@/lib/apps';
+import { Loader2, Terminal, X, RefreshCw } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface MultiLogsModalProps {
   containerNames: string[] | null;
@@ -21,16 +21,14 @@ function getContainerLabel(containerName: string): string {
     }
   }
   // Fallback: extract a readable name from container name
-  const parts = containerName.split("-");
+  const parts = containerName.split('-');
   return parts[parts.length - 1].charAt(0).toUpperCase() + parts[parts.length - 1].slice(1);
 }
 
 function getAppName(containerNames: string[]): string {
-  if (!containerNames.length) return "";
+  if (!containerNames.length) return '';
   // Find the app that contains these containers
-  const app = apps.find((a) => 
-    containerNames.some((name) => a.containers.includes(name))
-  );
+  const app = apps.find((a) => containerNames.some((name) => a.containers.includes(name)));
   return app?.name || containerNames[0];
 }
 
@@ -45,8 +43,13 @@ export function MultiLogsModal({ containerNames, onClose }: MultiLogsModalProps)
 
   const activeContainer = containerNames?.[activeTab];
 
-  const { data: logsData, isLoading, refetch, isRefetching } = useQuery({
-    queryKey: ["logs", activeContainer],
+  const {
+    data: logsData,
+    isLoading,
+    refetch,
+    isRefetching,
+  } = useQuery({
+    queryKey: ['logs', activeContainer],
     queryFn: () => fetchContainerLogs(activeContainer!, 500),
     enabled: !!activeContainer,
     refetchInterval: 3000,
@@ -55,7 +58,7 @@ export function MultiLogsModal({ containerNames, onClose }: MultiLogsModalProps)
   // Auto-scroll to bottom when logs update
   useEffect(() => {
     if (logsEndRef.current) {
-      logsEndRef.current.scrollIntoView({ behavior: "smooth" });
+      logsEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [logsData]);
 
@@ -65,11 +68,11 @@ export function MultiLogsModal({ containerNames, onClose }: MultiLogsModalProps)
   const hasTabs = containerNames.length > 1;
 
   return (
-    <div 
+    <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
       onClick={onClose}
     >
-      <div 
+      <div
         className="w-full max-w-5xl max-h-[85vh] bg-card border border-border rounded-2xl overflow-hidden shadow-2xl flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
@@ -82,7 +85,7 @@ export function MultiLogsModal({ containerNames, onClose }: MultiLogsModalProps)
             <div>
               <h3 className="font-semibold text-foreground">{appName}</h3>
               <p className="text-xs text-muted-foreground">
-                {hasTabs ? `${containerNames.length} containers` : "Container logs"}
+                {hasTabs ? `${containerNames.length} containers` : 'Container logs'}
               </p>
             </div>
           </div>
@@ -93,12 +96,11 @@ export function MultiLogsModal({ containerNames, onClose }: MultiLogsModalProps)
               className="p-2 hover:bg-muted rounded-lg transition-colors"
               title="Refresh logs"
             >
-              <RefreshCw className={`w-4 h-4 text-muted-foreground ${isRefetching ? "animate-spin" : ""}`} />
+              <RefreshCw
+                className={`w-4 h-4 text-muted-foreground ${isRefetching ? 'animate-spin' : ''}`}
+              />
             </button>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-muted rounded-lg transition-colors"
-            >
+            <button onClick={onClose} className="p-2 hover:bg-muted rounded-lg transition-colors">
               <X className="w-4 h-4 text-muted-foreground" />
             </button>
           </div>
@@ -112,10 +114,10 @@ export function MultiLogsModal({ containerNames, onClose }: MultiLogsModalProps)
                 key={name}
                 onClick={() => setActiveTab(index)}
                 className={cn(
-                  "px-4 py-2 text-sm font-medium rounded-lg transition-all",
+                  'px-4 py-2 text-sm font-medium rounded-lg transition-all',
                   activeTab === index
-                    ? "bg-primary text-primary-foreground shadow-lg"
-                    : "bg-slate-700/50 text-slate-400 hover:text-slate-200 hover:bg-slate-700"
+                    ? 'bg-primary text-primary-foreground shadow-lg'
+                    : 'bg-slate-700/50 text-slate-400 hover:text-slate-200 hover:bg-slate-700'
                 )}
               >
                 {getContainerLabel(name)}
@@ -147,9 +149,7 @@ export function MultiLogsModal({ containerNames, onClose }: MultiLogsModalProps)
         {/* Footer */}
         <div className="p-3 border-t border-border bg-secondary text-xs text-muted-foreground flex justify-between">
           <span>
-            {activeContainer && (
-              <span className="font-mono text-primary">{activeContainer}</span>
-            )}
+            {activeContainer && <span className="font-mono text-primary">{activeContainer}</span>}
           </span>
           <span>Showing last 500 lines • Auto-refreshing every 3s</span>
         </div>
@@ -165,20 +165,22 @@ function LogLine({ line }: { line: string }) {
   const isInfo = /info/i.test(line);
   const isDebug = /debug|trace/i.test(line);
 
-  let colorClass = "text-slate-300";
-  if (isError) colorClass = "text-red-400";
-  else if (isWarning) colorClass = "text-amber-400";
-  else if (isInfo) colorClass = "text-emerald-400";
-  else if (isDebug) colorClass = "text-sky-400";
+  let colorClass = 'text-slate-300';
+  if (isError) colorClass = 'text-red-400';
+  else if (isWarning) colorClass = 'text-amber-400';
+  else if (isInfo) colorClass = 'text-emerald-400';
+  else if (isDebug) colorClass = 'text-sky-400';
 
   // Clean up ANSI codes and format
   const cleanLine = line
-    .replace(/\x1b\[[0-9;]*m/g, "") // Remove ANSI color codes
-    .replace(/^\s+/, ""); // Trim leading whitespace
+    .replace(/\x1b\[[0-9;]*m/g, '') // Remove ANSI color codes
+    .replace(/^\s+/, ''); // Trim leading whitespace
 
   return (
-    <div className={`${colorClass} hover:bg-white/10 px-2 py-0.5 rounded whitespace-pre-wrap break-all`}>
-      {cleanLine || " "}
+    <div
+      className={`${colorClass} hover:bg-white/10 px-2 py-0.5 rounded whitespace-pre-wrap break-all`}
+    >
+      {cleanLine || ' '}
     </div>
   );
 }

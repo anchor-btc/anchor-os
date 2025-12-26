@@ -1,10 +1,7 @@
 //! WebSocket server for real-time logs and stats streaming
 
-use axum::{
-    extract::State,
-    response::IntoResponse,
-};
 use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
+use axum::{extract::State, response::IntoResponse};
 use futures_util::{SinkExt, StreamExt};
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
@@ -113,7 +110,7 @@ impl LogRingBuffer {
         if self.buffer.len() >= self.max_size {
             self.buffer.pop_front();
         }
-        
+
         let entry_clone = entry.clone();
         self.buffer.push_back(entry);
         entry_clone
@@ -128,11 +125,7 @@ impl LogRingBuffer {
     /// Get logs since a specific ID
     #[allow(dead_code)]
     pub fn since(&self, id: u64) -> Vec<LogEntry> {
-        self.buffer
-            .iter()
-            .filter(|e| e.id > id)
-            .cloned()
-            .collect()
+        self.buffer.iter().filter(|e| e.id > id).cloned().collect()
     }
 
     /// Get the last N logs
@@ -204,9 +197,14 @@ pub enum WsMessage {
     Ping,
     Pong,
     /// Subscribe to specific events
-    Subscribe { logs: bool, stats: bool },
+    Subscribe {
+        logs: bool,
+        stats: bool,
+    },
     /// Error message
-    Error { message: String },
+    Error {
+        message: String,
+    },
 }
 
 /// Broadcast channel for WebSocket messages
@@ -227,10 +225,7 @@ pub struct WsState {
 }
 
 /// WebSocket upgrade handler
-pub async fn ws_handler(
-    ws: WebSocketUpgrade,
-    State(state): State<WsState>,
-) -> impl IntoResponse {
+pub async fn ws_handler(ws: WebSocketUpgrade, State(state): State<WsState>) -> impl IntoResponse {
     ws.on_upgrade(|socket| handle_socket(socket, state))
 }
 
@@ -274,14 +269,9 @@ async fn handle_socket(socket: WebSocket, state: WsState) {
             Some(result) = receiver.next() => {
                 match result {
                     Ok(Message::Text(text)) => {
-                        if let Ok(msg) = serde_json::from_str::<WsMessage>(&text) {
-                            match msg {
-                                WsMessage::Ping => {
-                                    let pong = serde_json::to_string(&WsMessage::Pong).unwrap();
-                                    let _ = sender.send(Message::Text(pong)).await;
-                                }
-                                _ => {}
-                            }
+                        if let Ok(WsMessage::Ping) = serde_json::from_str::<WsMessage>(&text) {
+                            let pong = serde_json::to_string(&WsMessage::Pong).unwrap();
+                            let _ = sender.send(Message::Text(pong)).await;
                         }
                     }
                     Ok(Message::Close(_)) | Err(_) => break,
@@ -309,4 +299,3 @@ pub async fn broadcast_log(broadcast: &WsBroadcast, log_buffer: &SharedLogBuffer
 pub async fn broadcast_stats(broadcast: &WsBroadcast, stats: &GeneratorStats) {
     let _ = broadcast.send(WsMessage::Stats(stats.clone()));
 }
-

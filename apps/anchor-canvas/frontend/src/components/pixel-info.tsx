@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useQuery } from "@tanstack/react-query";
-import { fetchPixelInfo, rgbToHex, truncateTxid, type PixelInfo as PixelInfoType } from "@/lib/api";
-import { formatDistanceToNow } from "date-fns";
-import { ExternalLink, History, MapPin } from "lucide-react";
+import { useQuery } from '@tanstack/react-query';
+import { fetchPixelInfo, rgbToHex, truncateTxid } from '@/lib/api';
+import { formatDistanceToNow } from 'date-fns';
+import { ExternalLink, History, MapPin } from 'lucide-react';
 
 interface PixelInfoProps {
   x: number;
@@ -12,7 +12,7 @@ interface PixelInfoProps {
 
 export function PixelInfo({ x, y }: PixelInfoProps) {
   const { data, isLoading, error } = useQuery({
-    queryKey: ["pixel", x, y],
+    queryKey: ['pixel', x, y],
     queryFn: () => fetchPixelInfo(x, y),
     enabled: x >= 0 && y >= 0,
   });
@@ -27,11 +27,7 @@ export function PixelInfo({ x, y }: PixelInfoProps) {
   }
 
   if (error) {
-    return (
-      <div className="stats-card text-red-400 text-sm">
-        Failed to load pixel info
-      </div>
-    );
+    return <div className="stats-card text-red-400 text-sm">Failed to load pixel info</div>;
   }
 
   if (!data) return null;
@@ -76,7 +72,7 @@ export function PixelInfo({ x, y }: PixelInfoProps) {
           <div className="flex justify-between text-sm">
             <span className="text-gray-400">Block</span>
             <span className="font-mono text-accent">
-              #{current.last_block_height?.toLocaleString() || "Pending"}
+              #{current.last_block_height?.toLocaleString() || 'Pending'}
             </span>
           </div>
           <div className="flex justify-between text-sm items-center">
@@ -136,5 +132,3 @@ export function PixelInfo({ x, y }: PixelInfoProps) {
     </div>
   );
 }
-
-

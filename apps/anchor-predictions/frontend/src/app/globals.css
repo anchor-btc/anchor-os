@@ -1,6 +1,6 @@
 /* Anchor UI Design System */
-@import "@AnchorProtocol/ui/styles/globals.css";
-@import "@AnchorProtocol/ui/styles/themes/predictions.css";
+@import '@AnchorProtocol/ui/styles/globals.css';
+@import '@AnchorProtocol/ui/styles/themes/predictions.css';
 
 /* App-specific overrides */
 :root {
@@ -42,17 +42,34 @@
 
 /* Lottery ball animation */
 @keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
 }
 
 .lottery-ball {
   animation: bounce 0.6s ease-in-out infinite;
 }
 
-.lottery-ball:nth-child(1) { animation-delay: 0s; }
-.lottery-ball:nth-child(2) { animation-delay: 0.1s; }
-.lottery-ball:nth-child(3) { animation-delay: 0.2s; }
-.lottery-ball:nth-child(4) { animation-delay: 0.3s; }
-.lottery-ball:nth-child(5) { animation-delay: 0.4s; }
-.lottery-ball:nth-child(6) { animation-delay: 0.5s; }
+.lottery-ball:nth-child(1) {
+  animation-delay: 0s;
+}
+.lottery-ball:nth-child(2) {
+  animation-delay: 0.1s;
+}
+.lottery-ball:nth-child(3) {
+  animation-delay: 0.2s;
+}
+.lottery-ball:nth-child(4) {
+  animation-delay: 0.3s;
+}
+.lottery-ball:nth-child(5) {
+  animation-delay: 0.4s;
+}
+.lottery-ball:nth-child(6) {
+  animation-delay: 0.5s;
+}

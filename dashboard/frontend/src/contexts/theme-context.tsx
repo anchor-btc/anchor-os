@@ -1,20 +1,14 @@
-"use client";
+'use client';
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  ReactNode,
-} from "react";
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
 export type ThemeName =
-  | "bitcoin-orange"
-  | "dark"
-  | "midnight-blue"
-  | "light-clean"
-  | "hacker-green"
-  | "dracula";
+  | 'bitcoin-orange'
+  | 'dark'
+  | 'midnight-blue'
+  | 'light-clean'
+  | 'hacker-green'
+  | 'dracula';
 
 export interface ThemeInfo {
   id: ThemeName;
@@ -31,75 +25,75 @@ export interface ThemeInfo {
 
 export const THEMES: ThemeInfo[] = [
   {
-    id: "bitcoin-orange",
-    name: "Bitcoin Orange",
-    description: "Light theme with Bitcoin orange accent",
-    descriptionKey: "themeDescriptions.bitcoin-orange",
+    id: 'bitcoin-orange',
+    name: 'Bitcoin Orange',
+    description: 'Light theme with Bitcoin orange accent',
+    descriptionKey: 'themeDescriptions.bitcoin-orange',
     isDark: false,
     preview: {
-      background: "#fafafa",
-      primary: "#f7931a",
-      card: "#ffffff",
+      background: '#fafafa',
+      primary: '#f7931a',
+      card: '#ffffff',
     },
   },
   {
-    id: "dark",
-    name: "Dark Mode",
-    description: "Dark theme with Bitcoin orange accent",
-    descriptionKey: "themeDescriptions.dark",
+    id: 'dark',
+    name: 'Dark Mode',
+    description: 'Dark theme with Bitcoin orange accent',
+    descriptionKey: 'themeDescriptions.dark',
     isDark: true,
     preview: {
-      background: "#0a0a0a",
-      primary: "#f7931a",
-      card: "#141414",
+      background: '#0a0a0a',
+      primary: '#f7931a',
+      card: '#141414',
     },
   },
   {
-    id: "midnight-blue",
-    name: "Midnight Blue",
-    description: "Dark blue theme for night owls",
-    descriptionKey: "themeDescriptions.midnight-blue",
+    id: 'midnight-blue',
+    name: 'Midnight Blue',
+    description: 'Dark blue theme for night owls',
+    descriptionKey: 'themeDescriptions.midnight-blue',
     isDark: true,
     preview: {
-      background: "#0f172a",
-      primary: "#3b82f6",
-      card: "#1e293b",
+      background: '#0f172a',
+      primary: '#3b82f6',
+      card: '#1e293b',
     },
   },
   {
-    id: "light-clean",
-    name: "Light Clean",
-    description: "Minimalist light theme",
-    descriptionKey: "themeDescriptions.light-clean",
+    id: 'light-clean',
+    name: 'Light Clean',
+    description: 'Minimalist light theme',
+    descriptionKey: 'themeDescriptions.light-clean',
     isDark: false,
     preview: {
-      background: "#ffffff",
-      primary: "#18181b",
-      card: "#ffffff",
+      background: '#ffffff',
+      primary: '#18181b',
+      card: '#ffffff',
     },
   },
   {
-    id: "hacker-green",
-    name: "Hacker Green",
-    description: "Matrix-inspired terminal theme",
-    descriptionKey: "themeDescriptions.hacker-green",
+    id: 'hacker-green',
+    name: 'Hacker Green',
+    description: 'Matrix-inspired terminal theme',
+    descriptionKey: 'themeDescriptions.hacker-green',
     isDark: true,
     preview: {
-      background: "#0d1117",
-      primary: "#00ff41",
-      card: "#161b22",
+      background: '#0d1117',
+      primary: '#00ff41',
+      card: '#161b22',
     },
   },
   {
-    id: "dracula",
-    name: "Dracula",
-    description: "Popular dark theme with purple accents",
-    descriptionKey: "themeDescriptions.dracula",
+    id: 'dracula',
+    name: 'Dracula',
+    description: 'Popular dark theme with purple accents',
+    descriptionKey: 'themeDescriptions.dracula',
     isDark: true,
     preview: {
-      background: "#282a36",
-      primary: "#bd93f9",
-      card: "#21222c",
+      background: '#282a36',
+      primary: '#bd93f9',
+      card: '#21222c',
     },
   },
 ];
@@ -115,26 +109,24 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-const STORAGE_KEY = "anchor-os-theme";
-const AUTO_MODE_KEY = "anchor-os-theme-auto";
+const STORAGE_KEY = 'anchor-os-theme';
+const AUTO_MODE_KEY = 'anchor-os-theme-auto';
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeName>("bitcoin-orange");
+  const [theme, setThemeState] = useState<ThemeName>('bitcoin-orange');
   const [autoMode, setAutoModeState] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Load theme from localStorage on mount
   useEffect(() => {
     const savedTheme = localStorage.getItem(STORAGE_KEY) as ThemeName | null;
-    const savedAutoMode = localStorage.getItem(AUTO_MODE_KEY) === "true";
+    const savedAutoMode = localStorage.getItem(AUTO_MODE_KEY) === 'true';
 
     if (savedAutoMode) {
       setAutoModeState(true);
       // Detect system preference
-      const prefersDark = window.matchMedia(
-        "(prefers-color-scheme: dark)"
-      ).matches;
-      setThemeState(prefersDark ? "dark" : "bitcoin-orange");
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      setThemeState(prefersDark ? 'dark' : 'bitcoin-orange');
     } else if (savedTheme && THEMES.find((t) => t.id === savedTheme)) {
       setThemeState(savedTheme);
     }
@@ -146,19 +138,19 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!autoMode) return;
 
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = (e: MediaQueryListEvent) => {
-      setThemeState(e.matches ? "dark" : "bitcoin-orange");
+      setThemeState(e.matches ? 'dark' : 'bitcoin-orange');
     };
 
-    mediaQuery.addEventListener("change", handleChange);
-    return () => mediaQuery.removeEventListener("change", handleChange);
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
   }, [autoMode]);
 
   // Apply theme to document
   useEffect(() => {
     if (!isLoaded) return;
-    document.documentElement.setAttribute("data-theme", theme);
+    document.documentElement.setAttribute('data-theme', theme);
   }, [theme, isLoaded]);
 
   const setTheme = (newTheme: ThemeName) => {
@@ -166,7 +158,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEY, newTheme);
     if (autoMode) {
       setAutoModeState(false);
-      localStorage.setItem(AUTO_MODE_KEY, "false");
+      localStorage.setItem(AUTO_MODE_KEY, 'false');
     }
   };
 
@@ -174,15 +166,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setAutoModeState(auto);
     localStorage.setItem(AUTO_MODE_KEY, auto.toString());
     if (auto) {
-      const prefersDark = window.matchMedia(
-        "(prefers-color-scheme: dark)"
-      ).matches;
-      setThemeState(prefersDark ? "dark" : "bitcoin-orange");
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      setThemeState(prefersDark ? 'dark' : 'bitcoin-orange');
     }
   };
 
-  const currentTheme =
-    THEMES.find((t) => t.id === theme) || THEMES[0];
+  const currentTheme = THEMES.find((t) => t.id === theme) || THEMES[0];
 
   return (
     <ThemeContext.Provider
@@ -203,13 +192,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 export function useTheme() {
   const context = useContext(ThemeContext);
   if (context === undefined) {
-    throw new Error("useTheme must be used within a ThemeProvider");
+    throw new Error('useTheme must be used within a ThemeProvider');
   }
   return context;
 }
-
-
-
-
-
-

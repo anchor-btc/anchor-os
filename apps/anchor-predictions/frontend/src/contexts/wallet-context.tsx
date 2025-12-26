@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 
-const WALLET_URL = process.env.NEXT_PUBLIC_WALLET_URL || "http://localhost:8001";
+const WALLET_URL = process.env.NEXT_PUBLIC_WALLET_URL || 'http://localhost:8001';
 
 export interface WalletBalance {
   confirmed: number;
@@ -39,7 +39,7 @@ const defaultState: WalletState = {
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
-const STORAGE_KEY = "anchor-predictions-wallet-address";
+const STORAGE_KEY = 'anchor-predictions-wallet-address';
 
 export function WalletProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<WalletState>(defaultState);
@@ -47,7 +47,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   // Fetch wallet addresses
   const fetchAddresses = useCallback(async (): Promise<string[]> => {
     const res = await fetch(`${WALLET_URL}/wallet/addresses`);
-    if (!res.ok) throw new Error("Failed to fetch addresses");
+    if (!res.ok) throw new Error('Failed to fetch addresses');
     const data = await res.json();
     return data.addresses || [];
   }, []);
@@ -55,22 +55,22 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   // Fetch wallet balance
   const fetchBalance = useCallback(async (): Promise<WalletBalance> => {
     const res = await fetch(`${WALLET_URL}/wallet/balance`);
-    if (!res.ok) throw new Error("Failed to fetch balance");
+    if (!res.ok) throw new Error('Failed to fetch balance');
     return res.json();
   }, []);
 
   // Get or set persistent address
   const getPersistentAddress = useCallback((addresses: string[]): string => {
-    if (typeof window === "undefined") return addresses[0] || "";
-    
+    if (typeof window === 'undefined') return addresses[0] || '';
+
     // Check if we have a saved address
     const savedAddress = localStorage.getItem(STORAGE_KEY);
     if (savedAddress && addresses.includes(savedAddress)) {
       return savedAddress;
     }
-    
+
     // Use first address and save it
-    const address = addresses[0] || "";
+    const address = addresses[0] || '';
     if (address) {
       localStorage.setItem(STORAGE_KEY, address);
     }
@@ -79,13 +79,13 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
   // Connect to wallet
   const connect = useCallback(async () => {
-    setState(prev => ({ ...prev, connecting: true, error: null }));
-    
+    setState((prev) => ({ ...prev, connecting: true, error: null }));
+
     try {
       // Fetch wallet data
       const addresses = await fetchAddresses();
       const balance = await fetchBalance();
-      
+
       // Use persistent address to ensure consistency
       const address = getPersistentAddress(addresses);
 
@@ -99,8 +99,8 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         pubkey: null,
       });
     } catch (e: unknown) {
-      const error = e instanceof Error ? e.message : "Failed to connect to wallet";
-      setState(prev => ({
+      const error = e instanceof Error ? e.message : 'Failed to connect to wallet';
+      setState((prev) => ({
         ...prev,
         connected: false,
         connecting: false,
@@ -117,24 +117,24 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   // Refresh balance
   const refreshBalance = useCallback(async () => {
     if (!state.connected) return;
-    
+
     try {
       const balance = await fetchBalance();
-      setState(prev => ({ ...prev, balance }));
+      setState((prev) => ({ ...prev, balance }));
     } catch (e: unknown) {
-      console.error("Failed to refresh balance:", e);
+      console.error('Failed to refresh balance:', e);
     }
   }, [state.connected, fetchBalance]);
 
   // Refresh addresses
   const refreshAddresses = useCallback(async () => {
     if (!state.connected) return;
-    
+
     try {
       const addresses = await fetchAddresses();
-      setState(prev => ({ ...prev, addresses }));
+      setState((prev) => ({ ...prev, addresses }));
     } catch (e: unknown) {
-      console.error("Failed to refresh addresses:", e);
+      console.error('Failed to refresh addresses:', e);
     }
   }, [state.connected, fetchAddresses]);
 
@@ -159,17 +159,13 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     refreshAddresses,
   };
 
-  return (
-    <WalletContext.Provider value={value}>
-      {children}
-    </WalletContext.Provider>
-  );
+  return <WalletContext.Provider value={value}>{children}</WalletContext.Provider>;
 }
 
 export function useWallet(): WalletContextType {
   const context = useContext(WalletContext);
   if (context === undefined) {
-    throw new Error("useWallet must be used within a WalletProvider");
+    throw new Error('useWallet must be used within a WalletProvider');
   }
   return context;
 }
@@ -194,4 +190,3 @@ export function formatWalletBalance(sats: number): string {
   }
   return `${sats} sats`;
 }
-

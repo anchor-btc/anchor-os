@@ -1,26 +1,26 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState } from 'react';
+import { motion } from 'framer-motion';
 
 const steps = [
   {
-    number: "01",
-    title: "Clone the Repository",
-    description: "Get the Anchor OS source code from GitHub",
-    code: "git clone https://github.com/AnchorProtocol/anchor-os.git\ncd anchor-os",
+    number: '01',
+    title: 'Clone the Repository',
+    description: 'Get the Anchor OS source code from GitHub',
+    code: 'git clone https://github.com/AnchorProtocol/anchor-os.git\ncd anchor-os',
   },
   {
-    number: "02",
-    title: "Start the Stack",
-    description: "Launch all services with Docker Compose",
-    code: "docker compose up -d",
+    number: '02',
+    title: 'Start the Stack',
+    description: 'Launch all services with Docker Compose',
+    code: 'docker compose up -d',
   },
   {
-    number: "03",
-    title: "Open Dashboard",
-    description: "Access your Anchor OS dashboard",
-    code: "open http://localhost:8000",
+    number: '03',
+    title: 'Open Dashboard',
+    description: 'Access your Anchor OS dashboard',
+    code: 'open http://localhost:8000',
   },
 ];
 
@@ -51,8 +51,7 @@ export function QuickStart() {
             <span className="text-gradient">Quick Start</span>
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
-            Get your Bitcoin stack running in three simple steps. 
-            No complex configuration required.
+            Get your Bitcoin stack running in three simple steps. No complex configuration required.
           </p>
         </motion.div>
 
@@ -99,15 +98,35 @@ export function QuickStart() {
                       >
                         {copiedStep === index ? (
                           <>
-                            <svg className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            <svg
+                              className="w-4 h-4 text-green-400"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M5 13l4 4L19 7"
+                              />
                             </svg>
                             Copied!
                           </>
                         ) : (
                           <>
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                              />
                             </svg>
                             Copy
                           </>
@@ -115,9 +134,7 @@ export function QuickStart() {
                       </button>
                     </div>
                     <pre className="p-4 overflow-x-auto">
-                      <code className="text-sm font-mono text-primary">
-                        {step.code}
-                      </code>
+                      <code className="text-sm font-mono text-primary">{step.code}</code>
                     </pre>
                   </div>
                 </div>
@@ -144,4 +161,3 @@ export function QuickStart() {
     </section>
   );
 }
-

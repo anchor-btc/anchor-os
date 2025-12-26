@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import { Languages, Check, RefreshCw } from "lucide-react";
-import { supportedLanguages } from "@/lib/i18n/config";
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Languages, Check, RefreshCw } from 'lucide-react';
+import { supportedLanguages } from '@/lib/i18n/config';
 
 export default function LanguagePage() {
   const { t, i18n } = useTranslation();
@@ -11,7 +11,7 @@ export default function LanguagePage() {
 
   const handleLanguageChange = (code: string) => {
     i18n.changeLanguage(code);
-    localStorage.setItem("anchor-os-language", code);
+    localStorage.setItem('anchor-os-language', code);
     setHasChanges(true);
   };
 
@@ -27,12 +27,8 @@ export default function LanguagePage() {
             <Languages className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-foreground">
-              {t("language.title")}
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              {t("language.description")}
-            </p>
+            <h2 className="text-lg font-semibold text-foreground">{t('language.title')}</h2>
+            <p className="text-sm text-muted-foreground">{t('language.description')}</p>
           </div>
         </div>
 
@@ -45,8 +41,8 @@ export default function LanguagePage() {
                 w-full flex items-center justify-between p-4 rounded-lg border transition-colors text-left
                 ${
                   i18n.language === lang.code
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:bg-secondary/50"
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover:bg-secondary/50'
                 }
               `}
             >
@@ -54,9 +50,7 @@ export default function LanguagePage() {
                 <span className="text-2xl">{lang.flag}</span>
                 <div>
                   <div className="font-medium text-foreground">{lang.name}</div>
-                  <div className="text-sm text-muted-foreground">
-                    {lang.nativeName}
-                  </div>
+                  <div className="text-sm text-muted-foreground">{lang.nativeName}</div>
                 </div>
               </div>
               {i18n.language === lang.code && (
@@ -71,51 +65,36 @@ export default function LanguagePage() {
         {hasChanges && (
           <div className="mt-6 p-4 bg-primary/10 border border-primary/20 rounded-lg flex items-center justify-between">
             <div>
-              <div className="font-medium text-foreground">
-                {t("language.reloadRequired")}
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {t("language.reloadRequiredDesc")}
-              </p>
+              <div className="font-medium text-foreground">{t('language.reloadRequired')}</div>
+              <p className="text-sm text-muted-foreground">{t('language.reloadRequiredDesc')}</p>
             </div>
             <button
               onClick={handleReload}
               className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
             >
               <RefreshCw className="w-4 h-4" />
-              {t("language.reload")}
+              {t('language.reload')}
             </button>
           </div>
         )}
       </div>
 
       <div className="bg-card border border-border rounded-xl p-6">
-        <h3 className="text-sm font-medium text-foreground mb-2">
-          {t("common.note", "Note")}
-        </h3>
-        <p className="text-sm text-muted-foreground">{t("language.note")}</p>
+        <h3 className="text-sm font-medium text-foreground mb-2">{t('common.note', 'Note')}</h3>
+        <p className="text-sm text-muted-foreground">{t('language.note')}</p>
       </div>
 
       {/* Transifex Integration Info */}
       <div className="bg-card border border-border rounded-xl p-6">
-        <h3 className="text-sm font-medium text-foreground mb-2">
-          Transifex Integration
-        </h3>
+        <h3 className="text-sm font-medium text-foreground mb-2">Transifex Integration</h3>
         <p className="text-sm text-muted-foreground">
-          Translation files are located at{" "}
+          Translation files are located at{' '}
           <code className="px-1 py-0.5 bg-muted rounded text-xs">
             /public/locales/[lang]/common.json
           </code>
-          . These can be synced with Transifex for collaborative translation
-          management.
+          . These can be synced with Transifex for collaborative translation management.
         </p>
       </div>
     </div>
   );
 }
-
-
-
-
-
-

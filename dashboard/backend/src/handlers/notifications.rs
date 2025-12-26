@@ -115,7 +115,10 @@ pub async fn list_notifications(
     Query(query): Query<NotificationsQuery>,
 ) -> Result<Json<NotificationsListResponse>, (StatusCode, String)> {
     let pool = state.db_pool.as_ref().ok_or_else(|| {
-        (StatusCode::SERVICE_UNAVAILABLE, "Database not available".to_string())
+        (
+            StatusCode::SERVICE_UNAVAILABLE,
+            "Database not available".to_string(),
+        )
     })?;
 
     // Pagination
@@ -178,24 +181,11 @@ pub async fn list_notifications(
                 .fetch_all(pool)
                 .await
         }
-        (Some(t), _) if t != "all" => {
-            sqlx::query(&query_str)
-                .bind(t)
-                .fetch_all(pool)
-                .await
-        }
-        (_, Some(s)) if s != "all" => {
-            sqlx::query(&query_str)
-                .bind(s)
-                .fetch_all(pool)
-                .await
-        }
-        _ => {
-            sqlx::query(&query_str)
-                .fetch_all(pool)
-                .await
-        }
-    }.map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+        (Some(t), _) if t != "all" => sqlx::query(&query_str).bind(t).fetch_all(pool).await,
+        (_, Some(s)) if s != "all" => sqlx::query(&query_str).bind(s).fetch_all(pool).await,
+        _ => sqlx::query(&query_str).fetch_all(pool).await,
+    }
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     let notifications: Vec<Notification> = rows
         .iter()
@@ -219,25 +209,12 @@ pub async fn list_notifications(
                 .fetch_one(pool)
                 .await
         }
-        (Some(t), _) if t != "all" => {
-            sqlx::query(&count_query_str)
-                .bind(t)
-                .fetch_one(pool)
-                .await
-        }
-        (_, Some(s)) if s != "all" => {
-            sqlx::query(&count_query_str)
-                .bind(s)
-                .fetch_one(pool)
-                .await
-        }
-        _ => {
-            sqlx::query(&count_query_str)
-                .fetch_one(pool)
-                .await
-        }
-    }.map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-    
+        (Some(t), _) if t != "all" => sqlx::query(&count_query_str).bind(t).fetch_one(pool).await,
+        (_, Some(s)) if s != "all" => sqlx::query(&count_query_str).bind(s).fetch_one(pool).await,
+        _ => sqlx::query(&count_query_str).fetch_one(pool).await,
+    }
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
     let total: i64 = count_row.get("count");
 
     Ok(Json(NotificationsListResponse {
@@ -261,7 +238,10 @@ pub async fn get_unread_count(
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<UnreadCountResponse>, (StatusCode, String)> {
     let pool = state.db_pool.as_ref().ok_or_else(|| {
-        (StatusCode::SERVICE_UNAVAILABLE, "Database not available".to_string())
+        (
+            StatusCode::SERVICE_UNAVAILABLE,
+            "Database not available".to_string(),
+        )
     })?;
 
     let row = sqlx::query("SELECT COUNT(*) as count FROM notifications WHERE read = FALSE")
@@ -289,7 +269,10 @@ pub async fn create_notification(
     Json(req): Json<CreateNotificationRequest>,
 ) -> Result<(StatusCode, Json<Notification>), (StatusCode, String)> {
     let pool = state.db_pool.as_ref().ok_or_else(|| {
-        (StatusCode::SERVICE_UNAVAILABLE, "Database not available".to_string())
+        (
+            StatusCode::SERVICE_UNAVAILABLE,
+            "Database not available".to_string(),
+        )
     })?;
 
     let severity = req.severity.unwrap_or_else(|| "info".to_string());
@@ -297,7 +280,7 @@ pub async fn create_notification(
     let row = sqlx::query(
         "INSERT INTO notifications (notification_type, title, message, severity) 
          VALUES ($1, $2, $3, $4) 
-         RETURNING id, notification_type, title, message, severity, read, created_at"
+         RETURNING id, notification_type, title, message, severity, read, created_at",
     )
     .bind(&req.notification_type)
     .bind(&req.title)
@@ -338,7 +321,10 @@ pub async fn mark_as_read(
     Path(id): Path<i32>,
 ) -> Result<Json<NotificationActionResponse>, (StatusCode, String)> {
     let pool = state.db_pool.as_ref().ok_or_else(|| {
-        (StatusCode::SERVICE_UNAVAILABLE, "Database not available".to_string())
+        (
+            StatusCode::SERVICE_UNAVAILABLE,
+            "Database not available".to_string(),
+        )
     })?;
 
     let result = sqlx::query("UPDATE notifications SET read = TRUE WHERE id = $1")
@@ -370,7 +356,10 @@ pub async fn mark_all_as_read(
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<NotificationActionResponse>, (StatusCode, String)> {
     let pool = state.db_pool.as_ref().ok_or_else(|| {
-        (StatusCode::SERVICE_UNAVAILABLE, "Database not available".to_string())
+        (
+            StatusCode::SERVICE_UNAVAILABLE,
+            "Database not available".to_string(),
+        )
     })?;
 
     let result = sqlx::query("UPDATE notifications SET read = TRUE WHERE read = FALSE")
@@ -402,7 +391,10 @@ pub async fn delete_notification(
     Path(id): Path<i32>,
 ) -> Result<Json<NotificationActionResponse>, (StatusCode, String)> {
     let pool = state.db_pool.as_ref().ok_or_else(|| {
-        (StatusCode::SERVICE_UNAVAILABLE, "Database not available".to_string())
+        (
+            StatusCode::SERVICE_UNAVAILABLE,
+            "Database not available".to_string(),
+        )
     })?;
 
     let result = sqlx::query("DELETE FROM notifications WHERE id = $1")
@@ -434,7 +426,10 @@ pub async fn clear_read_notifications(
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<NotificationActionResponse>, (StatusCode, String)> {
     let pool = state.db_pool.as_ref().ok_or_else(|| {
-        (StatusCode::SERVICE_UNAVAILABLE, "Database not available".to_string())
+        (
+            StatusCode::SERVICE_UNAVAILABLE,
+            "Database not available".to_string(),
+        )
     })?;
 
     let result = sqlx::query("DELETE FROM notifications WHERE read = TRUE")

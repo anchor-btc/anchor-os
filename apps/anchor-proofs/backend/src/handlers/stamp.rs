@@ -166,4 +166,3 @@ pub async fn revoke(
 
     Ok(Json(response))
 }
-

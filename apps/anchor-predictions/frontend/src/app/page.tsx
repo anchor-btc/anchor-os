@@ -1,48 +1,50 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
-import { 
-  TrendingUp, 
-  Eye, 
-  Plus, 
-  BarChart3, 
-  Users, 
-  Coins, 
+import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
+import {
+  TrendingUp,
+  Eye,
+  Plus,
+  BarChart3,
+  Users,
+  Coins,
   CheckCircle,
   Loader2,
   ArrowUpRight,
   ArrowDownRight,
-  Zap
-} from "lucide-react";
-import { fetchStats, fetchMarkets, type Market } from "@/lib/api";
-import { cn, formatSats, formatPercent, shortenHash, statusColor, priceToColor } from "@/lib/utils";
+  Zap,
+} from 'lucide-react';
+import { fetchStats, fetchMarkets, type Market } from '@/lib/api';
+import { cn, formatSats, formatPercent, statusColor } from '@/lib/utils';
 
-function StatCard({ 
-  icon: Icon, 
-  label, 
-  value, 
+function StatCard({
+  icon: Icon,
+  label,
+  value,
   subValue,
-  color = "amber" 
-}: { 
-  icon: React.ElementType; 
-  label: string; 
+  color = 'amber',
+}: {
+  icon: React.ElementType;
+  label: string;
   value: string | number;
   subValue?: string;
   color?: string;
 }) {
   const colorClasses = {
-    amber: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-    green: "bg-green-500/10 text-green-400 border-green-500/20",
-    blue: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-    purple: "bg-purple-500/10 text-purple-400 border-purple-500/20",
+    amber: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+    green: 'bg-green-500/10 text-green-400 border-green-500/20',
+    blue: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+    purple: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
   };
 
   return (
-    <div className={cn(
-      "rounded-xl border p-5 backdrop-blur-sm",
-      colorClasses[color as keyof typeof colorClasses] || colorClasses.amber
-    )}>
+    <div
+      className={cn(
+        'rounded-xl border p-5 backdrop-blur-sm',
+        colorClasses[color as keyof typeof colorClasses] || colorClasses.amber
+      )}
+    >
       <div className="flex items-center gap-3 mb-3">
         <Icon className="w-5 h-5" />
         <span className="text-sm font-medium opacity-80">{label}</span>
@@ -54,8 +56,6 @@ function StatCard({
 }
 
 function MarketCard({ market }: { market: Market }) {
-  const isYesFavored = market.yes_price > 0.5;
-  
   return (
     <Link
       href={`/markets/${market.market_id}`}
@@ -65,7 +65,12 @@ function MarketCard({ market }: { market: Market }) {
         <h3 className="font-semibold text-white group-hover:text-amber-400 transition-colors line-clamp-2">
           {market.question}
         </h3>
-        <span className={cn("px-2 py-1 rounded text-xs font-medium shrink-0", statusColor(market.status))}>
+        <span
+          className={cn(
+            'px-2 py-1 rounded text-xs font-medium shrink-0',
+            statusColor(market.status)
+          )}
+        >
           {market.status.toUpperCase()}
         </span>
       </div>
@@ -83,7 +88,7 @@ function MarketCard({ market }: { market: Market }) {
           </span>
         </div>
         <div className="h-2 rounded-full bg-red-500/30 overflow-hidden">
-          <div 
+          <div
             className="h-full bg-gradient-to-r from-green-500 to-green-400 transition-all duration-500"
             style={{ width: `${market.yes_price * 100}%` }}
           />
@@ -101,9 +106,7 @@ function MarketCard({ market }: { market: Market }) {
             {market.position_count} bets
           </span>
         </div>
-        <span className="text-xs text-gray-500">
-          Block {market.resolution_block}
-        </span>
+        <span className="text-xs text-gray-500">Block {market.resolution_block}</span>
       </div>
     </Link>
   );
@@ -124,8 +127,8 @@ function HeroSection() {
           </div>
         </div>
         <p className="text-gray-300 max-w-2xl mb-6">
-          Trade on real-world outcomes using Bitcoin. Markets are resolved by trusted oracles,
-          with odds determined by an Automated Market Maker (AMM). Bet YES or NO on any question.
+          Trade on real-world outcomes using Bitcoin. Markets are resolved by trusted oracles, with
+          odds determined by an Automated Market Maker (AMM). Bet YES or NO on any question.
         </p>
         <div className="flex flex-wrap gap-3">
           <Link
@@ -150,13 +153,13 @@ function HeroSection() {
 
 export default function HomePage() {
   const { data: stats, isLoading: statsLoading } = useQuery({
-    queryKey: ["stats"],
+    queryKey: ['stats'],
     queryFn: fetchStats,
   });
 
   const { data: markets, isLoading: marketsLoading } = useQuery({
-    queryKey: ["markets", "open"],
-    queryFn: () => fetchMarkets("open", 6),
+    queryKey: ['markets', 'open'],
+    queryFn: () => fetchMarkets('open', 6),
   });
 
   return (
@@ -194,7 +197,7 @@ export default function HomePage() {
               icon={CheckCircle}
               label="Resolved"
               value={stats?.resolved_markets ?? 0}
-              subValue={formatSats(stats?.total_payouts_sats ?? 0) + " paid"}
+              subValue={formatSats(stats?.total_payouts_sats ?? 0) + ' paid'}
               color="purple"
             />
           </>
@@ -253,7 +256,8 @@ export default function HomePage() {
             </div>
             <h3 className="font-semibold text-white mb-2">Choose a Market</h3>
             <p className="text-gray-400 text-sm">
-              Browse prediction markets or create your own question. Each market has a YES and NO outcome.
+              Browse prediction markets or create your own question. Each market has a YES and NO
+              outcome.
             </p>
           </div>
           <div>
@@ -262,7 +266,8 @@ export default function HomePage() {
             </div>
             <h3 className="font-semibold text-white mb-2">Place Your Bet</h3>
             <p className="text-gray-400 text-sm">
-              Bet on YES or NO. The AMM sets prices based on market sentiment. Earlier bets get better odds.
+              Bet on YES or NO. The AMM sets prices based on market sentiment. Earlier bets get
+              better odds.
             </p>
           </div>
           <div>

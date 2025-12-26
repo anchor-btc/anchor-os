@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useQuery } from "@tanstack/react-query";
-import Link from "next/link";
-import { useCallback, useMemo, useState } from "react";
+import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
+import { useCallback, useMemo, useState } from 'react';
 import {
   ArrowLeft,
   Palette,
@@ -17,15 +17,9 @@ import {
   ExternalLink,
   Copy,
   Check,
-} from "lucide-react";
+} from 'lucide-react';
 
-import {
-  fetchMyPixels,
-  rgbToHex,
-  truncateTxid,
-  formatNumber,
-  type UserPixel,
-} from "@/lib/api";
+import { fetchMyPixels, rgbToHex, truncateTxid, formatNumber, type UserPixel } from '@/lib/api';
 
 interface TransactionGroup {
   txid: string;
@@ -45,7 +39,7 @@ export default function MyPixelsPage() {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["my-pixels"],
+    queryKey: ['my-pixels'],
     queryFn: () => fetchMyPixels(50000),
     staleTime: 30000,
   });
@@ -70,7 +64,7 @@ export default function MyPixelsPage() {
     for (const pixel of pixelsData.pixels) {
       const posKey = `${pixel.x},${pixel.y}`;
       const pixelKey = `${pixel.txid}-${pixel.x}-${pixel.y}`;
-      
+
       if (!seenPositions.has(posKey)) {
         // First time seeing this position = active (most recent)
         pixelStatus.set(pixelKey, true);
@@ -115,27 +109,29 @@ export default function MyPixelsPage() {
   const isPixelActive = useCallback((pixel: UserPixel, allPixels: UserPixel[]) => {
     // Find the most recent pixel at this position
     const pixelsAtPosition = allPixels
-      .filter(p => p.x === pixel.x && p.y === pixel.y)
+      .filter((p) => p.x === pixel.x && p.y === pixel.y)
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    
-    return pixelsAtPosition[0]?.txid === pixel.txid && 
-           pixelsAtPosition[0]?.created_at === pixel.created_at;
+
+    return (
+      pixelsAtPosition[0]?.txid === pixel.txid &&
+      pixelsAtPosition[0]?.created_at === pixel.created_at
+    );
   }, []);
 
   // Format date
   const formatDate = useCallback((dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString(undefined, {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     });
   }, []);
 
   // Toggle transaction expansion
   const toggleTx = useCallback((txid: string) => {
-    setExpandedTxs(prev => {
+    setExpandedTxs((prev) => {
       const next = new Set(prev);
       if (next.has(txid)) {
         next.delete(txid);
@@ -186,9 +182,7 @@ export default function MyPixelsPage() {
                 <Zap size={16} className="text-accent" />
                 Transactions
               </div>
-              <div className="text-2xl font-bold text-white">
-                {transactionGroups.length}
-              </div>
+              <div className="text-2xl font-bold text-white">{transactionGroups.length}</div>
             </div>
             <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
               <div className="flex items-center gap-2 text-gray-400 text-sm mb-1">
@@ -204,9 +198,7 @@ export default function MyPixelsPage() {
                 <CheckCircle2 size={16} className="text-green-500" />
                 Active
               </div>
-              <div className="text-2xl font-bold text-green-500">
-                {pixelsData.unique_positions}
-              </div>
+              <div className="text-2xl font-bold text-green-500">{pixelsData.unique_positions}</div>
             </div>
             <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
               <div className="flex items-center gap-2 text-gray-400 text-sm mb-1">
@@ -232,9 +224,7 @@ export default function MyPixelsPage() {
         {error && (
           <div className="flex flex-col items-center justify-center py-16">
             <AlertCircle size={40} className="text-red-500 mb-4" />
-            <p className="text-gray-400">
-              Failed to load pixels: {(error as Error).message}
-            </p>
+            <p className="text-gray-400">Failed to load pixels: {(error as Error).message}</p>
           </div>
         )}
 
@@ -242,9 +232,7 @@ export default function MyPixelsPage() {
         {!isLoading && !error && (!pixelsData || pixelsData.total_pixels === 0) && (
           <div className="flex flex-col items-center justify-center py-16">
             <Palette size={48} className="text-gray-600 mb-4" />
-            <h3 className="text-xl font-semibold text-white mb-2">
-              No pixels painted yet
-            </h3>
+            <h3 className="text-xl font-semibold text-white mb-2">No pixels painted yet</h3>
             <p className="text-gray-400 mb-6 text-center max-w-md">
               Start painting on the canvas and your pixels will appear here!
               <br />
@@ -265,10 +253,10 @@ export default function MyPixelsPage() {
             <h2 className="text-lg font-semibold text-white mb-4">
               Your Transactions ({transactionGroups.length})
             </h2>
-            
+
             {transactionGroups.map((group) => {
               const isExpanded = expandedTxs.has(group.txid);
-              
+
               return (
                 <div
                   key={group.txid}
@@ -301,7 +289,7 @@ export default function MyPixelsPage() {
                         )}
                       </button>
                     </div>
-                    
+
                     <div className="flex items-center gap-4">
                       {/* Pixel counts */}
                       <div className="flex items-center gap-3 text-sm">
@@ -315,11 +303,9 @@ export default function MyPixelsPage() {
                             {group.overwrittenCount}
                           </span>
                         )}
-                        <span className="text-gray-600">
-                          ({group.pixels.length} total)
-                        </span>
+                        <span className="text-gray-600">({group.pixels.length} total)</span>
                       </div>
-                      
+
                       {/* Color preview strip */}
                       <div className="flex gap-0.5">
                         {group.pixels.slice(0, 8).map((pixel, idx) => (
@@ -335,7 +321,7 @@ export default function MyPixelsPage() {
                           </div>
                         )}
                       </div>
-                      
+
                       {/* Date */}
                       <div className="flex items-center gap-1 text-xs text-gray-500 min-w-[100px] justify-end">
                         <Clock size={12} />
@@ -350,21 +336,21 @@ export default function MyPixelsPage() {
                       <div className="flex flex-wrap gap-2">
                         {group.pixels.map((pixel, idx) => {
                           const active = isPixelActive(pixel, pixelsData?.pixels || []);
-                          
+
                           return (
                             <Link
                               key={`${pixel.x}-${pixel.y}-${idx}`}
                               href={`/?x=${pixel.x}&y=${pixel.y}`}
                               className={`flex items-center gap-2 rounded-lg px-3 py-2 transition-colors group ${
-                                active 
-                                  ? "bg-gray-900 hover:bg-gray-700 border border-green-900/50" 
-                                  : "bg-gray-900/50 hover:bg-gray-800 border border-gray-700 opacity-60"
+                                active
+                                  ? 'bg-gray-900 hover:bg-gray-700 border border-green-900/50'
+                                  : 'bg-gray-900/50 hover:bg-gray-800 border border-gray-700 opacity-60'
                               }`}
-                              title={active ? "Active pixel" : "Overwritten by another pixel"}
+                              title={active ? 'Active pixel' : 'Overwritten by another pixel'}
                             >
                               <div
                                 className={`w-5 h-5 rounded border ${
-                                  active ? "border-green-700" : "border-gray-600"
+                                  active ? 'border-green-700' : 'border-gray-600'
                                 }`}
                                 style={{
                                   backgroundColor: rgbToHex(pixel.r, pixel.g, pixel.b),

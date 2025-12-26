@@ -1,23 +1,23 @@
-"use client";
+'use client';
 
-import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, Clock, Coins, CheckCircle, XCircle, ExternalLink } from "lucide-react";
-import { useState } from "react";
-import Link from "next/link";
-import { fetchDisputes, fetchDefaultExplorer, buildExplorerTxUrl } from "@/lib/api";
-import { formatDistanceToNow } from "date-fns";
-import { formatSats, shortenPubkey } from "@/lib/utils";
+import { useQuery } from '@tanstack/react-query';
+import { AlertTriangle, Clock, Coins, CheckCircle, XCircle, ExternalLink } from 'lucide-react';
+import { useState } from 'react';
+import Link from 'next/link';
+import { fetchDisputes, fetchDefaultExplorer, buildExplorerTxUrl } from '@/lib/api';
+import { formatDistanceToNow } from 'date-fns';
+import { formatSats, shortenPubkey } from '@/lib/utils';
 
 export default function DisputesPage() {
-  const [statusFilter, setStatusFilter] = useState<string>("pending");
+  const [statusFilter, setStatusFilter] = useState<string>('pending');
 
   const { data: disputes, isLoading } = useQuery({
-    queryKey: ["disputes", statusFilter],
-    queryFn: () => fetchDisputes(statusFilter === "all" ? undefined : statusFilter, 50),
+    queryKey: ['disputes', statusFilter],
+    queryFn: () => fetchDisputes(statusFilter === 'all' ? undefined : statusFilter, 50),
   });
 
   const { data: explorer } = useQuery({
-    queryKey: ["default-explorer"],
+    queryKey: ['default-explorer'],
     queryFn: fetchDefaultExplorer,
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
@@ -31,14 +31,14 @@ export default function DisputesPage() {
 
       {/* Status Filter */}
       <div className="flex gap-2">
-        {["pending", "resolved", "all"].map((status) => (
+        {['pending', 'resolved', 'all'].map((status) => (
           <button
             key={status}
             onClick={() => setStatusFilter(status)}
             className={`px-4 py-2 rounded-lg text-sm capitalize transition-colors ${
               statusFilter === status
-                ? "bg-purple-600 text-white"
-                : "bg-white/5 text-gray-400 hover:text-white"
+                ? 'bg-purple-600 text-white'
+                : 'bg-white/5 text-gray-400 hover:text-white'
             }`}
           >
             {status}
@@ -61,14 +61,16 @@ export default function DisputesPage() {
                   <div className="flex items-center gap-2">
                     <AlertTriangle className="w-5 h-5 text-red-400" />
                     <span className="font-medium text-white">{dispute.reason_name}</span>
-                    <span className={`px-2 py-0.5 rounded text-xs ${
-                      dispute.status === "pending"
-                        ? "bg-yellow-500/20 text-yellow-400"
-                        : dispute.resolution === "upheld"
-                        ? "bg-red-500/20 text-red-400"
-                        : "bg-green-500/20 text-green-400"
-                    }`}>
-                      {dispute.status === "resolved" ? dispute.resolution : dispute.status}
+                    <span
+                      className={`px-2 py-0.5 rounded text-xs ${
+                        dispute.status === 'pending'
+                          ? 'bg-yellow-500/20 text-yellow-400'
+                          : dispute.resolution === 'upheld'
+                            ? 'bg-red-500/20 text-red-400'
+                            : 'bg-green-500/20 text-green-400'
+                      }`}
+                    >
+                      {dispute.status === 'resolved' ? dispute.resolution : dispute.status}
                     </span>
                   </div>
                   <p className="text-sm text-gray-400 mt-2">
@@ -92,16 +94,14 @@ export default function DisputesPage() {
                     <Clock className="w-4 h-4" />
                     {formatDistanceToNow(new Date(dispute.created_at), { addSuffix: true })}
                   </div>
-                  {dispute.block_height && (
-                    <span>Block {dispute.block_height}</span>
-                  )}
-                  {dispute.resolution === "upheld" && (
+                  {dispute.block_height && <span>Block {dispute.block_height}</span>}
+                  {dispute.resolution === 'upheld' && (
                     <div className="flex items-center gap-1 text-red-400">
                       <XCircle className="w-4 h-4" />
                       Oracle slashed
                     </div>
                   )}
-                  {dispute.resolution === "rejected" && (
+                  {dispute.resolution === 'rejected' && (
                     <div className="flex items-center gap-1 text-green-400">
                       <CheckCircle className="w-4 h-4" />
                       Dispute rejected
@@ -153,4 +153,3 @@ export default function DisputesPage() {
     </div>
   );
 }
-

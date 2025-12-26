@@ -103,7 +103,10 @@ pub fn create_and_broadcast_stamps_tx(
     };
 
     let unsigned_hex = serialize_hex(&unsigned_tx);
-    debug!("Built unsigned Stamps transaction: {} bytes", unsigned_hex.len() / 2);
+    debug!(
+        "Built unsigned Stamps transaction: {} bytes",
+        unsigned_hex.len() / 2
+    );
 
     // Sign using wallet
     let signed: serde_json::Value = wallet.rpc.call(
@@ -115,10 +118,14 @@ pub fn create_and_broadcast_stamps_tx(
         anyhow::bail!("Stamps transaction signing incomplete");
     }
 
-    let signed_hex = signed["hex"].as_str().ok_or_else(|| anyhow::anyhow!("No hex in signed tx"))?;
+    let signed_hex = signed["hex"]
+        .as_str()
+        .ok_or_else(|| anyhow::anyhow!("No hex in signed tx"))?;
 
     // Broadcast
-    let txid: String = wallet.rpc.call("sendrawtransaction", &[serde_json::json!(signed_hex)])?;
+    let txid: String = wallet
+        .rpc
+        .call("sendrawtransaction", &[serde_json::json!(signed_hex)])?;
 
     info!(
         "Broadcast Stamps transaction: {} with {} multisig outputs",
@@ -134,4 +141,3 @@ pub fn create_and_broadcast_stamps_tx(
         carrier_name: "stamps".to_string(),
     })
 }
-

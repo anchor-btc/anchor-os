@@ -59,9 +59,15 @@ async fn main() -> anyhow::Result<()> {
         .route("/tokens/:ticker/holders", get(handlers::get_token_holders))
         .route("/tokens/:ticker/history", get(handlers::get_token_history))
         // Address endpoints
-        .route("/address/:address/balances", get(handlers::get_address_balances))
+        .route(
+            "/address/:address/balances",
+            get(handlers::get_address_balances),
+        )
         .route("/address/:address/utxos", get(handlers::get_address_utxos))
-        .route("/address/:address/history", get(handlers::get_address_history))
+        .route(
+            "/address/:address/history",
+            get(handlers::get_address_history),
+        )
         // Wallet endpoints
         .route("/wallet/tokens", get(handlers::get_wallet_tokens))
         // Transaction endpoints

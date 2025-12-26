@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useEffect } from "react";
+import { useEffect } from 'react';
 
 export default function DocsPage() {
   useEffect(() => {
     // Redirect to the centralized Anchor Docs
-    window.location.href = "http://localhost:3900/kinds/geomarker.html";
+    window.location.href = 'http://localhost:3900/kinds/geomarker.html';
   }, []);
 
   return (
@@ -14,8 +14,8 @@ export default function DocsPage() {
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto mb-4"></div>
         <p className="text-gray-400">Redirecting to Anchor Documentation...</p>
         <p className="text-gray-500 text-sm mt-2">
-          <a 
-            href="http://localhost:3900/kinds/geomarker.html" 
+          <a
+            href="http://localhost:3900/kinds/geomarker.html"
             className="text-primary hover:underline"
           >
             Click here if you are not redirected automatically

@@ -53,11 +53,11 @@
 //! ```
 
 mod error;
-mod validation;
 pub mod kinds;
+mod validation;
 
 pub use error::SpecError;
-pub use validation::{KindSpec, AnchorableSpec, OwnedSpec};
+pub use validation::{AnchorableSpec, KindSpec, OwnedSpec};
 
 // Re-export carrier types from anchor-core
 pub use anchor_core::carrier::CarrierType;
@@ -65,18 +65,17 @@ pub use anchor_core::carrier::CarrierType;
 /// Prelude module for convenient imports
 pub mod prelude {
     pub use crate::error::SpecError;
-    pub use crate::validation::{KindSpec, AnchorableSpec, OwnedSpec};
+    pub use crate::validation::{AnchorableSpec, KindSpec, OwnedSpec};
     pub use anchor_core::carrier::CarrierType;
 }
 
 // Re-export all kinds at crate level for convenience
-pub use kinds::text;
-pub use kinds::state;
 pub use kinds::dns;
-pub use kinds::proof;
-pub use kinds::token;
 pub use kinds::geomarker;
+pub use kinds::proof;
+pub use kinds::state;
+pub use kinds::text;
+pub use kinds::token;
 
 /// Protocol version
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
-

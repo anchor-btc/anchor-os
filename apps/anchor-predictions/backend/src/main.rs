@@ -78,7 +78,11 @@ async fn main() -> anyhow::Result<()> {
 
     // Load configuration
     let config = Config::from_env();
-    tracing::info!("Starting Anchor Predictions backend on {}:{}", config.host, config.port);
+    tracing::info!(
+        "Starting Anchor Predictions backend on {}:{}",
+        config.host,
+        config.port
+    );
 
     // Connect to database
     let db = Database::connect(&config.database_url).await?;

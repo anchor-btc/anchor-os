@@ -13,13 +13,9 @@ import {
   type Balance,
   type Utxo,
   type TransactionResult,
-} from "./types.js";
-import {
-  buildTransaction,
-  getNetwork,
-  type TransactionBuilderOptions,
-} from "./transaction.js";
-import * as bitcoin from "bitcoinjs-lib";
+} from './types.js';
+import { buildTransaction, getNetwork, type TransactionBuilderOptions } from './transaction.js';
+import * as bitcoin from 'bitcoinjs-lib';
 
 /**
  * Bitcoin Core RPC client
@@ -29,24 +25,20 @@ class BitcoinRpc {
   private auth: string;
 
   constructor(config: WalletConfigType) {
-    const walletPath = config.walletName
-      ? `/wallet/${config.walletName}`
-      : "";
+    const walletPath = config.walletName ? `/wallet/${config.walletName}` : '';
     this.url = `${config.rpcUrl}${walletPath}`;
-    this.auth = Buffer.from(
-      `${config.rpcUser}:${config.rpcPassword}`,
-    ).toString("base64");
+    this.auth = Buffer.from(`${config.rpcUser}:${config.rpcPassword}`).toString('base64');
   }
 
   async call<T>(method: string, params: unknown[] = []): Promise<T> {
     const response = await fetch(this.url, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
         Authorization: `Basic ${this.auth}`,
       },
       body: JSON.stringify({
-        jsonrpc: "1.0",
+        jsonrpc: '1.0',
         id: Date.now(),
         method,
         params,
@@ -56,17 +48,14 @@ class BitcoinRpc {
     if (!response.ok) {
       throw new AnchorError(
         AnchorErrorCode.RpcError,
-        `RPC error: ${response.status} ${response.statusText}`,
+        `RPC error: ${response.status} ${response.statusText}`
       );
     }
 
     const data = (await response.json()) as { result: T; error: unknown };
 
     if (data.error) {
-      throw new AnchorError(
-        AnchorErrorCode.RpcError,
-        `RPC error: ${JSON.stringify(data.error)}`,
-      );
+      throw new AnchorError(AnchorErrorCode.RpcError, `RPC error: ${JSON.stringify(data.error)}`);
     }
 
     return data.result;
@@ -101,7 +90,7 @@ export class AnchorWallet {
       };
     }
 
-    const result = await this.rpc.call<BalanceResult>("getbalances");
+    const result = await this.rpc.call<BalanceResult>('getbalances');
 
     const confirmed = Math.round(result.mine.trusted * 1e8);
     const unconfirmed = Math.round(result.mine.untrusted_pending * 1e8);
@@ -117,7 +106,7 @@ export class AnchorWallet {
    * Get a new receiving address
    */
   async getNewAddress(): Promise<string> {
-    return this.rpc.call<string>("getnewaddress");
+    return this.rpc.call<string>('getnewaddress');
   }
 
   /**
@@ -133,9 +122,7 @@ export class AnchorWallet {
       scriptPubKey: string;
     }
 
-    const result = await this.rpc.call<UnspentResult[]>("listunspent", [
-      minConfirmations,
-    ]);
+    const result = await this.rpc.call<UnspentResult[]>('listunspent', [minConfirmations]);
 
     return result.map((u) => ({
       txid: u.txid,
@@ -148,10 +135,7 @@ export class AnchorWallet {
   /**
    * Create a root message (new thread)
    */
-  async createRootMessage(
-    text: string,
-    carrier?: CarrierType,
-  ): Promise<TransactionResult> {
+  async createRootMessage(text: string, carrier?: CarrierType): Promise<TransactionResult> {
     return this.createMessage({
       kind: AnchorKind.Text,
       body: text,
@@ -166,7 +150,7 @@ export class AnchorWallet {
     text: string,
     parentTxid: string,
     parentVout: number = 0,
-    carrier?: CarrierType,
+    carrier?: CarrierType
   ): Promise<TransactionResult> {
     return this.createMessage({
       kind: AnchorKind.Text,
@@ -189,7 +173,7 @@ export class AnchorWallet {
   async createPermanentReply(
     text: string,
     parentTxid: string,
-    parentVout: number = 0,
+    parentVout: number = 0
   ): Promise<TransactionResult> {
     return this.createReply(text, parentTxid, parentVout, CarrierType.Stamps);
   }
@@ -198,20 +182,19 @@ export class AnchorWallet {
    * Create a message with custom options
    */
   async createMessage(
-    options: TransactionBuilderOptions["message"] & { carrier?: CarrierType },
+    options: TransactionBuilderOptions['message'] & { carrier?: CarrierType }
   ): Promise<TransactionResult> {
     // Get UTXOs
     const utxos = await this.listUtxos(0);
     if (utxos.length === 0) {
-      throw new AnchorError(AnchorErrorCode.NoUtxos, "No UTXOs available");
+      throw new AnchorError(AnchorErrorCode.NoUtxos, 'No UTXOs available');
     }
 
     // Get change address
     const changeAddress = await this.getNewAddress();
 
     // For Stamps, we need more UTXOs
-    const inputCount =
-      options.carrier === CarrierType.Stamps ? Math.min(2, utxos.length) : 1;
+    const inputCount = options.carrier === CarrierType.Stamps ? Math.min(2, utxos.length) : 1;
     const inputs = utxos.slice(0, inputCount);
 
     // Build transaction
@@ -247,13 +230,10 @@ export class AnchorWallet {
       complete: boolean;
     }
 
-    const result = await this.rpc.call<SignResult>("walletprocesspsbt", [hex]);
+    const result = await this.rpc.call<SignResult>('walletprocesspsbt', [hex]);
 
     if (!result.complete) {
-      throw new AnchorError(
-        AnchorErrorCode.SigningError,
-        "Failed to sign transaction",
-      );
+      throw new AnchorError(AnchorErrorCode.SigningError, 'Failed to sign transaction');
     }
 
     return bitcoin.Psbt.fromBase64(result.psbt, {
@@ -264,9 +244,7 @@ export class AnchorWallet {
   /**
    * Sign and broadcast a transaction
    */
-  async signAndBroadcast(
-    psbt: bitcoin.Psbt,
-  ): Promise<{ txid: string; hex: string }> {
+  async signAndBroadcast(psbt: bitcoin.Psbt): Promise<{ txid: string; hex: string }> {
     // Sign
     const signedPsbt = await this.signPsbt(psbt);
 
@@ -278,7 +256,7 @@ export class AnchorWallet {
     const hex = tx.toHex();
 
     // Broadcast
-    const txid = await this.rpc.call<string>("sendrawtransaction", [hex]);
+    const txid = await this.rpc.call<string>('sendrawtransaction', [hex]);
 
     return { txid, hex };
   }
@@ -287,7 +265,7 @@ export class AnchorWallet {
    * Broadcast a raw transaction
    */
   async broadcast(hex: string): Promise<string> {
-    return this.rpc.call<string>("sendrawtransaction", [hex]);
+    return this.rpc.call<string>('sendrawtransaction', [hex]);
   }
 
   /**
@@ -295,7 +273,7 @@ export class AnchorWallet {
    */
   async mineBlocks(count: number = 1): Promise<string[]> {
     const address = await this.getNewAddress();
-    return this.rpc.call<string[]>("generatetoaddress", [count, address]);
+    return this.rpc.call<string[]>('generatetoaddress', [count, address]);
   }
 
   /**
@@ -307,17 +285,14 @@ export class AnchorWallet {
     headers: number;
     bestblockhash: string;
   }> {
-    return this.rpc.call("getblockchaininfo");
+    return this.rpc.call('getblockchaininfo');
   }
 
   /**
    * Get raw transaction
    */
-  async getRawTransaction(
-    txid: string,
-    verbose: boolean = true,
-  ): Promise<unknown> {
-    return this.rpc.call("getrawtransaction", [txid, verbose]);
+  async getRawTransaction(txid: string, verbose: boolean = true): Promise<unknown> {
+    return this.rpc.call('getrawtransaction', [txid, verbose]);
   }
 }
 
@@ -333,19 +308,18 @@ export function createWallet(config: WalletConfigType): AnchorWallet {
  */
 export const WalletConfigHelper = {
   mainnet(rpcUrl: string, rpcUser: string, rpcPassword: string): WalletConfigType {
-    return { rpcUrl, rpcUser, rpcPassword, network: "mainnet" };
+    return { rpcUrl, rpcUser, rpcPassword, network: 'mainnet' };
   },
   testnet(rpcUrl: string, rpcUser: string, rpcPassword: string): WalletConfigType {
-    return { rpcUrl, rpcUser, rpcPassword, network: "testnet" };
+    return { rpcUrl, rpcUser, rpcPassword, network: 'testnet' };
   },
   signet(rpcUrl: string, rpcUser: string, rpcPassword: string): WalletConfigType {
-    return { rpcUrl, rpcUser, rpcPassword, network: "signet" };
+    return { rpcUrl, rpcUser, rpcPassword, network: 'signet' };
   },
   regtest(rpcUrl: string, rpcUser: string, rpcPassword: string): WalletConfigType {
-    return { rpcUrl, rpcUser, rpcPassword, network: "regtest" };
+    return { rpcUrl, rpcUser, rpcPassword, network: 'regtest' };
   },
 };
 
 // Re-export as WalletConfig for convenience
 export { WalletConfigHelper as WalletConfig };
-

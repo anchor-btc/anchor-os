@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { cn } from "../../utils/cn";
+import * as React from 'react';
+import { cn } from '../../utils/cn';
 
 export interface AppShellProps {
   /**
@@ -36,14 +36,9 @@ export interface AppShellProps {
  * </AppShell>
  * ```
  */
-export function AppShell({
-  children,
-  header,
-  footer,
-  className,
-}: AppShellProps) {
+export function AppShell({ children, header, footer, className }: AppShellProps) {
   return (
-    <div className={cn("flex flex-col min-h-screen", className)}>
+    <div className={cn('flex flex-col min-h-screen', className)}>
       {header}
       {children}
       {footer}

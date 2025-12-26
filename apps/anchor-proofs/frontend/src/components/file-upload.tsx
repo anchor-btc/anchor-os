@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useState, useCallback, useRef } from "react";
-import { Upload, File, X, Loader2 } from "lucide-react";
-import { hashFileBoth, getFileMetadata, formatFileSize, type HashResult } from "@/lib/hash";
-import { HashAlgorithm } from "@/lib/proof-encoder";
+import { useState, useCallback, useRef } from 'react';
+import { Upload, File, X, Loader2 } from 'lucide-react';
+import { hashFileBoth, getFileMetadata, formatFileSize, type HashResult } from '@/lib/hash';
+import { HashAlgorithm } from '@/lib/proof-encoder';
 
 export interface FileUploadResult {
   file: File;
@@ -21,11 +21,7 @@ interface FileUploadProps {
   disabled?: boolean;
 }
 
-export function FileUpload({
-  onFileProcessed,
-  onClear,
-  disabled = false,
-}: FileUploadProps) {
+export function FileUpload({ onFileProcessed, onClear, disabled = false }: FileUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -58,7 +54,7 @@ export function FileUpload({
         setProcessedFile(result);
         onFileProcessed(result);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to process file");
+        setError(err instanceof Error ? err.message : 'Failed to process file');
       } finally {
         setIsProcessing(false);
         setProgress(0);
@@ -111,7 +107,7 @@ export function FileUpload({
     setProcessedFile(null);
     setError(null);
     if (inputRef.current) {
-      inputRef.current.value = "";
+      inputRef.current.value = '';
     }
     onClear?.();
   }, [onClear]);
@@ -130,8 +126,8 @@ export function FileUpload({
           className={`
             relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer
             transition-all duration-200
-            ${isDragging ? "border-emerald-500 bg-emerald-500/10" : "border-slate-600 hover:border-slate-500"}
-            ${disabled || isProcessing ? "opacity-50 cursor-not-allowed" : ""}
+            ${isDragging ? 'border-emerald-500 bg-emerald-500/10' : 'border-slate-600 hover:border-slate-500'}
+            ${disabled || isProcessing ? 'opacity-50 cursor-not-allowed' : ''}
           `}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
@@ -165,9 +161,7 @@ export function FileUpload({
                 <p className="text-white font-medium">
                   Drag and drop a file here, or click to select
                 </p>
-                <p className="text-sm text-slate-400 mt-1">
-                  Any file type supported
-                </p>
+                <p className="text-sm text-slate-400 mt-1">Any file type supported</p>
               </div>
             </div>
           )}
@@ -183,9 +177,7 @@ export function FileUpload({
                 <File className="h-6 w-6 text-emerald-500" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-white font-medium truncate">
-                  {processedFile.filename}
-                </p>
+                <p className="text-white font-medium truncate">{processedFile.filename}</p>
                 <p className="text-sm text-slate-400">
                   {processedFile.mimeType} • {formatFileSize(processedFile.fileSize)}
                 </p>
@@ -212,9 +204,7 @@ export function FileUpload({
                   Copy
                 </button>
               </div>
-              <p className="font-mono text-xs text-white break-all">
-                {processedFile.sha256.hex}
-              </p>
+              <p className="font-mono text-xs text-white break-all">{processedFile.sha256.hex}</p>
             </div>
             <div className="bg-slate-700/50 rounded-lg p-3">
               <div className="flex items-center justify-between mb-1">
@@ -226,9 +216,7 @@ export function FileUpload({
                   Copy
                 </button>
               </div>
-              <p className="font-mono text-xs text-white break-all">
-                {processedFile.sha512.hex}
-              </p>
+              <p className="font-mono text-xs text-white break-all">{processedFile.sha512.hex}</p>
             </div>
           </div>
         </div>

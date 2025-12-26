@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { CANVAS_WIDTH, CANVAS_HEIGHT, type Pixel, fetchCanvasData } from "@/lib/api";
-import { type ImagePreview } from "./image-upload";
-import { type Tool } from "./toolbar";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { CANVAS_WIDTH, CANVAS_HEIGHT, type Pixel, fetchCanvasData } from '@/lib/api';
+import { type ImagePreview } from './image-upload';
+import { type Tool } from './toolbar';
 
 export type { Tool };
 
@@ -50,7 +50,6 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
     onAddPixel,
     onAddPixels,
     onRemovePixel,
-    onClearSelection,
     showGrid,
     refreshTrigger,
     imagePreview,
@@ -79,16 +78,16 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
   const [isPainting, setIsPainting] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [hoverPixel, setHoverPixel] = useState<{ x: number; y: number } | null>(null);
-  
+
   // Shape drawing state
   const [shapeStart, setShapeStart] = useState<{ x: number; y: number } | null>(null);
   const [shapeEnd, setShapeEnd] = useState<{ x: number; y: number } | null>(null);
   const [isDrawingShape, setIsDrawingShape] = useState(false);
-  
+
   // Image preview drag state
   const [isDraggingPreview, setIsDraggingPreview] = useState(false);
   const [previewDragStart, setPreviewDragStart] = useState({ x: 0, y: 0, offsetX: 0, offsetY: 0 });
-  
+
   // Pending pixels animation
   const [pulsePhase, setPulsePhase] = useState(0);
 
@@ -106,8 +105,8 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
       setPixelCount(data.size);
       setError(null);
     } catch (err) {
-      console.error("Failed to load canvas:", err);
-      setError(err instanceof Error ? err.message : "Failed to load canvas");
+      console.error('Failed to load canvas:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load canvas');
     } finally {
       setLoading(false);
     }
@@ -141,7 +140,11 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
     pendingPixels.forEach((pixel, key) => {
       if (pixels.has(key)) {
         const indexedPixel = pixels.get(key)!;
-        if (indexedPixel.r === pixel.r && indexedPixel.g === pixel.g && indexedPixel.b === pixel.b) {
+        if (
+          indexedPixel.r === pixel.r &&
+          indexedPixel.g === pixel.g &&
+          indexedPixel.b === pixel.b
+        ) {
           indexedPending.set(key, pixel);
         }
       }
@@ -182,8 +185,9 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
       const sx = x0 < x1 ? 1 : -1;
       const sy = y0 < y1 ? 1 : -1;
       let err = dx - dy;
-      let x = x0, y = y0;
-      
+      let x = x0,
+        y = y0;
+
       while (true) {
         // Add brush at this point
         const radius = Math.floor(brushSize / 2);
@@ -196,11 +200,17 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
             result.push({ x: px, y: py, ...selectedColor });
           }
         }
-        
+
         if (x === x1 && y === y1) break;
         const e2 = 2 * err;
-        if (e2 > -dy) { err -= dy; x += sx; }
-        if (e2 < dx) { err += dx; y += sy; }
+        if (e2 > -dy) {
+          err -= dy;
+          x += sx;
+        }
+        if (e2 < dx) {
+          err += dx;
+          y += sy;
+        }
       }
       return result;
     },
@@ -215,13 +225,15 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
       const maxX = Math.min(CANVAS_WIDTH - 1, Math.max(x0, x1));
       const minY = Math.max(0, Math.min(y0, y1));
       const maxY = Math.min(CANVAS_HEIGHT - 1, Math.max(y0, y1));
-      
+
       for (let x = minX; x <= maxX; x++) {
         for (let y = minY; y <= maxY; y++) {
           // Draw border only (thickness = brushSize)
-          const isOnBorder = 
-            x < minX + brushSize || x > maxX - brushSize ||
-            y < minY + brushSize || y > maxY - brushSize;
+          const isOnBorder =
+            x < minX + brushSize ||
+            x > maxX - brushSize ||
+            y < minY + brushSize ||
+            y > maxY - brushSize;
           if (isOnBorder) {
             result.push({ x, y, ...selectedColor });
           }
@@ -238,7 +250,7 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
       const result: Pixel[] = [];
       const radius = Math.round(Math.sqrt(Math.pow(endX - cx, 2) + Math.pow(endY - cy, 2)));
       if (radius === 0) return [{ x: cx, y: cy, ...selectedColor }];
-      
+
       const addPixelWithBrush = (x: number, y: number) => {
         const bRadius = Math.floor(brushSize / 2);
         for (let bx = -bRadius; bx <= bRadius; bx++) {
@@ -251,10 +263,11 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
           }
         }
       };
-      
-      let x = 0, y = radius;
+
+      let x = 0,
+        y = radius;
       let d = 3 - 2 * radius;
-      
+
       while (y >= x) {
         addPixelWithBrush(cx + x, cy + y);
         addPixelWithBrush(cx - x, cy + y);
@@ -264,7 +277,7 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
         addPixelWithBrush(cx - y, cy + x);
         addPixelWithBrush(cx + y, cy - x);
         addPixelWithBrush(cx - y, cy - x);
-        
+
         x++;
         if (d > 0) {
           y--;
@@ -284,51 +297,56 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
       const result: Pixel[] = [];
       const visited = new Set<string>();
       const queue: Array<{ x: number; y: number }> = [{ x: startX, y: startY }];
-      
+
       // Get target color (the color we're replacing)
-      const targetPixel = pixels.get(`${startX},${startY}`) || selectedPixels.get(`${startX},${startY}`);
-      const targetColor = targetPixel 
+      const targetPixel =
+        pixels.get(`${startX},${startY}`) || selectedPixels.get(`${startX},${startY}`);
+      const targetColor = targetPixel
         ? { r: targetPixel.r, g: targetPixel.g, b: targetPixel.b }
         : { r: 26, g: 26, b: 26 }; // Default canvas background
-      
+
       // Don't fill if target is same as selected color
-      if (targetColor.r === selectedColor.r && 
-          targetColor.g === selectedColor.g && 
-          targetColor.b === selectedColor.b) {
+      if (
+        targetColor.r === selectedColor.r &&
+        targetColor.g === selectedColor.g &&
+        targetColor.b === selectedColor.b
+      ) {
         return result;
       }
-      
+
       const maxFill = 50000; // Limit to prevent hanging
-      
+
       while (queue.length > 0 && result.length < maxFill) {
         const { x, y } = queue.shift()!;
         const key = `${x},${y}`;
-        
+
         if (visited.has(key)) continue;
         if (x < 0 || x >= CANVAS_WIDTH || y < 0 || y >= CANVAS_HEIGHT) continue;
-        
+
         const currentPixel = pixels.get(key) || selectedPixels.get(key);
         const currentColor = currentPixel
           ? { r: currentPixel.r, g: currentPixel.g, b: currentPixel.b }
           : { r: 26, g: 26, b: 26 };
-        
+
         // Check if color matches target
-        if (currentColor.r !== targetColor.r ||
-            currentColor.g !== targetColor.g ||
-            currentColor.b !== targetColor.b) {
+        if (
+          currentColor.r !== targetColor.r ||
+          currentColor.g !== targetColor.g ||
+          currentColor.b !== targetColor.b
+        ) {
           continue;
         }
-        
+
         visited.add(key);
         result.push({ x, y, ...selectedColor });
-        
+
         // Add neighbors
         queue.push({ x: x + 1, y });
         queue.push({ x: x - 1, y });
         queue.push({ x, y: y + 1 });
         queue.push({ x, y: y - 1 });
       }
-      
+
       return result;
     },
     [pixels, selectedPixels, selectedColor]
@@ -368,13 +386,13 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
-    
+
     // Always show the full canvas centered, with a reasonable zoom
     // This ensures users always see the whole canvas on load
     const scaleX = rect.width / CANVAS_WIDTH;
     const scaleY = rect.height / CANVAS_HEIGHT;
     const fitZoom = Math.min(scaleX, scaleY) * 0.85; // 85% to add some margin
-    
+
     setZoom(fitZoom);
     setOffset({
       x: (rect.width - CANVAS_WIDTH * fitZoom) / 2,
@@ -383,14 +401,18 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
   }, []);
 
   // Expose functions via ref
-  useImperativeHandle(ref, () => ({
-    zoomIn,
-    zoomOut,
-    resetView,
-    centerOnContent,
-    getZoom: () => zoom,
-    pickColor,
-  }), [zoomIn, zoomOut, resetView, centerOnContent, zoom, pickColor]);
+  useImperativeHandle(
+    ref,
+    () => ({
+      zoomIn,
+      zoomOut,
+      resetView,
+      centerOnContent,
+      getZoom: () => zoom,
+      pickColor,
+    }),
+    [zoomIn, zoomOut, resetView, centerOnContent, zoom, pickColor]
+  );
 
   // Initialize view
   useEffect(() => {
@@ -409,7 +431,7 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
     const container = containerRef.current;
     if (!canvas || !container) return;
 
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
     const rect = container.getBoundingClientRect();
@@ -417,7 +439,7 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
     canvas.height = rect.height;
 
     // Clear with dark background
-    ctx.fillStyle = "#0a0a0a";
+    ctx.fillStyle = '#0a0a0a';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     const pixelSize = zoom;
@@ -432,12 +454,12 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
     const canvasEndX = Math.min(canvas.width, CANVAS_WIDTH * pixelSize + offset.x);
     const canvasEndY = Math.min(canvas.height, CANVAS_HEIGHT * pixelSize + offset.y);
 
-    ctx.fillStyle = "#1a1a1a";
+    ctx.fillStyle = '#1a1a1a';
     ctx.fillRect(canvasStartX, canvasStartY, canvasEndX - canvasStartX, canvasEndY - canvasStartY);
 
     // Grid
     if (showGrid && zoom >= 6) {
-      ctx.strokeStyle = "#2a2a2a";
+      ctx.strokeStyle = '#2a2a2a';
       ctx.lineWidth = 0.5;
       for (let x = startX; x <= endX; x++) {
         const screenX = x * pixelSize + offset.x;
@@ -472,7 +494,7 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
       ctx.fillStyle = `rgba(${pixel.r}, ${pixel.g}, ${pixel.b}, 0.85)`;
       ctx.fillRect(screenX, screenY, Math.max(1, pixelSize), Math.max(1, pixelSize));
       if (zoom >= 4) {
-        ctx.strokeStyle = "#00d9ff";
+        ctx.strokeStyle = '#00d9ff';
         ctx.lineWidth = 1;
         ctx.strokeRect(screenX, screenY, pixelSize, pixelSize);
       }
@@ -502,13 +524,13 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
         ctx.fillStyle = `rgba(${pixel.r}, ${pixel.g}, ${pixel.b}, 0.6)`;
         ctx.fillRect(screenX, screenY, Math.max(1, pixelSize), Math.max(1, pixelSize));
       });
-      
+
       const previewStartX = imagePreview.offsetX * pixelSize + offset.x;
       const previewStartY = imagePreview.offsetY * pixelSize + offset.y;
       const previewWidth = imagePreview.width * pixelSize;
       const previewHeight = imagePreview.height * pixelSize;
-      
-      ctx.strokeStyle = "#3b82f6";
+
+      ctx.strokeStyle = '#3b82f6';
       ctx.lineWidth = 2;
       ctx.setLineDash([5, 5]);
       ctx.strokeRect(previewStartX, previewStartY, previewWidth, previewHeight);
@@ -518,14 +540,14 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
     // Draw shape preview while drawing
     if (isDrawingShape && shapeStart && shapeEnd) {
       let previewPixels: Pixel[] = [];
-      if (tool === "line") {
+      if (tool === 'line') {
         previewPixels = getLinePixels(shapeStart.x, shapeStart.y, shapeEnd.x, shapeEnd.y);
-      } else if (tool === "rectangle") {
+      } else if (tool === 'rectangle') {
         previewPixels = getRectanglePixels(shapeStart.x, shapeStart.y, shapeEnd.x, shapeEnd.y);
-      } else if (tool === "circle") {
+      } else if (tool === 'circle') {
         previewPixels = getCirclePixels(shapeStart.x, shapeStart.y, shapeEnd.x, shapeEnd.y);
       }
-      
+
       previewPixels.forEach((pixel) => {
         const screenX = pixel.x * pixelSize + offset.x;
         const screenY = pixel.y * pixelSize + offset.y;
@@ -536,22 +558,22 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
 
     // Brush preview on hover
     if (hoverPixel && !imagePreview && !isDrawingShape) {
-      if (tool === "paint" || tool === "erase") {
+      if (tool === 'paint' || tool === 'erase') {
         const brushPixels = getBrushPixels(hoverPixel.x, hoverPixel.y);
         brushPixels.forEach(({ x, y }) => {
           const screenX = x * pixelSize + offset.x;
           const screenY = y * pixelSize + offset.y;
-          ctx.strokeStyle = tool === "paint" ? "rgba(255, 107, 53, 0.8)" : "rgba(255, 53, 53, 0.8)";
+          ctx.strokeStyle = tool === 'paint' ? 'rgba(255, 107, 53, 0.8)' : 'rgba(255, 53, 53, 0.8)';
           ctx.lineWidth = 1;
           ctx.strokeRect(screenX, screenY, pixelSize, pixelSize);
         });
-      } else if (tool === "eyedropper") {
+      } else if (tool === 'eyedropper') {
         const screenX = hoverPixel.x * pixelSize + offset.x;
         const screenY = hoverPixel.y * pixelSize + offset.y;
-        ctx.strokeStyle = "#fff";
+        ctx.strokeStyle = '#fff';
         ctx.lineWidth = 2;
         ctx.strokeRect(screenX - 1, screenY - 1, pixelSize + 2, pixelSize + 2);
-      } else if (tool === "fill") {
+      } else if (tool === 'fill') {
         const screenX = hoverPixel.x * pixelSize + offset.x;
         const screenY = hoverPixel.y * pixelSize + offset.y;
         ctx.strokeStyle = `rgba(${selectedColor.r}, ${selectedColor.g}, ${selectedColor.b}, 0.8)`;
@@ -560,15 +582,31 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
       } else if (zoom >= 2) {
         const screenX = hoverPixel.x * pixelSize + offset.x;
         const screenY = hoverPixel.y * pixelSize + offset.y;
-        ctx.strokeStyle = "#ff6b35";
+        ctx.strokeStyle = '#ff6b35';
         ctx.lineWidth = 2;
         ctx.strokeRect(screenX, screenY, pixelSize, pixelSize);
       }
     }
   }, [
-    pixels, selectedPixels, pendingPixels, pulsePhase, zoom, offset, hoverPixel, 
-    showGrid, tool, brushSize, getBrushPixels, imagePreview, isDrawingShape, 
-    shapeStart, shapeEnd, getLinePixels, getRectanglePixels, getCirclePixels, selectedColor
+    pixels,
+    selectedPixels,
+    pendingPixels,
+    pulsePhase,
+    zoom,
+    offset,
+    hoverPixel,
+    showGrid,
+    tool,
+    brushSize,
+    getBrushPixels,
+    imagePreview,
+    isDrawingShape,
+    shapeStart,
+    shapeEnd,
+    getLinePixels,
+    getRectanglePixels,
+    getCirclePixels,
+    selectedColor,
   ]);
 
   useEffect(() => {
@@ -577,8 +615,8 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
 
   useEffect(() => {
     const handleResize = () => renderCanvas();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, [renderCanvas]);
 
   const screenToCanvas = useCallback(
@@ -598,10 +636,10 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
       const { x, y } = screenToCanvas(clientX, clientY);
       if (x < 0 || x >= CANVAS_WIDTH || y < 0 || y >= CANVAS_HEIGHT) return;
 
-      if (tool === "paint") {
+      if (tool === 'paint') {
         const brushPixels = getBrushPixels(x, y);
         onAddPixels?.(brushPixels);
-      } else if (tool === "erase") {
+      } else if (tool === 'erase') {
         const brushPixels = getBrushPixels(x, y);
         brushPixels.forEach(({ x: px, y: py }) => {
           onRemovePixel?.(`${px},${py}`);
@@ -616,9 +654,11 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
       // Image preview drag
       if (imagePreview && e.button === 0) {
         const { x, y } = screenToCanvas(e.clientX, e.clientY);
-        const inPreviewX = x >= imagePreview.offsetX && x < imagePreview.offsetX + imagePreview.width;
-        const inPreviewY = y >= imagePreview.offsetY && y < imagePreview.offsetY + imagePreview.height;
-        
+        const inPreviewX =
+          x >= imagePreview.offsetX && x < imagePreview.offsetX + imagePreview.width;
+        const inPreviewY =
+          y >= imagePreview.offsetY && y < imagePreview.offsetY + imagePreview.height;
+
         if (inPreviewX && inPreviewY) {
           setIsDraggingPreview(true);
           setPreviewDragStart({
@@ -630,21 +670,21 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
           return;
         }
       }
-      
+
       // Pan
-      if (e.button === 1 || (e.button === 0 && e.shiftKey) || tool === "pan") {
+      if (e.button === 1 || (e.button === 0 && e.shiftKey) || tool === 'pan') {
         setIsDragging(true);
         setDragStart({ x: e.clientX - offset.x, y: e.clientY - offset.y });
         return;
       }
-      
+
       if (e.button !== 0 || imagePreview) return;
-      
+
       const { x, y } = screenToCanvas(e.clientX, e.clientY);
       if (x < 0 || x >= CANVAS_WIDTH || y < 0 || y >= CANVAS_HEIGHT) return;
 
       // Eyedropper
-      if (tool === "eyedropper") {
+      if (tool === 'eyedropper') {
         const color = pickColor(x, y);
         if (color) {
           onColorPick?.(color);
@@ -653,7 +693,7 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
       }
 
       // Fill
-      if (tool === "fill") {
+      if (tool === 'fill') {
         const fillPixels = getFloodFillPixels(x, y);
         if (fillPixels.length > 0) {
           onAddPixels?.(fillPixels);
@@ -662,7 +702,7 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
       }
 
       // Shape tools
-      if (tool === "line" || tool === "rectangle" || tool === "circle") {
+      if (tool === 'line' || tool === 'rectangle' || tool === 'circle') {
         setShapeStart({ x, y });
         setShapeEnd({ x, y });
         setIsDrawingShape(true);
@@ -670,7 +710,7 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
       }
 
       // Select
-      if (tool === "select") {
+      if (tool === 'select') {
         const key = `${x},${y}`;
         if (selectedPixels.has(key)) {
           onRemovePixel?.(key);
@@ -682,15 +722,26 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
       }
 
       // Paint/Erase
-      if (tool === "paint" || tool === "erase") {
+      if (tool === 'paint' || tool === 'erase') {
         setIsPainting(true);
         handlePaint(e.clientX, e.clientY);
       }
     },
     [
-      offset, screenToCanvas, selectedPixels, selectedColor, tool, 
-      onAddPixel, onAddPixels, onRemovePixel, onPixelSelect, handlePaint, 
-      imagePreview, pickColor, onColorPick, getFloodFillPixels
+      offset,
+      screenToCanvas,
+      selectedPixels,
+      selectedColor,
+      tool,
+      onAddPixel,
+      onAddPixels,
+      onRemovePixel,
+      onPixelSelect,
+      handlePaint,
+      imagePreview,
+      pickColor,
+      onColorPick,
+      getFloodFillPixels,
     ]
   );
 
@@ -699,8 +750,14 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
       if (isDraggingPreview && imagePreview && onImagePreviewMove) {
         const deltaX = Math.round((e.clientX - previewDragStart.x) / zoom);
         const deltaY = Math.round((e.clientY - previewDragStart.y) / zoom);
-        const newOffsetX = Math.max(0, Math.min(CANVAS_WIDTH - imagePreview.width, previewDragStart.offsetX + deltaX));
-        const newOffsetY = Math.max(0, Math.min(CANVAS_HEIGHT - imagePreview.height, previewDragStart.offsetY + deltaY));
+        const newOffsetX = Math.max(
+          0,
+          Math.min(CANVAS_WIDTH - imagePreview.width, previewDragStart.offsetX + deltaX)
+        );
+        const newOffsetY = Math.max(
+          0,
+          Math.min(CANVAS_HEIGHT - imagePreview.height, previewDragStart.offsetY + deltaY)
+        );
         onImagePreviewMove(newOffsetX, newOffsetY);
       } else if (isDragging) {
         setOffset({
@@ -709,9 +766,9 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
         });
       } else if (isDrawingShape) {
         const { x, y } = screenToCanvas(e.clientX, e.clientY);
-        setShapeEnd({ 
-          x: Math.max(0, Math.min(CANVAS_WIDTH - 1, x)), 
-          y: Math.max(0, Math.min(CANVAS_HEIGHT - 1, y)) 
+        setShapeEnd({
+          x: Math.max(0, Math.min(CANVAS_WIDTH - 1, x)),
+          y: Math.max(0, Math.min(CANVAS_HEIGHT - 1, y)),
         });
       } else if (isPainting && !imagePreview) {
         handlePaint(e.clientX, e.clientY);
@@ -726,9 +783,18 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
       }
     },
     [
-      isDragging, isPainting, isDrawingShape, dragStart, screenToCanvas, 
-      onPixelHover, handlePaint, isDraggingPreview, imagePreview, 
-      previewDragStart, zoom, onImagePreviewMove
+      isDragging,
+      isPainting,
+      isDrawingShape,
+      dragStart,
+      screenToCanvas,
+      onPixelHover,
+      handlePaint,
+      isDraggingPreview,
+      imagePreview,
+      previewDragStart,
+      zoom,
+      onImagePreviewMove,
     ]
   );
 
@@ -736,25 +802,34 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
     // Finalize shape
     if (isDrawingShape && shapeStart && shapeEnd) {
       let shapePixels: Pixel[] = [];
-      if (tool === "line") {
+      if (tool === 'line') {
         shapePixels = getLinePixels(shapeStart.x, shapeStart.y, shapeEnd.x, shapeEnd.y);
-      } else if (tool === "rectangle") {
+      } else if (tool === 'rectangle') {
         shapePixels = getRectanglePixels(shapeStart.x, shapeStart.y, shapeEnd.x, shapeEnd.y);
-      } else if (tool === "circle") {
+      } else if (tool === 'circle') {
         shapePixels = getCirclePixels(shapeStart.x, shapeStart.y, shapeEnd.x, shapeEnd.y);
       }
       if (shapePixels.length > 0) {
         onAddPixels?.(shapePixels);
       }
     }
-    
+
     setIsDragging(false);
     setIsPainting(false);
     setIsDraggingPreview(false);
     setIsDrawingShape(false);
     setShapeStart(null);
     setShapeEnd(null);
-  }, [isDrawingShape, shapeStart, shapeEnd, tool, getLinePixels, getRectanglePixels, getCirclePixels, onAddPixels]);
+  }, [
+    isDrawingShape,
+    shapeStart,
+    shapeEnd,
+    tool,
+    getLinePixels,
+    getRectanglePixels,
+    getCirclePixels,
+    onAddPixels,
+  ]);
 
   const handleMouseLeave = useCallback(() => {
     setIsDragging(false);
@@ -790,11 +865,11 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
   );
 
   const getCursor = () => {
-    if (isDragging) return "grabbing";
-    if (tool === "pan") return "grab";
-    if (tool === "eyedropper") return "crosshair";
-    if (tool === "fill") return "crosshair";
-    return "crosshair";
+    if (isDragging) return 'grabbing';
+    if (tool === 'pan') return 'grab';
+    if (tool === 'eyedropper') return 'crosshair';
+    if (tool === 'fill') return 'crosshair';
+    return 'crosshair';
   };
 
   if (loading && pixels.size === 0) {
@@ -840,7 +915,7 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
 
       {/* Info display */}
       <div className="absolute left-3 top-3 bg-black/60 backdrop-blur-sm rounded-lg px-2.5 py-1.5 text-[11px] font-mono border border-white/10">
-        <span className="text-white/40">Pixels:</span>{" "}
+        <span className="text-white/40">Pixels:</span>{' '}
         <span className="text-orange-500">{pixelCount.toLocaleString()}</span>
         {pendingPixels && pendingPixels.size > 0 && (
           <>
@@ -855,9 +930,12 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
         <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-blue-600/95 backdrop-blur-sm rounded-xl px-4 py-3 shadow-lg border border-blue-500/30">
           <div className="flex items-center gap-4">
             <div className="text-sm text-white">
-              <span className="font-medium">{imagePreview.pixels.length.toLocaleString()}</span> pixels
+              <span className="font-medium">{imagePreview.pixels.length.toLocaleString()}</span>{' '}
+              pixels
               <span className="mx-2 text-blue-200">•</span>
-              <span className="font-mono text-xs">{imagePreview.offsetX}, {imagePreview.offsetY}</span>
+              <span className="font-mono text-xs">
+                {imagePreview.offsetX}, {imagePreview.offsetY}
+              </span>
             </div>
             <div className="flex gap-2">
               <button
@@ -874,9 +952,7 @@ export const Canvas = forwardRef<CanvasHandle, CanvasProps>(function Canvas(
               </button>
             </div>
           </div>
-          <div className="text-[10px] text-blue-200 mt-1.5 text-center">
-            Drag to reposition
-          </div>
+          <div className="text-[10px] text-blue-200 mt-1.5 text-center">Drag to reposition</div>
         </div>
       )}
     </div>

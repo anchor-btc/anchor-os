@@ -296,7 +296,11 @@ impl ProofEntry {
     }
 
     /// Create from hex-encoded hash
-    pub fn from_hex(algorithm: HashAlgorithm, hex_hash: &str, metadata: ProofMetadata) -> Result<Self> {
+    pub fn from_hex(
+        algorithm: HashAlgorithm,
+        hex_hash: &str,
+        metadata: ProofMetadata,
+    ) -> Result<Self> {
         let hash = hex::decode(hex_hash)?;
         if hash.len() != algorithm.hash_size() {
             return Err(SpecError::HashSizeMismatch {
@@ -368,8 +372,14 @@ impl ProofSpec {
     }
 
     /// Convenience: Create from hex hash
-    pub fn stamp_hex(algorithm: HashAlgorithm, hex_hash: &str, metadata: ProofMetadata) -> Result<Self> {
-        Ok(Self::stamp(ProofEntry::from_hex(algorithm, hex_hash, metadata)?))
+    pub fn stamp_hex(
+        algorithm: HashAlgorithm,
+        hex_hash: &str,
+        metadata: ProofMetadata,
+    ) -> Result<Self> {
+        Ok(Self::stamp(ProofEntry::from_hex(
+            algorithm, hex_hash, metadata,
+        )?))
     }
 }
 
@@ -547,7 +557,8 @@ mod tests {
     fn test_proof_batch_roundtrip() {
         let spec = ProofSpec::batch(vec![
             ProofEntry::sha256(vec![1u8; 32], ProofMetadata::default()).unwrap(),
-            ProofEntry::sha512(vec![2u8; 64], ProofMetadata::new().with_filename("doc.txt")).unwrap(),
+            ProofEntry::sha512(vec![2u8; 64], ProofMetadata::new().with_filename("doc.txt"))
+                .unwrap(),
         ]);
 
         let bytes = spec.to_bytes();
@@ -579,12 +590,13 @@ mod tests {
     #[test]
     fn test_from_hex() {
         let hex_hash = "a".repeat(64); // 32 bytes = 64 hex chars
-        let entry = ProofEntry::from_hex(HashAlgorithm::Sha256, &hex_hash, ProofMetadata::default());
+        let entry =
+            ProofEntry::from_hex(HashAlgorithm::Sha256, &hex_hash, ProofMetadata::default());
         assert!(entry.is_ok());
 
         let invalid_hex = "gg";
-        let entry = ProofEntry::from_hex(HashAlgorithm::Sha256, invalid_hex, ProofMetadata::default());
+        let entry =
+            ProofEntry::from_hex(HashAlgorithm::Sha256, invalid_hex, ProofMetadata::default());
         assert!(entry.is_err());
     }
 }
-

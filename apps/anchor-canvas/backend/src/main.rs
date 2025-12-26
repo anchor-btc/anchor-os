@@ -17,7 +17,10 @@ mod services;
 
 use std::sync::Arc;
 
-use axum::{routing::{get, post}, Router};
+use axum::{
+    routing::{get, post},
+    Router,
+};
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
 use tracing::info;
@@ -42,7 +45,10 @@ async fn main() -> anyhow::Result<()> {
 
     // Load configuration
     let config = Config::from_env();
-    info!("Starting AnchorCanvas Backend on {}:{}", config.host, config.port);
+    info!(
+        "Starting AnchorCanvas Backend on {}:{}",
+        config.host, config.port
+    );
 
     // Connect to database
     let db = Database::connect(&config.database_url).await?;
@@ -71,7 +77,10 @@ async fn main() -> anyhow::Result<()> {
         .route("/recent", get(handlers::get_recent))
         .route("/pixels/by-txids", post(handlers::get_pixels_by_txids))
         .route("/pixels/by-address", get(handlers::get_pixels_by_address))
-        .route("/pixels/by-addresses", post(handlers::get_pixels_by_addresses))
+        .route(
+            "/pixels/by-addresses",
+            post(handlers::get_pixels_by_addresses),
+        )
         .route("/pixels/my", get(handlers::get_my_pixels))
         .route("/canvas", get(handlers::get_canvas))
         .route("/canvas/preview", get(handlers::get_preview))
@@ -98,5 +107,3 @@ async fn main() -> anyhow::Result<()> {
 
     Ok(())
 }
-
-

@@ -100,19 +100,12 @@ pub async fn get_pixels_by_txids(
     Json(payload): Json<GetPixelsByTxidsRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     // Convert hex txids to bytes
-    let txids_bytes: Result<Vec<Vec<u8>>, _> = payload
-        .txids
-        .iter()
-        .map(hex::decode)
-        .collect();
+    let txids_bytes: Result<Vec<Vec<u8>>, _> = payload.txids.iter().map(hex::decode).collect();
 
     let txids_bytes = match txids_bytes {
         Ok(bytes) => bytes,
         Err(e) => {
-            return Err((
-                StatusCode::BAD_REQUEST,
-                format!("Invalid txid hex: {}", e),
-            ));
+            return Err((StatusCode::BAD_REQUEST, format!("Invalid txid hex: {}", e)));
         }
     };
 
@@ -126,13 +119,14 @@ pub async fn get_pixels_by_txids(
     };
 
     // Get stats
-    let (total_pixels, unique_transactions) = match state.db.get_pixels_stats_by_txids(&txids_bytes).await {
-        Ok(stats) => stats,
-        Err(e) => {
-            error!("Failed to get pixels stats: {}", e);
-            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
-        }
-    };
+    let (total_pixels, unique_transactions) =
+        match state.db.get_pixels_stats_by_txids(&txids_bytes).await {
+            Ok(stats) => stats,
+            Err(e) => {
+                error!("Failed to get pixels stats: {}", e);
+                return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+            }
+        };
 
     Ok(Json(GetPixelsByTxidsResponse {
         pixels,
@@ -163,10 +157,7 @@ pub async fn get_pixels_by_address(
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     // Validate address (basic check)
     if params.address.is_empty() {
-        return Err((
-            StatusCode::BAD_REQUEST,
-            "Address is required".to_string(),
-        ));
+        return Err((StatusCode::BAD_REQUEST, "Address is required".to_string()));
     }
 
     let per_page = params.per_page.clamp(1, 500);
@@ -174,7 +165,11 @@ pub async fn get_pixels_by_address(
     let offset = page * per_page;
 
     // Get pixels
-    let pixels = match state.db.get_pixels_by_address(&params.address, per_page, offset).await {
+    let pixels = match state
+        .db
+        .get_pixels_by_address(&params.address, per_page, offset)
+        .await
+    {
         Ok(pixels) => pixels,
         Err(e) => {
             error!("Failed to get pixels by address: {}", e);
@@ -183,13 +178,14 @@ pub async fn get_pixels_by_address(
     };
 
     // Get stats
-    let (total_pixels, unique_transactions, unique_positions) = match state.db.get_pixels_stats_by_address(&params.address).await {
-        Ok(stats) => stats,
-        Err(e) => {
-            error!("Failed to get pixels stats by address: {}", e);
-            return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
-        }
-    };
+    let (total_pixels, unique_transactions, unique_positions) =
+        match state.db.get_pixels_stats_by_address(&params.address).await {
+            Ok(stats) => stats,
+            Err(e) => {
+                error!("Failed to get pixels stats by address: {}", e);
+                return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+            }
+        };
 
     Ok(Json(GetPixelsByAddressResponse {
         pixels,
@@ -231,7 +227,11 @@ pub async fn get_pixels_by_addresses(
     let per_page = payload.per_page.clamp(1, 500);
 
     // Get pixels
-    let pixels = match state.db.get_pixels_by_addresses(&payload.addresses, per_page).await {
+    let pixels = match state
+        .db
+        .get_pixels_by_addresses(&payload.addresses, per_page)
+        .await
+    {
         Ok(pixels) => pixels,
         Err(e) => {
             error!("Failed to get pixels by addresses: {}", e);
@@ -240,7 +240,11 @@ pub async fn get_pixels_by_addresses(
     };
 
     // Get stats
-    let (total_pixels, unique_transactions, unique_positions) = match state.db.get_pixels_stats_by_addresses(&payload.addresses).await {
+    let (total_pixels, unique_transactions, unique_positions) = match state
+        .db
+        .get_pixels_stats_by_addresses(&payload.addresses)
+        .await
+    {
         Ok(stats) => stats,
         Err(e) => {
             error!("Failed to get pixels stats by addresses: {}", e);
@@ -283,10 +287,11 @@ pub async fn get_my_pixels(
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     // Allow up to 50000 pixels for my pixels page (user's own pixels)
     let per_page = params.per_page.clamp(1, 50000);
-    
+
     // Get wallet URL from environment
-    let wallet_url = std::env::var("WALLET_URL").unwrap_or_else(|_| "http://core-wallet:3001".to_string());
-    
+    let wallet_url =
+        std::env::var("WALLET_URL").unwrap_or_else(|_| "http://core-wallet:3001".to_string());
+
     // Fetch all addresses from the wallet
     let client = reqwest::Client::new();
     let wallet_response = client
@@ -295,24 +300,36 @@ pub async fn get_my_pixels(
         .await
         .map_err(|e| {
             error!("Failed to connect to wallet service: {}", e);
-            (StatusCode::SERVICE_UNAVAILABLE, format!("Wallet service unavailable: {}", e))
+            (
+                StatusCode::SERVICE_UNAVAILABLE,
+                format!("Wallet service unavailable: {}", e),
+            )
         })?;
-    
+
     if !wallet_response.status().is_success() {
-        error!("Wallet service returned error: {}", wallet_response.status());
-        return Err((StatusCode::SERVICE_UNAVAILABLE, "Wallet service error".to_string()));
+        error!(
+            "Wallet service returned error: {}",
+            wallet_response.status()
+        );
+        return Err((
+            StatusCode::SERVICE_UNAVAILABLE,
+            "Wallet service error".to_string(),
+        ));
     }
-    
-    let wallet_data: WalletAddressesResponse = wallet_response
-        .json()
-        .await
-        .map_err(|e| {
-            error!("Failed to parse wallet response: {}", e);
-            (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to parse wallet response: {}", e))
-        })?;
-    
-    info!("Fetched {} addresses from wallet", wallet_data.addresses.len());
-    
+
+    let wallet_data: WalletAddressesResponse = wallet_response.json().await.map_err(|e| {
+        error!("Failed to parse wallet response: {}", e);
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Failed to parse wallet response: {}", e),
+        )
+    })?;
+
+    info!(
+        "Fetched {} addresses from wallet",
+        wallet_data.addresses.len()
+    );
+
     if wallet_data.addresses.is_empty() {
         return Ok(Json(GetPixelsByAddressResponse {
             pixels: vec![],
@@ -323,9 +340,13 @@ pub async fn get_my_pixels(
             per_page,
         }));
     }
-    
+
     // Get pixels for all addresses
-    let pixels = match state.db.get_pixels_by_addresses(&wallet_data.addresses, per_page).await {
+    let pixels = match state
+        .db
+        .get_pixels_by_addresses(&wallet_data.addresses, per_page)
+        .await
+    {
         Ok(pixels) => pixels,
         Err(e) => {
             error!("Failed to get pixels by addresses: {}", e);
@@ -334,7 +355,11 @@ pub async fn get_my_pixels(
     };
 
     // Get stats
-    let (total_pixels, unique_transactions, unique_positions) = match state.db.get_pixels_stats_by_addresses(&wallet_data.addresses).await {
+    let (total_pixels, unique_transactions, unique_positions) = match state
+        .db
+        .get_pixels_stats_by_addresses(&wallet_data.addresses)
+        .await
+    {
         Ok(stats) => stats,
         Err(e) => {
             error!("Failed to get pixels stats by addresses: {}", e);
@@ -351,4 +376,3 @@ pub async fn get_my_pixels(
         per_page,
     }))
 }
-

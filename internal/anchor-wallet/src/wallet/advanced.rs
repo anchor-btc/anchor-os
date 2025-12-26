@@ -150,8 +150,11 @@ impl WalletService {
                         }
                         _ => {
                             // For other carriers, fall back to WitnessData with advanced options
-                            let fallback_carrier = selector.get_carrier(CarrierType::WitnessData).unwrap();
-                            if let Ok(CarrierOutput::WitnessData { chunks: _, script }) = fallback_carrier.encode(&message) {
+                            let fallback_carrier =
+                                selector.get_carrier(CarrierType::WitnessData).unwrap();
+                            if let Ok(CarrierOutput::WitnessData { chunks: _, script }) =
+                                fallback_carrier.encode(&message)
+                            {
                                 self.create_and_broadcast_advanced_witness_tx(
                                     script,
                                     fee_rate,
@@ -203,10 +206,12 @@ impl WalletService {
             .collect();
 
         // Add OP_RETURN
-        outputs_map.push(serde_json::json!({ "data": hex::encode(extract_op_return_data(&op_return_script)) }));
+        outputs_map.push(
+            serde_json::json!({ "data": hex::encode(extract_op_return_data(&op_return_script)) }),
+        );
 
         use bitcoincore_rpc::RpcApi;
-        
+
         let raw_tx: String = self.rpc.call(
             "createrawtransaction",
             &[serde_json::json!(inputs), serde_json::json!(outputs_map)],
@@ -240,16 +245,18 @@ impl WalletService {
         }
 
         // Broadcast
-        let txid: String = self.rpc.call("sendrawtransaction", &[serde_json::json!(signed_hex)])?;
+        let txid: String = self
+            .rpc
+            .call("sendrawtransaction", &[serde_json::json!(signed_hex)])?;
 
         // Find the OP_RETURN output index
-        let decoded: serde_json::Value = self.rpc.call("decoderawtransaction", &[serde_json::json!(signed_hex)])?;
+        let decoded: serde_json::Value = self
+            .rpc
+            .call("decoderawtransaction", &[serde_json::json!(signed_hex)])?;
         let vouts = decoded["vout"].as_array().context("No vouts")?;
         let anchor_vout = vouts
             .iter()
-            .position(|v| {
-                v["scriptPubKey"]["type"].as_str() == Some("nulldata")
-            })
+            .position(|v| v["scriptPubKey"]["type"].as_str() == Some("nulldata"))
             .unwrap_or(0) as u32;
 
         Ok(CreatedTransaction {
@@ -272,16 +279,19 @@ impl WalletService {
         locked_set: Option<&HashSet<(String, u32)>>,
     ) -> Result<CreatedTransaction> {
         // Acquire the transaction creation mutex to prevent race conditions
-        let _tx_guard = self.tx_creation_mutex.lock()
+        let _tx_guard = self
+            .tx_creation_mutex
+            .lock()
             .map_err(|e| anyhow::anyhow!("Transaction mutex poisoned: {}", e))?;
-        
+
         use bitcoin::secp256k1::Secp256k1;
         use bitcoin::XOnlyPublicKey;
 
         let secp = Secp256k1::new();
-        
+
         // Use a static internal key (no key path spend)
-        let internal_key_bytes = hex::decode("0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798")?;
+        let internal_key_bytes =
+            hex::decode("0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798")?;
         let internal_key = bitcoin::secp256k1::PublicKey::from_slice(&internal_key_bytes)?;
         let internal_xonly = XOnlyPublicKey::from(internal_key);
 
@@ -289,7 +299,7 @@ impl WalletService {
         let tap_builder = TaprootBuilder::new()
             .add_leaf(0, data_script.clone())
             .context("Failed to add script to taproot")?;
-        
+
         let taproot_info = tap_builder
             .finalize(&secp, internal_xonly)
             .map_err(|e| anyhow::anyhow!("Failed to finalize taproot: {:?}", e))?;
@@ -299,10 +309,13 @@ impl WalletService {
 
         // Calculate fees
         let commit_vsize = 150u64;
-        let reveal_vsize = 200u64 + (data_script.len() as u64) + (required_inputs.len() as u64 * 68) + (custom_outputs.len() as u64 * 34);
+        let reveal_vsize = 200u64
+            + (data_script.len() as u64)
+            + (required_inputs.len() as u64 * 68)
+            + (custom_outputs.len() as u64 * 34);
         let commit_fee = commit_vsize * fee_rate;
         let reveal_fee = reveal_vsize * fee_rate;
-        
+
         // Commit amount needs to cover reveal fee plus outputs
         let total_output_value: u64 = custom_outputs.iter().map(|(_, v)| *v).sum::<u64>() + 546; // +546 for token change
         let commit_amount = reveal_fee + total_output_value + 1000; // Extra buffer
@@ -313,10 +326,10 @@ impl WalletService {
         if utxos.is_empty() {
             anyhow::bail!("No UTXOs available for advanced witness tx (all may be locked)");
         }
-        
+
         let mut selected_utxos = Vec::new();
         let mut total_input = 0u64;
-        
+
         for utxo in &utxos {
             if total_input >= required {
                 break;
@@ -326,7 +339,11 @@ impl WalletService {
         }
 
         if total_input < required {
-            anyhow::bail!("Insufficient funds for advanced witness tx: need {} sats, have {}", required, total_input);
+            anyhow::bail!(
+                "Insufficient funds for advanced witness tx: need {} sats, have {}",
+                required,
+                total_input
+            );
         }
 
         let commit_inputs: Vec<TxIn> = selected_utxos
@@ -343,7 +360,7 @@ impl WalletService {
             .collect();
 
         use bitcoincore_rpc::RpcApi;
-        
+
         let change_address = self.rpc.get_new_address(None, None)?;
         let change_script = change_address.assume_checked().script_pubkey();
 
@@ -378,10 +395,15 @@ impl WalletService {
             anyhow::bail!("Advanced witness commit signing incomplete");
         }
 
-        let signed_commit_hex = signed_commit["hex"].as_str().context("No hex in signed commit")?;
+        let signed_commit_hex = signed_commit["hex"]
+            .as_str()
+            .context("No hex in signed commit")?;
 
         // Broadcast commit
-        let commit_txid: String = self.rpc.call("sendrawtransaction", &[serde_json::json!(signed_commit_hex)])?;
+        let commit_txid: String = self.rpc.call(
+            "sendrawtransaction",
+            &[serde_json::json!(signed_commit_hex)],
+        )?;
         info!("Broadcast advanced witness commit tx: {}", commit_txid);
 
         let commit_txid_parsed = Txid::from_str(&commit_txid)?;
@@ -392,7 +414,7 @@ impl WalletService {
 
         // Build reveal inputs: first the commit output, then the token UTXOs
         let mut reveal_inputs: Vec<TxIn> = Vec::new();
-        
+
         // Add commit output as first input
         reveal_inputs.push(TxIn {
             previous_output: OutPoint {
@@ -408,10 +430,7 @@ impl WalletService {
         for (txid_str, vout) in &required_inputs {
             let txid = Txid::from_str(txid_str)?;
             reveal_inputs.push(TxIn {
-                previous_output: OutPoint {
-                    txid,
-                    vout: *vout,
-                },
+                previous_output: OutPoint { txid, vout: *vout },
                 script_sig: ScriptBuf::new(),
                 sequence: Sequence::ENABLE_RBF_NO_LOCKTIME,
                 witness: Witness::new(),
@@ -420,7 +439,7 @@ impl WalletService {
 
         // Build reveal outputs
         let mut reveal_outputs: Vec<TxOut> = Vec::new();
-        
+
         // Output 0: Token change (back to wallet) - the anchor output
         reveal_outputs.push(TxOut {
             value: Amount::from_sat(546),
@@ -482,13 +501,21 @@ impl WalletService {
                     warn!("Reveal signing error: {:?}", err);
                 }
             }
-            anyhow::bail!("Advanced witness reveal signing incomplete: {:?}", signed_reveal);
+            anyhow::bail!(
+                "Advanced witness reveal signing incomplete: {:?}",
+                signed_reveal
+            );
         }
 
-        let signed_reveal_hex = signed_reveal["hex"].as_str().context("No hex in signed reveal")?;
+        let signed_reveal_hex = signed_reveal["hex"]
+            .as_str()
+            .context("No hex in signed reveal")?;
 
         // Broadcast reveal transaction
-        let reveal_txid: String = self.rpc.call("sendrawtransaction", &[serde_json::json!(signed_reveal_hex)])?;
+        let reveal_txid: String = self.rpc.call(
+            "sendrawtransaction",
+            &[serde_json::json!(signed_reveal_hex)],
+        )?;
 
         info!(
             "Broadcast advanced witness reveal tx: {} (commit: {})",
@@ -504,4 +531,3 @@ impl WalletService {
         })
     }
 }
-

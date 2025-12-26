@@ -28,7 +28,10 @@ pub enum LockReason {
     /// Locked because it holds tokens
     Token { ticker: String, amount: String },
     /// Locked for a generic asset
-    Asset { asset_type: String, asset_id: String },
+    Asset {
+        asset_type: String,
+        asset_id: String,
+    },
 }
 
 impl LockReason {
@@ -38,7 +41,10 @@ impl LockReason {
             LockReason::Manual => "Manually locked".to_string(),
             LockReason::Domain { name } => format!("Domain: {}", name),
             LockReason::Token { ticker, amount } => format!("Token: {} {}", amount, ticker),
-            LockReason::Asset { asset_type, asset_id } => {
+            LockReason::Asset {
+                asset_type,
+                asset_id,
+            } => {
                 format!("Asset: {} ({})", asset_id, asset_type)
             }
         }
@@ -120,18 +126,16 @@ impl LockManager {
         // Load existing state or create default
         let state = if state_path.exists() {
             match fs::read_to_string(&state_path) {
-                Ok(content) => {
-                    match serde_json::from_str::<LockState>(&content) {
-                        Ok(state) => {
-                            info!("Loaded {} locked UTXOs from disk", state.locked_utxos.len());
-                            state
-                        }
-                        Err(e) => {
-                            warn!("Failed to parse lock state, starting fresh: {}", e);
-                            LockState::default()
-                        }
+                Ok(content) => match serde_json::from_str::<LockState>(&content) {
+                    Ok(state) => {
+                        info!("Loaded {} locked UTXOs from disk", state.locked_utxos.len());
+                        state
                     }
-                }
+                    Err(e) => {
+                        warn!("Failed to parse lock state, starting fresh: {}", e);
+                        LockState::default()
+                    }
+                },
                 Err(e) => {
                     warn!("Failed to read lock state file, starting fresh: {}", e);
                     LockState::default()
@@ -155,7 +159,10 @@ impl LockManager {
 
     /// Save the current state to disk
     fn save(&self) -> Result<()> {
-        let state = self.state.read().map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
+        let state = self
+            .state
+            .read()
+            .map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
         let content = serde_json::to_string_pretty(&*state)?;
         fs::write(&self.state_path, content).context("Failed to write lock state")?;
         debug!("Saved lock state with {} UTXOs", state.locked_utxos.len());
@@ -166,10 +173,17 @@ impl LockManager {
     ///
     /// Returns Ok(true) if the UTXO was newly locked, Ok(false) if already locked
     pub fn lock(&self, txid: String, vout: u32, reason: LockReason) -> Result<bool> {
-        let mut state = self.state.write().map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
+        let mut state = self
+            .state
+            .write()
+            .map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
 
         // Check if already locked
-        if state.locked_utxos.iter().any(|u| u.txid == txid && u.vout == vout) {
+        if state
+            .locked_utxos
+            .iter()
+            .any(|u| u.txid == txid && u.vout == vout)
+        {
             debug!("UTXO {}:{} is already locked", txid, vout);
             return Ok(false);
         }
@@ -177,7 +191,7 @@ impl LockManager {
         // Add new lock
         let locked_utxo = LockedUtxo::new(txid.clone(), vout, reason.clone());
         state.locked_utxos.push(locked_utxo);
-        
+
         drop(state);
         self.save()?;
 
@@ -189,10 +203,15 @@ impl LockManager {
     ///
     /// Returns Ok(true) if the UTXO was unlocked, Ok(false) if it wasn't locked
     pub fn unlock(&self, txid: &str, vout: u32) -> Result<bool> {
-        let mut state = self.state.write().map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
+        let mut state = self
+            .state
+            .write()
+            .map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
 
         let initial_len = state.locked_utxos.len();
-        state.locked_utxos.retain(|u| !(u.txid == txid && u.vout == vout));
+        state
+            .locked_utxos
+            .retain(|u| !(u.txid == txid && u.vout == vout));
         let removed = state.locked_utxos.len() < initial_len;
 
         if removed {
@@ -207,12 +226,22 @@ impl LockManager {
     /// Unlock a UTXO only if it has a specific reason type
     ///
     /// This is useful for unlocking domain UTXOs only when doing a DNS update
-    pub fn unlock_if_reason(&self, txid: &str, vout: u32, expected_reason: &LockReason) -> Result<bool> {
-        let mut state = self.state.write().map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
+    pub fn unlock_if_reason(
+        &self,
+        txid: &str,
+        vout: u32,
+        expected_reason: &LockReason,
+    ) -> Result<bool> {
+        let mut state = self
+            .state
+            .write()
+            .map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
 
         let initial_len = state.locked_utxos.len();
         state.locked_utxos.retain(|u| {
-            !(u.txid == txid && u.vout == vout && std::mem::discriminant(&u.reason) == std::mem::discriminant(expected_reason))
+            !(u.txid == txid
+                && u.vout == vout
+                && std::mem::discriminant(&u.reason) == std::mem::discriminant(expected_reason))
         });
         let removed = state.locked_utxos.len() < initial_len;
 
@@ -229,13 +258,20 @@ impl LockManager {
     ///
     /// Returns the number of newly locked UTXOs
     pub fn bulk_lock(&self, utxos: Vec<(String, u32, LockReason)>) -> Result<usize> {
-        let mut state = self.state.write().map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
+        let mut state = self
+            .state
+            .write()
+            .map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
 
         let mut newly_locked = 0;
 
         for (txid, vout, reason) in utxos {
             // Check if already locked
-            if state.locked_utxos.iter().any(|u| u.txid == txid && u.vout == vout) {
+            if state
+                .locked_utxos
+                .iter()
+                .any(|u| u.txid == txid && u.vout == vout)
+            {
                 continue;
             }
 
@@ -243,7 +279,12 @@ impl LockManager {
             let locked_utxo = LockedUtxo::new(txid.clone(), vout, reason.clone());
             state.locked_utxos.push(locked_utxo);
             newly_locked += 1;
-            debug!("Bulk locked UTXO {}:{} - {}", txid, vout, reason.description());
+            debug!(
+                "Bulk locked UTXO {}:{} - {}",
+                txid,
+                vout,
+                reason.description()
+            );
         }
 
         if newly_locked > 0 {
@@ -259,10 +300,15 @@ impl LockManager {
     ///
     /// Returns the number of stale locks removed
     pub fn prune_stale_locks(&self, current_utxos: &HashSet<(String, u32)>) -> Result<usize> {
-        let mut state = self.state.write().map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
+        let mut state = self
+            .state
+            .write()
+            .map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
 
         let initial_len = state.locked_utxos.len();
-        state.locked_utxos.retain(|u| current_utxos.contains(&(u.txid.clone(), u.vout)));
+        state
+            .locked_utxos
+            .retain(|u| current_utxos.contains(&(u.txid.clone(), u.vout)));
         let removed = initial_len - state.locked_utxos.len();
 
         if removed > 0 {
@@ -289,13 +335,17 @@ impl LockManager {
     /// Check if a specific UTXO is locked
     pub fn is_locked(&self, txid: &str, vout: u32) -> bool {
         let state = self.state.read().unwrap_or_else(|e| e.into_inner());
-        state.locked_utxos.iter().any(|u| u.txid == txid && u.vout == vout)
+        state
+            .locked_utxos
+            .iter()
+            .any(|u| u.txid == txid && u.vout == vout)
     }
 
     /// Get the lock reason for a specific UTXO
     pub fn get_lock_reason(&self, txid: &str, vout: u32) -> Option<LockReason> {
         let state = self.state.read().unwrap_or_else(|e| e.into_inner());
-        state.locked_utxos
+        state
+            .locked_utxos
             .iter()
             .find(|u| u.txid == txid && u.vout == vout)
             .map(|u| u.reason.clone())
@@ -309,7 +359,10 @@ impl LockManager {
 
     /// Set auto-lock enabled/disabled
     pub fn set_auto_lock(&self, enabled: bool) -> Result<()> {
-        let mut state = self.state.write().map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
+        let mut state = self
+            .state
+            .write()
+            .map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
         state.auto_lock_enabled = enabled;
         drop(state);
         self.save()?;
@@ -325,7 +378,10 @@ impl LockManager {
 
     /// Update the last sync timestamp
     pub fn update_last_sync(&self) -> Result<()> {
-        let mut state = self.state.write().map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
+        let mut state = self
+            .state
+            .write()
+            .map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
         state.last_sync = Some(Utc::now());
         drop(state);
         self.save()?;
@@ -335,7 +391,8 @@ impl LockManager {
     /// Get all locked domain UTXOs
     pub fn get_domain_locks(&self) -> Vec<LockedUtxo> {
         let state = self.state.read().unwrap_or_else(|e| e.into_inner());
-        state.locked_utxos
+        state
+            .locked_utxos
             .iter()
             .filter(|u| u.reason.is_domain())
             .cloned()
@@ -345,7 +402,8 @@ impl LockManager {
     /// Get all locked token UTXOs
     pub fn get_token_locks(&self) -> Vec<LockedUtxo> {
         let state = self.state.read().unwrap_or_else(|e| e.into_inner());
-        state.locked_utxos
+        state
+            .locked_utxos
             .iter()
             .filter(|u| u.reason.is_token())
             .cloned()
@@ -355,7 +413,8 @@ impl LockManager {
     /// Find a domain lock by domain name
     pub fn find_domain_lock(&self, domain_name: &str) -> Option<LockedUtxo> {
         let state = self.state.read().unwrap_or_else(|e| e.into_inner());
-        state.locked_utxos
+        state
+            .locked_utxos
             .iter()
             .find(|u| matches!(&u.reason, LockReason::Domain { name } if name == domain_name))
             .cloned()
@@ -364,17 +423,31 @@ impl LockManager {
     /// Transfer a domain lock to a new UTXO
     ///
     /// This is used when a domain is updated - the old UTXO is unlocked and the new one is locked
-    pub fn transfer_domain_lock(&self, domain_name: &str, old_txid: &str, old_vout: u32, new_txid: String, new_vout: u32) -> Result<bool> {
-        let mut state = self.state.write().map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
+    pub fn transfer_domain_lock(
+        &self,
+        domain_name: &str,
+        old_txid: &str,
+        old_vout: u32,
+        new_txid: String,
+        new_vout: u32,
+    ) -> Result<bool> {
+        let mut state = self
+            .state
+            .write()
+            .map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
 
         // Find and remove the old lock
         let old_lock_idx = state.locked_utxos.iter().position(|u| {
-            u.txid == old_txid && u.vout == old_vout &&
-            matches!(&u.reason, LockReason::Domain { name } if name == domain_name)
+            u.txid == old_txid
+                && u.vout == old_vout
+                && matches!(&u.reason, LockReason::Domain { name } if name == domain_name)
         });
 
         if old_lock_idx.is_none() {
-            warn!("No existing domain lock found for {} at {}:{}", domain_name, old_txid, old_vout);
+            warn!(
+                "No existing domain lock found for {} at {}:{}",
+                domain_name, old_txid, old_vout
+            );
             return Ok(false);
         }
 
@@ -385,7 +458,9 @@ impl LockManager {
         let new_lock = LockedUtxo::new(
             new_txid.clone(),
             new_vout,
-            LockReason::Domain { name: domain_name.to_string() },
+            LockReason::Domain {
+                name: domain_name.to_string(),
+            },
         );
         state.locked_utxos.push(new_lock);
 
@@ -417,10 +492,14 @@ mod tests {
         let (manager, _temp) = create_test_manager();
 
         // Lock a UTXO
-        assert!(manager.lock("abc123".to_string(), 0, LockReason::Manual).unwrap());
+        assert!(manager
+            .lock("abc123".to_string(), 0, LockReason::Manual)
+            .unwrap());
 
         // Try to lock again - should return false
-        assert!(!manager.lock("abc123".to_string(), 0, LockReason::Manual).unwrap());
+        assert!(!manager
+            .lock("abc123".to_string(), 0, LockReason::Manual)
+            .unwrap());
 
         // Check it's locked
         assert!(manager.is_locked("abc123", 0));
@@ -437,7 +516,9 @@ mod tests {
         let (manager, _temp) = create_test_manager();
 
         // Lock for domain
-        let reason = LockReason::Domain { name: "test.btc".to_string() };
+        let reason = LockReason::Domain {
+            name: "test.btc".to_string(),
+        };
         assert!(manager.lock("txid123".to_string(), 0, reason).unwrap());
 
         // Find domain lock
@@ -451,17 +532,15 @@ mod tests {
         let (manager, _temp) = create_test_manager();
 
         // Lock for domain
-        let reason = LockReason::Domain { name: "test.btc".to_string() };
+        let reason = LockReason::Domain {
+            name: "test.btc".to_string(),
+        };
         manager.lock("old_txid".to_string(), 0, reason).unwrap();
 
         // Transfer lock
-        assert!(manager.transfer_domain_lock(
-            "test.btc",
-            "old_txid",
-            0,
-            "new_txid".to_string(),
-            1
-        ).unwrap());
+        assert!(manager
+            .transfer_domain_lock("test.btc", "old_txid", 0, "new_txid".to_string(), 1)
+            .unwrap());
 
         // Old should be unlocked
         assert!(!manager.is_locked("old_txid", 0));
@@ -481,8 +560,21 @@ mod tests {
 
         let utxos = vec![
             ("tx1".to_string(), 0, LockReason::Manual),
-            ("tx2".to_string(), 1, LockReason::Domain { name: "a.btc".to_string() }),
-            ("tx3".to_string(), 2, LockReason::Token { ticker: "BTC".to_string(), amount: "100".to_string() }),
+            (
+                "tx2".to_string(),
+                1,
+                LockReason::Domain {
+                    name: "a.btc".to_string(),
+                },
+            ),
+            (
+                "tx3".to_string(),
+                2,
+                LockReason::Token {
+                    ticker: "BTC".to_string(),
+                    amount: "100".to_string(),
+                },
+            ),
         ];
 
         assert_eq!(manager.bulk_lock(utxos).unwrap(), 3);
@@ -494,9 +586,15 @@ mod tests {
         let (manager, _temp) = create_test_manager();
 
         // Lock some UTXOs
-        manager.lock("tx1".to_string(), 0, LockReason::Manual).unwrap();
-        manager.lock("tx2".to_string(), 1, LockReason::Manual).unwrap();
-        manager.lock("tx3".to_string(), 2, LockReason::Manual).unwrap();
+        manager
+            .lock("tx1".to_string(), 0, LockReason::Manual)
+            .unwrap();
+        manager
+            .lock("tx2".to_string(), 1, LockReason::Manual)
+            .unwrap();
+        manager
+            .lock("tx3".to_string(), 2, LockReason::Manual)
+            .unwrap();
 
         // Only tx2 exists now
         let current_utxos: HashSet<(String, u32)> = [("tx2".to_string(), 1)].into_iter().collect();
@@ -515,7 +613,15 @@ mod tests {
         // Create manager and lock something
         {
             let manager = LockManager::new(path.clone()).unwrap();
-            manager.lock("persistent_tx".to_string(), 0, LockReason::Domain { name: "test.btc".to_string() }).unwrap();
+            manager
+                .lock(
+                    "persistent_tx".to_string(),
+                    0,
+                    LockReason::Domain {
+                        name: "test.btc".to_string(),
+                    },
+                )
+                .unwrap();
         }
 
         // Create new manager from same path - should load lock
@@ -527,4 +633,3 @@ mod tests {
         }
     }
 }
-

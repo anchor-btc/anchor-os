@@ -6,4 +6,3 @@
 mod wallet;
 
 pub use wallet::{AnchorRef, WalletClient};
-

@@ -15,7 +15,7 @@
  */
 
 // Components
-export { Button, buttonVariants, type ButtonProps } from "./components/button";
+export { Button, buttonVariants, type ButtonProps } from './components/button';
 export {
   Card,
   CardHeader,
@@ -23,25 +23,17 @@ export {
   CardTitle,
   CardDescription,
   CardContent,
-} from "./components/card";
-export { Input, type InputProps } from "./components/input";
-export {
-  Container,
-  containerSizes,
-  type ContainerProps,
-} from "./components/container";
-export {
-  Footer,
-  accentColors,
-  type FooterProps,
-} from "./components/footer";
+} from './components/card';
+export { Input, type InputProps } from './components/input';
+export { Container, containerSizes, type ContainerProps } from './components/container';
+export { Footer, accentColors, type FooterProps } from './components/footer';
 
 export {
   HeroSection,
   type HeroSectionProps,
   type HeroAction,
   type HeroAccentColor,
-} from "./components/hero-section";
+} from './components/hero-section';
 
 export {
   StatsGrid,
@@ -49,7 +41,7 @@ export {
   type StatsGridProps,
   type StatCardProps,
   type StatItem,
-} from "./components/stats-card";
+} from './components/stats-card';
 
 export {
   HowItWorks,
@@ -58,13 +50,13 @@ export {
   type HowItWorksStepCardProps,
   type HowItWorksStep,
   type HowItWorksAccentColor,
-} from "./components/how-it-works";
+} from './components/how-it-works';
 
 export {
   AppBackground,
   APP_BACKGROUND_CLASS,
   type AppBackgroundProps,
-} from "./components/app-background";
+} from './components/app-background';
 
 // Layout Components
 export {
@@ -111,17 +103,13 @@ export {
   type OverlayControlsProps,
   type OverlayControlsGroupProps,
   type OverlayPosition,
-} from "./components/layout";
+} from './components/layout';
 
 // Mini Footer for fullscreen apps
-export {
-  MiniFooter,
-  MiniFooterDivider,
-  type MiniFooterProps,
-} from "./components/mini-footer";
+export { MiniFooter, MiniFooterDivider, type MiniFooterProps } from './components/mini-footer';
 
 // Utilities
-export { cn } from "./utils/cn";
+export { cn } from './utils/cn';
 
 // Re-export Tailwind preset for convenience
-export { anchorPreset } from "../tailwind.config";
+export { anchorPreset } from '../tailwind.config';

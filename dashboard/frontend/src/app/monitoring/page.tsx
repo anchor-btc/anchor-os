@@ -1,28 +1,26 @@
-"use client";
+'use client';
 
-import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
-import { Activity, Loader2 } from "lucide-react";
-import { fetchContainers } from "@/lib/api";
-import { IframeView } from "@/components/iframe-view";
+import { useTranslation } from 'react-i18next';
+import { useQuery } from '@tanstack/react-query';
+import { Activity, Loader2 } from 'lucide-react';
+import { fetchContainers } from '@/lib/api';
+import { IframeView } from '@/components/iframe-view';
 
 // Import DS components
-import { PageHeader, Section } from "@/components/ds";
+import { PageHeader, Section } from '@/components/ds';
 
 export default function MonitoringPage() {
   const { t } = useTranslation();
 
   const { data: containersData, isLoading } = useQuery({
-    queryKey: ["containers"],
+    queryKey: ['containers'],
     queryFn: fetchContainers,
     refetchInterval: 10000,
   });
 
   const containers = containersData?.containers || [];
-  const netdataContainer = containers.find(
-    (c) => c.name === "anchor-monitoring-netdata"
-  );
-  const isRunning = netdataContainer?.state === "running";
+  const netdataContainer = containers.find((c) => c.name === 'anchor-monitoring-netdata');
+  const isRunning = netdataContainer?.state === 'running';
 
   if (isLoading) {
     return (
@@ -39,18 +37,18 @@ export default function MonitoringPage() {
         <PageHeader
           icon={Activity}
           iconColor="emerald"
-          title={t("monitoring.title")}
-          subtitle={t("monitoring.notRunning")}
+          title={t('monitoring.title')}
+          subtitle={t('monitoring.notRunning')}
         />
 
         {/* Not running message */}
         <Section className="p-8 text-center">
           <Activity className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-foreground mb-2">
-            {t("monitoring.notRunningMsg")}
+            {t('monitoring.notRunningMsg')}
           </h2>
           <p className="text-muted-foreground mb-4">
-            {t("monitoring.startWith")}:{" "}
+            {t('monitoring.startWith')}:{' '}
             <code className="bg-muted px-2 py-1 rounded">
               docker compose up -d monitoring-netdata
             </code>

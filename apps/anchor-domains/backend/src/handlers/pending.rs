@@ -32,7 +32,7 @@ pub async fn get_pending_status(
     validate_domain_name(&name)?;
 
     let pending = state.db.get_pending_transaction(&name).await?;
-    
+
     Ok(Json(PendingStatusResponse {
         name: name.clone(),
         has_pending: pending.is_some(),
@@ -56,4 +56,3 @@ pub async fn list_pending_transactions(
     let pending = state.db.list_pending_transactions().await?;
     Ok(Json(pending))
 }
-

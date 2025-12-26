@@ -54,8 +54,8 @@ impl IdentityType {
     /// Get the key type byte for protocol encoding
     pub fn key_type_byte(&self) -> u8 {
         match self {
-            IdentityType::Nostr => 0x00,  // secp256k1
-            IdentityType::Pubky => 0x01,  // Ed25519
+            IdentityType::Nostr => 0x00, // secp256k1
+            IdentityType::Pubky => 0x01, // Ed25519
         }
     }
 }
@@ -178,8 +178,7 @@ impl Identity {
 
     /// Get the public key bytes
     pub fn public_key_bytes(&self) -> Result<[u8; 32]> {
-        let bytes = hex::decode(&self.public_key)
-            .context("Invalid public key hex")?;
+        let bytes = hex::decode(&self.public_key).context("Invalid public key hex")?;
         if bytes.len() != 32 {
             anyhow::bail!("Public key must be 32 bytes");
         }
@@ -214,13 +213,11 @@ pub struct PubkyHomeserver {
     pub requires_invite: bool,
 }
 
-pub const PUBKY_HOMESERVERS: &[PubkyHomeserver] = &[
-    PubkyHomeserver {
-        name: "Synonym (Official)",
-        url: "https://homeserver.pubky.app",
-        requires_invite: true,
-    },
-];
+pub const PUBKY_HOMESERVERS: &[PubkyHomeserver] = &[PubkyHomeserver {
+    name: "Synonym (Official)",
+    url: "https://homeserver.pubky.app",
+    requires_invite: true,
+}];
 
 /// Manager for decentralized identities
 pub struct IdentityManager {
@@ -243,26 +240,33 @@ impl IdentityManager {
         // Load existing state or create default
         let state = if state_path.exists() {
             match fs::read_to_string(&state_path) {
-                Ok(content) => {
-                    match serde_json::from_str::<IdentityState>(&content) {
-                        Ok(state) => {
-                            info!("Loaded {} identities from disk", state.identities.len());
-                            state
-                        }
-                        Err(e) => {
-                            warn!("Failed to parse identity state, starting fresh: {}", e);
-                            IdentityState { version: 1, ..Default::default() }
+                Ok(content) => match serde_json::from_str::<IdentityState>(&content) {
+                    Ok(state) => {
+                        info!("Loaded {} identities from disk", state.identities.len());
+                        state
+                    }
+                    Err(e) => {
+                        warn!("Failed to parse identity state, starting fresh: {}", e);
+                        IdentityState {
+                            version: 1,
+                            ..Default::default()
                         }
                     }
-                }
+                },
                 Err(e) => {
                     warn!("Failed to read identity state file, starting fresh: {}", e);
-                    IdentityState { version: 1, ..Default::default() }
+                    IdentityState {
+                        version: 1,
+                        ..Default::default()
+                    }
                 }
             }
         } else {
             debug!("No existing identity state file, starting fresh");
-            IdentityState { version: 1, ..Default::default() }
+            IdentityState {
+                version: 1,
+                ..Default::default()
+            }
         };
 
         let manager = Self {
@@ -278,25 +282,42 @@ impl IdentityManager {
 
     /// Save the current state to disk
     fn save(&self) -> Result<()> {
-        let state = self.state.read().map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
+        let state = self
+            .state
+            .read()
+            .map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
         let content = serde_json::to_string_pretty(&*state)?;
         fs::write(&self.state_path, content).context("Failed to write identity state")?;
-        debug!("Saved identity state with {} identities", state.identities.len());
+        debug!(
+            "Saved identity state with {} identities",
+            state.identities.len()
+        );
         Ok(())
     }
 
     /// Create a new identity
     pub fn create(&self, identity: Identity) -> Result<Identity> {
-        let mut state = self.state.write().map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
+        let mut state = self
+            .state
+            .write()
+            .map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
 
         // Check for duplicate public key
-        if state.identities.iter().any(|i| i.public_key == identity.public_key) {
+        if state
+            .identities
+            .iter()
+            .any(|i| i.public_key == identity.public_key)
+        {
             anyhow::bail!("Identity with this public key already exists");
         }
 
         // If this is the first identity of this type, make it primary
         let mut identity = identity;
-        if !state.identities.iter().any(|i| i.identity_type == identity.identity_type) {
+        if !state
+            .identities
+            .iter()
+            .any(|i| i.identity_type == identity.identity_type)
+        {
             identity.is_primary = true;
         }
 
@@ -306,7 +327,11 @@ impl IdentityManager {
         drop(state);
         self.save()?;
 
-        info!("Created new {} identity: {}", result.identity_type.display_name(), result.label);
+        info!(
+            "Created new {} identity: {}",
+            result.identity_type.display_name(),
+            result.label
+        );
         Ok(result)
     }
 
@@ -319,7 +344,8 @@ impl IdentityManager {
     /// Get identities by type
     pub fn list_by_type(&self, identity_type: IdentityType) -> Vec<Identity> {
         let state = self.state.read().unwrap_or_else(|e| e.into_inner());
-        state.identities
+        state
+            .identities
             .iter()
             .filter(|i| i.identity_type == identity_type)
             .cloned()
@@ -335,23 +361,37 @@ impl IdentityManager {
     /// Get identity by public key
     pub fn get_by_pubkey(&self, public_key: &str) -> Option<Identity> {
         let state = self.state.read().unwrap_or_else(|e| e.into_inner());
-        state.identities.iter().find(|i| i.public_key == public_key).cloned()
+        state
+            .identities
+            .iter()
+            .find(|i| i.public_key == public_key)
+            .cloned()
     }
 
     /// Get primary identity for a type
     pub fn get_primary(&self, identity_type: IdentityType) -> Option<Identity> {
         let state = self.state.read().unwrap_or_else(|e| e.into_inner());
-        state.identities
+        state
+            .identities
             .iter()
             .find(|i| i.identity_type == identity_type && i.is_primary)
             .cloned()
     }
 
     /// Update an identity
-    pub fn update(&self, id: &str, label: Option<String>, metadata: Option<IdentityMetadata>) -> Result<Identity> {
-        let mut state = self.state.write().map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
+    pub fn update(
+        &self,
+        id: &str,
+        label: Option<String>,
+        metadata: Option<IdentityMetadata>,
+    ) -> Result<Identity> {
+        let mut state = self
+            .state
+            .write()
+            .map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
 
-        let identity = state.identities
+        let identity = state
+            .identities
             .iter_mut()
             .find(|i| i.id == id)
             .ok_or_else(|| anyhow::anyhow!("Identity not found"))?;
@@ -374,10 +414,14 @@ impl IdentityManager {
 
     /// Set an identity as primary for its type
     pub fn set_primary(&self, id: &str) -> Result<Identity> {
-        let mut state = self.state.write().map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
+        let mut state = self
+            .state
+            .write()
+            .map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
 
         // Find the identity and its type
-        let identity_type = state.identities
+        let identity_type = state
+            .identities
             .iter()
             .find(|i| i.id == id)
             .map(|i| i.identity_type)
@@ -390,7 +434,8 @@ impl IdentityManager {
             }
         }
 
-        let result = state.identities
+        let result = state
+            .identities
             .iter()
             .find(|i| i.id == id)
             .cloned()
@@ -399,13 +444,20 @@ impl IdentityManager {
         drop(state);
         self.save()?;
 
-        info!("Set {} as primary {} identity", result.label, result.identity_type.display_name());
+        info!(
+            "Set {} as primary {} identity",
+            result.label,
+            result.identity_type.display_name()
+        );
         Ok(result)
     }
 
     /// Delete an identity
     pub fn delete(&self, id: &str) -> Result<bool> {
-        let mut state = self.state.write().map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
+        let mut state = self
+            .state
+            .write()
+            .map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
 
         let initial_len = state.identities.len();
         let deleted_identity = state.identities.iter().find(|i| i.id == id).cloned();
@@ -416,7 +468,8 @@ impl IdentityManager {
             // If we deleted a primary, make another one primary
             if let Some(deleted) = &deleted_identity {
                 if deleted.is_primary {
-                    if let Some(new_primary) = state.identities
+                    if let Some(new_primary) = state
+                        .identities
                         .iter_mut()
                         .find(|i| i.identity_type == deleted.identity_type)
                     {
@@ -427,7 +480,10 @@ impl IdentityManager {
 
             drop(state);
             self.save()?;
-            info!("Deleted identity: {}", deleted_identity.map(|i| i.label).unwrap_or_default());
+            info!(
+                "Deleted identity: {}",
+                deleted_identity.map(|i| i.label).unwrap_or_default()
+            );
         }
 
         Ok(removed)
@@ -435,9 +491,13 @@ impl IdentityManager {
 
     /// Update DNS publication status
     pub fn set_dns_published(&self, id: &str, info: Option<DnsPublishInfo>) -> Result<Identity> {
-        let mut state = self.state.write().map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
+        let mut state = self
+            .state
+            .write()
+            .map_err(|e| anyhow::anyhow!("Lock poisoned: {}", e))?;
 
-        let identity = state.identities
+        let identity = state
+            .identities
             .iter_mut()
             .find(|i| i.id == id)
             .ok_or_else(|| anyhow::anyhow!("Identity not found"))?;
@@ -461,7 +521,8 @@ impl IdentityManager {
     /// Get identities published to a specific domain
     pub fn get_published_to_domain(&self, domain: &str) -> Vec<Identity> {
         let state = self.state.read().unwrap_or_else(|e| e.into_inner());
-        state.identities
+        state
+            .identities
             .iter()
             .filter(|i| {
                 i.dns_published
@@ -476,8 +537,16 @@ impl IdentityManager {
     /// Count identities by type
     pub fn count_by_type(&self) -> Vec<(IdentityType, usize)> {
         let state = self.state.read().unwrap_or_else(|e| e.into_inner());
-        let nostr_count = state.identities.iter().filter(|i| i.identity_type == IdentityType::Nostr).count();
-        let pubky_count = state.identities.iter().filter(|i| i.identity_type == IdentityType::Pubky).count();
+        let nostr_count = state
+            .identities
+            .iter()
+            .filter(|i| i.identity_type == IdentityType::Nostr)
+            .count();
+        let pubky_count = state
+            .identities
+            .iter()
+            .filter(|i| i.identity_type == IdentityType::Pubky)
+            .count();
         vec![
             (IdentityType::Nostr, nostr_count),
             (IdentityType::Pubky, pubky_count),
@@ -622,4 +691,3 @@ mod tests {
         }
     }
 }
-

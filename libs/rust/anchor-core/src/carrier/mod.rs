@@ -25,20 +25,20 @@
 //! let output = carrier.encode(&message)?;
 //! ```
 
-mod error;
-mod selector;
-mod op_return;
-mod inscription;
-mod stamps;
 mod annex;
+mod error;
+mod inscription;
+mod op_return;
+mod selector;
+mod stamps;
 mod witness;
 
-pub use error::*;
-pub use selector::*;
-pub use op_return::*;
-pub use inscription::*;
-pub use stamps::*;
 pub use annex::*;
+pub use error::*;
+pub use inscription::*;
+pub use op_return::*;
+pub use selector::*;
+pub use stamps::*;
 pub use witness::*;
 
 use bitcoin::script::ScriptBuf;

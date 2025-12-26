@@ -10,21 +10,29 @@ services:
       context: ../infra/bitcoin-core
       dockerfile: Dockerfile
       args:
-        BITCOIN_VERSION: "30.0"
+        BITCOIN_VERSION: '30.0'
         NETWORK: regtest
     container_name: anchor-core-bitcoin
     ports:
-      - "18443:18443"  # RPC (regtest)
-      - "18444:18444"  # P2P (regtest)
-      - "8332:8332"    # RPC (mainnet)
-      - "8333:8333"    # P2P (mainnet)
-      - "29000:29000"  # ZMQ rawblock
-      - "29001:29001"  # ZMQ rawtx
-      - "29002:29002"  # ZMQ sequence
+      - '18443:18443' # RPC (regtest)
+      - '18444:18444' # P2P (regtest)
+      - '8332:8332' # RPC (mainnet)
+      - '8333:8333' # P2P (mainnet)
+      - '29000:29000' # ZMQ rawblock
+      - '29001:29001' # ZMQ rawtx
+      - '29002:29002' # ZMQ sequence
     volumes:
       - bitcoin-data:/home/bitcoin/.bitcoin
     healthcheck:
-      test: ["CMD", "bitcoin-cli", "-regtest", "-rpcuser=anchor", "-rpcpassword=anchor", "getblockchaininfo"]
+      test:
+        [
+          'CMD',
+          'bitcoin-cli',
+          '-regtest',
+          '-rpcuser=anchor',
+          '-rpcpassword=anchor',
+          'getblockchaininfo',
+        ]
       interval: 5s
       timeout: 10s
       retries: 5
@@ -44,7 +52,7 @@ services:
       POSTGRES_PASSWORD: anchor
       POSTGRES_DB: anchor
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - postgres-data:/var/lib/postgresql/data
       # Base initialization
@@ -65,7 +73,7 @@ services:
       - ../dashboard/backend/migrations/0014_dashboard_profile.sql:/docker-entrypoint-initdb.d/14-dashboard-profile.sql
       - ../dashboard/backend/migrations/0015_dashboard_notifications.sql:/docker-entrypoint-initdb.d/15-dashboard-notifications.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U anchor -d anchor"]
+      test: ['CMD-SHELL', 'pg_isready -U anchor -d anchor']
       interval: 5s
       timeout: 5s
       retries: 5
@@ -107,7 +115,7 @@ services:
       dockerfile: ./internal/anchor-wallet/Dockerfile
     container_name: anchor-core-wallet
     ports:
-      - "8001:8001"
+      - '8001:8001'
     environment:
       BITCOIN_RPC_URL: http://core-bitcoin:18443
       BITCOIN_RPC_USER: anchor
@@ -121,7 +129,7 @@ services:
       RUST_LOG: info
       # BDK Wallet Configuration
       ELECTRUM_URL: tcp://core-electrs:50001
-      BDK_ENABLED: "true"
+      BDK_ENABLED: 'true'
       BDK_PASSWORD: anchor_wallet_password
       BITCOIN_NETWORK: regtest
     volumes:
@@ -134,7 +142,7 @@ services:
     networks:
       - anchor-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:8001/health']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -150,7 +158,7 @@ services:
       dockerfile: ./internal/anchor-testnet/Dockerfile
     container_name: anchor-core-testnet
     ports:
-      - "8002:8002"
+      - '8002:8002'
     environment:
       WALLET_URL: http://core-wallet:8001
       API_PORT: 8002
@@ -165,7 +173,7 @@ services:
     networks:
       - anchor-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:8002/health']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -175,4 +183,3 @@ services:
       - default
       - full
       - core-testnet
-

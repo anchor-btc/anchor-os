@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useState, useEffect, memo, useCallback } from "react";
-import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
-import { useTranslation } from "react-i18next";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect, memo, useCallback } from 'react';
+import Link from 'next/link';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   DndContext,
   closestCenter,
@@ -13,13 +13,13 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
-} from "@dnd-kit/core";
+} from '@dnd-kit/core';
 import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
+} from '@dnd-kit/sortable';
 import {
   Anchor,
   LayoutDashboard,
@@ -34,9 +34,6 @@ import {
   Database,
   Pickaxe,
   Server,
-  Terminal,
-  Wrench,
-  Zap,
   MessageSquare,
   ScrollText,
   SquareTerminal,
@@ -59,7 +56,6 @@ import {
   ChevronRight,
   Clock,
   Blocks,
-  GripVertical,
   Pencil,
   Check,
   RotateCw,
@@ -68,28 +64,37 @@ import {
   Ticket,
   Cpu,
   Fingerprint,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { apps } from "@/lib/apps";
-import { getAppStatus } from "@/lib/apps";
-import { fetchContainers, startContainer, stopContainer, fetchUserProfile, fetchInstallationStatus, shutdownAll, restartAll, fetchBlockchainInfo } from "@/lib/api";
-import { getServiceIdFromAppId } from "@/lib/service-rules";
-import { MultiLogsModal } from "./multi-logs-modal";
-import { MultiTerminalModal } from "./multi-terminal-modal";
-import { NotificationBell } from "./notification-bell";
-import { useAuth } from "@/contexts/auth-context";
-import { SortableItem, SortableCategory } from "./sidebar-sortable";
-import { useSidebarOrder, CategoryKey, DEFAULT_CATEGORY_ORDER } from "@/hooks/use-sidebar-order";
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { apps } from '@/lib/apps';
+import { getAppStatus } from '@/lib/apps';
+import {
+  fetchContainers,
+  startContainer,
+  stopContainer,
+  fetchUserProfile,
+  fetchInstallationStatus,
+  shutdownAll,
+  restartAll,
+  fetchBlockchainInfo,
+} from '@/lib/api';
+import { getServiceIdFromAppId } from '@/lib/service-rules';
+import { MultiLogsModal } from './multi-logs-modal';
+import { MultiTerminalModal } from './multi-terminal-modal';
+import { NotificationBell } from './notification-bell';
+import { useAuth } from '@/contexts/auth-context';
+import { SortableItem, SortableCategory } from './sidebar-sortable';
+import { useSidebarOrder, CategoryKey } from '@/hooks/use-sidebar-order';
 
 // Memoized Clock component - manages its own state to avoid sidebar re-renders
 const SidebarClock = memo(function SidebarClock() {
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
-  
+
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
-    
+
     return () => clearInterval(timer);
   }, []);
 
@@ -97,7 +102,11 @@ const SidebarClock = memo(function SidebarClock() {
     <div className="flex items-center gap-2 text-muted-foreground">
       <Clock className="w-3.5 h-3.5" />
       <span className="font-mono tabular-nums">
-        {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+        {currentTime.toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+        })}
       </span>
     </div>
   );
@@ -106,7 +115,7 @@ const SidebarClock = memo(function SidebarClock() {
 // Memoized BlockHeight component - manages its own query to avoid sidebar re-renders
 const SidebarBlockHeight = memo(function SidebarBlockHeight() {
   const { data: blockchainInfo } = useQuery({
-    queryKey: ["blockchain-info-sidebar"],
+    queryKey: ['blockchain-info-sidebar'],
     queryFn: fetchBlockchainInfo,
     refetchInterval: 10000, // Refresh every 10 seconds
   });
@@ -125,13 +134,13 @@ const SidebarBlockHeight = memo(function SidebarBlockHeight() {
 
 const navigationSections = [
   {
-    labelKey: "sidebar.menu",
+    labelKey: 'sidebar.menu',
     items: [
-      { nameKey: "nav.dashboard", href: "/", icon: LayoutDashboard },
-      { nameKey: "nav.services", href: "/apps", icon: AppWindow },
-      { nameKey: "nav.identities", href: "/identities", icon: Fingerprint },
-      { nameKey: "nav.settings", href: "/settings", icon: Settings },
-      { nameKey: "nav.backups", href: "/backup", icon: HardDrive },
+      { nameKey: 'nav.dashboard', href: '/', icon: LayoutDashboard },
+      { nameKey: 'nav.services', href: '/apps', icon: AppWindow },
+      { nameKey: 'nav.identities', href: '/identities', icon: Fingerprint },
+      { nameKey: 'nav.settings', href: '/settings', icon: Settings },
+      { nameKey: 'nav.backups', href: '/backup', icon: HardDrive },
     ],
   },
 ];
@@ -171,27 +180,27 @@ const DEFAULT_EXPANDED: Record<CategoryKey, boolean> = {
 
 // Category config with icons and translation keys
 const categoryConfig: Record<CategoryKey, { icon: React.ElementType; labelKey: string }> = {
-  protocol: { icon: Anchor, labelKey: "sidebar.protocol" },
-  apps: { icon: AppWindow, labelKey: "sidebar.apps" },
-  explorers: { icon: Search, labelKey: "sidebar.explorers" },
-  kernel: { icon: Cpu, labelKey: "sidebar.kernel" },
-  network: { icon: Network, labelKey: "sidebar.network" },
+  protocol: { icon: Anchor, labelKey: 'sidebar.protocol' },
+  apps: { icon: AppWindow, labelKey: 'sidebar.apps' },
+  explorers: { icon: Search, labelKey: 'sidebar.explorers' },
+  kernel: { icon: Cpu, labelKey: 'sidebar.kernel' },
+  network: { icon: Network, labelKey: 'sidebar.network' },
 };
 
 // Map category keys to app categories
 const categoryToAppCategory: Record<CategoryKey, string> = {
-  protocol: "anchor",
-  apps: "app",
-  explorers: "explorer",
-  kernel: "kernel",
-  network: "network",
+  protocol: 'anchor',
+  apps: 'app',
+  explorers: 'explorer',
+  kernel: 'kernel',
+  network: 'network',
 };
 
 export function Sidebar() {
   const { t } = useTranslation();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const currentAppId = searchParams.get("app");
+  const currentAppId = searchParams.get('app');
   const queryClient = useQueryClient();
   const { isAuthEnabled } = useAuth();
   const [logsContainers, setLogsContainers] = useState<string[] | null>(null);
@@ -200,10 +209,11 @@ export function Sidebar() {
   const [isShuttingDown, setIsShuttingDown] = useState(false);
   const [isRestarting, setIsRestarting] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
-  
+
   // Collapsed categories state with localStorage persistence
-  const [expandedCategories, setExpandedCategories] = useState<Record<CategoryKey, boolean>>(DEFAULT_EXPANDED);
-  
+  const [expandedCategories, setExpandedCategories] =
+    useState<Record<CategoryKey, boolean>>(DEFAULT_EXPANDED);
+
   // Sidebar order hook for drag-and-drop
   const {
     categoryOrder,
@@ -215,7 +225,6 @@ export function Sidebar() {
     confirmEdit,
     cancelEdit,
     resetOrder,
-    isLoaded: isOrderLoaded,
   } = useSidebarOrder();
 
   // DnD sensors
@@ -229,10 +238,10 @@ export function Sidebar() {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
-  
+
   // Load collapsed state from localStorage on mount
   useEffect(() => {
-    const saved = localStorage.getItem("anchor-sidebar-expanded");
+    const saved = localStorage.getItem('anchor-sidebar-expanded');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -242,30 +251,30 @@ export function Sidebar() {
       }
     }
   }, []);
-  
+
   // Toggle category expansion
   const toggleCategory = (category: CategoryKey) => {
     setExpandedCategories((prev) => {
       const next = { ...prev, [category]: !prev[category] };
-      localStorage.setItem("anchor-sidebar-expanded", JSON.stringify(next));
+      localStorage.setItem('anchor-sidebar-expanded', JSON.stringify(next));
       return next;
     });
   };
 
   const { data: containersData } = useQuery({
-    queryKey: ["containers"],
+    queryKey: ['containers'],
     queryFn: fetchContainers,
     refetchInterval: 5000,
   });
 
   const { data: userProfile } = useQuery({
-    queryKey: ["userProfile"],
+    queryKey: ['userProfile'],
     queryFn: fetchUserProfile,
     staleTime: 60000, // Cache for 1 minute
   });
 
   const { data: installationStatus } = useQuery({
-    queryKey: ["installation-status"],
+    queryKey: ['installation-status'],
     queryFn: fetchInstallationStatus,
     refetchInterval: 5000, // Sync with apps page
   });
@@ -284,21 +293,21 @@ export function Sidebar() {
   const startMutation = useMutation({
     mutationFn: startContainer,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["containers"] });
+      queryClient.invalidateQueries({ queryKey: ['containers'] });
     },
   });
 
   const stopMutation = useMutation({
     mutationFn: stopContainer,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["containers"] });
+      queryClient.invalidateQueries({ queryKey: ['containers'] });
     },
   });
 
   const shutdownMutation = useMutation({
     mutationFn: shutdownAll,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["containers"] });
+      queryClient.invalidateQueries({ queryKey: ['containers'] });
       setIsShuttingDown(false);
     },
     onError: () => {
@@ -309,7 +318,7 @@ export function Sidebar() {
   const restartAllMutation = useMutation({
     mutationFn: restartAll,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["containers"] });
+      queryClient.invalidateQueries({ queryKey: ['containers'] });
       setIsRestarting(false);
     },
     onError: () => {
@@ -318,14 +327,14 @@ export function Sidebar() {
   });
 
   const handleShutdown = () => {
-    if (confirm(t("sidebar.confirmShutdown", "Are you sure you want to shutdown all services?"))) {
+    if (confirm(t('sidebar.confirmShutdown', 'Are you sure you want to shutdown all services?'))) {
       setIsShuttingDown(true);
       shutdownMutation.mutate();
     }
   };
 
   const handleRestartAll = () => {
-    if (confirm(t("sidebar.confirmRestart", "Are you sure you want to restart all services?"))) {
+    if (confirm(t('sidebar.confirmRestart', 'Are you sure you want to restart all services?'))) {
       setIsRestarting(true);
       restartAllMutation.mutate();
     }
@@ -372,11 +381,16 @@ export function Sidebar() {
   };
 
   // Get apps by category, filtered by installation status
-  const getAppsForCategory = useCallback((category: CategoryKey) => {
-    const appCategory = categoryToAppCategory[category];
-    const filtered = apps.filter((app) => app.category === appCategory && isServiceInstalled(app.id));
-    return getSortedItems(category, filtered);
-  }, [getSortedItems, isServiceInstalled]);
+  const getAppsForCategory = useCallback(
+    (category: CategoryKey) => {
+      const appCategory = categoryToAppCategory[category];
+      const filtered = apps.filter(
+        (app) => app.category === appCategory && isServiceInstalled(app.id)
+      );
+      return getSortedItems(category, filtered);
+    },
+    [getSortedItems, isServiceInstalled]
+  );
 
   const getAppStatusInfo = (appContainers: string[]) => {
     const status = getAppStatus(
@@ -385,8 +399,9 @@ export function Sidebar() {
     );
     return {
       status,
-      isRunning: status === "running" || status === "partial",
-      color: status === "running" ? "bg-success" : status === "partial" ? "bg-warning" : "bg-slate-500",
+      isRunning: status === 'running' || status === 'partial',
+      color:
+        status === 'running' ? 'bg-success' : status === 'partial' ? 'bg-warning' : 'bg-slate-500',
     };
   };
 
@@ -418,22 +433,22 @@ export function Sidebar() {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         onClick={(e) => handleToggleService(e, containerNames, isRunning)}
-        title={isRunning ? "Stop Service" : "Start Service"}
+        title={isRunning ? 'Stop Service' : 'Start Service'}
       >
         {/* Status dot - visible by default, hidden on hover */}
         <div
           className={cn(
-            "w-2 h-2 rounded-full transition-all duration-150",
+            'w-2 h-2 rounded-full transition-all duration-150',
             color,
-            isHovered && "opacity-0 scale-0"
+            isHovered && 'opacity-0 scale-0'
           )}
         />
         {/* Play/Pause button - hidden by default, visible on hover */}
         <div
           className={cn(
-            "absolute inset-0 flex items-center justify-center transition-all duration-150",
-            isRunning ? "text-destructive" : "text-success",
-            isHovered ? "opacity-100 scale-100" : "opacity-0 scale-75"
+            'absolute inset-0 flex items-center justify-center transition-all duration-150',
+            isRunning ? 'text-destructive' : 'text-success',
+            isHovered ? 'opacity-100 scale-100' : 'opacity-0 scale-75'
           )}
         >
           {isRunning ? (
@@ -459,13 +474,13 @@ export function Sidebar() {
     count: number;
   }) => {
     const isExpanded = expandedCategories[category];
-    
+
     return (
       <button
         onClick={() => !isEditMode && toggleCategory(category)}
         className={cn(
-          "w-full flex items-center justify-between px-3 py-1.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors group",
-          isEditMode && "cursor-default"
+          'w-full flex items-center justify-between px-3 py-1.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors group',
+          isEditMode && 'cursor-default'
         )}
       >
         <div className="flex items-center gap-2">
@@ -486,7 +501,7 @@ export function Sidebar() {
     );
   };
 
-  const renderServiceItem = (app: typeof apps[0]) => {
+  const renderServiceItem = (app: (typeof apps)[0]) => {
     const Icon = iconMap[app.icon] || Server;
     const hasExternalUrl = !!app.url;
     const hasInternalUrl = !!app.internalUrl;
@@ -561,18 +576,16 @@ export function Sidebar() {
           <Link
             href={`/?app=${app.id}`}
             className={cn(
-              "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors group",
+              'flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors group',
               isActiveInIframe
-                ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                ? 'bg-primary/10 text-primary'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
             )}
           >
             {content}
           </Link>
         ) : (
-          <div
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground/60 cursor-default group"
-          >
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground/60 cursor-default group">
             {content}
           </div>
         )}
@@ -589,7 +602,7 @@ export function Sidebar() {
   // Handle drag end for categories
   const handleCategoryDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    
+
     if (over && active.id !== over.id) {
       const oldIndex = categoryOrder.indexOf(active.id as CategoryKey);
       const newIndex = categoryOrder.indexOf(over.id as CategoryKey);
@@ -601,7 +614,7 @@ export function Sidebar() {
   // Handle drag end for items within a category
   const handleItemDragEnd = (category: CategoryKey) => (event: DragEndEvent) => {
     const { active, over } = event;
-    
+
     if (over && active.id !== over.id) {
       const items = getAppsForCategory(category);
       const itemIds = items.map((item) => item.id);
@@ -639,9 +652,7 @@ export function Sidebar() {
                 items={items.map((item) => item.id)}
                 strategy={verticalListSortingStrategy}
               >
-                <div className="mt-1 space-y-0.5">
-                  {items.map(renderServiceItem)}
-                </div>
+                <div className="mt-1 space-y-0.5">{items.map(renderServiceItem)}</div>
               </SortableContext>
             </DndContext>
           )}
@@ -662,7 +673,9 @@ export function Sidebar() {
               </div>
               <div>
                 <h1 className="font-bold text-lg text-foreground">ANCHOR OS</h1>
-                <span className="text-[10px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded">beta</span>
+                <span className="text-[10px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                  beta
+                </span>
               </div>
             </Link>
             <NotificationBell />
@@ -673,16 +686,20 @@ export function Sidebar() {
         {userProfile && userProfile.name && (
           <div className="px-4 py-3 border-b border-border shrink-0">
             <div className="flex items-center gap-3">
-              <Link href="/settings/profile" className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity">
+              <Link
+                href="/settings/profile"
+                className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity"
+              >
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-orange-500/20 flex items-center justify-center text-xl overflow-hidden border-2 border-primary/20 ring-2 ring-primary/10 shrink-0">
-                  {userProfile.avatar_url?.startsWith("data:") || userProfile.avatar_url?.startsWith("http") ? (
+                  {userProfile.avatar_url?.startsWith('data:') ||
+                  userProfile.avatar_url?.startsWith('http') ? (
                     <img
                       src={userProfile.avatar_url}
                       alt={userProfile.name}
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span>{userProfile.avatar_url || "🧑‍💻"}</span>
+                    <span>{userProfile.avatar_url || '🧑‍💻'}</span>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -699,10 +716,7 @@ export function Sidebar() {
                 </button>
                 {moreMenuOpen && (
                   <>
-                    <div 
-                      className="fixed inset-0 z-40" 
-                      onClick={() => setMoreMenuOpen(false)}
-                    />
+                    <div className="fixed inset-0 z-40" onClick={() => setMoreMenuOpen(false)} />
                     <div className="absolute right-0 top-full mt-1 w-48 bg-card border border-border rounded-lg shadow-xl z-50 py-1">
                       <button
                         onClick={() => {
@@ -712,20 +726,20 @@ export function Sidebar() {
                         className="w-full flex items-center gap-3 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                       >
                         <Pencil className="w-4 h-4" />
-                        {t("sidebar.editOrder", "Edit Sidebar")}
+                        {t('sidebar.editOrder', 'Edit Sidebar')}
                       </button>
                       <div className="h-px bg-border my-1" />
                       {isAuthEnabled && (
-                      <button
-                        onClick={() => {
-                          localStorage.removeItem("anchor-os-token");
-                          window.location.reload();
-                        }}
-                        className="w-full flex items-center gap-3 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                      >
-                        <Lock className="w-4 h-4" />
-                        {t("sidebar.lock", "Lock")}
-                      </button>
+                        <button
+                          onClick={() => {
+                            localStorage.removeItem('anchor-os-token');
+                            window.location.reload();
+                          }}
+                          className="w-full flex items-center gap-3 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                        >
+                          <Lock className="w-4 h-4" />
+                          {t('sidebar.lock', 'Lock')}
+                        </button>
                       )}
                       <button
                         onClick={() => {
@@ -740,7 +754,7 @@ export function Sidebar() {
                         ) : (
                           <RotateCcw className="w-4 h-4" />
                         )}
-                        {t("sidebar.restartAll", "Restart All")}
+                        {t('sidebar.restartAll', 'Restart All')}
                       </button>
                       <div className="h-px bg-border my-1" />
                       <button
@@ -756,7 +770,7 @@ export function Sidebar() {
                         ) : (
                           <Power className="w-4 h-4" />
                         )}
-                        {t("sidebar.shutdown", "Shutdown")}
+                        {t('sidebar.shutdown', 'Shutdown')}
                       </button>
                     </div>
                   </>
@@ -770,16 +784,15 @@ export function Sidebar() {
         <nav className="flex-1 overflow-y-auto p-3 space-y-1">
           {/* Navigation Sections */}
           {navigationSections.map((section, sectionIndex) => (
-            <div key={section.labelKey} className={sectionIndex > 0 ? "pt-4" : ""}>
+            <div key={section.labelKey} className={sectionIndex > 0 ? 'pt-4' : ''}>
               <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-3 mb-2">
                 {t(section.labelKey)}
               </p>
               {section.items.map((item) => {
                 // Dashboard is active when pathname is "/" AND no app is selected in iframe
-                const isActive = item.href === "/" 
-                  ? pathname === "/" && !currentAppId
-                  : pathname === item.href;
-                
+                const isActive =
+                  item.href === '/' ? pathname === '/' && !currentAppId : pathname === item.href;
+
                 // Handle external links (like Docs)
                 if ('external' in item && item.external && 'externalUrl' in item) {
                   return (
@@ -795,16 +808,16 @@ export function Sidebar() {
                     </a>
                   );
                 }
-                
+
                 return (
                   <Link
                     key={item.nameKey}
                     href={item.href}
                     className={cn(
-                      "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                      'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                       isActive
-                        ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                     )}
                   >
                     <item.icon className="w-4 h-4" />
@@ -821,10 +834,7 @@ export function Sidebar() {
             collisionDetection={closestCenter}
             onDragEnd={handleCategoryDragEnd}
           >
-            <SortableContext
-              items={categoryOrder}
-              strategy={verticalListSortingStrategy}
-            >
+            <SortableContext items={categoryOrder} strategy={verticalListSortingStrategy}>
               {categoryOrder.map(renderCategory)}
             </SortableContext>
           </DndContext>
@@ -841,19 +851,19 @@ export function Sidebar() {
                     className="flex items-center gap-1.5 px-2 py-1 bg-primary text-primary-foreground rounded text-[10px] font-medium hover:bg-primary/90 transition-colors"
                   >
                     <Check className="w-3 h-3" />
-                    {t("sidebar.done", "Done")}
+                    {t('sidebar.done', 'Done')}
                   </button>
                   <button
                     onClick={cancelEdit}
                     className="flex items-center gap-1.5 px-2 py-1 bg-muted text-muted-foreground rounded text-[10px] font-medium hover:bg-muted/80 transition-colors"
                   >
-                    {t("sidebar.cancel", "Cancel")}
+                    {t('sidebar.cancel', 'Cancel')}
                   </button>
                 </div>
                 <button
                   onClick={resetOrder}
                   className="flex items-center gap-1.5 px-2 py-1 text-muted-foreground rounded text-[10px] font-medium hover:text-foreground transition-colors"
-                  title={t("sidebar.resetOrder", "Reset Order")}
+                  title={t('sidebar.resetOrder', 'Reset Order')}
                 >
                   <RotateCw className="w-3 h-3" />
                 </button>
@@ -869,10 +879,7 @@ export function Sidebar() {
       </aside>
 
       {/* Logs Modal (with tabs for multiple containers) */}
-      <MultiLogsModal
-        containerNames={logsContainers}
-        onClose={() => setLogsContainers(null)}
-      />
+      <MultiLogsModal containerNames={logsContainers} onClose={() => setLogsContainers(null)} />
 
       {/* Terminal Modal (with tabs for multiple containers) */}
       <MultiTerminalModal

@@ -335,4 +335,3 @@ mod tests {
         assert!(GeoMarkerSpec::supported_carriers().contains(&CarrierType::WitnessData));
     }
 }
-

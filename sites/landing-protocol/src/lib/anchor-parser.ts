@@ -13,19 +13,19 @@ export interface ParsedMessage {
 }
 
 export const KIND_NAMES: Record<number, string> = {
-  0: "Generic",
-  1: "Text",
-  2: "State",
-  3: "Image",
-  4: "DNS",
-  5: "Geomarker",
-  6: "Token",
-  7: "Vote",
-  8: "Proof",
+  0: 'Generic',
+  1: 'Text',
+  2: 'State',
+  3: 'Image',
+  4: 'DNS',
+  5: 'Geomarker',
+  6: 'Token',
+  7: 'Vote',
+  8: 'Proof',
 };
 
 export function hexToBytes(hex: string): number[] {
-  const cleanHex = hex.replace(/\s/g, "").toLowerCase();
+  const cleanHex = hex.replace(/\s/g, '').toLowerCase();
   const bytes: number[] = [];
   for (let i = 0; i < cleanHex.length; i += 2) {
     const byte = parseInt(cleanHex.substr(i, 2), 16);
@@ -37,7 +37,7 @@ export function hexToBytes(hex: string): number[] {
 }
 
 export function bytesToHex(bytes: number[]): string {
-  return bytes.map((b) => b.toString(16).padStart(2, "0")).join("");
+  return bytes.map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 export function parseAnchorMessage(hex: string): ParsedMessage {
@@ -52,7 +52,7 @@ export function parseAnchorMessage(hex: string): ParsedMessage {
       anchorCount: null,
       anchors: [],
       body: null,
-      error: "Message too short (minimum 6 bytes)",
+      error: 'Message too short (minimum 6 bytes)',
     };
   }
 
@@ -68,7 +68,7 @@ export function parseAnchorMessage(hex: string): ParsedMessage {
       anchorCount: null,
       anchors: [],
       body: null,
-      error: "Invalid magic bytes (expected A11C0001)",
+      error: 'Invalid magic bytes (expected A11C0001)',
     };
   }
 
@@ -110,13 +110,11 @@ export function parseAnchorMessage(hex: string): ParsedMessage {
 
   // Parse body
   const bodyBytes = bytes.slice(offset);
-  let bodyText = "";
+  let bodyText = '';
   try {
-    bodyText = new TextDecoder("utf-8", { fatal: false }).decode(
-      new Uint8Array(bodyBytes)
-    );
+    bodyText = new TextDecoder('utf-8', { fatal: false }).decode(new Uint8Array(bodyBytes));
   } catch {
-    bodyText = "[Binary data]";
+    bodyText = '[Binary data]';
   }
 
   return {
@@ -130,19 +128,21 @@ export function parseAnchorMessage(hex: string): ParsedMessage {
 }
 
 // Example message: "Hello!" with no anchors
-export const EXAMPLE_HEX = "A11C00010100" + bytesToHex(
-  Array.from(new TextEncoder().encode("Hello, Bitcoin! ⚡"))
-);
+export const EXAMPLE_HEX =
+  'A11C00010100' + bytesToHex(Array.from(new TextEncoder().encode('Hello, Bitcoin! ⚡')));
 
-export function createTextMessage(text: string, anchors: { txidPrefix: string; vout: number }[] = []): string {
+export function createTextMessage(
+  text: string,
+  anchors: { txidPrefix: string; vout: number }[] = []
+): string {
   const textBytes = Array.from(new TextEncoder().encode(text));
   const anchorBytes: number[] = [];
-  
+
   for (const anchor of anchors) {
     const txidBytes = hexToBytes(anchor.txidPrefix);
     anchorBytes.push(...txidBytes.slice(0, 8), anchor.vout);
   }
-  
+
   const message = [
     ...ANCHOR_MAGIC,
     1, // Kind: Text
@@ -150,7 +150,6 @@ export function createTextMessage(text: string, anchors: { txidPrefix: string; v
     ...anchorBytes,
     ...textBytes,
   ];
-  
+
   return bytesToHex(message);
 }
-

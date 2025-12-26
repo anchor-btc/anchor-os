@@ -1,19 +1,19 @@
 /**
  * Anchor OS Bridge Script
- * 
+ *
  * Include this script in your app to enable URL synchronization
  * with the Anchor OS dashboard when running inside the iframe.
- * 
+ *
  * Usage: Add to your app's HTML or Next.js _document.tsx:
  * <script src="http://localhost:8000/anchor-os-bridge.js"></script>
- * 
+ *
  * Or dynamically:
  * const script = document.createElement('script');
  * script.src = 'http://localhost:8000/anchor-os-bridge.js';
  * document.head.appendChild(script);
  */
 
-(function() {
+(function () {
   'use strict';
 
   // Only run if we're in an iframe
@@ -27,10 +27,13 @@
   // Send current URL to parent
   function sendUrlToParent() {
     try {
-      window.parent.postMessage({
-        type: 'anchor-url-change',
-        url: window.location.href
-      }, DASHBOARD_ORIGIN);
+      window.parent.postMessage(
+        {
+          type: 'anchor-url-change',
+          url: window.location.href,
+        },
+        DASHBOARD_ORIGIN
+      );
     } catch (e) {
       // Ignore errors
     }
@@ -46,12 +49,12 @@
   const originalPushState = history.pushState;
   const originalReplaceState = history.replaceState;
 
-  history.pushState = function() {
+  history.pushState = function () {
     originalPushState.apply(this, arguments);
     sendUrlToParent();
   };
 
-  history.replaceState = function() {
+  history.replaceState = function () {
     originalReplaceState.apply(this, arguments);
     sendUrlToParent();
   };
@@ -61,7 +64,7 @@
 
   // For Next.js and other SPAs, also watch for URL changes periodically
   let lastUrl = window.location.href;
-  setInterval(function() {
+  setInterval(function () {
     if (window.location.href !== lastUrl) {
       lastUrl = window.location.href;
       sendUrlToParent();

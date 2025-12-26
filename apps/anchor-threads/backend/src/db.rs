@@ -85,11 +85,10 @@ impl Database {
             .fetch_one(&self.pool)
             .await?;
 
-        let resolved_anchors: (i64,) = sqlx::query_as(
-            "SELECT COUNT(*) FROM anchors WHERE resolved_txid IS NOT NULL",
-        )
-        .fetch_one(&self.pool)
-        .await?;
+        let resolved_anchors: (i64,) =
+            sqlx::query_as("SELECT COUNT(*) FROM anchors WHERE resolved_txid IS NOT NULL")
+                .fetch_one(&self.pool)
+                .await?;
 
         let orphan_anchors: (i64,) =
             sqlx::query_as("SELECT COUNT(*) FROM anchors WHERE is_orphan = TRUE")
@@ -239,8 +238,12 @@ impl Database {
     }
 
     /// List root messages with advanced filters
-    pub async fn list_roots_filtered(&self, params: &crate::models::FilterParams) -> Result<(Vec<MessageResponse>, i64)> {
-        let mut conditions = vec!["NOT EXISTS (SELECT 1 FROM anchors a WHERE a.message_id = m.id)".to_string()];
+    pub async fn list_roots_filtered(
+        &self,
+        params: &crate::models::FilterParams,
+    ) -> Result<(Vec<MessageResponse>, i64)> {
+        let mut conditions =
+            vec!["NOT EXISTS (SELECT 1 FROM anchors a WHERE a.message_id = m.id)".to_string()];
         let mut bind_index = 1;
 
         // Build filter conditions
@@ -278,7 +281,10 @@ impl Database {
         }
 
         if params.text.is_some() {
-            conditions.push(format!("(convert_from(m.body, 'UTF8') ILIKE ${} OR encode(m.body, 'hex') ILIKE ${})", bind_index, bind_index));
+            conditions.push(format!(
+                "(convert_from(m.body, 'UTF8') ILIKE ${} OR encode(m.body, 'hex') ILIKE ${})",
+                bind_index, bind_index
+            ));
             bind_index += 1;
         }
 
@@ -313,10 +319,7 @@ impl Database {
         };
 
         // Build count query
-        let count_query = format!(
-            "SELECT COUNT(*) FROM messages m WHERE {}",
-            where_clause
-        );
+        let count_query = format!("SELECT COUNT(*) FROM messages m WHERE {}", where_clause);
 
         // Build main query with subquery for reply_count to allow sorting
         let main_query = format!(
@@ -328,7 +331,10 @@ impl Database {
             ORDER BY {}
             LIMIT ${} OFFSET ${}
             "#,
-            where_clause, order_by, bind_index, bind_index + 1
+            where_clause,
+            order_by,
+            bind_index,
+            bind_index + 1
         );
 
         // Execute count query with bindings
@@ -462,9 +468,12 @@ impl Database {
     }
 
     /// Get popular threads sorted by total message count
-    pub async fn get_popular_threads(&self, limit: i32) -> Result<Vec<crate::models::PopularThreadResponse>> {
+    pub async fn get_popular_threads(
+        &self,
+        limit: i32,
+    ) -> Result<Vec<crate::models::PopularThreadResponse>> {
         use crate::models::PopularThreadResponse;
-        
+
         // Get all root messages (no anchors)
         let rows: Vec<MessageRow> = sqlx::query_as(
             r#"
@@ -479,17 +488,17 @@ impl Database {
         )
         .fetch_all(&self.pool)
         .await?;
-        
+
         // For each root, calculate total thread messages
         let mut popular: Vec<PopularThreadResponse> = Vec::new();
-        
+
         for row in rows {
             let message = self.row_to_response(row).await?;
-            
+
             // Get thread to count total messages
             let mut txid_bytes = hex::decode(&message.txid)?;
             txid_bytes.reverse();
-            
+
             if let Some(thread) = self.get_thread(&txid_bytes, message.vout).await? {
                 popular.push(PopularThreadResponse {
                     message,
@@ -497,10 +506,10 @@ impl Database {
                 });
             }
         }
-        
+
         // Sort by total thread messages descending
         popular.sort_by(|a, b| b.total_thread_messages.cmp(&a.total_thread_messages));
-        
+
         // Take only threads with more than 1 message and limit
         Ok(popular
             .into_iter()
@@ -527,7 +536,10 @@ impl Database {
     }
 
     /// Recursively get thread replies
-    async fn get_thread_replies(&self, parent: &MessageResponse) -> Result<Vec<ThreadNodeResponse>> {
+    async fn get_thread_replies(
+        &self,
+        parent: &MessageResponse,
+    ) -> Result<Vec<ThreadNodeResponse>> {
         // parent.txid is in display format (big-endian hex), need to convert to internal format
         let mut txid = hex::decode(&parent.txid)?;
         txid.reverse(); // Convert from display to internal format
@@ -698,20 +710,16 @@ fn kind_to_name(kind: i16) -> String {
 fn reverse_hex_bytes(hex: &str) -> String {
     // Normalize to lowercase
     let hex = hex.to_lowercase();
-    
+
     // If odd length, pad with leading zero
     let hex = if hex.len() % 2 == 1 {
         format!("0{}", hex)
     } else {
         hex.to_string()
     };
-    
+
     // Split into byte pairs and reverse
-    let bytes: Vec<&str> = (0..hex.len())
-        .step_by(2)
-        .map(|i| &hex[i..i+2])
-        .collect();
-    
+    let bytes: Vec<&str> = (0..hex.len()).step_by(2).map(|i| &hex[i..i + 2]).collect();
+
     bytes.into_iter().rev().collect()
 }
-

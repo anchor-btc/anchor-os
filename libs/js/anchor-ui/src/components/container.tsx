@@ -1,11 +1,11 @@
-import * as React from "react";
-import { cn } from "../utils/cn";
+import * as React from 'react';
+import { cn } from '../utils/cn';
 
 const containerSizes = {
-  sm: "max-w-4xl",
-  md: "max-w-5xl",
-  lg: "max-w-6xl",
-  xl: "max-w-7xl",
+  sm: 'max-w-4xl',
+  md: 'max-w-5xl',
+  lg: 'max-w-6xl',
+  xl: 'max-w-7xl',
 } as const;
 
 export interface ContainerProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -20,7 +20,7 @@ export interface ContainerProps extends React.HTMLAttributes<HTMLDivElement> {
   /**
    * HTML element to render as
    */
-  as?: "div" | "main" | "section" | "article" | "nav" | "header" | "footer";
+  as?: 'div' | 'main' | 'section' | 'article' | 'nav' | 'header' | 'footer';
 }
 
 /**
@@ -38,11 +38,11 @@ export interface ContainerProps extends React.HTMLAttributes<HTMLDivElement> {
  * ```
  */
 const Container = React.forwardRef<HTMLDivElement, ContainerProps>(
-  ({ className, size = "lg", as: Component = "div", children, ...props }, ref) => {
+  ({ className, size = 'lg', as: Component = 'div', children, ...props }, ref) => {
     return (
       <Component
         ref={ref}
-        className={cn("container mx-auto px-4", containerSizes[size], className)}
+        className={cn('container mx-auto px-4', containerSizes[size], className)}
         {...props}
       >
         {children}
@@ -50,6 +50,6 @@ const Container = React.forwardRef<HTMLDivElement, ContainerProps>(
     );
   }
 );
-Container.displayName = "Container";
+Container.displayName = 'Container';
 
 export { Container, containerSizes };

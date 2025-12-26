@@ -1,33 +1,31 @@
-"use client";
+'use client';
 
-import { useQuery } from "@tanstack/react-query";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-} from "recharts";
-import { Loader2, Link2, AlertTriangle, HelpCircle, CheckCircle, Clock } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { fetchAnchorStats, fetchOrphanAnchors, IndexerAnchorStats } from "@/lib/api";
+import { useQuery } from '@tanstack/react-query';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { Loader2, Link2, AlertTriangle, HelpCircle, CheckCircle, Clock } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { fetchAnchorStats, fetchOrphanAnchors } from '@/lib/api';
 
 const CHART_COLORS = {
-  resolved: "#22c55e",
-  orphaned: "#ef4444",
-  ambiguous: "#f59e0b",
-  pending: "#6b7280",
+  resolved: '#22c55e',
+  orphaned: '#ef4444',
+  ambiguous: '#f59e0b',
+  pending: '#6b7280',
 };
 
 export function AnchorStatsChart() {
-  const { data: stats, isLoading, error } = useQuery({
-    queryKey: ["indexer-anchor-stats"],
+  const {
+    data: stats,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ['indexer-anchor-stats'],
     queryFn: fetchAnchorStats,
     refetchInterval: 10000,
   });
 
   const { data: orphans } = useQuery({
-    queryKey: ["indexer-orphan-anchors"],
+    queryKey: ['indexer-orphan-anchors'],
     queryFn: () => fetchOrphanAnchors(5),
     refetchInterval: 30000,
   });
@@ -59,10 +57,10 @@ export function AnchorStatsChart() {
   }
 
   const chartData = [
-    { name: "Resolved", value: stats.resolved, color: CHART_COLORS.resolved },
-    { name: "Orphaned", value: stats.orphaned, color: CHART_COLORS.orphaned },
-    { name: "Ambiguous", value: stats.ambiguous, color: CHART_COLORS.ambiguous },
-    { name: "Pending", value: stats.pending, color: CHART_COLORS.pending },
+    { name: 'Resolved', value: stats.resolved, color: CHART_COLORS.resolved },
+    { name: 'Orphaned', value: stats.orphaned, color: CHART_COLORS.orphaned },
+    { name: 'Ambiguous', value: stats.ambiguous, color: CHART_COLORS.ambiguous },
+    { name: 'Pending', value: stats.pending, color: CHART_COLORS.pending },
   ].filter((d) => d.value > 0);
 
   return (
@@ -99,12 +97,12 @@ export function AnchorStatsChart() {
               </Pie>
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: "8px",
-                  fontSize: "12px",
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px',
+                  fontSize: '12px',
                 }}
-                formatter={(value) => [(value as number).toLocaleString(), ""]}
+                formatter={(value) => [(value as number).toLocaleString(), '']}
               />
             </PieChart>
           </ResponsiveContainer>
@@ -171,20 +169,20 @@ function StatRow({
   label: string;
   value: number;
   total: number;
-  color: "green" | "red" | "yellow" | "gray";
+  color: 'green' | 'red' | 'yellow' | 'gray';
 }) {
-  const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : "0";
+  const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0';
 
   const colorClasses = {
-    green: "text-green-500 bg-green-500/10",
-    red: "text-red-500 bg-red-500/10",
-    yellow: "text-yellow-500 bg-yellow-500/10",
-    gray: "text-gray-500 bg-gray-500/10",
+    green: 'text-green-500 bg-green-500/10',
+    red: 'text-red-500 bg-red-500/10',
+    yellow: 'text-yellow-500 bg-yellow-500/10',
+    gray: 'text-gray-500 bg-gray-500/10',
   };
 
   return (
     <div className="flex items-center gap-2">
-      <div className={cn("w-6 h-6 rounded flex items-center justify-center", colorClasses[color])}>
+      <div className={cn('w-6 h-6 rounded flex items-center justify-center', colorClasses[color])}>
         {icon}
       </div>
       <span className="text-sm text-foreground flex-1">{label}</span>
@@ -193,4 +191,3 @@ function StatRow({
     </div>
   );
 }
-

@@ -8,8 +8,8 @@ use std::sync::Arc;
 
 use crate::error::{AppError, AppResult};
 use crate::models::{
-    AvailabilityResponse, Domain, DomainListItem, GetDomainsByOwnerRequest,
-    HistoryEntry, ListParams, MyDomainsQuery, MyDomainsResponse, PaginatedResponse,
+    AvailabilityResponse, Domain, DomainListItem, GetDomainsByOwnerRequest, HistoryEntry,
+    ListParams, MyDomainsQuery, MyDomainsResponse, PaginatedResponse,
 };
 use crate::services::validation::{parse_txid_list, parse_txids, validate_domain_name};
 use crate::AppState;
@@ -37,7 +37,7 @@ pub async fn list_domains(
         .db
         .list_domains(params.page, params.per_page, params.search.as_deref())
         .await?;
-    
+
     Ok(Json(PaginatedResponse::new(
         domains,
         total,
@@ -65,9 +65,12 @@ pub async fn get_domain(
 ) -> AppResult<Json<Domain>> {
     validate_domain_name(&name)?;
 
-    let domain = state.db.get_domain(&name).await?
+    let domain = state
+        .db
+        .get_domain(&name)
+        .await?
         .ok_or_else(|| AppError::not_found("Domain not found"))?;
-    
+
     Ok(Json(domain))
 }
 
@@ -126,7 +129,7 @@ pub async fn check_availability(
     validate_domain_name(&name)?;
 
     let available = state.db.is_domain_available(&name).await?;
-    
+
     Ok(Json(AvailabilityResponse {
         name: name.clone(),
         available,
@@ -134,7 +137,7 @@ pub async fn check_availability(
 }
 
 /// Get domains owned by a list of transaction IDs (GET with query params)
-/// 
+///
 /// This endpoint is used for the "My Domains" feature. It accepts a comma-separated
 /// list of transaction IDs in the query string and returns all domains where the owner_txid matches.
 #[utoipa::path(
@@ -165,7 +168,7 @@ pub async fn get_my_domains(
 }
 
 /// Get domains owned by a list of transaction IDs
-/// 
+///
 /// This endpoint is used for the "My Domains" feature. It accepts a list of
 /// transaction IDs and returns all domains where the owner_txid matches.
 #[utoipa::path(
@@ -187,4 +190,3 @@ pub async fn get_domains_by_owner(
     let domains = state.db.get_domains_by_owner_txids(&txids).await?;
     Ok(Json(domains))
 }
-

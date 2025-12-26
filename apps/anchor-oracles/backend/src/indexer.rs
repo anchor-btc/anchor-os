@@ -1,10 +1,10 @@
 //! Indexer for Anchor Oracle messages from the blockchain
 
-use anchor_core::{AnchorKind, carrier::CarrierSelector};
+use anchor_core::{carrier::CarrierSelector, AnchorKind};
 use anyhow::Result;
 use bitcoin::consensus::encode::deserialize;
 use bitcoin::hashes::Hash;
-use bitcoin::{Block, Transaction, Address, Network};
+use bitcoin::{Address, Block, Network, Transaction};
 use bitcoincore_rpc::{Auth, Client, RpcApi};
 use std::sync::Arc;
 use tokio::time::{sleep, Duration};
@@ -46,8 +46,14 @@ impl OracleRegistration {
 
         let categories = i16::from_be_bytes([body[offset], body[offset + 1]]) as i32;
         let stake_amount = i64::from_be_bytes([
-            body[offset + 2], body[offset + 3], body[offset + 4], body[offset + 5],
-            body[offset + 6], body[offset + 7], body[offset + 8], body[offset + 9],
+            body[offset + 2],
+            body[offset + 3],
+            body[offset + 4],
+            body[offset + 5],
+            body[offset + 6],
+            body[offset + 7],
+            body[offset + 8],
+            body[offset + 9],
         ]);
 
         let metadata = if body.len() > offset + 10 {
@@ -68,6 +74,7 @@ impl OracleRegistration {
 }
 
 /// Oracle attestation body parser
+#[allow(dead_code)]
 pub struct OracleAttestationBody {
     pub category: u8,
     pub event_id: [u8; 32],
@@ -87,8 +94,7 @@ impl OracleAttestationBody {
         event_id.copy_from_slice(&body[1..33]);
 
         let attestation_block = i64::from_be_bytes([
-            body[33], body[34], body[35], body[36],
-            body[37], body[38], body[39], body[40],
+            body[33], body[34], body[35], body[36], body[37], body[38], body[39], body[40],
         ]);
 
         let outcome_len = u16::from_be_bytes([body[41], body[42]]) as usize;
@@ -111,6 +117,7 @@ impl OracleAttestationBody {
 }
 
 /// Oracle event request body parser
+#[allow(dead_code)]
 pub struct OracleEventBody {
     pub event_id: [u8; 32],
     pub category: u8,
@@ -119,6 +126,7 @@ pub struct OracleEventBody {
     pub description: String,
 }
 
+#[allow(dead_code)]
 impl OracleEventBody {
     pub fn parse(body: &[u8]) -> Option<Self> {
         // Minimum: event_id(32) + category(1) + resolution_block(4) + bounty(8) = 45 bytes
@@ -131,13 +139,10 @@ impl OracleEventBody {
 
         let category = body[32];
 
-        let resolution_block = i32::from_be_bytes([
-            body[33], body[34], body[35], body[36],
-        ]);
+        let resolution_block = i32::from_be_bytes([body[33], body[34], body[35], body[36]]);
 
         let bounty_sats = i64::from_be_bytes([
-            body[37], body[38], body[39], body[40],
-            body[41], body[42], body[43], body[44],
+            body[37], body[38], body[39], body[40], body[41], body[42], body[43], body[44],
         ]);
 
         let description = if body.len() > 45 {
@@ -157,6 +162,7 @@ impl OracleEventBody {
 }
 
 /// Oracle dispute body parser
+#[allow(dead_code)]
 pub struct OracleDisputeBody {
     pub disputer_pubkey: [u8; 32],
     pub attestation_txid: [u8; 32],
@@ -166,6 +172,7 @@ pub struct OracleDisputeBody {
     pub evidence: String,
 }
 
+#[allow(dead_code)]
 impl OracleDisputeBody {
     pub fn parse(body: &[u8]) -> Option<Self> {
         // Minimum: disputer(32) + att_txid(32) + att_vout(2) + reason(1) + stake(8) = 75 bytes
@@ -184,8 +191,7 @@ impl OracleDisputeBody {
         let reason = body[66];
 
         let stake_sats = i64::from_be_bytes([
-            body[67], body[68], body[69], body[70],
-            body[71], body[72], body[73], body[74],
+            body[67], body[68], body[69], body[70], body[71], body[72], body[73], body[74],
         ]);
 
         let evidence = if body.len() > 75 {
@@ -215,13 +221,20 @@ impl Indexer {
     pub fn new(config: &Config, db: Arc<Database>) -> Result<Self> {
         let rpc = Client::new(
             &config.bitcoin_rpc_url,
-            Auth::UserPass(config.bitcoin_rpc_user.clone(), config.bitcoin_rpc_password.clone()),
+            Auth::UserPass(
+                config.bitcoin_rpc_user.clone(),
+                config.bitcoin_rpc_password.clone(),
+            ),
         )?;
 
         // Create carrier selector that can detect all carrier types
         let carrier_selector = CarrierSelector::new();
 
-        Ok(Self { db, rpc, carrier_selector })
+        Ok(Self {
+            db,
+            rpc,
+            carrier_selector,
+        })
     }
 
     pub async fn run(&self) -> Result<()> {
@@ -247,7 +260,9 @@ impl Indexer {
             let block: Block = deserialize(&block_bytes)?;
 
             self.process_block(&block, target_height).await?;
-            self.db.update_last_block(&block_hash[..], target_height).await?;
+            self.db
+                .update_last_block(&block_hash[..], target_height)
+                .await?;
 
             last_height = target_height;
             if target_height % 100 == 0 {
@@ -270,13 +285,13 @@ impl Indexer {
     fn extract_creator_address(&self, tx: &Transaction) -> Option<String> {
         // Use regtest network for address extraction
         let network = Network::Regtest;
-        
+
         for output in &tx.output {
             // Skip OP_RETURN outputs
             if output.script_pubkey.is_op_return() {
                 continue;
             }
-            
+
             // Try to extract address from script
             if let Ok(address) = Address::from_script(&output.script_pubkey, network) {
                 return Some(address.to_string());
@@ -302,12 +317,14 @@ impl Indexer {
             let carrier_name = format!("{:?}", detected.carrier_type);
 
             match msg.kind {
-                    AnchorKind::Oracle => {
-                        if let Some(reg) = OracleRegistration::parse(&msg.body) {
-                            match reg.action {
-                                0 => {
-                                    // Register new oracle
-                                    let _ = self.db.insert_oracle(
+                AnchorKind::Oracle => {
+                    if let Some(reg) = OracleRegistration::parse(&msg.body) {
+                        match reg.action {
+                            0 => {
+                                // Register new oracle
+                                let _ = self
+                                    .db
+                                    .insert_oracle(
                                         &reg.oracle_pubkey,
                                         &reg.name,
                                         reg.metadata.as_deref(),
@@ -316,42 +333,58 @@ impl Indexer {
                                         &txid_bytes,
                                         Some(height),
                                         creator_address.as_deref(),
-                                    ).await;
-                                    tracing::info!("Indexed oracle registration: {} stake={} sats (via {}) creator={:?}", reg.name, reg.stake_amount, carrier_name, creator_address);
-                                }
-                                1 => {
-                                    // Update oracle - handled by upsert
-                                    let _ = self.db.insert_oracle(
-                                        &reg.oracle_pubkey,
-                                        &reg.name,
-                                        reg.metadata.as_deref(),
-                                        reg.categories,
-                                        reg.stake_amount,
-                                        &txid_bytes,
-                                        Some(height),
-                                        creator_address.as_deref(),
-                                    ).await;
-                                    tracing::info!("Indexed oracle update: {} stake={} sats (via {})", reg.name, reg.stake_amount, carrier_name);
-                                }
-                                2 => {
-                                    // Deactivate - would need separate handling
-                                    tracing::info!("Oracle deactivation request (via {})", carrier_name);
-                                }
-                                _ => {}
+                                    )
+                                    .await;
+                                tracing::info!("Indexed oracle registration: {} stake={} sats (via {}) creator={:?}", reg.name, reg.stake_amount, carrier_name, creator_address);
                             }
+                            1 => {
+                                // Update oracle - handled by upsert
+                                let _ = self
+                                    .db
+                                    .insert_oracle(
+                                        &reg.oracle_pubkey,
+                                        &reg.name,
+                                        reg.metadata.as_deref(),
+                                        reg.categories,
+                                        reg.stake_amount,
+                                        &txid_bytes,
+                                        Some(height),
+                                        creator_address.as_deref(),
+                                    )
+                                    .await;
+                                tracing::info!(
+                                    "Indexed oracle update: {} stake={} sats (via {})",
+                                    reg.name,
+                                    reg.stake_amount,
+                                    carrier_name
+                                );
+                            }
+                            2 => {
+                                // Deactivate - would need separate handling
+                                tracing::info!(
+                                    "Oracle deactivation request (via {})",
+                                    carrier_name
+                                );
+                            }
+                            _ => {}
                         }
                     }
-                    AnchorKind::OracleAttestation => {
-                        if let Some(att) = OracleAttestationBody::parse(&msg.body) {
-                            // Find oracle from anchors (parent message)
-                            if let Some(anchor) = msg.canonical_parent() {
-                                // Look up oracle by parent txid prefix
-                                // We use txid_prefix as the key since that's what we have
-                                if let Ok(Some(oracle_id)) = self.db.get_oracle_id_by_pubkey(&anchor.txid_prefix).await {
-                                    // Try to parse outcome as description
-                                    let event_desc = String::from_utf8(att.outcome_data.clone()).ok();
-                                    
-                                    match self.db.insert_attestation(
+                }
+                AnchorKind::OracleAttestation => {
+                    if let Some(att) = OracleAttestationBody::parse(&msg.body) {
+                        // Find oracle from anchors (parent message)
+                        if let Some(anchor) = msg.canonical_parent() {
+                            // Look up oracle by parent txid prefix
+                            // We use txid_prefix as the key since that's what we have
+                            if let Ok(Some(oracle_id)) =
+                                self.db.get_oracle_id_by_pubkey(&anchor.txid_prefix).await
+                            {
+                                // Try to parse outcome as description
+                                let event_desc = String::from_utf8(att.outcome_data.clone()).ok();
+
+                                match self
+                                    .db
+                                    .insert_attestation(
                                         oracle_id,
                                         &txid_bytes,
                                         vout as i32,
@@ -361,29 +394,36 @@ impl Indexer {
                                         event_desc.as_deref(),
                                         &att.outcome_data,
                                         &att.schnorr_signature,
-                                    ).await {
-                                        Ok(id) => {
-                                            tracing::info!(
+                                    )
+                                    .await
+                                {
+                                    Ok(id) => {
+                                        tracing::info!(
                                                 "Indexed attestation id={} for event {} at block {} (via {})",
                                                 id,
                                                 hex::encode(&att.event_id[..8]),
                                                 height,
                                                 carrier_name
                                             );
-                                            // Update event status to fulfilled
-                                            if let Err(e) = self.db.fulfill_event(&att.event_id, oracle_id).await {
-                                                tracing::warn!("Failed to fulfill event: {}", e);
-                                            }
+                                        // Update event status to fulfilled
+                                        if let Err(e) =
+                                            self.db.fulfill_event(&att.event_id, oracle_id).await
+                                        {
+                                            tracing::warn!("Failed to fulfill event: {}", e);
                                         }
-                                        Err(e) => tracing::warn!("Failed to insert attestation: {}", e),
                                     }
-                                } else {
-                                    // Try with first oracle as fallback for testnet
-                                    if let Ok(oracles) = self.db.get_oracles(1, 0).await {
-                                        if let Some(oracle) = oracles.first() {
-                                            let event_desc = String::from_utf8(att.outcome_data.clone()).ok();
-                                            
-                                            if let Ok(id) = self.db.insert_attestation(
+                                    Err(e) => tracing::warn!("Failed to insert attestation: {}", e),
+                                }
+                            } else {
+                                // Try with first oracle as fallback for testnet
+                                if let Ok(oracles) = self.db.get_oracles(1, 0).await {
+                                    if let Some(oracle) = oracles.first() {
+                                        let event_desc =
+                                            String::from_utf8(att.outcome_data.clone()).ok();
+
+                                        if let Ok(id) = self
+                                            .db
+                                            .insert_attestation(
                                                 oracle.id,
                                                 &txid_bytes,
                                                 vout as i32,
@@ -393,17 +433,22 @@ impl Indexer {
                                                 event_desc.as_deref(),
                                                 &att.outcome_data,
                                                 &att.schnorr_signature,
-                                            ).await {
-                                                tracing::info!(
+                                            )
+                                            .await
+                                        {
+                                            tracing::info!(
                                                     "Indexed attestation id={} (fallback oracle={}) (via {})",
                                                     id,
                                                     oracle.name,
                                                     carrier_name
                                                 );
-                                                // Update event status to fulfilled
-                                                if let Err(e) = self.db.fulfill_event(&att.event_id, oracle.id).await {
-                                                    tracing::warn!("Failed to fulfill event: {}", e);
-                                                }
+                                            // Update event status to fulfilled
+                                            if let Err(e) = self
+                                                .db
+                                                .fulfill_event(&att.event_id, oracle.id)
+                                                .await
+                                            {
+                                                tracing::warn!("Failed to fulfill event: {}", e);
                                             }
                                         }
                                     }
@@ -411,18 +456,23 @@ impl Indexer {
                             }
                         }
                     }
-                    AnchorKind::OracleDispute => {
-                        tracing::debug!("Found OracleDispute message (via {})", carrier_name);
-                        if let Some(disp) = OracleDisputeBody::parse(&msg.body) {
-                            tracing::debug!(
-                                "Parsed dispute: attestation_txid={}, reason={}, stake={}",
-                                hex::encode(&disp.attestation_txid),
-                                disp.reason,
-                                disp.stake_sats
-                            );
-                            // Look up attestation by txid
-                            if let Ok(Some(attestation_id)) = self.db.get_attestation_id_by_txid(&disp.attestation_txid).await {
-                                match self.db.insert_dispute(
+                }
+                AnchorKind::OracleDispute => {
+                    tracing::debug!("Found OracleDispute message (via {})", carrier_name);
+                    if let Some(disp) = OracleDisputeBody::parse(&msg.body) {
+                        tracing::debug!(
+                            "Parsed dispute: attestation_txid={}, reason={}, stake={}",
+                            hex::encode(disp.attestation_txid),
+                            disp.reason,
+                            disp.stake_sats
+                        );
+                        // Look up attestation by txid
+                        if let Ok(Some(attestation_id)) = self
+                            .db
+                            .get_attestation_id_by_txid(&disp.attestation_txid)
+                            .await
+                        {
+                            match self.db.insert_dispute(
                                     attestation_id,
                                     &disp.disputer_pubkey,
                                     &txid_bytes,
@@ -440,11 +490,11 @@ impl Indexer {
                                     ),
                                     Err(e) => tracing::warn!("Failed to insert dispute: {}", e),
                                 }
-                            } else {
-                                // For testnet, just insert with fallback to first attestation if any
-                                if let Ok(attestations) = self.db.get_attestations(1, 0).await {
-                                    if let Some(att) = attestations.first() {
-                                        match self.db.insert_dispute(
+                        } else {
+                            // For testnet, just insert with fallback to first attestation if any
+                            if let Ok(attestations) = self.db.get_attestations(1, 0).await {
+                                if let Some(att) = attestations.first() {
+                                    match self.db.insert_dispute(
                                             att.id,
                                             &disp.disputer_pubkey,
                                             &txid_bytes,
@@ -461,27 +511,33 @@ impl Indexer {
                                             ),
                                             Err(e) => tracing::warn!("Failed to insert fallback dispute: {}", e),
                                         }
-                                    } else {
-                                        tracing::warn!(
-                                            "Dispute at vout {} - no attestations in database (via {})",
-                                            vout,
-                                            carrier_name
-                                        );
-                                    }
+                                } else {
+                                    tracing::warn!(
+                                        "Dispute at vout {} - no attestations in database (via {})",
+                                        vout,
+                                        carrier_name
+                                    );
                                 }
                             }
-                        } else {
-                            tracing::warn!("Failed to parse OracleDispute body (len={})", msg.body.len());
                         }
+                    } else {
+                        tracing::warn!(
+                            "Failed to parse OracleDispute body (len={})",
+                            msg.body.len()
+                        );
                     }
-                    AnchorKind::OracleSlash => {
-                        tracing::debug!("Indexed oracle slash at height {} (via {})", height, carrier_name);
-                    }
-                    _ => {}
                 }
+                AnchorKind::OracleSlash => {
+                    tracing::debug!(
+                        "Indexed oracle slash at height {} (via {})",
+                        height,
+                        carrier_name
+                    );
+                }
+                _ => {}
+            }
         }
 
         Ok(())
     }
 }
-

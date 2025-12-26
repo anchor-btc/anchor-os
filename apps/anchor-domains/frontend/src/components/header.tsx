@@ -1,17 +1,10 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { Globe, Home, List, User, BookOpen, PlusCircle } from "lucide-react";
+import Link from 'next/link';
+import { Globe, Home, List, User, BookOpen, PlusCircle } from 'lucide-react';
 
-const DOCS_URL = "http://localhost:3900/kinds/dns.html";
-import {
-  AppHeader,
-  AppLogo,
-  NavLink,
-  NavGroup,
-  Container,
-  Button,
-} from "@AnchorProtocol/ui";
+const DOCS_URL = 'http://localhost:3900/kinds/dns.html';
+import { AppHeader, AppLogo, NavLink, NavGroup, Container, Button } from '@AnchorProtocol/ui';
 
 export function Header() {
   return (

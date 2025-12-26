@@ -8,7 +8,13 @@ use crate::models::{Category, MapStats};
 impl Database {
     /// Get map statistics
     pub async fn get_stats(&self) -> Result<MapStats> {
-        let row: (i64, i64, i64, Option<i32>, Option<chrono::DateTime<chrono::Utc>>) = sqlx::query_as(
+        let row: (
+            i64,
+            i64,
+            i64,
+            Option<i32>,
+            Option<chrono::DateTime<chrono::Utc>>,
+        ) = sqlx::query_as(
             r#"
             SELECT 
                 total_markers,
@@ -33,11 +39,10 @@ impl Database {
 
     /// Get all categories
     pub async fn get_categories(&self) -> Result<Vec<Category>> {
-        let rows: Vec<(i16, String, String, String)> = sqlx::query_as(
-            "SELECT id, name, icon, color FROM marker_categories ORDER BY id",
-        )
-        .fetch_all(&self.pool)
-        .await?;
+        let rows: Vec<(i16, String, String, String)> =
+            sqlx::query_as("SELECT id, name, icon, color FROM marker_categories ORDER BY id")
+                .fetch_all(&self.pool)
+                .await?;
 
         Ok(rows
             .into_iter()
@@ -50,4 +55,3 @@ impl Database {
             .collect())
     }
 }
-

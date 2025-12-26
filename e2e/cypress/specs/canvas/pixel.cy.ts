@@ -36,17 +36,19 @@ describe('Anchor Canvas Pixel Placement', () => {
 
   it('should be able to select a color', () => {
     // Find and click color palette
-    cy.get('[data-color], .color-picker, input[type="color"]').first().then(($el) => {
-      if ($el.length) {
-        cy.wrap($el).click();
-      }
-    });
+    cy.get('[data-color], .color-picker, input[type="color"]')
+      .first()
+      .then(($el) => {
+        if ($el.length) {
+          cy.wrap($el).click();
+        }
+      });
   });
 
   it('should show coordinates on hover', () => {
     // Hover over canvas area
     cy.get('canvas, [data-canvas], .canvas').first().trigger('mouseover');
-    
+
     // Look for coordinate display
     cy.contains(/x:|y:|\d+,\s*\d+/i, { timeout: 5000 }).should('exist');
   });
@@ -58,22 +60,24 @@ describe('Anchor Canvas Pixel Placement', () => {
 
   it('should place a pixel (full flow)', () => {
     // Select a color first
-    cy.get('[data-color], .color-picker button, input[type="color"]').first().then(($el) => {
-      if ($el.length) {
-        cy.wrap($el).click();
-      }
-    });
-    
+    cy.get('[data-color], .color-picker button, input[type="color"]')
+      .first()
+      .then(($el) => {
+        if ($el.length) {
+          cy.wrap($el).click();
+        }
+      });
+
     // Click on canvas to place pixel
     cy.get('canvas, [data-canvas], .canvas').first().click(100, 100, { force: true });
-    
+
     // Wait for transaction
     cy.wait(3000);
-    
+
     // Mine block
     cy.mineBlocks(1);
     cy.wait(3000);
-    
+
     // Canvas should still be visible (success)
     cy.get('canvas, [data-canvas], .canvas').should('be.visible');
   });
@@ -85,15 +89,17 @@ describe('Anchor Canvas Navigation', () => {
   });
 
   it('should be able to pan the canvas', () => {
-    cy.get('canvas, [data-canvas]').first().then(($canvas) => {
-      if ($canvas.length) {
-        // Drag to pan
-        cy.wrap($canvas)
-          .trigger('mousedown', { clientX: 200, clientY: 200 })
-          .trigger('mousemove', { clientX: 300, clientY: 300 })
-          .trigger('mouseup');
-      }
-    });
+    cy.get('canvas, [data-canvas]')
+      .first()
+      .then(($canvas) => {
+        if ($canvas.length) {
+          // Drag to pan
+          cy.wrap($canvas)
+            .trigger('mousedown', { clientX: 200, clientY: 200 })
+            .trigger('mousemove', { clientX: 300, clientY: 300 })
+            .trigger('mouseup');
+        }
+      });
   });
 
   it('should display recently placed pixels', () => {
@@ -101,4 +107,3 @@ describe('Anchor Canvas Navigation', () => {
     cy.contains(/recent|latest|activity/i, { timeout: 10000 }).should('exist');
   });
 });
-

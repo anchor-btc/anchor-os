@@ -4,8 +4,8 @@ use anyhow::Result;
 use sqlx::postgres::PgPool;
 
 use crate::models::{
-    Attestation, CategoryInfo, Dispute, EventRequest, Oracle, OracleCategories, OracleStats,
-    category_name, dispute_reason_name, key_type_name,
+    category_name, dispute_reason_name, key_type_name, Attestation, CategoryInfo, Dispute,
+    EventRequest, Oracle, OracleCategories, OracleStats,
 };
 
 #[derive(Clone)]
@@ -17,19 +17,20 @@ impl Database {
     pub async fn connect(database_url: &str) -> Result<Self> {
         let pool = PgPool::connect(database_url).await?;
         let db = Self { pool };
-        
+
         // Run migrations on startup
         db.run_migrations().await?;
-        
+
         Ok(db)
     }
-    
+
     /// Run database migrations
     async fn run_migrations(&self) -> Result<()> {
         tracing::info!("Running database migrations...");
-        
+
         // Create oracles table
-        sqlx::query(r#"
+        sqlx::query(
+            r#"
             CREATE TABLE IF NOT EXISTS oracles (
                 id SERIAL PRIMARY KEY,
                 pubkey BYTEA NOT NULL UNIQUE,
@@ -45,16 +46,31 @@ impl Database {
                 reputation_score REAL NOT NULL DEFAULT 50.0,
                 created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
             )
-        "#).execute(&self.pool).await?;
-        
+        "#,
+        )
+        .execute(&self.pool)
+        .await?;
+
         // Create indexes for oracles
-        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_oracles_pubkey ON oracles(pubkey)").execute(&self.pool).await;
-        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_oracles_status ON oracles(status)").execute(&self.pool).await;
-        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_oracles_reputation ON oracles(reputation_score DESC)").execute(&self.pool).await;
-        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_oracles_categories ON oracles(categories)").execute(&self.pool).await;
-        
+        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_oracles_pubkey ON oracles(pubkey)")
+            .execute(&self.pool)
+            .await;
+        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_oracles_status ON oracles(status)")
+            .execute(&self.pool)
+            .await;
+        let _ = sqlx::query(
+            "CREATE INDEX IF NOT EXISTS idx_oracles_reputation ON oracles(reputation_score DESC)",
+        )
+        .execute(&self.pool)
+        .await;
+        let _ =
+            sqlx::query("CREATE INDEX IF NOT EXISTS idx_oracles_categories ON oracles(categories)")
+                .execute(&self.pool)
+                .await;
+
         // Create attestations table
-        sqlx::query(r#"
+        sqlx::query(
+            r#"
             CREATE TABLE IF NOT EXISTS attestations (
                 id SERIAL PRIMARY KEY,
                 oracle_id INTEGER NOT NULL REFERENCES oracles(id),
@@ -70,17 +86,41 @@ impl Database {
                 created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
                 UNIQUE(txid, vout)
             )
-        "#).execute(&self.pool).await?;
-        
+        "#,
+        )
+        .execute(&self.pool)
+        .await?;
+
         // Create indexes for attestations
-        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_attestations_oracle ON attestations(oracle_id)").execute(&self.pool).await;
-        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_attestations_event ON attestations(event_id)").execute(&self.pool).await;
-        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_attestations_category ON attestations(category)").execute(&self.pool).await;
-        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_attestations_status ON attestations(status)").execute(&self.pool).await;
-        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_attestations_block ON attestations(block_height)").execute(&self.pool).await;
-        
+        let _ = sqlx::query(
+            "CREATE INDEX IF NOT EXISTS idx_attestations_oracle ON attestations(oracle_id)",
+        )
+        .execute(&self.pool)
+        .await;
+        let _ = sqlx::query(
+            "CREATE INDEX IF NOT EXISTS idx_attestations_event ON attestations(event_id)",
+        )
+        .execute(&self.pool)
+        .await;
+        let _ = sqlx::query(
+            "CREATE INDEX IF NOT EXISTS idx_attestations_category ON attestations(category)",
+        )
+        .execute(&self.pool)
+        .await;
+        let _ = sqlx::query(
+            "CREATE INDEX IF NOT EXISTS idx_attestations_status ON attestations(status)",
+        )
+        .execute(&self.pool)
+        .await;
+        let _ = sqlx::query(
+            "CREATE INDEX IF NOT EXISTS idx_attestations_block ON attestations(block_height)",
+        )
+        .execute(&self.pool)
+        .await;
+
         // Create disputes table
-        sqlx::query(r#"
+        sqlx::query(
+            r#"
             CREATE TABLE IF NOT EXISTS disputes (
                 id SERIAL PRIMARY KEY,
                 attestation_id INTEGER NOT NULL REFERENCES attestations(id),
@@ -95,15 +135,29 @@ impl Database {
                 created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
                 UNIQUE(txid, vout)
             )
-        "#).execute(&self.pool).await?;
-        
+        "#,
+        )
+        .execute(&self.pool)
+        .await?;
+
         // Create indexes for disputes
-        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_disputes_attestation ON disputes(attestation_id)").execute(&self.pool).await;
-        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_disputes_status ON disputes(status)").execute(&self.pool).await;
-        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_disputes_disputer ON disputes(disputer_pubkey)").execute(&self.pool).await;
-        
+        let _ = sqlx::query(
+            "CREATE INDEX IF NOT EXISTS idx_disputes_attestation ON disputes(attestation_id)",
+        )
+        .execute(&self.pool)
+        .await;
+        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_disputes_status ON disputes(status)")
+            .execute(&self.pool)
+            .await;
+        let _ = sqlx::query(
+            "CREATE INDEX IF NOT EXISTS idx_disputes_disputer ON disputes(disputer_pubkey)",
+        )
+        .execute(&self.pool)
+        .await;
+
         // Create event_requests table
-        sqlx::query(r#"
+        sqlx::query(
+            r#"
             CREATE TABLE IF NOT EXISTS event_requests (
                 id SERIAL PRIMARY KEY,
                 event_id BYTEA NOT NULL UNIQUE,
@@ -115,15 +169,31 @@ impl Database {
                 fulfilled_by INTEGER REFERENCES oracles(id),
                 created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
             )
-        "#).execute(&self.pool).await?;
-        
+        "#,
+        )
+        .execute(&self.pool)
+        .await?;
+
         // Create indexes for event_requests
-        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_event_requests_event ON event_requests(event_id)").execute(&self.pool).await;
-        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_event_requests_category ON event_requests(category)").execute(&self.pool).await;
-        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_event_requests_status ON event_requests(status)").execute(&self.pool).await;
-        
+        let _ = sqlx::query(
+            "CREATE INDEX IF NOT EXISTS idx_event_requests_event ON event_requests(event_id)",
+        )
+        .execute(&self.pool)
+        .await;
+        let _ = sqlx::query(
+            "CREATE INDEX IF NOT EXISTS idx_event_requests_category ON event_requests(category)",
+        )
+        .execute(&self.pool)
+        .await;
+        let _ = sqlx::query(
+            "CREATE INDEX IF NOT EXISTS idx_event_requests_status ON event_requests(status)",
+        )
+        .execute(&self.pool)
+        .await;
+
         // Create oracle_stakes table
-        sqlx::query(r#"
+        sqlx::query(
+            r#"
             CREATE TABLE IF NOT EXISTS oracle_stakes (
                 id SERIAL PRIMARY KEY,
                 oracle_id INTEGER NOT NULL REFERENCES oracles(id),
@@ -134,35 +204,63 @@ impl Database {
                 block_height INTEGER,
                 created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
             )
-        "#).execute(&self.pool).await?;
-        
+        "#,
+        )
+        .execute(&self.pool)
+        .await?;
+
         // Create indexes for oracle_stakes
-        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_oracle_stakes_oracle ON oracle_stakes(oracle_id)").execute(&self.pool).await;
-        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_oracle_stakes_action ON oracle_stakes(action)").execute(&self.pool).await;
-        
+        let _ = sqlx::query(
+            "CREATE INDEX IF NOT EXISTS idx_oracle_stakes_oracle ON oracle_stakes(oracle_id)",
+        )
+        .execute(&self.pool)
+        .await;
+        let _ = sqlx::query(
+            "CREATE INDEX IF NOT EXISTS idx_oracle_stakes_action ON oracle_stakes(action)",
+        )
+        .execute(&self.pool)
+        .await;
+
         // Add identity columns (key_type and linked_identity_id) - migration
-        let _ = sqlx::query("ALTER TABLE oracles ADD COLUMN IF NOT EXISTS key_type INTEGER NOT NULL DEFAULT 0").execute(&self.pool).await;
-        let _ = sqlx::query("ALTER TABLE oracles ADD COLUMN IF NOT EXISTS linked_identity_id TEXT").execute(&self.pool).await;
-        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_oracles_key_type ON oracles(key_type)").execute(&self.pool).await;
-        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_oracles_linked_identity ON oracles(linked_identity_id)").execute(&self.pool).await;
-        
+        let _ = sqlx::query(
+            "ALTER TABLE oracles ADD COLUMN IF NOT EXISTS key_type INTEGER NOT NULL DEFAULT 0",
+        )
+        .execute(&self.pool)
+        .await;
+        let _ = sqlx::query("ALTER TABLE oracles ADD COLUMN IF NOT EXISTS linked_identity_id TEXT")
+            .execute(&self.pool)
+            .await;
+        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_oracles_key_type ON oracles(key_type)")
+            .execute(&self.pool)
+            .await;
+        let _ = sqlx::query(
+            "CREATE INDEX IF NOT EXISTS idx_oracles_linked_identity ON oracles(linked_identity_id)",
+        )
+        .execute(&self.pool)
+        .await;
+
         // Create indexer_state table
-        sqlx::query(r#"
+        sqlx::query(
+            r#"
             CREATE TABLE IF NOT EXISTS indexer_state (
                 id INTEGER PRIMARY KEY DEFAULT 1,
                 last_block_hash BYTEA,
                 last_block_height INTEGER NOT NULL DEFAULT 0,
                 updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
             )
-        "#).execute(&self.pool).await?;
-        
+        "#,
+        )
+        .execute(&self.pool)
+        .await?;
+
         // Insert initial indexer state if not exists
         let _ = sqlx::query(
             "INSERT INTO indexer_state (id, last_block_height) VALUES (1, 0) ON CONFLICT (id) DO NOTHING"
         ).execute(&self.pool).await;
-        
+
         // Create stats view
-        let _ = sqlx::query(r#"
+        let _ = sqlx::query(
+            r#"
             CREATE OR REPLACE VIEW oracle_stats AS
             SELECT 
                 COUNT(*) as total_oracles,
@@ -171,8 +269,11 @@ impl Database {
                 AVG(reputation_score) as avg_reputation,
                 COALESCE(SUM(total_attestations), 0) as total_attestations
             FROM oracles
-        "#).execute(&self.pool).await;
-        
+        "#,
+        )
+        .execute(&self.pool)
+        .await;
+
         tracing::info!("Database migrations completed");
         Ok(())
     }
@@ -180,11 +281,26 @@ impl Database {
     // Oracle operations
 
     pub async fn get_oracles(&self, limit: i64, offset: i64) -> Result<Vec<Oracle>> {
-        let rows = sqlx::query_as::<_, (
-            i32, Vec<u8>, String, Option<String>, i32, i64, String,
-            Option<i32>, i32, i32, i32, f32, chrono::DateTime<chrono::Utc>,
-            i32, Option<String>,
-        )>(
+        let rows = sqlx::query_as::<
+            _,
+            (
+                i32,
+                Vec<u8>,
+                String,
+                Option<String>,
+                i32,
+                i64,
+                String,
+                Option<i32>,
+                i32,
+                i32,
+                i32,
+                f32,
+                chrono::DateTime<chrono::Utc>,
+                i32,
+                Option<String>,
+            ),
+        >(
             r#"
             SELECT id, pubkey, name, description, categories, stake_sats, status,
                    registered_at, total_attestations, successful_attestations,
@@ -200,36 +316,54 @@ impl Database {
         .fetch_all(&self.pool)
         .await?;
 
-        Ok(rows.into_iter().map(|r| {
-            let cats = OracleCategories(r.4);
-            Oracle {
-                id: r.0,
-                pubkey: hex::encode(&r.1),
-                key_type: r.13,
-                key_type_name: key_type_name(r.13),
-                name: r.2,
-                description: r.3,
-                categories: r.4,
-                category_names: cats.names().into_iter().map(String::from).collect(),
-                stake_sats: r.5,
-                status: r.6,
-                registered_at: r.7,
-                total_attestations: r.8,
-                successful_attestations: r.9,
-                disputed_attestations: r.10,
-                reputation_score: r.11,
-                created_at: r.12.to_rfc3339(),
-                linked_identity_id: r.14,
-            }
-        }).collect())
+        Ok(rows
+            .into_iter()
+            .map(|r| {
+                let cats = OracleCategories(r.4);
+                Oracle {
+                    id: r.0,
+                    pubkey: hex::encode(&r.1),
+                    key_type: r.13,
+                    key_type_name: key_type_name(r.13),
+                    name: r.2,
+                    description: r.3,
+                    categories: r.4,
+                    category_names: cats.names().into_iter().map(String::from).collect(),
+                    stake_sats: r.5,
+                    status: r.6,
+                    registered_at: r.7,
+                    total_attestations: r.8,
+                    successful_attestations: r.9,
+                    disputed_attestations: r.10,
+                    reputation_score: r.11,
+                    created_at: r.12.to_rfc3339(),
+                    linked_identity_id: r.14,
+                }
+            })
+            .collect())
     }
 
     pub async fn get_oracle_by_pubkey(&self, pubkey: &[u8]) -> Result<Option<Oracle>> {
-        let row = sqlx::query_as::<_, (
-            i32, Vec<u8>, String, Option<String>, i32, i64, String,
-            Option<i32>, i32, i32, i32, f32, chrono::DateTime<chrono::Utc>,
-            i32, Option<String>,
-        )>(
+        let row = sqlx::query_as::<
+            _,
+            (
+                i32,
+                Vec<u8>,
+                String,
+                Option<String>,
+                i32,
+                i64,
+                String,
+                Option<i32>,
+                i32,
+                i32,
+                i32,
+                f32,
+                chrono::DateTime<chrono::Utc>,
+                i32,
+                Option<String>,
+            ),
+        >(
             r#"
             SELECT id, pubkey, name, description, categories, stake_sats, status,
                    registered_at, total_attestations, successful_attestations,
@@ -273,11 +407,26 @@ impl Database {
             return Ok(vec![]);
         }
 
-        let rows = sqlx::query_as::<_, (
-            i32, Vec<u8>, String, Option<String>, i32, i64, String,
-            Option<i32>, i32, i32, i32, f32, chrono::DateTime<chrono::Utc>,
-            i32, Option<String>,
-        )>(
+        let rows = sqlx::query_as::<
+            _,
+            (
+                i32,
+                Vec<u8>,
+                String,
+                Option<String>,
+                i32,
+                i64,
+                String,
+                Option<i32>,
+                i32,
+                i32,
+                i32,
+                f32,
+                chrono::DateTime<chrono::Utc>,
+                i32,
+                Option<String>,
+            ),
+        >(
             r#"
             SELECT id, pubkey, name, description, categories, stake_sats, status,
                    registered_at, total_attestations, successful_attestations,
@@ -292,28 +441,31 @@ impl Database {
         .fetch_all(&self.pool)
         .await?;
 
-        Ok(rows.into_iter().map(|r| {
-            let cats = OracleCategories(r.4);
-            Oracle {
-                id: r.0,
-                pubkey: hex::encode(&r.1),
-                key_type: r.13,
-                key_type_name: key_type_name(r.13),
-                name: r.2,
-                description: r.3,
-                categories: r.4,
-                category_names: cats.names().into_iter().map(String::from).collect(),
-                stake_sats: r.5,
-                status: r.6,
-                registered_at: r.7,
-                total_attestations: r.8,
-                successful_attestations: r.9,
-                disputed_attestations: r.10,
-                reputation_score: r.11,
-                created_at: r.12.to_rfc3339(),
-                linked_identity_id: r.14,
-            }
-        }).collect())
+        Ok(rows
+            .into_iter()
+            .map(|r| {
+                let cats = OracleCategories(r.4);
+                Oracle {
+                    id: r.0,
+                    pubkey: hex::encode(&r.1),
+                    key_type: r.13,
+                    key_type_name: key_type_name(r.13),
+                    name: r.2,
+                    description: r.3,
+                    categories: r.4,
+                    category_names: cats.names().into_iter().map(String::from).collect(),
+                    stake_sats: r.5,
+                    status: r.6,
+                    registered_at: r.7,
+                    total_attestations: r.8,
+                    successful_attestations: r.9,
+                    disputed_attestations: r.10,
+                    reputation_score: r.11,
+                    created_at: r.12.to_rfc3339(),
+                    linked_identity_id: r.14,
+                }
+            })
+            .collect())
     }
 
     pub async fn insert_oracle(
@@ -327,7 +479,19 @@ impl Database {
         block_height: Option<i32>,
         creator_address: Option<&str>,
     ) -> Result<i32> {
-        self.insert_oracle_with_key_type(pubkey, name, description, categories, stake_sats, txid, block_height, 0, None, creator_address).await
+        self.insert_oracle_with_key_type(
+            pubkey,
+            name,
+            description,
+            categories,
+            stake_sats,
+            txid,
+            block_height,
+            0,
+            None,
+            creator_address,
+        )
+        .await
     }
 
     /// Insert oracle with key_type and optional linked identity
@@ -378,12 +542,10 @@ impl Database {
 
     /// Get oracle by pubkey (returns oracle_id if found)
     pub async fn get_oracle_id_by_pubkey(&self, pubkey: &[u8]) -> Result<Option<i32>> {
-        let row: Option<(i32,)> = sqlx::query_as(
-            "SELECT id FROM oracles WHERE pubkey = $1"
-        )
-        .bind(pubkey)
-        .fetch_optional(&self.pool)
-        .await?;
+        let row: Option<(i32,)> = sqlx::query_as("SELECT id FROM oracles WHERE pubkey = $1")
+            .bind(pubkey)
+            .fetch_optional(&self.pool)
+            .await?;
         Ok(row.map(|r| r.0))
     }
 
@@ -425,7 +587,7 @@ impl Database {
         let _ = sqlx::query(
             "UPDATE oracles SET total_attestations = total_attestations + 1, 
                                 successful_attestations = successful_attestations + 1 
-             WHERE id = $1"
+             WHERE id = $1",
         )
         .bind(oracle_id)
         .execute(&self.pool)
@@ -480,12 +642,10 @@ impl Database {
 
     /// Get attestation ID by txid
     pub async fn get_attestation_id_by_txid(&self, txid: &[u8]) -> Result<Option<i32>> {
-        let row: Option<(i32,)> = sqlx::query_as(
-            "SELECT id FROM attestations WHERE txid = $1"
-        )
-        .bind(txid)
-        .fetch_optional(&self.pool)
-        .await?;
+        let row: Option<(i32,)> = sqlx::query_as("SELECT id FROM attestations WHERE txid = $1")
+            .bind(txid)
+            .fetch_optional(&self.pool)
+            .await?;
         Ok(row.map(|r| r.0))
     }
 
@@ -519,12 +679,10 @@ impl Database {
         .await?;
 
         // Update attestation status to disputed
-        let _ = sqlx::query(
-            "UPDATE attestations SET status = 'disputed' WHERE id = $1"
-        )
-        .bind(attestation_id)
-        .execute(&self.pool)
-        .await;
+        let _ = sqlx::query("UPDATE attestations SET status = 'disputed' WHERE id = $1")
+            .bind(attestation_id)
+            .execute(&self.pool)
+            .await;
 
         // Increment disputed_attestations counter for the oracle
         let _ = sqlx::query(
@@ -533,7 +691,7 @@ impl Database {
                 disputed_attestations = disputed_attestations + 1,
                 successful_attestations = GREATEST(0, successful_attestations - 1)
             WHERE id = (SELECT oracle_id FROM attestations WHERE id = $1)
-            "#
+            "#,
         )
         .bind(attestation_id)
         .execute(&self.pool)
@@ -545,10 +703,25 @@ impl Database {
     // Attestation operations
 
     pub async fn get_attestations(&self, limit: i64, offset: i64) -> Result<Vec<Attestation>> {
-        let rows = sqlx::query_as::<_, (
-            i32, i32, Vec<u8>, i32, Option<i32>, i32, Vec<u8>,
-            Option<String>, Vec<u8>, Vec<u8>, String, chrono::DateTime<chrono::Utc>, Option<String>, Option<Vec<u8>>,
-        )>(
+        let rows = sqlx::query_as::<
+            _,
+            (
+                i32,
+                i32,
+                Vec<u8>,
+                i32,
+                Option<i32>,
+                i32,
+                Vec<u8>,
+                Option<String>,
+                Vec<u8>,
+                Vec<u8>,
+                String,
+                chrono::DateTime<chrono::Utc>,
+                Option<String>,
+                Option<Vec<u8>>,
+            ),
+        >(
             r#"
             SELECT a.id, a.oracle_id, a.txid, a.vout, a.block_height, a.category,
                    a.event_id, a.event_description, a.outcome_data, a.schnorr_signature,
@@ -564,31 +737,52 @@ impl Database {
         .fetch_all(&self.pool)
         .await?;
 
-        Ok(rows.into_iter().map(|r| Attestation {
-            id: r.0,
-            oracle_id: r.1,
-            oracle_pubkey: r.13.map(|p| hex::encode(&p)),
-            oracle_name: r.12,
-            txid: hex::encode(&r.2),
-            vout: r.3,
-            block_height: r.4,
-            category: r.5,
-            category_name: category_name(r.5),
-            event_id: hex::encode(&r.6),
-            event_description: r.7,
-            outcome_data: hex::encode(&r.8),
-            schnorr_signature: hex::encode(&r.9),
-            status: r.10,
-            created_at: r.11.to_rfc3339(),
-        }).collect())
+        Ok(rows
+            .into_iter()
+            .map(|r| Attestation {
+                id: r.0,
+                oracle_id: r.1,
+                oracle_pubkey: r.13.map(|p| hex::encode(&p)),
+                oracle_name: r.12,
+                txid: hex::encode(&r.2),
+                vout: r.3,
+                block_height: r.4,
+                category: r.5,
+                category_name: category_name(r.5),
+                event_id: hex::encode(&r.6),
+                event_description: r.7,
+                outcome_data: hex::encode(&r.8),
+                schnorr_signature: hex::encode(&r.9),
+                status: r.10,
+                created_at: r.11.to_rfc3339(),
+            })
+            .collect())
     }
 
-    pub async fn get_attestations_by_oracle(&self, oracle_id: i32, limit: i64) -> Result<Vec<Attestation>> {
-        let rows = sqlx::query_as::<_, (
-            i32, i32, Vec<u8>, i32, Option<i32>, i32, Vec<u8>,
-            Option<String>, Vec<u8>, Vec<u8>, String, chrono::DateTime<chrono::Utc>,
-            Option<String>, Option<Vec<u8>>,
-        )>(
+    pub async fn get_attestations_by_oracle(
+        &self,
+        oracle_id: i32,
+        limit: i64,
+    ) -> Result<Vec<Attestation>> {
+        let rows = sqlx::query_as::<
+            _,
+            (
+                i32,
+                i32,
+                Vec<u8>,
+                i32,
+                Option<i32>,
+                i32,
+                Vec<u8>,
+                Option<String>,
+                Vec<u8>,
+                Vec<u8>,
+                String,
+                chrono::DateTime<chrono::Utc>,
+                Option<String>,
+                Option<Vec<u8>>,
+            ),
+        >(
             r#"
             SELECT a.id, a.oracle_id, a.txid, a.vout, a.block_height, a.category,
                    a.event_id, a.event_description, a.outcome_data, a.schnorr_signature,
@@ -605,33 +799,48 @@ impl Database {
         .fetch_all(&self.pool)
         .await?;
 
-        Ok(rows.into_iter().map(|r| Attestation {
-            id: r.0,
-            oracle_id: r.1,
-            oracle_pubkey: r.13.map(|p| hex::encode(&p)),
-            oracle_name: r.12,
-            txid: hex::encode(&r.2),
-            vout: r.3,
-            block_height: r.4,
-            category: r.5,
-            category_name: category_name(r.5),
-            event_id: hex::encode(&r.6),
-            event_description: r.7,
-            outcome_data: hex::encode(&r.8),
-            schnorr_signature: hex::encode(&r.9),
-            status: r.10,
-            created_at: r.11.to_rfc3339(),
-        }).collect())
+        Ok(rows
+            .into_iter()
+            .map(|r| Attestation {
+                id: r.0,
+                oracle_id: r.1,
+                oracle_pubkey: r.13.map(|p| hex::encode(&p)),
+                oracle_name: r.12,
+                txid: hex::encode(&r.2),
+                vout: r.3,
+                block_height: r.4,
+                category: r.5,
+                category_name: category_name(r.5),
+                event_id: hex::encode(&r.6),
+                event_description: r.7,
+                outcome_data: hex::encode(&r.8),
+                schnorr_signature: hex::encode(&r.9),
+                status: r.10,
+                created_at: r.11.to_rfc3339(),
+            })
+            .collect())
     }
 
     // Dispute operations
 
     pub async fn get_disputes(&self, status: Option<&str>, limit: i64) -> Result<Vec<Dispute>> {
         let rows = if let Some(s) = status {
-            sqlx::query_as::<_, (
-                i32, i32, Vec<u8>, Vec<u8>, i32, Option<i32>, i32, i64,
-                String, Option<String>, chrono::DateTime<chrono::Utc>,
-            )>(
+            sqlx::query_as::<
+                _,
+                (
+                    i32,
+                    i32,
+                    Vec<u8>,
+                    Vec<u8>,
+                    i32,
+                    Option<i32>,
+                    i32,
+                    i64,
+                    String,
+                    Option<String>,
+                    chrono::DateTime<chrono::Utc>,
+                ),
+            >(
                 r#"
                 SELECT id, attestation_id, disputer_pubkey, txid, vout, block_height,
                        reason, stake_sats, status, resolution, created_at
@@ -646,10 +855,22 @@ impl Database {
             .fetch_all(&self.pool)
             .await?
         } else {
-            sqlx::query_as::<_, (
-                i32, i32, Vec<u8>, Vec<u8>, i32, Option<i32>, i32, i64,
-                String, Option<String>, chrono::DateTime<chrono::Utc>,
-            )>(
+            sqlx::query_as::<
+                _,
+                (
+                    i32,
+                    i32,
+                    Vec<u8>,
+                    Vec<u8>,
+                    i32,
+                    Option<i32>,
+                    i32,
+                    i64,
+                    String,
+                    Option<String>,
+                    chrono::DateTime<chrono::Utc>,
+                ),
+            >(
                 r#"
                 SELECT id, attestation_id, disputer_pubkey, txid, vout, block_height,
                        reason, stake_sats, status, resolution, created_at
@@ -663,30 +884,47 @@ impl Database {
             .await?
         };
 
-        Ok(rows.into_iter().map(|r| Dispute {
-            id: r.0,
-            attestation_id: r.1,
-            disputer_pubkey: hex::encode(&r.2),
-            txid: hex::encode(&r.3),
-            vout: r.4,
-            block_height: r.5,
-            reason: r.6,
-            reason_name: dispute_reason_name(r.6),
-            stake_sats: r.7,
-            status: r.8,
-            resolution: r.9,
-            created_at: r.10.to_rfc3339(),
-        }).collect())
+        Ok(rows
+            .into_iter()
+            .map(|r| Dispute {
+                id: r.0,
+                attestation_id: r.1,
+                disputer_pubkey: hex::encode(&r.2),
+                txid: hex::encode(&r.3),
+                vout: r.4,
+                block_height: r.5,
+                reason: r.6,
+                reason_name: dispute_reason_name(r.6),
+                stake_sats: r.7,
+                status: r.8,
+                resolution: r.9,
+                created_at: r.10.to_rfc3339(),
+            })
+            .collect())
     }
 
     // Event request operations
 
-    pub async fn get_event_requests(&self, status: Option<&str>, limit: i64) -> Result<Vec<EventRequest>> {
+    pub async fn get_event_requests(
+        &self,
+        status: Option<&str>,
+        limit: i64,
+    ) -> Result<Vec<EventRequest>> {
         let rows = if let Some(s) = status {
-            sqlx::query_as::<_, (
-                i32, Vec<u8>, i32, String, Option<i32>, i64, String,
-                Option<i32>, chrono::DateTime<chrono::Utc>,
-            )>(
+            sqlx::query_as::<
+                _,
+                (
+                    i32,
+                    Vec<u8>,
+                    i32,
+                    String,
+                    Option<i32>,
+                    i64,
+                    String,
+                    Option<i32>,
+                    chrono::DateTime<chrono::Utc>,
+                ),
+            >(
                 r#"
                 SELECT id, event_id, category, description, resolution_block,
                        bounty_sats, status, fulfilled_by, created_at
@@ -701,10 +939,20 @@ impl Database {
             .fetch_all(&self.pool)
             .await?
         } else {
-            sqlx::query_as::<_, (
-                i32, Vec<u8>, i32, String, Option<i32>, i64, String,
-                Option<i32>, chrono::DateTime<chrono::Utc>,
-            )>(
+            sqlx::query_as::<
+                _,
+                (
+                    i32,
+                    Vec<u8>,
+                    i32,
+                    String,
+                    Option<i32>,
+                    i64,
+                    String,
+                    Option<i32>,
+                    chrono::DateTime<chrono::Utc>,
+                ),
+            >(
                 r#"
                 SELECT id, event_id, category, description, resolution_block,
                        bounty_sats, status, fulfilled_by, created_at
@@ -718,25 +966,38 @@ impl Database {
             .await?
         };
 
-        Ok(rows.into_iter().map(|r| EventRequest {
-            id: r.0,
-            event_id: hex::encode(&r.1),
-            category: r.2,
-            category_name: category_name(r.2),
-            description: r.3,
-            resolution_block: r.4,
-            bounty_sats: r.5,
-            status: r.6,
-            fulfilled_by: r.7,
-            created_at: r.8.to_rfc3339(),
-        }).collect())
+        Ok(rows
+            .into_iter()
+            .map(|r| EventRequest {
+                id: r.0,
+                event_id: hex::encode(&r.1),
+                category: r.2,
+                category_name: category_name(r.2),
+                description: r.3,
+                resolution_block: r.4,
+                bounty_sats: r.5,
+                status: r.6,
+                fulfilled_by: r.7,
+                created_at: r.8.to_rfc3339(),
+            })
+            .collect())
     }
 
     pub async fn get_event_by_id(&self, id: i32) -> Result<Option<EventRequest>> {
-        let row = sqlx::query_as::<_, (
-            i32, Vec<u8>, i32, String, Option<i32>, i64, String,
-            Option<i32>, chrono::DateTime<chrono::Utc>,
-        )>(
+        let row = sqlx::query_as::<
+            _,
+            (
+                i32,
+                Vec<u8>,
+                i32,
+                String,
+                Option<i32>,
+                i64,
+                String,
+                Option<i32>,
+                chrono::DateTime<chrono::Utc>,
+            ),
+        >(
             r#"
             SELECT id, event_id, category, description, resolution_block,
                    bounty_sats, status, fulfilled_by, created_at
@@ -764,23 +1025,36 @@ impl Database {
 
     pub async fn get_attestations_by_event(&self, event_id: i32) -> Result<Vec<Attestation>> {
         // First get the event_id bytes
-        let event = sqlx::query_as::<_, (Vec<u8>,)>(
-            "SELECT event_id FROM event_requests WHERE id = $1"
-        )
-        .bind(event_id)
-        .fetch_optional(&self.pool)
-        .await?;
+        let event =
+            sqlx::query_as::<_, (Vec<u8>,)>("SELECT event_id FROM event_requests WHERE id = $1")
+                .bind(event_id)
+                .fetch_optional(&self.pool)
+                .await?;
 
         let event_id_bytes = match event {
             Some((bytes,)) => bytes,
             None => return Ok(vec![]),
         };
 
-        let rows = sqlx::query_as::<_, (
-            i32, i32, Vec<u8>, i32, Option<i32>, i32,
-            Vec<u8>, Option<String>, Vec<u8>, Vec<u8>, String,
-            chrono::DateTime<chrono::Utc>, Option<String>, Option<Vec<u8>>,
-        )>(
+        let rows = sqlx::query_as::<
+            _,
+            (
+                i32,
+                i32,
+                Vec<u8>,
+                i32,
+                Option<i32>,
+                i32,
+                Vec<u8>,
+                Option<String>,
+                Vec<u8>,
+                Vec<u8>,
+                String,
+                chrono::DateTime<chrono::Utc>,
+                Option<String>,
+                Option<Vec<u8>>,
+            ),
+        >(
             r#"
             SELECT a.id, a.oracle_id, a.txid, a.vout, a.block_height, a.category,
                    a.event_id, a.event_description, a.outcome_data, a.schnorr_signature,
@@ -795,23 +1069,26 @@ impl Database {
         .fetch_all(&self.pool)
         .await?;
 
-        Ok(rows.into_iter().map(|r| Attestation {
-            id: r.0,
-            oracle_id: r.1,
-            oracle_pubkey: r.13.map(|p| hex::encode(&p)),
-            oracle_name: r.12,
-            txid: hex::encode(&r.2),
-            vout: r.3,
-            block_height: r.4,
-            category: r.5,
-            category_name: category_name(r.5),
-            event_id: hex::encode(&r.6),
-            event_description: r.7,
-            outcome_data: hex::encode(&r.8),
-            schnorr_signature: hex::encode(&r.9),
-            status: r.10,
-            created_at: r.11.to_rfc3339(),
-        }).collect())
+        Ok(rows
+            .into_iter()
+            .map(|r| Attestation {
+                id: r.0,
+                oracle_id: r.1,
+                oracle_pubkey: r.13.map(|p| hex::encode(&p)),
+                oracle_name: r.12,
+                txid: hex::encode(&r.2),
+                vout: r.3,
+                block_height: r.4,
+                category: r.5,
+                category_name: category_name(r.5),
+                event_id: hex::encode(&r.6),
+                event_description: r.7,
+                outcome_data: hex::encode(&r.8),
+                schnorr_signature: hex::encode(&r.9),
+                status: r.10,
+                created_at: r.11.to_rfc3339(),
+            })
+            .collect())
     }
 
     // Stats
@@ -831,17 +1108,15 @@ impl Database {
         .fetch_one(&self.pool)
         .await?;
 
-        let pending_events: (i64,) = sqlx::query_as(
-            "SELECT COUNT(*) FROM event_requests WHERE status = 'pending'"
-        )
-        .fetch_one(&self.pool)
-        .await?;
+        let pending_events: (i64,) =
+            sqlx::query_as("SELECT COUNT(*) FROM event_requests WHERE status = 'pending'")
+                .fetch_one(&self.pool)
+                .await?;
 
-        let active_disputes: (i64,) = sqlx::query_as(
-            "SELECT COUNT(*) FROM disputes WHERE status = 'pending'"
-        )
-        .fetch_one(&self.pool)
-        .await?;
+        let active_disputes: (i64,) =
+            sqlx::query_as("SELECT COUNT(*) FROM disputes WHERE status = 'pending'")
+                .fetch_one(&self.pool)
+                .await?;
 
         Ok(OracleStats {
             total_oracles: oracle_stats.0,
@@ -868,18 +1143,17 @@ impl Database {
         let mut result = Vec::new();
         for (id, name, desc) in categories {
             let oracle_count: (i64,) = sqlx::query_as(
-                "SELECT COUNT(*) FROM oracles WHERE categories & $1 != 0 AND status = 'active'"
+                "SELECT COUNT(*) FROM oracles WHERE categories & $1 != 0 AND status = 'active'",
             )
             .bind(id)
             .fetch_one(&self.pool)
             .await?;
 
-            let attestation_count: (i64,) = sqlx::query_as(
-                "SELECT COUNT(*) FROM attestations WHERE category = $1"
-            )
-            .bind(id)
-            .fetch_one(&self.pool)
-            .await?;
+            let attestation_count: (i64,) =
+                sqlx::query_as("SELECT COUNT(*) FROM attestations WHERE category = $1")
+                    .bind(id)
+                    .fetch_one(&self.pool)
+                    .await?;
 
             result.push(CategoryInfo {
                 id,
@@ -896,11 +1170,10 @@ impl Database {
     // Indexer state
 
     pub async fn get_last_block_height(&self) -> Result<i32> {
-        let row: (i32,) = sqlx::query_as(
-            "SELECT last_block_height FROM indexer_state WHERE id = 1"
-        )
-        .fetch_one(&self.pool)
-        .await?;
+        let row: (i32,) =
+            sqlx::query_as("SELECT last_block_height FROM indexer_state WHERE id = 1")
+                .fetch_one(&self.pool)
+                .await?;
         Ok(row.0)
     }
 
@@ -915,4 +1188,3 @@ impl Database {
         Ok(())
     }
 }
-

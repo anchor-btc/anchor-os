@@ -33,7 +33,7 @@ impl IdentityType {
             IdentityType::Pubky => "pubky",
         }
     }
-    
+
     /// Convert to string for database storage
     pub fn as_str(&self) -> &'static str {
         match self {
@@ -87,7 +87,11 @@ pub struct DomainIdentitiesResponse {
 
 /// Build the DNS record name according to Selfie Records spec
 /// Format: [subdomain.]user._[type].domain.tld
-fn build_record_name(domain: &str, identity_type: &IdentityType, subdomain: Option<&str>) -> String {
+fn build_record_name(
+    domain: &str,
+    identity_type: &IdentityType,
+    subdomain: Option<&str>,
+) -> String {
     let prefix = identity_type.dns_prefix();
     match subdomain {
         Some(sub) => format!("{}.user._{}.{}", sub, prefix, domain),
@@ -104,7 +108,14 @@ fn format_public_key(identity_type: &IdentityType, public_key: &str) -> String {
                 public_key.to_string()
             } else {
                 // Assume hex, format as npub (simplified)
-                format!("npub1{}", &public_key[..if public_key.len() > 59 { 59 } else { public_key.len() }])
+                format!(
+                    "npub1{}",
+                    &public_key[..if public_key.len() > 59 {
+                        59
+                    } else {
+                        public_key.len()
+                    }]
+                )
             }
         }
         IdentityType::Pubky => {
@@ -137,12 +148,18 @@ pub async fn list_domain_identities(
     Path(domain): Path<String>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     // Verify domain exists and get its ID
-    let domain_data = state.db.get_domain(&domain).await
+    let domain_data = state
+        .db
+        .get_domain(&domain)
+        .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
         .ok_or_else(|| (StatusCode::NOT_FOUND, "Domain not found".to_string()))?;
 
     // Query identities from database
-    let identity_rows = state.db.get_domain_identities(domain_data.id).await
+    let identity_rows = state
+        .db
+        .get_domain_identities(domain_data.id)
+        .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     // Convert to response format
@@ -157,10 +174,7 @@ pub async fn list_domain_identities(
         })
         .collect();
 
-    Ok(Json(DomainIdentitiesResponse {
-        domain,
-        identities,
-    }))
+    Ok(Json(DomainIdentitiesResponse { domain, identities }))
 }
 
 /// Publish an identity to a domain's DNS
@@ -189,7 +203,10 @@ pub async fn publish_domain_identity(
     Json(req): Json<PublishIdentityRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     // Verify domain exists and get its ID
-    let domain_data = state.db.get_domain(&domain).await
+    let domain_data = state
+        .db
+        .get_domain(&domain)
+        .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
         .ok_or_else(|| (StatusCode::NOT_FOUND, "Domain not found".to_string()))?;
 
@@ -198,15 +215,18 @@ pub async fn publish_domain_identity(
     let record_value = format_public_key(&req.identity_type, &req.public_key);
 
     // Store in database (also creates TXT record)
-    state.db.insert_domain_identity(
-        domain_data.id,
-        req.identity_type.as_str(),
-        &req.public_key,
-        req.subdomain.as_deref(),
-        &record_name,
-        &record_value,
-    ).await
-    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    state
+        .db
+        .insert_domain_identity(
+            domain_data.id,
+            req.identity_type.as_str(),
+            &req.public_key,
+            req.subdomain.as_deref(),
+            &record_name,
+            &record_value,
+        )
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     Ok(Json(PublishIdentityResponse {
         success: true,
@@ -242,7 +262,10 @@ pub async fn remove_domain_identity(
     Path((domain, identity_type)): Path<(String, String)>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     // Verify domain exists and get its ID
-    let domain_data = state.db.get_domain(&domain).await
+    let domain_data = state
+        .db
+        .get_domain(&domain)
+        .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
         .ok_or_else(|| (StatusCode::NOT_FOUND, "Domain not found".to_string()))?;
 
@@ -253,7 +276,10 @@ pub async fn remove_domain_identity(
     };
 
     // Delete from database
-    let deleted = state.db.delete_domain_identity(domain_data.id, identity_type_str, None).await
+    let deleted = state
+        .db
+        .delete_domain_identity(domain_data.id, identity_type_str, None)
+        .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     if deleted {
@@ -292,7 +318,10 @@ pub async fn resolve_identity(
     // Parse address format: [subdomain.]user@domain.com
     let parts: Vec<&str> = params.address.split('@').collect();
     if parts.len() != 2 {
-        return Err((StatusCode::BAD_REQUEST, "Invalid address format. Use user@domain.com".to_string()));
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "Invalid address format. Use user@domain.com".to_string(),
+        ));
     }
 
     let user_part = parts[0];

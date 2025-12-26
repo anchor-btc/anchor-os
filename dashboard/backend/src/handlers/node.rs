@@ -2,12 +2,7 @@
 //!
 //! Endpoints for managing Bitcoin Core versions
 
-use axum::{
-    extract::State,
-    http::StatusCode,
-    response::IntoResponse,
-    Json,
-};
+use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 use bollard::container::ListContainersOptions;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -63,26 +58,38 @@ pub struct SwitchVersionResponse {
 
 fn get_version_info(version: &str) -> VersionInfo {
     let (release_date, features) = match version {
-        "30.0" => ("May 2024", vec![
-            "Default v2 transport (BIP324)".to_string(),
-            "Improved wallet performance".to_string(),
-            "New RPC commands".to_string(),
-        ]),
-        "29.0" => ("Dec 2024", vec![
-            "Ephemeral dust support".to_string(),
-            "Fee estimation improvements".to_string(),
-            "P2P protocol updates".to_string(),
-        ]),
-        "28.0" => ("Oct 2024", vec![
-            "Testnet4 support".to_string(),
-            "JSON-RPC 2.0 support".to_string(),
-            "assumeUTXO improvements".to_string(),
-        ]),
-        "27.0" => ("Apr 2024", vec![
-            "v2 transport enabled".to_string(),
-            "Wallet migration improvements".to_string(),
-            "Mempool policy updates".to_string(),
-        ]),
+        "30.0" => (
+            "May 2024",
+            vec![
+                "Default v2 transport (BIP324)".to_string(),
+                "Improved wallet performance".to_string(),
+                "New RPC commands".to_string(),
+            ],
+        ),
+        "29.0" => (
+            "Dec 2024",
+            vec![
+                "Ephemeral dust support".to_string(),
+                "Fee estimation improvements".to_string(),
+                "P2P protocol updates".to_string(),
+            ],
+        ),
+        "28.0" => (
+            "Oct 2024",
+            vec![
+                "Testnet4 support".to_string(),
+                "JSON-RPC 2.0 support".to_string(),
+                "assumeUTXO improvements".to_string(),
+            ],
+        ),
+        "27.0" => (
+            "Apr 2024",
+            vec![
+                "v2 transport enabled".to_string(),
+                "Wallet migration improvements".to_string(),
+                "Mempool policy updates".to_string(),
+            ],
+        ),
         _ => ("Unknown", vec![]),
     };
 
@@ -119,10 +126,13 @@ pub async fn get_node_config(
 
     let (is_running, current_version) = match state.docker.list_containers(options).await {
         Ok(containers) => {
-            let running = containers.iter().any(|c| c.state.as_deref() == Some("running"));
-            
+            let running = containers
+                .iter()
+                .any(|c| c.state.as_deref() == Some("running"));
+
             // Try to get version from image tag
-            let version = containers.first()
+            let version = containers
+                .first()
                 .and_then(|c| c.image.as_ref())
                 .map(|img| {
                     // Extract version from image name if available
@@ -133,7 +143,7 @@ pub async fn get_node_config(
                         DEFAULT_VERSION.to_string()
                     }
                 });
-            
+
             (running, version)
         }
         Err(e) => {
@@ -171,13 +181,19 @@ pub async fn switch_node(
     State(_state): State<Arc<AppState>>,
     Json(req): Json<SwitchVersionRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
-    info!("Switching to Bitcoin Core version: {}, network: {}", req.version, req.network);
+    info!(
+        "Switching to Bitcoin Core version: {}, network: {}",
+        req.version, req.network
+    );
 
     // Validate version
     if !BITCOIN_VERSIONS.contains(&req.version.as_str()) {
         return Err((
             StatusCode::BAD_REQUEST,
-            format!("Invalid version: {}. Available: {:?}", req.version, BITCOIN_VERSIONS),
+            format!(
+                "Invalid version: {}. Available: {:?}",
+                req.version, BITCOIN_VERSIONS
+            ),
         ));
     }
 
@@ -315,15 +331,13 @@ pub async fn get_node_settings(
     // Try to read settings from database
     let settings = if let Some(pool) = &state.db_pool {
         let result = sqlx::query_scalar::<_, serde_json::Value>(
-            "SELECT value FROM system_settings WHERE key = 'node_settings'"
+            "SELECT value FROM system_settings WHERE key = 'node_settings'",
         )
         .fetch_optional(pool)
         .await;
 
         match result {
-            Ok(Some(json_value)) => {
-                serde_json::from_value(json_value).unwrap_or_default()
-            }
+            Ok(Some(json_value)) => serde_json::from_value(json_value).unwrap_or_default(),
             _ => NodeSettings::default(),
         }
     } else {
@@ -406,15 +420,15 @@ fn generate_bitcoin_conf(settings: &NodeSettings) -> String {
     lines.push(format!("minrelaytxfee={:.8}", settings.minrelaytxfee));
     lines.push(format!("dbcache={}", settings.dbcache));
     lines.push(format!("rpcthreads={}", settings.rpcthreads));
-    
+
     if settings.prune > 0 {
         lines.push(format!("prune={}", settings.prune));
     }
-    
+
     if settings.blockfilterindex {
         lines.push("blockfilterindex=1".to_string());
     }
-    
+
     if settings.coinstatsindex {
         lines.push("coinstatsindex=1".to_string());
     }
@@ -456,15 +470,15 @@ fn generate_bitcoin_conf(settings: &NodeSettings) -> String {
     // Tor settings
     if !settings.proxy.is_empty() || settings.listenonion || !settings.onlynet.is_empty() {
         lines.push("# Tor Settings".to_string());
-        
+
         if !settings.proxy.is_empty() {
             lines.push(format!("proxy={}", settings.proxy));
         }
-        
+
         if settings.listenonion {
             lines.push("listenonion=1".to_string());
         }
-        
+
         if !settings.onlynet.is_empty() {
             lines.push(format!("onlynet={}", settings.onlynet));
         }

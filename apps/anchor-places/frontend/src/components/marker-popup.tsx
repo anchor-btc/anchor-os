@@ -1,16 +1,8 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  X,
-  MessageCircle,
-  Send,
-  Loader2,
-  ExternalLink,
-  Clock,
-  Bitcoin,
-} from "lucide-react";
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { X, MessageCircle, Send, Loader2, ExternalLink, Clock, Bitcoin } from 'lucide-react';
 import {
   fetchMarkerDetail,
   createReply,
@@ -19,8 +11,8 @@ import {
   mineBlocks,
   getExplorerTxUrl,
   type Marker,
-} from "@/lib/api";
-import { CategoryBadge } from "./category-filter";
+} from '@/lib/api';
+import { CategoryBadge } from './category-filter';
 
 interface MarkerPopupProps {
   marker: Marker;
@@ -28,19 +20,19 @@ interface MarkerPopupProps {
 }
 
 export function MarkerPopup({ marker, onClose }: MarkerPopupProps) {
-  const [replyText, setReplyText] = useState("");
+  const [replyText, setReplyText] = useState('');
   const [showReplyForm, setShowReplyForm] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: detail, isLoading } = useQuery({
-    queryKey: ["marker-detail", marker.txid, marker.vout],
+    queryKey: ['marker-detail', marker.txid, marker.vout],
     queryFn: () => fetchMarkerDetail(marker.txid, marker.vout),
   });
 
   const replyMutation = useMutation({
     mutationFn: () => createReply(marker.txid, marker.vout, replyText),
     onSuccess: async () => {
-      setReplyText("");
+      setReplyText('');
       setShowReplyForm(false);
       // Mine a block to confirm the transaction (regtest only)
       try {
@@ -51,7 +43,7 @@ export function MarkerPopup({ marker, onClose }: MarkerPopupProps) {
       // Refetch after a short delay
       setTimeout(() => {
         queryClient.invalidateQueries({
-          queryKey: ["marker-detail", marker.txid, marker.vout],
+          queryKey: ['marker-detail', marker.txid, marker.vout],
         });
       }, 2000);
     },
@@ -114,10 +106,7 @@ export function MarkerPopup({ marker, onClose }: MarkerPopupProps) {
           ) : detail?.replies && detail.replies.length > 0 ? (
             <div className="divide-y divide-map-border">
               {detail.replies.map((reply) => (
-                <div
-                  key={`${reply.txid}-${reply.vout}`}
-                  className="px-4 py-3"
-                >
+                <div key={`${reply.txid}-${reply.vout}`} className="px-4 py-3">
                   <p className="text-sm text-foreground">{reply.message}</p>
                   <div className="flex items-center gap-2 mt-1 text-xs text-secondary-foreground">
                     <span>{formatDate(reply.created_at)}</span>
@@ -127,9 +116,7 @@ export function MarkerPopup({ marker, onClose }: MarkerPopupProps) {
               ))}
             </div>
           ) : (
-            <div className="py-6 text-center text-secondary-foreground text-sm">
-              No replies yet
-            </div>
+            <div className="py-6 text-center text-secondary-foreground text-sm">No replies yet</div>
           )}
         </div>
 
@@ -146,9 +133,7 @@ export function MarkerPopup({ marker, onClose }: MarkerPopupProps) {
                 className="w-full px-3 py-2 bg-map-bg border border-map-border rounded-lg text-foreground placeholder:text-secondary-foreground resize-none focus:border-primary focus:ring-1 focus:ring-primary/20"
               />
               <div className="flex items-center justify-between">
-                <span className="text-xs text-secondary-foreground">
-                  {replyText.length}/255
-                </span>
+                <span className="text-xs text-secondary-foreground">{replyText.length}/255</span>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setShowReplyForm(false)}
@@ -174,7 +159,7 @@ export function MarkerPopup({ marker, onClose }: MarkerPopupProps) {
                 <p className="text-xs text-red-400">
                   {replyMutation.error instanceof Error
                     ? replyMutation.error.message
-                    : "Failed to create reply"}
+                    : 'Failed to create reply'}
                 </p>
               )}
             </div>
@@ -192,4 +177,3 @@ export function MarkerPopup({ marker, onClose }: MarkerPopupProps) {
     </div>
   );
 }
-
