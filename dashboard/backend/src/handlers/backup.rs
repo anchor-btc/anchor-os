@@ -117,11 +117,6 @@ pub struct RestoreResponse {
 }
 
 #[derive(Debug, Serialize)]
-pub struct VolumesResponse {
-    pub volumes: Vec<volumes::DockerVolume>,
-}
-
-#[derive(Debug, Serialize)]
 pub struct SnapshotsResponse {
     pub snapshots: Vec<crate::backup::engine::ResticSnapshot>,
 }

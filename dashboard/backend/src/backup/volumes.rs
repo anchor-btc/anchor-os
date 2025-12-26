@@ -1,17 +1,8 @@
 //! Docker volume backup utilities
 
 use anyhow::Result;
-use serde::{Deserialize, Serialize};
 use tokio::process::Command;
 use tracing::{error, info};
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DockerVolume {
-    pub name: String,
-    pub driver: String,
-    pub mountpoint: String,
-    pub size_bytes: Option<i64>,
-}
 
 /// Get list of Anchor-related volumes to backup
 pub fn get_anchor_volumes() -> Vec<&'static str> {
