@@ -327,7 +327,13 @@ export default function ProfilePage() {
                   )}
                 >
                   {isImageAvatar ? (
-                    <Image src={avatar} alt="Avatar preview" fill className="object-cover" unoptimized />
+                    <Image
+                      src={avatar}
+                      alt="Avatar preview"
+                      fill
+                      className="object-cover"
+                      unoptimized
+                    />
                   ) : (
                     <span className="text-2xl">{avatar || '🧑‍💻'}</span>
                   )}
