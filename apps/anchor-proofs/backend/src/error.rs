@@ -60,7 +60,6 @@ impl AppError {
     pub fn internal(msg: impl Into<String>) -> Self {
         Self::Internal(msg.into())
     }
-
 }
 
 impl IntoResponse for AppError {
