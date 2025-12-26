@@ -284,6 +284,7 @@ impl Database {
     }
 
     /// Get protocol statistics
+    #[allow(clippy::type_complexity)]
     pub async fn get_stats(&self) -> Result<ProofStats> {
         let row: (
             i64,
