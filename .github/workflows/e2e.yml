@@ -37,6 +37,9 @@ jobs:
 
       - name: Build Docker Images
         run: |
+          # Pull external images first
+          docker compose --profile default pull --ignore-pull-failures || true
+          
           # Build all images with cache
           docker compose --profile default build
           
