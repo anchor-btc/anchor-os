@@ -162,7 +162,10 @@ async fn main() -> anyhow::Result<()> {
     // Start HTTP server
     let addr = SocketAddr::from(([0, 0, 0, 0], config.port));
     info!("Starting HTTP server on {}", addr);
-    info!("Swagger UI available at http://localhost:{}/swagger-ui/", config.port);
+    info!(
+        "Swagger UI available at http://localhost:{}/swagger-ui/",
+        config.port
+    );
 
     let listener = tokio::net::TcpListener::bind(addr).await?;
     axum::serve(listener, app).await?;
