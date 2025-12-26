@@ -28,8 +28,7 @@ RUN mkdir -p apps/anchor-places/backend/src && echo "fn main() {}" > apps/anchor
 RUN mkdir -p apps/anchor-proofs/backend/src && echo "fn main() {}" > apps/anchor-proofs/backend/src/main.rs
 RUN mkdir -p apps/anchor-tokens/backend/src && echo "fn main() {}" > apps/anchor-tokens/backend/src/main.rs
 RUN mkdir -p apps/anchor-oracles/backend/src && echo "fn main() {}" > apps/anchor-oracles/backend/src/main.rs
-RUN mkdir -p anchor/dashboard/backend/src && echo "fn main() {}" > anchor/dashboard/backend/src/main.rs
-RUN mkdir -p anchor/backup/backend/src && echo "fn main() {}" > anchor/backup/backend/src/main.rs
+RUN mkdir -p dashboard/backend/src && echo "fn main() {}" > dashboard/backend/src/main.rs
 COPY internal/anchor-indexer/Cargo.toml ./internal/anchor-indexer/
 COPY internal/anchor-wallet/Cargo.toml ./internal/anchor-wallet/
 COPY internal/anchor-testnet/Cargo.toml ./internal/anchor-testnet/
@@ -41,8 +40,7 @@ COPY apps/anchor-places/backend/Cargo.toml ./apps/anchor-places/backend/
 COPY apps/anchor-proofs/backend/Cargo.toml ./apps/anchor-proofs/backend/
 COPY apps/anchor-tokens/backend/Cargo.toml ./apps/anchor-tokens/backend/
 COPY apps/anchor-oracles/backend/Cargo.toml ./apps/anchor-oracles/backend/
-COPY anchor/dashboard/backend/Cargo.toml ./anchor/dashboard/backend/
-COPY anchor/backup/backend/Cargo.toml ./anchor/backup/backend/
+COPY dashboard/backend/Cargo.toml ./dashboard/backend/
 
 # Build the application
 RUN cargo build --release --package anchor-predictions-backend

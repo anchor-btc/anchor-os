@@ -9,142 +9,164 @@ use bitcoincore_rpc::{Auth, Client, RpcApi};
 use std::sync::Arc;
 use tokio::time::{sleep, Duration};
 
+use crate::amm::{AmmState, INITIAL_LIQUIDITY};
 use crate::config::Config;
 use crate::db::Database;
 
-/// Lottery create message parser
-pub struct LotteryCreateBody {
-    pub lottery_id: [u8; 32],
-    pub lottery_type: u8,
-    pub number_count: u8,
-    pub number_max: u8,
-    pub draw_block: u32,
-    pub ticket_price_sats: i64,
-    pub token_type: u8,
+/// Market creation message parser
+/// Format: [market_id 32] [question_len 2 BE] [question var] [desc_len 2 BE] [desc var] [resolution_block 4 BE] [oracle_pubkey 32] [initial_liquidity 8 BE]
+pub struct MarketCreateBody {
+    pub market_id: [u8; 32],
+    pub question: String,
+    pub description: Option<String>,
+    pub resolution_block: u32,
     pub oracle_pubkey: [u8; 32],
+    pub initial_liquidity: i64,
 }
 
-impl LotteryCreateBody {
+impl MarketCreateBody {
     pub fn parse(body: &[u8]) -> Option<Self> {
-        if body.len() < 79 {
+        if body.len() < 36 {
+            // Minimum: market_id(32) + question_len(2) + at least 1 char + resolution_block is later
             return None;
         }
 
-        let mut lottery_id = [0u8; 32];
-        lottery_id.copy_from_slice(&body[0..32]);
+        let mut market_id = [0u8; 32];
+        market_id.copy_from_slice(&body[0..32]);
 
-        let lottery_type = body[32];
-        let number_count = body[33];
-        let number_max = body[34];
-        
-        let draw_block = u32::from_be_bytes([body[35], body[36], body[37], body[38]]);
-        let ticket_price_sats = i64::from_be_bytes([
-            body[39], body[40], body[41], body[42],
-            body[43], body[44], body[45], body[46],
+        let question_len = u16::from_be_bytes([body[32], body[33]]) as usize;
+        if body.len() < 34 + question_len + 2 {
+            return None;
+        }
+
+        let question = String::from_utf8_lossy(&body[34..34 + question_len]).to_string();
+        let mut offset = 34 + question_len;
+
+        let desc_len = u16::from_be_bytes([body[offset], body[offset + 1]]) as usize;
+        offset += 2;
+
+        let description = if desc_len > 0 && body.len() >= offset + desc_len {
+            let desc = String::from_utf8_lossy(&body[offset..offset + desc_len]).to_string();
+            offset += desc_len;
+            Some(desc)
+        } else {
+            None
+        };
+
+        if body.len() < offset + 4 + 32 {
+            return None;
+        }
+
+        let resolution_block = u32::from_be_bytes([
+            body[offset],
+            body[offset + 1],
+            body[offset + 2],
+            body[offset + 3],
         ]);
-        let token_type = body[47];
-        
+        offset += 4;
+
         let mut oracle_pubkey = [0u8; 32];
-        oracle_pubkey.copy_from_slice(&body[48..80]);
+        oracle_pubkey.copy_from_slice(&body[offset..offset + 32]);
+        offset += 32;
+
+        let initial_liquidity = if body.len() >= offset + 8 {
+            i64::from_be_bytes([
+                body[offset],
+                body[offset + 1],
+                body[offset + 2],
+                body[offset + 3],
+                body[offset + 4],
+                body[offset + 5],
+                body[offset + 6],
+                body[offset + 7],
+            ])
+        } else {
+            INITIAL_LIQUIDITY
+        };
 
         Some(Self {
-            lottery_id,
-            lottery_type,
-            number_count,
-            number_max,
-            draw_block,
-            ticket_price_sats,
-            token_type,
+            market_id,
+            question,
+            description,
+            resolution_block,
             oracle_pubkey,
+            initial_liquidity,
         })
     }
 }
 
-/// Lottery ticket message parser
-pub struct LotteryTicketBody {
-    pub lottery_id: [u8; 32],
-    pub _number_count: u8,
-    pub numbers: Vec<u8>,
-    pub buyer_pubkey: [u8; 33],
-    pub amount_paid: i64,
+/// Place bet message parser
+/// Format: [market_id 32] [outcome 1] [amount_sats 8 BE] [min_shares 8 BE] [user_pubkey 33]
+pub struct PlaceBetBody {
+    pub market_id: [u8; 32],
+    pub outcome: u8,
+    pub amount_sats: i64,
+    pub _min_shares: i64,
+    pub user_pubkey: [u8; 33],
 }
 
-impl LotteryTicketBody {
+impl PlaceBetBody {
     pub fn parse(body: &[u8]) -> Option<Self> {
-        if body.len() < 75 {
+        if body.len() < 32 + 1 + 8 + 8 + 33 {
             return None;
         }
 
-        let mut lottery_id = [0u8; 32];
-        lottery_id.copy_from_slice(&body[0..32]);
+        let mut market_id = [0u8; 32];
+        market_id.copy_from_slice(&body[0..32]);
 
-        let number_count = body[32];
-        if body.len() < 33 + number_count as usize + 33 + 8 {
-            return None;
-        }
+        let outcome = body[32];
 
-        let numbers = body[33..33 + number_count as usize].to_vec();
-        let offset = 33 + number_count as usize;
-
-        let mut buyer_pubkey = [0u8; 33];
-        buyer_pubkey.copy_from_slice(&body[offset..offset + 33]);
-
-        let amount_paid = i64::from_be_bytes([
-            body[offset + 33], body[offset + 34], body[offset + 35], body[offset + 36],
-            body[offset + 37], body[offset + 38], body[offset + 39], body[offset + 40],
+        let amount_sats = i64::from_be_bytes([
+            body[33], body[34], body[35], body[36], body[37], body[38], body[39], body[40],
         ]);
 
+        let min_shares = i64::from_be_bytes([
+            body[41], body[42], body[43], body[44], body[45], body[46], body[47], body[48],
+        ]);
+
+        let mut user_pubkey = [0u8; 33];
+        user_pubkey.copy_from_slice(&body[49..82]);
+
         Some(Self {
-            lottery_id,
-            _number_count: number_count,
-            numbers,
-            buyer_pubkey,
-            amount_paid,
+            market_id,
+            outcome,
+            amount_sats,
+            _min_shares: min_shares,
+            user_pubkey,
         })
     }
 }
 
-/// Lottery draw message parser (oracle attestation)
-pub struct LotteryDrawBody {
-    pub lottery_id: [u8; 32],
-    pub _draw_block_height: u32,
-    pub _block_hash: [u8; 32],
-    pub _number_count: u8,
-    pub winning_numbers: Vec<u8>,
+/// Market resolve message parser
+/// Format: [market_id 32] [resolution 1] [oracle_pubkey 32] [schnorr_signature 64]
+pub struct MarketResolveBody {
+    pub market_id: [u8; 32],
+    pub resolution: u8,
+    pub _oracle_pubkey: [u8; 32],
     pub _schnorr_signature: [u8; 64],
 }
 
-impl LotteryDrawBody {
+impl MarketResolveBody {
     pub fn parse(body: &[u8]) -> Option<Self> {
-        if body.len() < 133 {
+        if body.len() < 32 + 1 + 32 + 64 {
             return None;
         }
 
-        let mut lottery_id = [0u8; 32];
-        lottery_id.copy_from_slice(&body[0..32]);
+        let mut market_id = [0u8; 32];
+        market_id.copy_from_slice(&body[0..32]);
 
-        let draw_block_height = u32::from_be_bytes([body[32], body[33], body[34], body[35]]);
+        let resolution = body[32];
 
-        let mut block_hash = [0u8; 32];
-        block_hash.copy_from_slice(&body[36..68]);
-
-        let number_count = body[68];
-        if body.len() < 69 + number_count as usize + 64 {
-            return None;
-        }
-
-        let winning_numbers = body[69..69 + number_count as usize].to_vec();
-        let offset = 69 + number_count as usize;
+        let mut oracle_pubkey = [0u8; 32];
+        oracle_pubkey.copy_from_slice(&body[33..65]);
 
         let mut schnorr_signature = [0u8; 64];
-        schnorr_signature.copy_from_slice(&body[offset..offset + 64]);
+        schnorr_signature.copy_from_slice(&body[65..129]);
 
         Some(Self {
-            lottery_id,
-            _draw_block_height: draw_block_height,
-            _block_hash: block_hash,
-            _number_count: number_count,
-            winning_numbers,
+            market_id,
+            resolution,
+            _oracle_pubkey: oracle_pubkey,
             _schnorr_signature: schnorr_signature,
         })
     }
@@ -166,7 +188,7 @@ impl Indexer {
     }
 
     pub async fn run(&self) -> Result<()> {
-        tracing::info!("Starting Lottery indexer");
+        tracing::info!("Starting Prediction Markets indexer");
 
         loop {
             if let Err(e) = self.sync_blocks().await {
@@ -212,63 +234,105 @@ impl Indexer {
         for (vout, output) in tx.output.iter().enumerate() {
             if let Some(msg) = parse_output_script(&output.script_pubkey) {
                 match msg.kind {
-                    AnchorKind::LotteryCreate => {
-                        if let Some(create) = LotteryCreateBody::parse(&msg.body) {
+                    AnchorKind::MarketCreate => {
+                        if let Some(create) = MarketCreateBody::parse(&msg.body) {
                             // Get creator from transaction inputs (simplified)
                             let creator = [0u8; 33]; // Would extract from input
 
-                            let _ = self.db.insert_lottery(
-                                &create.lottery_id,
-                                create.lottery_type as i32,
-                                create.number_count as i32,
-                                create.number_max as i32,
-                                create.draw_block as i32,
-                                create.ticket_price_sats,
-                                create.token_type as i32,
-                                &create.oracle_pubkey,
-                                &creator,
-                                &txid_bytes,
-                                Some(height),
-                            ).await;
-                            
+                            let _ = self
+                                .db
+                                .insert_market(
+                                    &create.market_id,
+                                    &create.question,
+                                    create.description.as_deref(),
+                                    create.resolution_block as i32,
+                                    &create.oracle_pubkey,
+                                    &creator,
+                                    &txid_bytes,
+                                    height,
+                                    create.initial_liquidity,
+                                )
+                                .await;
+
                             tracing::info!(
-                                "Indexed lottery creation: {} at block {}",
-                                hex::encode(&create.lottery_id[..8]),
-                                height
+                                "Indexed market: {} - \"{}\"",
+                                hex::encode(&create.market_id[..8]),
+                                create.question.chars().take(50).collect::<String>()
                             );
                         }
                     }
-                    AnchorKind::LotteryTicket => {
-                        if let Some(ticket) = LotteryTicketBody::parse(&msg.body) {
-                            let _ = self.db.insert_ticket(
-                                &ticket.lottery_id,
-                                &txid_bytes,
-                                vout as i32,
-                                Some(height),
-                                &ticket.buyer_pubkey,
-                                &ticket.numbers,
-                                ticket.amount_paid,
-                            ).await;
-                            
-                            tracing::info!(
-                                "Indexed ticket purchase for lottery {}",
-                                hex::encode(&ticket.lottery_id[..8])
-                            );
+                    AnchorKind::PlaceBet => {
+                        if let Some(bet) = PlaceBetBody::parse(&msg.body) {
+                            // Get current AMM state
+                            if let Ok(Some(amm)) =
+                                self.db.get_market_amm_state(&bet.market_id).await
+                            {
+                                // Calculate shares
+                                let result = amm.quote(bet.outcome as i16, bet.amount_sats);
+
+                                // Insert position
+                                let _ = self
+                                    .db
+                                    .insert_position(
+                                        &bet.market_id,
+                                        &txid_bytes,
+                                        vout as i32,
+                                        height,
+                                        &bet.user_pubkey,
+                                        bet.outcome as i16,
+                                        bet.amount_sats,
+                                        result.shares_out,
+                                        result.avg_price as f32,
+                                    )
+                                    .await;
+
+                                // Update market AMM state
+                                let _ = self
+                                    .db
+                                    .update_market_after_bet(
+                                        &bet.market_id,
+                                        result.new_yes_pool,
+                                        result.new_no_pool,
+                                        bet.amount_sats,
+                                        bet.outcome as i16,
+                                    )
+                                    .await;
+
+                                let outcome_str = if bet.outcome == 1 { "YES" } else { "NO" };
+                                tracing::info!(
+                                    "Indexed bet on {}: {} {} sats -> {} shares",
+                                    hex::encode(&bet.market_id[..8]),
+                                    outcome_str,
+                                    bet.amount_sats,
+                                    result.shares_out
+                                );
+                            }
                         }
                     }
-                    AnchorKind::LotteryDraw => {
-                        if let Some(draw) = LotteryDrawBody::parse(&msg.body) {
-                            // Update lottery with winning numbers
+                    AnchorKind::MarketResolve => {
+                        if let Some(resolve) = MarketResolveBody::parse(&msg.body) {
+                            let _ = self
+                                .db
+                                .resolve_market(
+                                    &resolve.market_id,
+                                    resolve.resolution as i16,
+                                    &txid_bytes,
+                                    height,
+                                )
+                                .await;
+
+                            let resolution_str = match resolve.resolution {
+                                0 => "NO",
+                                1 => "YES",
+                                2 => "INVALID",
+                                _ => "UNKNOWN",
+                            };
                             tracing::info!(
-                                "Indexed lottery draw for {} with {} winning numbers",
-                                hex::encode(&draw.lottery_id[..8]),
-                                draw.winning_numbers.len()
+                                "Indexed market resolution: {} -> {}",
+                                hex::encode(&resolve.market_id[..8]),
+                                resolution_str
                             );
-                            // Would update lottery status and determine winners
                         }
-                    }
-                    AnchorKind::LotteryClaim => {
-                        tracing::debug!("Indexed lottery claim at height {}", height);
                     }
                     _ => {}
                 }
@@ -278,4 +342,3 @@ impl Indexer {
         Ok(())
     }
 }
-

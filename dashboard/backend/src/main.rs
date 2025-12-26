@@ -92,6 +92,7 @@ pub struct AppState {
         handlers::indexer::get_indexer_stats,
         handlers::indexer::get_messages,
         handlers::indexer::get_message_detail,
+        handlers::indexer::get_utxo_protocol_info,
         handlers::indexer::get_timeseries,
         handlers::indexer::get_anchor_stats,
         handlers::indexer::get_orphan_anchors,
@@ -422,6 +423,7 @@ async fn main() -> Result<()> {
         .route("/indexer/stats", get(handlers::indexer::get_indexer_stats))
         .route("/indexer/messages", get(handlers::indexer::get_messages))
         .route("/indexer/messages/:txid/:vout", get(handlers::indexer::get_message_detail))
+        .route("/indexer/utxo-protocol-info", post(handlers::indexer::get_utxo_protocol_info))
         .route("/indexer/stats/timeseries", get(handlers::indexer::get_timeseries))
         .route("/indexer/stats/performance", get(handlers::indexer::get_performance))
         .route("/indexer/anchors/stats", get(handlers::indexer::get_anchor_stats))

@@ -106,7 +106,7 @@ export default function DocsPage() {
             The Anchor Oracles API is available at:
           </p>
           <code className="block p-3 rounded-lg bg-black/50 text-purple-300 font-mono text-sm">
-            http://localhost:3020/swagger-ui
+            http://localhost:3701/swagger-ui
           </code>
         </section>
       </div>

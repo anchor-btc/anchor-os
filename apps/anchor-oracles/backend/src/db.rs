@@ -5,7 +5,7 @@ use sqlx::postgres::PgPool;
 
 use crate::models::{
     Attestation, CategoryInfo, Dispute, EventRequest, Oracle, OracleCategories, OracleStats,
-    category_name, dispute_reason_name,
+    category_name, dispute_reason_name, key_type_name,
 };
 
 #[derive(Clone)]
@@ -140,6 +140,12 @@ impl Database {
         let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_oracle_stakes_oracle ON oracle_stakes(oracle_id)").execute(&self.pool).await;
         let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_oracle_stakes_action ON oracle_stakes(action)").execute(&self.pool).await;
         
+        // Add identity columns (key_type and linked_identity_id) - migration
+        let _ = sqlx::query("ALTER TABLE oracles ADD COLUMN IF NOT EXISTS key_type INTEGER NOT NULL DEFAULT 0").execute(&self.pool).await;
+        let _ = sqlx::query("ALTER TABLE oracles ADD COLUMN IF NOT EXISTS linked_identity_id TEXT").execute(&self.pool).await;
+        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_oracles_key_type ON oracles(key_type)").execute(&self.pool).await;
+        let _ = sqlx::query("CREATE INDEX IF NOT EXISTS idx_oracles_linked_identity ON oracles(linked_identity_id)").execute(&self.pool).await;
+        
         // Create indexer_state table
         sqlx::query(r#"
             CREATE TABLE IF NOT EXISTS indexer_state (
@@ -177,11 +183,13 @@ impl Database {
         let rows = sqlx::query_as::<_, (
             i32, Vec<u8>, String, Option<String>, i32, i64, String,
             Option<i32>, i32, i32, i32, f32, chrono::DateTime<chrono::Utc>,
+            i32, Option<String>,
         )>(
             r#"
             SELECT id, pubkey, name, description, categories, stake_sats, status,
                    registered_at, total_attestations, successful_attestations,
-                   disputed_attestations, reputation_score, created_at
+                   disputed_attestations, reputation_score, created_at,
+                   COALESCE(key_type, 0), linked_identity_id
             FROM oracles
             ORDER BY reputation_score DESC, total_attestations DESC
             LIMIT $1 OFFSET $2
@@ -197,6 +205,8 @@ impl Database {
             Oracle {
                 id: r.0,
                 pubkey: hex::encode(&r.1),
+                key_type: r.13,
+                key_type_name: key_type_name(r.13),
                 name: r.2,
                 description: r.3,
                 categories: r.4,
@@ -209,6 +219,7 @@ impl Database {
                 disputed_attestations: r.10,
                 reputation_score: r.11,
                 created_at: r.12.to_rfc3339(),
+                linked_identity_id: r.14,
             }
         }).collect())
     }
@@ -217,11 +228,13 @@ impl Database {
         let row = sqlx::query_as::<_, (
             i32, Vec<u8>, String, Option<String>, i32, i64, String,
             Option<i32>, i32, i32, i32, f32, chrono::DateTime<chrono::Utc>,
+            i32, Option<String>,
         )>(
             r#"
             SELECT id, pubkey, name, description, categories, stake_sats, status,
                    registered_at, total_attestations, successful_attestations,
-                   disputed_attestations, reputation_score, created_at
+                   disputed_attestations, reputation_score, created_at,
+                   COALESCE(key_type, 0), linked_identity_id
             FROM oracles
             WHERE pubkey = $1
             "#,
@@ -235,6 +248,8 @@ impl Database {
             Oracle {
                 id: r.0,
                 pubkey: hex::encode(&r.1),
+                key_type: r.13,
+                key_type_name: key_type_name(r.13),
                 name: r.2,
                 description: r.3,
                 categories: r.4,
@@ -247,8 +262,58 @@ impl Database {
                 disputed_attestations: r.10,
                 reputation_score: r.11,
                 created_at: r.12.to_rfc3339(),
+                linked_identity_id: r.14,
             }
         }))
+    }
+
+    /// Get oracles by creator addresses
+    pub async fn get_oracles_by_addresses(&self, addresses: &[String]) -> Result<Vec<Oracle>> {
+        if addresses.is_empty() {
+            return Ok(vec![]);
+        }
+
+        let rows = sqlx::query_as::<_, (
+            i32, Vec<u8>, String, Option<String>, i32, i64, String,
+            Option<i32>, i32, i32, i32, f32, chrono::DateTime<chrono::Utc>,
+            i32, Option<String>,
+        )>(
+            r#"
+            SELECT id, pubkey, name, description, categories, stake_sats, status,
+                   registered_at, total_attestations, successful_attestations,
+                   disputed_attestations, reputation_score, created_at,
+                   COALESCE(key_type, 0), linked_identity_id
+            FROM oracles
+            WHERE creator_address = ANY($1)
+            ORDER BY reputation_score DESC, created_at DESC
+            "#,
+        )
+        .bind(addresses)
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(rows.into_iter().map(|r| {
+            let cats = OracleCategories(r.4);
+            Oracle {
+                id: r.0,
+                pubkey: hex::encode(&r.1),
+                key_type: r.13,
+                key_type_name: key_type_name(r.13),
+                name: r.2,
+                description: r.3,
+                categories: r.4,
+                category_names: cats.names().into_iter().map(String::from).collect(),
+                stake_sats: r.5,
+                status: r.6,
+                registered_at: r.7,
+                total_attestations: r.8,
+                successful_attestations: r.9,
+                disputed_attestations: r.10,
+                reputation_score: r.11,
+                created_at: r.12.to_rfc3339(),
+                linked_identity_id: r.14,
+            }
+        }).collect())
     }
 
     pub async fn insert_oracle(
@@ -257,17 +322,40 @@ impl Database {
         name: &str,
         description: Option<&str>,
         categories: i32,
+        stake_sats: i64,
         txid: &[u8],
         block_height: Option<i32>,
+        creator_address: Option<&str>,
+    ) -> Result<i32> {
+        self.insert_oracle_with_key_type(pubkey, name, description, categories, stake_sats, txid, block_height, 0, None, creator_address).await
+    }
+
+    /// Insert oracle with key_type and optional linked identity
+    pub async fn insert_oracle_with_key_type(
+        &self,
+        pubkey: &[u8],
+        name: &str,
+        description: Option<&str>,
+        categories: i32,
+        stake_sats: i64,
+        txid: &[u8],
+        block_height: Option<i32>,
+        key_type: i32,
+        linked_identity_id: Option<&str>,
+        creator_address: Option<&str>,
     ) -> Result<i32> {
         let row: (i32,) = sqlx::query_as(
             r#"
-            INSERT INTO oracles (pubkey, name, description, categories, registered_txid, registered_at)
-            VALUES ($1, $2, $3, $4, $5, $6)
+            INSERT INTO oracles (pubkey, name, description, categories, stake_sats, registered_txid, registered_at, key_type, linked_identity_id, creator_address)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
             ON CONFLICT (pubkey) DO UPDATE SET
                 name = EXCLUDED.name,
                 description = EXCLUDED.description,
                 categories = EXCLUDED.categories,
+                stake_sats = EXCLUDED.stake_sats,
+                key_type = EXCLUDED.key_type,
+                linked_identity_id = COALESCE(EXCLUDED.linked_identity_id, oracles.linked_identity_id),
+                creator_address = COALESCE(EXCLUDED.creator_address, oracles.creator_address),
                 updated_at = NOW()
             RETURNING id
             "#,
@@ -276,8 +364,12 @@ impl Database {
         .bind(name)
         .bind(description)
         .bind(categories)
+        .bind(stake_sats)
         .bind(txid)
         .bind(block_height)
+        .bind(key_type)
+        .bind(linked_identity_id)
+        .bind(creator_address)
         .fetch_one(&self.pool)
         .await?;
 
@@ -370,6 +462,22 @@ impl Database {
         Ok(row.0)
     }
 
+    /// Update event status to fulfilled when attestation is made
+    pub async fn fulfill_event(&self, event_id: &[u8], oracle_id: i32) -> Result<()> {
+        sqlx::query(
+            r#"
+            UPDATE event_requests 
+            SET status = 'fulfilled', fulfilled_by = $1
+            WHERE event_id = $2 AND status = 'pending'
+            "#,
+        )
+        .bind(oracle_id)
+        .bind(event_id)
+        .execute(&self.pool)
+        .await?;
+        Ok(())
+    }
+
     /// Get attestation ID by txid
     pub async fn get_attestation_id_by_txid(&self, txid: &[u8]) -> Result<Option<i32>> {
         let row: Option<(i32,)> = sqlx::query_as(
@@ -418,6 +526,19 @@ impl Database {
         .execute(&self.pool)
         .await;
 
+        // Increment disputed_attestations counter for the oracle
+        let _ = sqlx::query(
+            r#"
+            UPDATE oracles SET 
+                disputed_attestations = disputed_attestations + 1,
+                successful_attestations = GREATEST(0, successful_attestations - 1)
+            WHERE id = (SELECT oracle_id FROM attestations WHERE id = $1)
+            "#
+        )
+        .bind(attestation_id)
+        .execute(&self.pool)
+        .await;
+
         Ok(row.0)
     }
 
@@ -426,12 +547,12 @@ impl Database {
     pub async fn get_attestations(&self, limit: i64, offset: i64) -> Result<Vec<Attestation>> {
         let rows = sqlx::query_as::<_, (
             i32, i32, Vec<u8>, i32, Option<i32>, i32, Vec<u8>,
-            Option<String>, Vec<u8>, Vec<u8>, String, chrono::DateTime<chrono::Utc>, Option<String>,
+            Option<String>, Vec<u8>, Vec<u8>, String, chrono::DateTime<chrono::Utc>, Option<String>, Option<Vec<u8>>,
         )>(
             r#"
             SELECT a.id, a.oracle_id, a.txid, a.vout, a.block_height, a.category,
                    a.event_id, a.event_description, a.outcome_data, a.schnorr_signature,
-                   a.status, a.created_at, o.name as oracle_name
+                   a.status, a.created_at, o.name as oracle_name, o.pubkey as oracle_pubkey
             FROM attestations a
             LEFT JOIN oracles o ON a.oracle_id = o.id
             ORDER BY a.created_at DESC
@@ -446,6 +567,7 @@ impl Database {
         Ok(rows.into_iter().map(|r| Attestation {
             id: r.0,
             oracle_id: r.1,
+            oracle_pubkey: r.13.map(|p| hex::encode(&p)),
             oracle_name: r.12,
             txid: hex::encode(&r.2),
             vout: r.3,
@@ -465,14 +587,16 @@ impl Database {
         let rows = sqlx::query_as::<_, (
             i32, i32, Vec<u8>, i32, Option<i32>, i32, Vec<u8>,
             Option<String>, Vec<u8>, Vec<u8>, String, chrono::DateTime<chrono::Utc>,
+            Option<String>, Option<Vec<u8>>,
         )>(
             r#"
-            SELECT id, oracle_id, txid, vout, block_height, category,
-                   event_id, event_description, outcome_data, schnorr_signature,
-                   status, created_at
-            FROM attestations
-            WHERE oracle_id = $1
-            ORDER BY created_at DESC
+            SELECT a.id, a.oracle_id, a.txid, a.vout, a.block_height, a.category,
+                   a.event_id, a.event_description, a.outcome_data, a.schnorr_signature,
+                   a.status, a.created_at, o.name as oracle_name, o.pubkey as oracle_pubkey
+            FROM attestations a
+            LEFT JOIN oracles o ON a.oracle_id = o.id
+            WHERE a.oracle_id = $1
+            ORDER BY a.created_at DESC
             LIMIT $2
             "#,
         )
@@ -484,7 +608,8 @@ impl Database {
         Ok(rows.into_iter().map(|r| Attestation {
             id: r.0,
             oracle_id: r.1,
-            oracle_name: None,
+            oracle_pubkey: r.13.map(|p| hex::encode(&p)),
+            oracle_name: r.12,
             txid: hex::encode(&r.2),
             vout: r.3,
             block_height: r.4,
@@ -604,6 +729,88 @@ impl Database {
             status: r.6,
             fulfilled_by: r.7,
             created_at: r.8.to_rfc3339(),
+        }).collect())
+    }
+
+    pub async fn get_event_by_id(&self, id: i32) -> Result<Option<EventRequest>> {
+        let row = sqlx::query_as::<_, (
+            i32, Vec<u8>, i32, String, Option<i32>, i64, String,
+            Option<i32>, chrono::DateTime<chrono::Utc>,
+        )>(
+            r#"
+            SELECT id, event_id, category, description, resolution_block,
+                   bounty_sats, status, fulfilled_by, created_at
+            FROM event_requests
+            WHERE id = $1
+            "#,
+        )
+        .bind(id)
+        .fetch_optional(&self.pool)
+        .await?;
+
+        Ok(row.map(|r| EventRequest {
+            id: r.0,
+            event_id: hex::encode(&r.1),
+            category: r.2,
+            category_name: category_name(r.2),
+            description: r.3,
+            resolution_block: r.4,
+            bounty_sats: r.5,
+            status: r.6,
+            fulfilled_by: r.7,
+            created_at: r.8.to_rfc3339(),
+        }))
+    }
+
+    pub async fn get_attestations_by_event(&self, event_id: i32) -> Result<Vec<Attestation>> {
+        // First get the event_id bytes
+        let event = sqlx::query_as::<_, (Vec<u8>,)>(
+            "SELECT event_id FROM event_requests WHERE id = $1"
+        )
+        .bind(event_id)
+        .fetch_optional(&self.pool)
+        .await?;
+
+        let event_id_bytes = match event {
+            Some((bytes,)) => bytes,
+            None => return Ok(vec![]),
+        };
+
+        let rows = sqlx::query_as::<_, (
+            i32, i32, Vec<u8>, i32, Option<i32>, i32,
+            Vec<u8>, Option<String>, Vec<u8>, Vec<u8>, String,
+            chrono::DateTime<chrono::Utc>, Option<String>, Option<Vec<u8>>,
+        )>(
+            r#"
+            SELECT a.id, a.oracle_id, a.txid, a.vout, a.block_height, a.category,
+                   a.event_id, a.event_description, a.outcome_data, a.schnorr_signature,
+                   a.status, a.created_at, o.name as oracle_name, o.pubkey as oracle_pubkey
+            FROM attestations a
+            LEFT JOIN oracles o ON a.oracle_id = o.id
+            WHERE a.event_id = $1
+            ORDER BY a.created_at DESC
+            "#,
+        )
+        .bind(&event_id_bytes)
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(rows.into_iter().map(|r| Attestation {
+            id: r.0,
+            oracle_id: r.1,
+            oracle_pubkey: r.13.map(|p| hex::encode(&p)),
+            oracle_name: r.12,
+            txid: hex::encode(&r.2),
+            vout: r.3,
+            block_height: r.4,
+            category: r.5,
+            category_name: category_name(r.5),
+            event_id: hex::encode(&r.6),
+            event_description: r.7,
+            outcome_data: hex::encode(&r.8),
+            schnorr_signature: hex::encode(&r.9),
+            status: r.10,
+            created_at: r.11.to_rfc3339(),
         }).collect())
     }
 

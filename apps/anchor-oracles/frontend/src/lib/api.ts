@@ -1,4 +1,5 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3020";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3701";
+const DASHBOARD_API = process.env.NEXT_PUBLIC_DASHBOARD_API_URL || "http://localhost:3100";
 
 export interface Oracle {
   id: number;
@@ -20,6 +21,7 @@ export interface Oracle {
 export interface Attestation {
   id: number;
   oracle_id: number;
+  oracle_pubkey: string | null;
   oracle_name: string | null;
   txid: string;
   vout: number;
@@ -114,6 +116,14 @@ export async function fetchEvents(status?: string, limit = 50): Promise<EventReq
   return fetchApi(`/api/events?${params}`);
 }
 
+export async function fetchEvent(id: number): Promise<EventRequest> {
+  return fetchApi(`/api/events/${id}`);
+}
+
+export async function fetchEventAttestations(id: number): Promise<Attestation[]> {
+  return fetchApi(`/api/events/${id}/attestations`);
+}
+
 export async function fetchDisputes(status?: string, limit = 50): Promise<Dispute[]> {
   const params = new URLSearchParams({ limit: String(limit) });
   if (status) params.set("status", status);
@@ -122,5 +132,59 @@ export async function fetchDisputes(status?: string, limit = 50): Promise<Disput
 
 export async function fetchCategories(): Promise<CategoryInfo[]> {
   return fetchApi("/api/categories");
+}
+
+export async function fetchOraclesByAddresses(addresses: string[]): Promise<Oracle[]> {
+  if (addresses.length === 0) return [];
+  
+  // Use POST to avoid URL length limits with many addresses
+  const res = await fetch(`${API_BASE}/api/oracles/by-addresses`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ addresses }),
+  });
+  
+  if (!res.ok) {
+    throw new Error(`API error: ${res.status}`);
+  }
+  return res.json();
+}
+
+// Explorer types and functions
+export interface ExplorerInfo {
+  explorer: string;
+  name: string;
+  status: string | null;
+  port: number;
+  is_default: boolean;
+  base_url: string;
+  tx_url_template: string;
+  address_url_template: string;
+}
+
+export async function fetchDefaultExplorer(): Promise<ExplorerInfo> {
+  const res = await fetch(`${DASHBOARD_API}/explorer/default`);
+  if (!res.ok) {
+    // Fallback to mempool if dashboard is unavailable
+    return {
+      explorer: "mempool",
+      name: "Mempool",
+      status: null,
+      port: 4000,
+      is_default: true,
+      base_url: "http://localhost:4000",
+      tx_url_template: "/tx/{txid}",
+      address_url_template: "/address/{address}",
+    };
+  }
+  return res.json();
+}
+
+export function buildExplorerTxUrl(explorer: ExplorerInfo, txid: string): string {
+  return explorer.base_url + explorer.tx_url_template.replace("{txid}", txid);
+}
+
+export function buildExplorerAddressUrl(explorer: ExplorerInfo, address: string): string {
+  return explorer.base_url + explorer.address_url_template.replace("{address}", address);
 }
 

@@ -4,6 +4,7 @@
 
 mod config;
 mod handlers;
+mod identity;
 mod locked;
 mod migration;
 mod wallet;
@@ -22,6 +23,7 @@ use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
 use crate::config::Config;
+use crate::identity::IdentityManager;
 use crate::locked::LockManager;
 use crate::wallet::{BdkWalletService, WalletService};
 
@@ -30,6 +32,7 @@ pub struct AppState {
     pub wallet: WalletService,
     pub bdk_wallet: Option<BdkWalletService>,
     pub lock_manager: LockManager,
+    pub identity_manager: IdentityManager,
     pub config: Config,
 }
 
@@ -173,11 +176,16 @@ async fn main() -> Result<()> {
     let lock_manager = LockManager::new(config.data_dir.clone())?;
     info!("Lock manager initialized");
 
+    // Create identity manager
+    let identity_manager = IdentityManager::new(config.data_dir.clone())?;
+    info!("Identity manager initialized");
+
     // Create application state
     let state = Arc::new(AppState {
         wallet,
         bdk_wallet,
         lock_manager,
+        identity_manager,
         config: config.clone(),
     });
 
@@ -214,6 +222,21 @@ async fn main() -> Result<()> {
         .route("/wallet/broadcast", post(handlers::broadcast))
         .route("/wallet/mine", post(handlers::mine_blocks))
         .route("/wallet/rawtx/:txid", get(handlers::get_raw_tx))
+        // Identity endpoints
+        .route("/wallet/identities", get(handlers::list_identities))
+        .route("/wallet/identities", post(handlers::create_identity))
+        .route("/wallet/identities/defaults", get(handlers::get_identity_defaults))
+        .route("/wallet/identities/generate", post(handlers::generate_keypair))
+        .route("/wallet/identities/verify", post(handlers::verify_signature))
+        .route("/wallet/identities/:id", get(handlers::get_identity))
+        .route("/wallet/identities/:id", axum::routing::put(handlers::update_identity))
+        .route("/wallet/identities/:id", axum::routing::delete(handlers::delete_identity))
+        .route("/wallet/identities/:id/primary", post(handlers::set_identity_primary))
+        .route("/wallet/identities/:id/dns", post(handlers::set_identity_dns))
+        .route("/wallet/identities/:id/dns", axum::routing::delete(handlers::remove_identity_dns))
+        .route("/wallet/identities/:id/sign", post(handlers::sign_message))
+        .route("/wallet/identities/:id/export", get(handlers::export_private_key))
+        .route("/wallet/identities/sync-dns", post(handlers::sync_identities_from_dns))
         .with_state(state)
         .layer(TraceLayer::new_for_http())
         .layer(

@@ -1,380 +1,552 @@
 //! Database operations for Anchor Predictions
 
 use anyhow::Result;
-use sqlx::postgres::PgPool;
+use sqlx::postgres::PgPoolOptions;
+use sqlx::{PgPool, Row};
 
-use crate::models::{
-    Lottery, LotteryStats, PrizeTier, Ticket, Winner,
-    lottery_type_name, token_type_name,
-};
+use crate::amm::AmmState;
+use crate::models::{outcome_name, resolution_name, Market, MarketStats, Position, Winner};
 
-#[derive(Clone)]
 pub struct Database {
-    pool: PgPool,
+    pub pool: PgPool,
 }
 
 impl Database {
     pub async fn connect(database_url: &str) -> Result<Self> {
-        let pool = PgPool::connect(database_url).await?;
+        let pool = PgPoolOptions::new()
+            .max_connections(5)
+            .connect(database_url)
+            .await?;
         Ok(Self { pool })
     }
 
-    // Lottery operations
+    // ==================== Stats ====================
 
-    pub async fn get_lotteries(&self, status: Option<&str>, limit: i64) -> Result<Vec<Lottery>> {
-        let rows = if let Some(s) = status {
-            sqlx::query_as::<_, (
-                i32, Vec<u8>, i32, i32, i32, i32, i64, i32, Vec<u8>, Vec<u8>,
-                String, i64, i32, Option<Vec<u8>>, chrono::DateTime<chrono::Utc>,
-            )>(
+    pub async fn get_stats(&self) -> Result<MarketStats> {
+        let row = sqlx::query(
+            r#"
+            SELECT 
+                total_markets, active_markets, resolved_markets,
+                total_positions, total_volume_sats, total_payouts_sats,
+                largest_market_sats
+            FROM market_stats WHERE id = 1
+            "#,
+        )
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(MarketStats {
+            total_markets: row.get("total_markets"),
+            active_markets: row.get("active_markets"),
+            resolved_markets: row.get("resolved_markets"),
+            total_positions: row.get("total_positions"),
+            total_volume_sats: row.get("total_volume_sats"),
+            total_payouts_sats: row.get("total_payouts_sats"),
+            largest_market_sats: row.get("largest_market_sats"),
+        })
+    }
+
+    // ==================== Markets ====================
+
+    pub async fn list_markets(&self, status: Option<&str>, limit: i32) -> Result<Vec<Market>> {
+        let query = match status {
+            Some(s) => sqlx::query(
                 r#"
-                SELECT id, lottery_id, lottery_type, number_count, number_max, draw_block,
-                       ticket_price_sats, token_type, oracle_pubkey, creator_pubkey,
-                       status, total_pool_sats, ticket_count, winning_numbers, created_at
-                FROM lotteries
+                SELECT id, market_id, question, description, resolution_block,
+                       oracle_pubkey, creator_pubkey, status, resolution,
+                       yes_pool, no_pool, total_volume_sats, total_yes_sats,
+                       total_no_sats, position_count, created_at
+                FROM markets
                 WHERE status = $1
-                ORDER BY draw_block ASC
+                ORDER BY created_at DESC
                 LIMIT $2
                 "#,
             )
             .bind(s)
-            .bind(limit)
-            .fetch_all(&self.pool)
-            .await?
-        } else {
-            sqlx::query_as::<_, (
-                i32, Vec<u8>, i32, i32, i32, i32, i64, i32, Vec<u8>, Vec<u8>,
-                String, i64, i32, Option<Vec<u8>>, chrono::DateTime<chrono::Utc>,
-            )>(
+            .bind(limit),
+            None => sqlx::query(
                 r#"
-                SELECT id, lottery_id, lottery_type, number_count, number_max, draw_block,
-                       ticket_price_sats, token_type, oracle_pubkey, creator_pubkey,
-                       status, total_pool_sats, ticket_count, winning_numbers, created_at
-                FROM lotteries
+                SELECT id, market_id, question, description, resolution_block,
+                       oracle_pubkey, creator_pubkey, status, resolution,
+                       yes_pool, no_pool, total_volume_sats, total_yes_sats,
+                       total_no_sats, position_count, created_at
+                FROM markets
                 ORDER BY created_at DESC
                 LIMIT $1
                 "#,
             )
-            .bind(limit)
-            .fetch_all(&self.pool)
-            .await?
+            .bind(limit),
         };
 
-        Ok(rows.into_iter().map(|r| Lottery {
-            id: r.0,
-            lottery_id: hex::encode(&r.1),
-            lottery_type: r.2,
-            lottery_type_name: lottery_type_name(r.2),
-            number_count: r.3,
-            number_max: r.4,
-            draw_block: r.5,
-            ticket_price_sats: r.6,
-            token_type: r.7,
-            token_type_name: token_type_name(r.7),
-            oracle_pubkey: hex::encode(&r.8),
-            creator_pubkey: hex::encode(&r.9),
-            status: r.10,
-            total_pool_sats: r.11,
-            ticket_count: r.12,
-            winning_numbers: r.13,
-            created_at: r.14.to_rfc3339(),
-        }).collect())
+        let rows = query.fetch_all(&self.pool).await?;
+        let markets = rows.iter().map(|row| self.row_to_market(row)).collect();
+        Ok(markets)
     }
 
-    pub async fn get_lottery_by_id(&self, lottery_id: &[u8]) -> Result<Option<Lottery>> {
-        let row = sqlx::query_as::<_, (
-            i32, Vec<u8>, i32, i32, i32, i32, i64, i32, Vec<u8>, Vec<u8>,
-            String, i64, i32, Option<Vec<u8>>, chrono::DateTime<chrono::Utc>,
-        )>(
+    pub async fn get_market(&self, market_id: &str) -> Result<Option<Market>> {
+        let market_id_bytes = hex::decode(market_id)?;
+        let row = sqlx::query(
             r#"
-            SELECT id, lottery_id, lottery_type, number_count, number_max, draw_block,
-                   ticket_price_sats, token_type, oracle_pubkey, creator_pubkey,
-                   status, total_pool_sats, ticket_count, winning_numbers, created_at
-            FROM lotteries
-            WHERE lottery_id = $1
+            SELECT id, market_id, question, description, resolution_block,
+                   oracle_pubkey, creator_pubkey, status, resolution,
+                   yes_pool, no_pool, total_volume_sats, total_yes_sats,
+                   total_no_sats, position_count, created_at
+            FROM markets
+            WHERE market_id = $1
             "#,
         )
-        .bind(lottery_id)
+        .bind(&market_id_bytes)
         .fetch_optional(&self.pool)
         .await?;
 
-        Ok(row.map(|r| Lottery {
-            id: r.0,
-            lottery_id: hex::encode(&r.1),
-            lottery_type: r.2,
-            lottery_type_name: lottery_type_name(r.2),
-            number_count: r.3,
-            number_max: r.4,
-            draw_block: r.5,
-            ticket_price_sats: r.6,
-            token_type: r.7,
-            token_type_name: token_type_name(r.7),
-            oracle_pubkey: hex::encode(&r.8),
-            creator_pubkey: hex::encode(&r.9),
-            status: r.10,
-            total_pool_sats: r.11,
-            ticket_count: r.12,
-            winning_numbers: r.13,
-            created_at: r.14.to_rfc3339(),
-        }))
+        Ok(row.as_ref().map(|r| self.row_to_market(r)))
     }
 
-    pub async fn insert_lottery(
+    pub async fn get_market_by_bytes(&self, market_id: &[u8]) -> Result<Option<Market>> {
+        let row = sqlx::query(
+            r#"
+            SELECT id, market_id, question, description, resolution_block,
+                   oracle_pubkey, creator_pubkey, status, resolution,
+                   yes_pool, no_pool, total_volume_sats, total_yes_sats,
+                   total_no_sats, position_count, created_at
+            FROM markets
+            WHERE market_id = $1
+            "#,
+        )
+        .bind(market_id)
+        .fetch_optional(&self.pool)
+        .await?;
+
+        Ok(row.as_ref().map(|r| self.row_to_market(r)))
+    }
+
+    pub async fn create_market(&self, market: &Market) -> Result<i32> {
+        // Convert hex market_id to bytes
+        let market_id_bytes = hex::decode(&market.market_id)?;
+        let oracle_bytes = hex::decode(&market.oracle_pubkey).unwrap_or_default();
+        let creator_bytes = hex::decode(&market.creator_pubkey).unwrap_or_default();
+        
+        // Calculate k_constant as string (for NUMERIC)
+        let k_constant = format!("{}", market.yes_pool as i128 * market.no_pool as i128);
+        
+        let row = sqlx::query(
+            r#"
+            INSERT INTO markets (
+                market_id, question, description, resolution_block, 
+                oracle_pubkey, creator_pubkey, status, resolution,
+                yes_pool, no_pool, k_constant, total_volume_sats, 
+                total_yes_sats, total_no_sats, position_count
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::NUMERIC, $12, $13, $14, $15)
+            RETURNING id
+            "#,
+        )
+        .bind(&market_id_bytes)
+        .bind(&market.question)
+        .bind(&market.description)
+        .bind(market.resolution_block)
+        .bind(&oracle_bytes)
+        .bind(&creator_bytes)
+        .bind(&market.status)
+        .bind(market.resolution)
+        .bind(market.yes_pool)
+        .bind(market.no_pool)
+        .bind(&k_constant)
+        .bind(market.total_volume_sats)
+        .bind(market.total_yes_sats)
+        .bind(market.total_no_sats)
+        .bind(market.position_count)
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(row.get("id"))
+    }
+
+    fn row_to_market(&self, row: &sqlx::postgres::PgRow) -> Market {
+        let market_id: Vec<u8> = row.get("market_id");
+        let oracle_pubkey: Vec<u8> = row.get("oracle_pubkey");
+        let creator_pubkey: Vec<u8> = row.get("creator_pubkey");
+        let resolution: Option<i16> = row.get("resolution");
+        let yes_pool: i64 = row.get("yes_pool");
+        let no_pool: i64 = row.get("no_pool");
+        let (yes_price, no_price) = Market::calculate_prices(yes_pool, no_pool);
+        let created_at: chrono::DateTime<chrono::Utc> = row.get("created_at");
+
+        Market {
+            id: row.get("id"),
+            market_id: hex::encode(&market_id),
+            question: row.get("question"),
+            description: row.get("description"),
+            resolution_block: row.get("resolution_block"),
+            oracle_pubkey: hex::encode(&oracle_pubkey),
+            creator_pubkey: hex::encode(&creator_pubkey),
+            status: row.get("status"),
+            resolution,
+            resolution_name: resolution_name(resolution),
+            yes_pool,
+            no_pool,
+            yes_price,
+            no_price,
+            total_volume_sats: row.get("total_volume_sats"),
+            total_yes_sats: row.get("total_yes_sats"),
+            total_no_sats: row.get("total_no_sats"),
+            position_count: row.get("position_count"),
+            created_at: created_at.to_rfc3339(),
+        }
+    }
+
+    pub async fn insert_market(
         &self,
-        lottery_id: &[u8],
-        lottery_type: i32,
-        number_count: i32,
-        number_max: i32,
-        draw_block: i32,
-        ticket_price_sats: i64,
-        token_type: i32,
+        market_id: &[u8],
+        question: &str,
+        description: Option<&str>,
+        resolution_block: i32,
         oracle_pubkey: &[u8],
         creator_pubkey: &[u8],
-        txid: &[u8],
-        block_height: Option<i32>,
-    ) -> Result<i32> {
-        let row: (i32,) = sqlx::query_as(
+        created_txid: &[u8],
+        block_height: i32,
+        initial_liquidity: i64,
+    ) -> Result<()> {
+        sqlx::query(
             r#"
-            INSERT INTO lotteries (lottery_id, lottery_type, number_count, number_max,
-                                   draw_block, ticket_price_sats, token_type, oracle_pubkey,
-                                   creator_pubkey, created_txid, created_at_block)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-            ON CONFLICT (lottery_id) DO NOTHING
-            RETURNING id
+            INSERT INTO markets (
+                market_id, question, description, resolution_block,
+                oracle_pubkey, creator_pubkey, created_txid, created_at_block,
+                yes_pool, no_pool, k_constant
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9, $9::NUMERIC * $9::NUMERIC)
+            ON CONFLICT (market_id) DO NOTHING
             "#,
         )
-        .bind(lottery_id)
-        .bind(lottery_type)
-        .bind(number_count)
-        .bind(number_max)
-        .bind(draw_block)
-        .bind(ticket_price_sats)
-        .bind(token_type)
+        .bind(market_id)
+        .bind(question)
+        .bind(description)
+        .bind(resolution_block)
         .bind(oracle_pubkey)
         .bind(creator_pubkey)
-        .bind(txid)
+        .bind(created_txid)
         .bind(block_height)
-        .fetch_one(&self.pool)
-        .await?;
-
-        Ok(row.0)
-    }
-
-    // Ticket operations
-
-    pub async fn get_tickets_by_lottery(&self, lottery_id: &[u8], limit: i64) -> Result<Vec<Ticket>> {
-        let rows = sqlx::query_as::<_, (
-            i32, Vec<u8>, Vec<u8>, i32, Option<i32>, Vec<u8>, Vec<u8>, i64,
-            i32, bool, i32, i64, bool, chrono::DateTime<chrono::Utc>,
-        )>(
-            r#"
-            SELECT id, lottery_id, txid, vout, block_height, buyer_pubkey, numbers,
-                   amount_sats, matching_numbers, is_winner, prize_tier, prize_sats,
-                   claimed, created_at
-            FROM tickets
-            WHERE lottery_id = $1
-            ORDER BY created_at DESC
-            LIMIT $2
-            "#,
-        )
-        .bind(lottery_id)
-        .bind(limit)
-        .fetch_all(&self.pool)
-        .await?;
-
-        Ok(rows.into_iter().map(|r| Ticket {
-            id: r.0,
-            lottery_id: hex::encode(&r.1),
-            txid: hex::encode(&r.2),
-            vout: r.3,
-            block_height: r.4,
-            buyer_pubkey: hex::encode(&r.5),
-            numbers: r.6,
-            amount_sats: r.7,
-            matching_numbers: r.8,
-            is_winner: r.9,
-            prize_tier: r.10,
-            prize_sats: r.11,
-            claimed: r.12,
-            created_at: r.13.to_rfc3339(),
-        }).collect())
-    }
-
-    pub async fn get_tickets_by_buyer(&self, buyer_pubkey: &[u8], limit: i64) -> Result<Vec<Ticket>> {
-        let rows = sqlx::query_as::<_, (
-            i32, Vec<u8>, Vec<u8>, i32, Option<i32>, Vec<u8>, Vec<u8>, i64,
-            i32, bool, i32, i64, bool, chrono::DateTime<chrono::Utc>,
-        )>(
-            r#"
-            SELECT id, lottery_id, txid, vout, block_height, buyer_pubkey, numbers,
-                   amount_sats, matching_numbers, is_winner, prize_tier, prize_sats,
-                   claimed, created_at
-            FROM tickets
-            WHERE buyer_pubkey = $1
-            ORDER BY created_at DESC
-            LIMIT $2
-            "#,
-        )
-        .bind(buyer_pubkey)
-        .bind(limit)
-        .fetch_all(&self.pool)
-        .await?;
-
-        Ok(rows.into_iter().map(|r| Ticket {
-            id: r.0,
-            lottery_id: hex::encode(&r.1),
-            txid: hex::encode(&r.2),
-            vout: r.3,
-            block_height: r.4,
-            buyer_pubkey: hex::encode(&r.5),
-            numbers: r.6,
-            amount_sats: r.7,
-            matching_numbers: r.8,
-            is_winner: r.9,
-            prize_tier: r.10,
-            prize_sats: r.11,
-            claimed: r.12,
-            created_at: r.13.to_rfc3339(),
-        }).collect())
-    }
-
-    pub async fn insert_ticket(
-        &self,
-        lottery_id: &[u8],
-        txid: &[u8],
-        vout: i32,
-        block_height: Option<i32>,
-        buyer_pubkey: &[u8],
-        numbers: &[u8],
-        amount_sats: i64,
-    ) -> Result<i32> {
-        let row: (i32,) = sqlx::query_as(
-            r#"
-            INSERT INTO tickets (lottery_id, txid, vout, block_height, buyer_pubkey, numbers, amount_sats)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
-            ON CONFLICT (txid, vout) DO NOTHING
-            RETURNING id
-            "#,
-        )
-        .bind(lottery_id)
-        .bind(txid)
-        .bind(vout)
-        .bind(block_height)
-        .bind(buyer_pubkey)
-        .bind(numbers)
-        .bind(amount_sats)
-        .fetch_one(&self.pool)
-        .await?;
-
-        // Update lottery pool
-        sqlx::query(
-            "UPDATE lotteries SET total_pool_sats = total_pool_sats + $1, ticket_count = ticket_count + 1 WHERE lottery_id = $2"
-        )
-        .bind(amount_sats)
-        .bind(lottery_id)
-        .execute(&self.pool)
-        .await?;
-
-        Ok(row.0)
-    }
-
-    // Winner operations
-
-    pub async fn get_winners(&self, lottery_id: &[u8]) -> Result<Vec<Winner>> {
-        let rows = sqlx::query_as::<_, (
-            i32, Vec<u8>, Vec<u8>, i32, i32, i64, bool,
-        )>(
-            r#"
-            SELECT id, buyer_pubkey, numbers, matching_numbers, prize_tier, prize_sats, claimed
-            FROM tickets
-            WHERE lottery_id = $1 AND is_winner = true
-            ORDER BY prize_tier ASC
-            "#,
-        )
-        .bind(lottery_id)
-        .fetch_all(&self.pool)
-        .await?;
-
-        Ok(rows.into_iter().map(|r| Winner {
-            ticket_id: r.0,
-            buyer_pubkey: hex::encode(&r.1),
-            numbers: r.2,
-            matching_numbers: r.3,
-            prize_tier: r.4,
-            prize_sats: r.5,
-            claimed: r.6,
-        }).collect())
-    }
-
-    // Prize tiers
-
-    pub async fn get_prize_tiers(&self, lottery_type: i32) -> Result<Vec<PrizeTier>> {
-        let rows = sqlx::query_as::<_, (i32, i32, f32, String)>(
-            r#"
-            SELECT tier, matches_required, payout_percentage, description
-            FROM prize_tiers
-            WHERE lottery_type = $1
-            ORDER BY tier ASC
-            "#,
-        )
-        .bind(lottery_type)
-        .fetch_all(&self.pool)
-        .await?;
-
-        Ok(rows.into_iter().map(|r| PrizeTier {
-            tier: r.0,
-            matches_required: r.1,
-            payout_percentage: r.2,
-            description: r.3,
-        }).collect())
-    }
-
-    // Stats
-
-    pub async fn get_stats(&self) -> Result<LotteryStats> {
-        let stats: (i32, i32, i32, i64, i64, i64) = sqlx::query_as(
-            "SELECT total_lotteries, completed_lotteries, total_tickets_sold, total_volume_sats, total_payouts_sats, biggest_jackpot_sats FROM lottery_stats WHERE id = 1"
-        )
-        .fetch_one(&self.pool)
-        .await?;
-
-        let active: (i64,) = sqlx::query_as(
-            "SELECT COUNT(*) FROM lotteries WHERE status = 'open'"
-        )
-        .fetch_one(&self.pool)
-        .await?;
-
-        Ok(LotteryStats {
-            total_lotteries: stats.0,
-            completed_lotteries: stats.1,
-            total_tickets_sold: stats.2,
-            total_volume_sats: stats.3,
-            total_payouts_sats: stats.4,
-            biggest_jackpot_sats: stats.5,
-            active_lotteries: active.0 as i32,
-        })
-    }
-
-    // Indexer state
-
-    pub async fn get_last_block_height(&self) -> Result<i32> {
-        let row: (i32,) = sqlx::query_as(
-            "SELECT last_block_height FROM indexer_state WHERE id = 1"
-        )
-        .fetch_one(&self.pool)
-        .await?;
-        Ok(row.0)
-    }
-
-    pub async fn update_last_block(&self, block_hash: &[u8], block_height: i32) -> Result<()> {
-        sqlx::query(
-            "UPDATE indexer_state SET last_block_hash = $1, last_block_height = $2, updated_at = NOW() WHERE id = 1"
-        )
-        .bind(block_hash)
-        .bind(block_height)
+        .bind(initial_liquidity)
         .execute(&self.pool)
         .await?;
         Ok(())
     }
-}
 
+    // ==================== Positions ====================
+
+    pub async fn get_market_positions(&self, market_id: &str, limit: i32) -> Result<Vec<Position>> {
+        let market_id_bytes = hex::decode(market_id)?;
+        let rows = sqlx::query(
+            r#"
+            SELECT id, market_id, txid, vout, block_height, user_pubkey,
+                   outcome, amount_sats, shares, avg_price,
+                   is_winner, payout_sats, claimed, created_at
+            FROM positions
+            WHERE market_id = $1
+            ORDER BY created_at DESC
+            LIMIT $2
+            "#,
+        )
+        .bind(&market_id_bytes)
+        .bind(limit)
+        .fetch_all(&self.pool)
+        .await?;
+
+        let positions = rows.iter().map(|row| self.row_to_position(row)).collect();
+        Ok(positions)
+    }
+
+    pub async fn get_user_positions(&self, user_pubkey: &str, limit: i32) -> Result<Vec<Position>> {
+        let user_pubkey_bytes = hex::decode(user_pubkey)?;
+        let rows = sqlx::query(
+            r#"
+            SELECT id, market_id, txid, vout, block_height, user_pubkey,
+                   outcome, amount_sats, shares, avg_price,
+                   is_winner, payout_sats, claimed, created_at
+            FROM positions
+            WHERE user_pubkey = $1
+            ORDER BY created_at DESC
+            LIMIT $2
+            "#,
+        )
+        .bind(&user_pubkey_bytes)
+        .bind(limit)
+        .fetch_all(&self.pool)
+        .await?;
+
+        let positions = rows.iter().map(|row| self.row_to_position(row)).collect();
+        Ok(positions)
+    }
+
+    pub async fn get_all_positions(&self, limit: i32) -> Result<Vec<Position>> {
+        let rows = sqlx::query(
+            r#"
+            SELECT id, market_id, txid, vout, block_height, user_pubkey,
+                   outcome, amount_sats, shares, avg_price,
+                   is_winner, payout_sats, claimed, created_at
+            FROM positions
+            ORDER BY created_at DESC
+            LIMIT $1
+            "#,
+        )
+        .bind(limit)
+        .fetch_all(&self.pool)
+        .await?;
+
+        let positions = rows.iter().map(|row| self.row_to_position(row)).collect();
+        Ok(positions)
+    }
+
+    fn row_to_position(&self, row: &sqlx::postgres::PgRow) -> Position {
+        let market_id: Vec<u8> = row.get("market_id");
+        let txid: Vec<u8> = row.get("txid");
+        let user_pubkey: Vec<u8> = row.get("user_pubkey");
+        let outcome: i16 = row.get("outcome");
+        let created_at: chrono::DateTime<chrono::Utc> = row.get("created_at");
+
+        Position {
+            id: row.get("id"),
+            market_id: hex::encode(&market_id),
+            txid: hex::encode(&txid),
+            vout: row.get("vout"),
+            block_height: row.get("block_height"),
+            user_pubkey: hex::encode(&user_pubkey),
+            outcome,
+            outcome_name: outcome_name(outcome),
+            amount_sats: row.get("amount_sats"),
+            shares: row.get("shares"),
+            avg_price: row.get("avg_price"),
+            is_winner: row.get("is_winner"),
+            payout_sats: row.get("payout_sats"),
+            claimed: row.get("claimed"),
+            created_at: created_at.to_rfc3339(),
+        }
+    }
+
+    pub async fn get_position_by_id(&self, id: i32) -> Result<Option<Position>> {
+        let row = sqlx::query(
+            r#"
+            SELECT id, market_id, txid, vout, block_height, user_pubkey,
+                   outcome, amount_sats, shares, avg_price,
+                   is_winner, payout_sats, claimed, created_at
+            FROM positions
+            WHERE id = $1
+            "#,
+        )
+        .bind(id)
+        .fetch_optional(&self.pool)
+        .await?;
+
+        Ok(row.map(|r| self.row_to_position(&r)))
+    }
+
+    pub async fn insert_position(
+        &self,
+        market_id: &[u8],
+        txid: &[u8],
+        vout: i32,
+        block_height: i32,
+        user_pubkey: &[u8],
+        outcome: i16,
+        amount_sats: i64,
+        shares: i64,
+        avg_price: f32,
+    ) -> Result<()> {
+        sqlx::query(
+            r#"
+            INSERT INTO positions (
+                market_id, txid, vout, block_height, user_pubkey,
+                outcome, amount_sats, shares, avg_price
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            ON CONFLICT (txid, vout) DO NOTHING
+            "#,
+        )
+        .bind(market_id)
+        .bind(txid)
+        .bind(vout)
+        .bind(block_height)
+        .bind(user_pubkey)
+        .bind(outcome)
+        .bind(amount_sats)
+        .bind(shares)
+        .bind(avg_price)
+        .execute(&self.pool)
+        .await?;
+        Ok(())
+    }
+
+    pub async fn update_market_after_bet(
+        &self,
+        market_id: &[u8],
+        new_yes_pool: i64,
+        new_no_pool: i64,
+        amount_sats: i64,
+        outcome: i16,
+    ) -> Result<()> {
+        let (yes_add, no_add) = if outcome == 1 {
+            (amount_sats, 0i64)
+        } else {
+            (0i64, amount_sats)
+        };
+
+        sqlx::query(
+            r#"
+            UPDATE markets SET
+                yes_pool = $1,
+                no_pool = $2,
+                total_volume_sats = total_volume_sats + $3,
+                total_yes_sats = total_yes_sats + $4,
+                total_no_sats = total_no_sats + $5,
+                position_count = position_count + 1,
+                updated_at = NOW()
+            WHERE market_id = $6
+            "#,
+        )
+        .bind(new_yes_pool)
+        .bind(new_no_pool)
+        .bind(amount_sats)
+        .bind(yes_add)
+        .bind(no_add)
+        .bind(market_id)
+        .execute(&self.pool)
+        .await?;
+        Ok(())
+    }
+
+    // ==================== Resolution ====================
+
+    pub async fn resolve_market(
+        &self,
+        market_id: &[u8],
+        resolution: i16,
+        resolved_txid: &[u8],
+        resolved_at_block: i32,
+    ) -> Result<()> {
+        sqlx::query(
+            r#"
+            UPDATE markets SET
+                resolution = $1,
+                resolved_txid = $2,
+                resolved_at_block = $3,
+                updated_at = NOW()
+            WHERE market_id = $4 AND status = 'open'
+            "#,
+        )
+        .bind(resolution)
+        .bind(resolved_txid)
+        .bind(resolved_at_block)
+        .bind(market_id)
+        .execute(&self.pool)
+        .await?;
+        Ok(())
+    }
+
+    pub async fn get_market_winners(&self, market_id: &str) -> Result<Vec<Winner>> {
+        let market_id_bytes = hex::decode(market_id)?;
+        let rows = sqlx::query(
+            r#"
+            SELECT id, user_pubkey, outcome, amount_sats, shares, payout_sats, claimed
+            FROM positions
+            WHERE market_id = $1 AND is_winner = true
+            ORDER BY payout_sats DESC
+            "#,
+        )
+        .bind(&market_id_bytes)
+        .fetch_all(&self.pool)
+        .await?;
+
+        let winners = rows
+            .iter()
+            .map(|row| {
+                let user_pubkey: Vec<u8> = row.get("user_pubkey");
+                let outcome: i16 = row.get("outcome");
+                Winner {
+                    position_id: row.get("id"),
+                    user_pubkey: hex::encode(&user_pubkey),
+                    outcome,
+                    outcome_name: outcome_name(outcome),
+                    amount_sats: row.get("amount_sats"),
+                    shares: row.get("shares"),
+                    payout_sats: row.get("payout_sats"),
+                    claimed: row.get("claimed"),
+                }
+            })
+            .collect();
+        Ok(winners)
+    }
+
+    pub async fn claim_winnings(&self, position_id: i32, claim_txid: &[u8]) -> Result<bool> {
+        let result = sqlx::query(
+            r#"
+            UPDATE positions SET
+                claimed = true,
+                claim_txid = $1,
+                updated_at = NOW()
+            WHERE id = $2 AND is_winner = true AND claimed = false
+            "#,
+        )
+        .bind(claim_txid)
+        .bind(position_id)
+        .execute(&self.pool)
+        .await?;
+        Ok(result.rows_affected() > 0)
+    }
+
+    // ==================== History ====================
+
+    pub async fn get_resolved_markets(&self, limit: i32) -> Result<Vec<Market>> {
+        let rows = sqlx::query(
+            r#"
+            SELECT id, market_id, question, description, resolution_block,
+                   oracle_pubkey, creator_pubkey, status, resolution,
+                   yes_pool, no_pool, total_volume_sats, total_yes_sats,
+                   total_no_sats, position_count, created_at
+            FROM markets
+            WHERE status = 'resolved'
+            ORDER BY updated_at DESC
+            LIMIT $1
+            "#,
+        )
+        .bind(limit)
+        .fetch_all(&self.pool)
+        .await?;
+
+        let markets = rows.iter().map(|row| self.row_to_market(row)).collect();
+        Ok(markets)
+    }
+
+    // ==================== Indexer State ====================
+
+    pub async fn get_last_block_height(&self) -> Result<i32> {
+        let row = sqlx::query("SELECT last_block_height FROM indexer_state WHERE id = 1")
+            .fetch_one(&self.pool)
+            .await?;
+        Ok(row.get("last_block_height"))
+    }
+
+    pub async fn update_last_block(&self, block_hash: &[u8], height: i32) -> Result<()> {
+        sqlx::query(
+            r#"
+            UPDATE indexer_state SET
+                last_block_hash = $1,
+                last_block_height = $2,
+                updated_at = NOW()
+            WHERE id = 1
+            "#,
+        )
+        .bind(block_hash)
+        .bind(height)
+        .execute(&self.pool)
+        .await?;
+        Ok(())
+    }
+
+    // ==================== AMM Helpers ====================
+
+    pub async fn get_market_amm_state(&self, market_id: &[u8]) -> Result<Option<AmmState>> {
+        let row = sqlx::query("SELECT yes_pool, no_pool FROM markets WHERE market_id = $1")
+            .bind(market_id)
+            .fetch_optional(&self.pool)
+            .await?;
+
+        Ok(row.map(|r| AmmState::from_pools(r.get("yes_pool"), r.get("no_pool"))))
+    }
+}

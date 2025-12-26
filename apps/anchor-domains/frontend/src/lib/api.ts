@@ -40,6 +40,8 @@ export function getExplorerTxUrl(txid: string): string {
 export interface DnsRecord {
   id: number;
   record_type: string;
+  /** Record name/subdomain prefix (e.g., "user._nostr", "www", null for root "@") */
+  name?: string;
   ttl: number;
   value: string;
   priority?: number;
@@ -134,6 +136,7 @@ export interface WalletUtxo {
 
 export interface DnsRecordInput {
   record_type: string;
+  name?: string; // Subdomain/prefix (e.g., "user._nostr", "www", "@" or null for root)
   value: string;
   ttl?: number;
   priority?: number;
@@ -313,6 +316,62 @@ export async function mineBlocks(count = 1): Promise<{ blocks: number }> {
     body: JSON.stringify({ blocks: count }),
   });
   if (!res.ok) throw new Error("Failed to mine blocks");
+  return res.json();
+}
+
+// Identity Types
+export type IdentityType = "nostr" | "pubky";
+
+export interface WalletIdentity {
+  id: string;
+  identity_type: IdentityType;
+  label: string;
+  public_key: string;
+  formatted_public_key: string;
+  is_primary: boolean;
+  created_at: string;
+}
+
+export interface IdentitiesResponse {
+  identities: WalletIdentity[];
+  total: number;
+}
+
+export async function getWalletIdentities(): Promise<IdentitiesResponse> {
+  const res = await fetch(`${WALLET_URL}/wallet/identities`);
+  if (!res.ok) throw new Error("Failed to fetch wallet identities");
+  return res.json();
+}
+
+// Identity record format for Selfie Records
+// TXT value is just the formatted public key (npub1xxx... or pk:xxx...)
+export function formatIdentityAsTxt(identity: WalletIdentity): string {
+  // Use the formatted_public_key from the wallet if available,
+  // otherwise build it from the raw public key
+  if (identity.formatted_public_key) {
+    return identity.formatted_public_key;
+  }
+  const prefix = identity.identity_type === "nostr" ? "npub1" : "pk:";
+  return `${prefix}${identity.public_key}`;
+}
+
+// Identity Record Types
+export interface IdentityRecord {
+  identity_type: IdentityType;
+  subdomain?: string;
+  public_key: string;
+  record_name: string;
+  published_at: string;
+}
+
+export interface ListIdentitiesResponse {
+  domain: string;
+  identities: IdentityRecord[];
+}
+
+export async function listDomainIdentities(domain: string): Promise<ListIdentitiesResponse> {
+  const res = await fetch(`${API_URL}/domains/${encodeURIComponent(domain)}/identities`);
+  if (!res.ok) throw new Error("Failed to fetch domain identities");
   return res.json();
 }
 

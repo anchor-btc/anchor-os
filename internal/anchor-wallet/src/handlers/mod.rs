@@ -8,10 +8,12 @@
 //! - `locks` - UTXO lock management
 //! - `assets` - Asset aggregation and browsing
 //! - `backup` - Wallet backup, mnemonic, and recovery
+//! - `identity` - Decentralized identity management (Nostr, Pubky)
 
 mod assets;
 mod backup;
 mod health;
+mod identity;
 mod locks;
 mod message;
 mod transaction;
@@ -25,4 +27,5 @@ pub use transaction::*;
 pub use locks::*;
 pub use assets::*;
 pub use backup::*;
+pub use identity::*;
 

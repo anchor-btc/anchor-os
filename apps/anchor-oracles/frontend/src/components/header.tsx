@@ -6,10 +6,11 @@ import {
   AppLogo,
   NavLink,
   NavGroup,
+  NavDropdown,
   Container,
   Button,
 } from "@AnchorProtocol/ui";
-import { Eye, Home, Users, Calendar, AlertTriangle, BookOpen, UserPlus } from "lucide-react";
+import { Eye, Home, Users, Calendar, AlertTriangle, BookOpen, UserPlus, User, CheckCircle, Compass } from "lucide-react";
 
 const DOCS_URL = "http://localhost:3900/apps/oracles";
 
@@ -38,8 +39,17 @@ export function Header() {
               <NavLink href="/events" icon={Calendar} accentColor="purple">
                 Events
               </NavLink>
-              <NavLink href="/disputes" icon={AlertTriangle} accentColor="purple">
-                Disputes
+              <NavDropdown
+                label="Explore"
+                icon={Compass}
+                accentColor="purple"
+                items={[
+                  { href: "/attestations", label: "Attestations", icon: CheckCircle },
+                  { href: "/disputes", label: "Disputes", icon: AlertTriangle },
+                ]}
+              />
+              <NavLink href="/my-oracles" icon={User} accentColor="purple">
+                My Oracles
               </NavLink>
               <NavLink href={DOCS_URL} icon={BookOpen} external>
                 Docs

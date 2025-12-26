@@ -27,6 +27,7 @@ import {
   Trash2,
   ChevronDown,
   ChevronUp,
+  Calendar,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -243,6 +244,7 @@ export default function TestnetPage() {
           <MessageStat icon={Eye} label="Oracle" value={stats?.oracle_count || 0} color="violet" />
           <MessageStat icon={Check} label="Attestation" value={stats?.oracle_attestation_count || 0} color="emerald" />
           <MessageStat icon={Zap} label="Dispute" value={stats?.oracle_dispute_count || 0} color="amber" />
+          <MessageStat icon={Calendar} label="Event" value={stats?.oracle_event_count || 0} color="pink" />
           <MessageStat icon={Sparkles} label="Prediction" value={stats?.prediction_count || 0} color="rose" />
         </div>
       </Section>
@@ -384,6 +386,13 @@ export default function TestnetPage() {
               checked={localConfig?.enable_oracle_dispute || false}
               onChange={(v) => handleConfigChange("enable_oracle_dispute", v)}
               color="amber"
+            />
+            <TypeToggle
+              icon={Calendar}
+              label="Event"
+              checked={localConfig?.enable_oracle_event || false}
+              onChange={(v) => handleConfigChange("enable_oracle_event", v)}
+              color="pink"
             />
             <TypeToggle
               icon={Sparkles}

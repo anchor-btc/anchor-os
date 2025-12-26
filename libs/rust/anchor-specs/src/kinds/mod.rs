@@ -10,7 +10,7 @@
 //! | 10-19 | Infrastructure | DNS, Proof, GeoMarker |
 //! | 20-29 | Assets | Token |
 //! | 30-39 | Oracles | Oracle, OracleAttestation, OracleDispute, OracleSlash |
-//! | 40-49 | Games | LotteryCreate, LotteryTicket, LotteryDraw, LotteryClaim |
+//! | 40-49 | Predictions | MarketCreate, PlaceBet, MarketResolve, ClaimWinnings |
 
 pub mod text;
 pub mod state;

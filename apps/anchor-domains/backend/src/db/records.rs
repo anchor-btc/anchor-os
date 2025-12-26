@@ -11,6 +11,7 @@ impl Database {
         let rows: Vec<(
             i32,
             i16,
+            Option<String>,  // record_name (subdomain prefix)
             i32,
             String,
             Option<i32>,
@@ -21,7 +22,7 @@ impl Database {
             chrono::DateTime<chrono::Utc>,
         )> = sqlx::query_as(
             r#"
-            SELECT id, record_type, ttl, value, priority, weight, port, txid, block_height, created_at
+            SELECT id, record_type, record_name, ttl, value, priority, weight, port, txid, block_height, created_at
             FROM dns_records
             WHERE domain_id = $1 AND is_active = TRUE
             ORDER BY record_type, created_at
@@ -41,14 +42,15 @@ impl Database {
                 DnsRecordResponse {
                     id: r.0,
                     record_type,
-                    ttl: r.2,
-                    value: r.3,
-                    priority: r.4,
-                    weight: r.5,
-                    port: r.6,
-                    txid: hex::encode(&r.7),
-                    block_height: r.8,
-                    created_at: r.9,
+                    name: r.2,
+                    ttl: r.3,
+                    value: r.4,
+                    priority: r.5,
+                    weight: r.6,
+                    port: r.7,
+                    txid: hex::encode(&r.8),
+                    block_height: r.9,
+                    created_at: r.10,
                 }
             })
             .collect())

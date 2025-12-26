@@ -4,7 +4,7 @@ use anchor_core::{AnchorKind, carrier::CarrierSelector};
 use anyhow::Result;
 use bitcoin::consensus::encode::deserialize;
 use bitcoin::hashes::Hash;
-use bitcoin::{Block, Transaction};
+use bitcoin::{Block, Transaction, Address, Network};
 use bitcoincore_rpc::{Auth, Client, RpcApi};
 use std::sync::Arc;
 use tokio::time::{sleep, Duration};
@@ -18,7 +18,7 @@ pub struct OracleRegistration {
     pub oracle_pubkey: [u8; 32],
     pub name: String,
     pub categories: i32,
-    pub _stake_amount: i64,
+    pub stake_amount: i64,
     pub metadata: Option<String>,
 }
 
@@ -61,7 +61,7 @@ impl OracleRegistration {
             oracle_pubkey,
             name,
             categories,
-            _stake_amount: stake_amount,
+            stake_amount,
             metadata,
         })
     }
@@ -265,8 +265,33 @@ impl Indexer {
         Ok(())
     }
 
+    /// Extract creator address from transaction outputs
+    /// Tries to find the first non-OP_RETURN output with a valid address
+    fn extract_creator_address(&self, tx: &Transaction) -> Option<String> {
+        // Use regtest network for address extraction
+        let network = Network::Regtest;
+        
+        for output in &tx.output {
+            // Skip OP_RETURN outputs
+            if output.script_pubkey.is_op_return() {
+                continue;
+            }
+            
+            // Try to extract address from script
+            if let Ok(address) = Address::from_script(&output.script_pubkey, network) {
+                return Some(address.to_string());
+            }
+        }
+        None
+    }
+
     async fn process_transaction(&self, tx: &Transaction, height: i32) -> Result<()> {
-        let txid_bytes = tx.compute_txid().to_byte_array();
+        // Get txid in display format (reversed/big-endian) to match Bitcoin standard
+        let mut txid_bytes = tx.compute_txid().to_byte_array();
+        txid_bytes.reverse(); // Convert from internal (little-endian) to display format (big-endian)
+
+        // Extract creator address from first non-OP_RETURN output (usually the change address)
+        let creator_address = self.extract_creator_address(tx);
 
         // Use CarrierSelector to detect messages from ALL carrier types
         let detected_messages = self.carrier_selector.detect(tx);
@@ -287,10 +312,12 @@ impl Indexer {
                                         &reg.name,
                                         reg.metadata.as_deref(),
                                         reg.categories,
+                                        reg.stake_amount,
                                         &txid_bytes,
                                         Some(height),
+                                        creator_address.as_deref(),
                                     ).await;
-                                    tracing::info!("Indexed oracle registration: {} (via {})", reg.name, carrier_name);
+                                    tracing::info!("Indexed oracle registration: {} stake={} sats (via {}) creator={:?}", reg.name, reg.stake_amount, carrier_name, creator_address);
                                 }
                                 1 => {
                                     // Update oracle - handled by upsert
@@ -299,10 +326,12 @@ impl Indexer {
                                         &reg.name,
                                         reg.metadata.as_deref(),
                                         reg.categories,
+                                        reg.stake_amount,
                                         &txid_bytes,
                                         Some(height),
+                                        creator_address.as_deref(),
                                     ).await;
-                                    tracing::info!("Indexed oracle update: {} (via {})", reg.name, carrier_name);
+                                    tracing::info!("Indexed oracle update: {} stake={} sats (via {})", reg.name, reg.stake_amount, carrier_name);
                                 }
                                 2 => {
                                     // Deactivate - would need separate handling
@@ -333,13 +362,19 @@ impl Indexer {
                                         &att.outcome_data,
                                         &att.schnorr_signature,
                                     ).await {
-                                        Ok(id) => tracing::info!(
-                                            "Indexed attestation id={} for event {} at block {} (via {})",
-                                            id,
-                                            hex::encode(&att.event_id[..8]),
-                                            height,
-                                            carrier_name
-                                        ),
+                                        Ok(id) => {
+                                            tracing::info!(
+                                                "Indexed attestation id={} for event {} at block {} (via {})",
+                                                id,
+                                                hex::encode(&att.event_id[..8]),
+                                                height,
+                                                carrier_name
+                                            );
+                                            // Update event status to fulfilled
+                                            if let Err(e) = self.db.fulfill_event(&att.event_id, oracle_id).await {
+                                                tracing::warn!("Failed to fulfill event: {}", e);
+                                            }
+                                        }
                                         Err(e) => tracing::warn!("Failed to insert attestation: {}", e),
                                     }
                                 } else {
@@ -365,6 +400,10 @@ impl Indexer {
                                                     oracle.name,
                                                     carrier_name
                                                 );
+                                                // Update event status to fulfilled
+                                                if let Err(e) = self.db.fulfill_event(&att.event_id, oracle.id).await {
+                                                    tracing::warn!("Failed to fulfill event: {}", e);
+                                                }
                                             }
                                         }
                                     }

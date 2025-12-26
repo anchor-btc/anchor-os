@@ -22,6 +22,11 @@ export {
   type NavLinkProps,
 } from "./nav-link";
 export { NavGroup, gapSizes, type NavGroupProps } from "./nav-group";
+export {
+  NavDropdown,
+  type NavDropdownProps,
+  type NavDropdownItem,
+} from "./nav-dropdown";
 
 // Fullscreen layout components
 export { FullscreenShell, type FullscreenShellProps } from "./fullscreen-shell";

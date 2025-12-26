@@ -28,29 +28,29 @@ export function ProofCard({ proof, showDetails = false }: ProofCardProps) {
 
   return (
     <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4 hover:border-slate-600 transition-colors">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-start gap-3">
-          <div className="p-2 bg-slate-700 rounded-lg">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3 min-w-0 flex-1">
+          <div className="p-2 bg-slate-700 rounded-lg flex-shrink-0">
             <File className="h-5 w-5 text-emerald-500" />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <h3 className="text-white font-medium truncate">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-white font-medium truncate max-w-[180px]" title={proof.filename || "Unnamed file"}>
                 {proof.filename || "Unnamed file"}
               </h3>
               {proof.is_revoked ? (
-                <span className="flex items-center gap-1 text-xs text-red-400 bg-red-500/20 px-2 py-0.5 rounded-full">
+                <span className="flex items-center gap-1 text-xs text-red-400 bg-red-500/20 px-2 py-0.5 rounded-full flex-shrink-0">
                   <XCircle className="w-3 h-3" />
                   Revoked
                 </span>
               ) : (
-                <span className="flex items-center gap-1 text-xs text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded-full">
+                <span className="flex items-center gap-1 text-xs text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded-full flex-shrink-0">
                   <CheckCircle className="w-3 h-3" />
                   Valid
                 </span>
               )}
             </div>
-            <p className="text-sm text-slate-400 mt-0.5">
+            <p className="text-sm text-slate-400 mt-0.5 truncate">
               {proof.mime_type || "application/octet-stream"}
               {proof.file_size && ` • ${formatFileSize(proof.file_size)}`}
             </p>
@@ -59,7 +59,7 @@ export function ProofCard({ proof, showDetails = false }: ProofCardProps) {
 
         <Link
           href={`/proof/${proof.file_hash}?algo=${proof.hash_algo_name.toLowerCase().replace("-", "")}`}
-          className="flex items-center gap-1 text-sm text-emerald-500 hover:text-emerald-400"
+          className="flex items-center gap-1 text-sm text-emerald-500 hover:text-emerald-400 flex-shrink-0"
         >
           View
           <ExternalLink className="w-4 h-4" />

@@ -2,12 +2,15 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   checkAvailability,
   registerDomain,
   mineBlocks,
+  getWalletIdentities,
+  formatIdentityAsTxt,
   type DnsRecordInput,
+  type WalletIdentity,
 } from "@/lib/api";
 import { SUPPORTED_TLDS, type SupportedTLD } from "@/lib/dns-encoder";
 import {
@@ -18,6 +21,9 @@ import {
   XCircle,
   AlertCircle,
   Info,
+  Fingerprint,
+  Zap,
+  Key,
 } from "lucide-react";
 
 const RECORD_TYPES = ["A", "AAAA", "CNAME", "TXT", "MX", "NS", "SRV"];
@@ -67,6 +73,16 @@ function RegisterPageContent() {
   const [nextId, setNextId] = useState(2);
   const [success, setSuccess] = useState<{ txid: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [selectedIdentities, setSelectedIdentities] = useState<Set<string>>(new Set());
+
+  // Fetch wallet identities
+  const { data: identitiesData, isLoading: isLoadingIdentities } = useQuery({
+    queryKey: ["walletIdentities"],
+    queryFn: getWalletIdentities,
+    staleTime: 30000,
+  });
+
+  const identities = identitiesData?.identities || [];
 
   const getFullDomainName = () => `${domainName}${selectedTld}`;
 
@@ -98,8 +114,22 @@ function RegisterPageContent() {
     }
   }, [searchParams]);
 
+  // Toggle identity selection
+  const toggleIdentity = (identityId: string) => {
+    setSelectedIdentities((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(identityId)) {
+        newSet.delete(identityId);
+      } else {
+        newSet.add(identityId);
+      }
+      return newSet;
+    });
+  };
+
   const registerMutation = useMutation({
     mutationFn: async () => {
+      // User-defined DNS records
       const dnsRecords: DnsRecordInput[] = records
         .filter((r) => r.value.trim())
         .map((r) => ({
@@ -110,6 +140,17 @@ function RegisterPageContent() {
           weight: r.weight,
           port: r.port,
         }));
+
+      // Add identity TXT records (Selfie Records format)
+      identities
+        .filter((id) => selectedIdentities.has(id.id))
+        .forEach((identity) => {
+          dnsRecords.push({
+            record_type: "TXT",
+            value: formatIdentityAsTxt(identity),
+            ttl: 300,
+          });
+        });
 
       return registerDomain(getFullDomainName(), dnsRecords, selectedCarrier);
     },
@@ -205,6 +246,7 @@ function RegisterPageContent() {
                 setSelectedTld(".btc");
                 setRecords([{ id: 1, record_type: "A", value: "", ttl: 300 }]);
                 setAvailability(null);
+                setSelectedIdentities(new Set());
               }}
               className="mt-4 px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors"
             >
@@ -377,6 +419,111 @@ function RegisterPageContent() {
                 ))}
               </div>
             </div>
+
+            {/* Identity Records (Selfie Records) */}
+            {identities.length > 0 && (
+              <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="p-2 bg-purple-500/20 rounded-lg">
+                    <Fingerprint className="h-4 w-4 text-purple-400" />
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium text-slate-300">
+                      Link Identities
+                    </label>
+                    <p className="text-xs text-slate-500">
+                      Selfie Records - Add your Nostr/Pubky identity to this domain
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {isLoadingIdentities ? (
+                    <div className="flex items-center justify-center py-4">
+                      <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
+                    </div>
+                  ) : (
+                    identities.map((identity) => {
+                      const isSelected = selectedIdentities.has(identity.id);
+                      const isNostr = identity.identity_type === "nostr";
+                      
+                      return (
+                        <label
+                          key={identity.id}
+                          className={`flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all ${
+                            isSelected
+                              ? isNostr
+                                ? "bg-purple-500/10 border-purple-500"
+                                : "bg-cyan-500/10 border-cyan-500"
+                              : "bg-slate-700/30 border-slate-600 hover:border-slate-500"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleIdentity(identity.id)}
+                            className="sr-only"
+                          />
+                          <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                            isSelected
+                              ? isNostr
+                                ? "border-purple-500 bg-purple-500"
+                                : "border-cyan-500 bg-cyan-500"
+                              : "border-slate-500"
+                          }`}>
+                            {isSelected && (
+                              <CheckCircle className="h-3.5 w-3.5 text-white" />
+                            )}
+                          </div>
+                          <div className={`p-2 rounded-lg ${
+                            isNostr ? "bg-purple-500/20" : "bg-cyan-500/20"
+                          }`}>
+                            {isNostr ? (
+                              <Zap className="h-4 w-4 text-purple-400" />
+                            ) : (
+                              <Key className="h-4 w-4 text-cyan-400" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-white">
+                                {identity.label}
+                              </span>
+                              <span className={`text-xs px-2 py-0.5 rounded ${
+                                isNostr
+                                  ? "bg-purple-500/20 text-purple-300"
+                                  : "bg-cyan-500/20 text-cyan-300"
+                              }`}>
+                                {identity.identity_type}
+                              </span>
+                              {identity.is_primary && (
+                                <span className="text-xs px-2 py-0.5 rounded bg-bitcoin-orange/20 text-bitcoin-orange">
+                                  Primary
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-slate-400 font-mono truncate mt-1">
+                              {identity.formatted_public_key}
+                            </p>
+                          </div>
+                        </label>
+                      );
+                    })
+                  )}
+                </div>
+
+                {selectedIdentities.size > 0 && (
+                  <div className="mt-4 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+                    <div className="flex items-center gap-2 text-green-400 text-sm">
+                      <CheckCircle className="h-4 w-4" />
+                      <span>
+                        {selectedIdentities.size} identit{selectedIdentities.size > 1 ? "ies" : "y"} will be linked as TXT records
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Carrier Selection */}
             <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-6">

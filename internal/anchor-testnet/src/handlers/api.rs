@@ -52,7 +52,13 @@ pub struct UpdateConfigRequest {
     #[serde(default)]
     pub enable_oracle_dispute: Option<bool>,
     #[serde(default)]
+    pub enable_oracle_event: Option<bool>,
+    #[serde(default)]
     pub enable_prediction: Option<bool>,
+    #[serde(default)]
+    pub enable_prediction_ticket: Option<bool>,
+    #[serde(default)]
+    pub enable_prediction_draw: Option<bool>,
     #[serde(default)]
     pub weight_op_return: Option<u8>,
     #[serde(default)]
@@ -132,8 +138,17 @@ pub async fn update_config_handler(
     if let Some(v) = req.enable_oracle_dispute {
         config.enable_oracle_dispute = v;
     }
+    if let Some(v) = req.enable_oracle_event {
+        config.enable_oracle_event = v;
+    }
     if let Some(v) = req.enable_prediction {
         config.enable_prediction = v;
+    }
+    if let Some(v) = req.enable_prediction_ticket {
+        config.enable_prediction_ticket = v;
+    }
+    if let Some(v) = req.enable_prediction_draw {
+        config.enable_prediction_draw = v;
     }
     if let Some(v) = req.weight_op_return {
         config.weight_op_return = v.min(100);

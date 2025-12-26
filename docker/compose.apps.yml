@@ -472,6 +472,8 @@ services:
         condition: service_healthy
       core-bitcoin:
         condition: service_healthy
+      core-wallet:
+        condition: service_healthy
       app-oracles-backend:
         condition: service_healthy
     networks:

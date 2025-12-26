@@ -67,6 +67,7 @@ import {
   Eye,
   Ticket,
   Cpu,
+  Fingerprint,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apps } from "@/lib/apps";
@@ -128,6 +129,7 @@ const navigationSections = [
     items: [
       { nameKey: "nav.dashboard", href: "/", icon: LayoutDashboard },
       { nameKey: "nav.services", href: "/apps", icon: AppWindow },
+      { nameKey: "nav.identities", href: "/identities", icon: Fingerprint },
       { nameKey: "nav.settings", href: "/settings", icon: Settings },
       { nameKey: "nav.backups", href: "/backup", icon: HardDrive },
     ],

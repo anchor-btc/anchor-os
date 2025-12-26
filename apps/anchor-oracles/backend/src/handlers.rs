@@ -113,6 +113,79 @@ pub async fn get_oracle(
     }
 }
 
+/// Get oracles by wallet addresses (for "My Oracles" feature)
+#[derive(Debug, Deserialize)]
+pub struct AddressesQuery {
+    pub addresses: Option<String>, // Comma-separated list of addresses (for GET)
+}
+
+#[derive(Debug, Deserialize, utoipa::ToSchema)]
+pub struct AddressesBody {
+    pub addresses: Vec<String>, // Array of addresses (for POST)
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/oracles/by-addresses",
+    params(
+        ("addresses" = String, Query, description = "Comma-separated wallet addresses")
+    ),
+    responses(
+        (status = 200, description = "Oracles created by these addresses", body = Vec<Oracle>)
+    ),
+    tag = "oracles"
+)]
+pub async fn get_oracles_by_addresses(
+    State(db): State<AppState>,
+    Query(params): Query<AddressesQuery>,
+) -> impl IntoResponse {
+    let addresses: Vec<String> = params.addresses
+        .unwrap_or_default()
+        .split(',')
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .collect();
+
+    if addresses.is_empty() {
+        return Json(Vec::<Oracle>::new()).into_response();
+    }
+
+    match db.get_oracles_by_addresses(&addresses).await {
+        Ok(oracles) => Json(oracles).into_response(),
+        Err(e) => {
+            tracing::error!("Failed to get oracles by addresses: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response()
+        }
+    }
+}
+
+/// Get oracles by wallet addresses via POST (for large address lists)
+#[utoipa::path(
+    post,
+    path = "/api/oracles/by-addresses",
+    request_body = AddressesBody,
+    responses(
+        (status = 200, description = "Oracles created by these addresses", body = Vec<Oracle>)
+    ),
+    tag = "oracles"
+)]
+pub async fn post_oracles_by_addresses(
+    State(db): State<AppState>,
+    Json(body): Json<AddressesBody>,
+) -> impl IntoResponse {
+    if body.addresses.is_empty() {
+        return Json(Vec::<Oracle>::new()).into_response();
+    }
+
+    match db.get_oracles_by_addresses(&body.addresses).await {
+        Ok(oracles) => Json(oracles).into_response(),
+        Err(e) => {
+            tracing::error!("Failed to get oracles by addresses: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response()
+        }
+    }
+}
+
 /// Get oracle's attestation history
 #[utoipa::path(
     get,
@@ -270,16 +343,87 @@ pub async fn list_events(
     tag = "events"
 )]
 pub async fn create_event_request(
-    State(_db): State<AppState>,
+    State(db): State<AppState>,
     Json(req): Json<CreateEventRequest>,
 ) -> impl IntoResponse {
-    // In production, this would create the event request
-    Json(serde_json::json!({
-        "status": "created",
-        "category": req.category,
-        "description": req.description,
-        "resolution_block": req.resolution_block,
-    }))
+    // Generate a random event_id (32 bytes)
+    use rand::Rng;
+    let mut event_id = [0u8; 32];
+    rand::thread_rng().fill(&mut event_id);
+    
+    match db.insert_event_request(
+        &event_id,
+        req.category,
+        &req.description,
+        req.resolution_block,
+        req.bounty_sats,
+    ).await {
+        Ok(id) => Json(serde_json::json!({
+            "status": "created",
+            "id": id,
+            "event_id": hex::encode(&event_id),
+            "category": req.category,
+            "description": req.description,
+            "resolution_block": req.resolution_block,
+            "bounty_sats": req.bounty_sats,
+        })).into_response(),
+        Err(e) => {
+            tracing::error!("Failed to create event request: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response()
+        }
+    }
+}
+
+/// Get event by ID
+#[utoipa::path(
+    get,
+    path = "/api/events/{id}",
+    params(
+        ("id" = i32, Path, description = "Event ID")
+    ),
+    responses(
+        (status = 200, description = "Event details", body = EventRequest),
+        (status = 404, description = "Event not found")
+    ),
+    tag = "events"
+)]
+pub async fn get_event(
+    State(db): State<AppState>,
+    Path(id): Path<i32>,
+) -> impl IntoResponse {
+    match db.get_event_by_id(id).await {
+        Ok(Some(event)) => Json(event).into_response(),
+        Ok(None) => (StatusCode::NOT_FOUND, "Event not found").into_response(),
+        Err(e) => {
+            tracing::error!("Failed to get event: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response()
+        }
+    }
+}
+
+/// Get attestations for an event
+#[utoipa::path(
+    get,
+    path = "/api/events/{id}/attestations",
+    params(
+        ("id" = i32, Path, description = "Event ID")
+    ),
+    responses(
+        (status = 200, description = "Attestations for this event", body = Vec<Attestation>)
+    ),
+    tag = "events"
+)]
+pub async fn get_event_attestations(
+    State(db): State<AppState>,
+    Path(id): Path<i32>,
+) -> impl IntoResponse {
+    match db.get_attestations_by_event(id).await {
+        Ok(attestations) => Json(attestations).into_response(),
+        Err(e) => {
+            tracing::error!("Failed to get event attestations: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response()
+        }
+    }
 }
 
 /// List disputes

@@ -203,7 +203,10 @@ async fn main() -> Result<()> {
                     config::MessageType::Oracle => "🔮",
                     config::MessageType::OracleAttestation => "✅",
                     config::MessageType::OracleDispute => "⚔️",
-                    config::MessageType::Prediction => "🎲",
+                    config::MessageType::OracleEvent => "📅",
+                    config::MessageType::Prediction => "📊",
+                    config::MessageType::PredictionTicket => "🎯",
+                    config::MessageType::PredictionDraw => "⚖️",
                 };
                 let carrier_icon = match result.carrier {
                     CarrierType::OpReturn => "📦",

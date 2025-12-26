@@ -9,7 +9,7 @@ import {
   Container,
   Button,
 } from "@AnchorProtocol/ui";
-import { Ticket, Home, Trophy, Clock, BookOpen, Plus } from "lucide-react";
+import { TrendingUp, Home, User, Clock, BookOpen, Plus } from "lucide-react";
 
 const DOCS_URL = "http://localhost:3900/apps/predictions";
 
@@ -20,9 +20,9 @@ export function Header() {
         <nav className="flex items-center h-16">
           <AppLogo
             appName="Predictions"
-            appIcon={Ticket}
+            appIcon={TrendingUp}
             accentColor="amber"
-            subtitle="Trustless Bitcoin Predictions"
+            subtitle="Binary Markets on Bitcoin"
           />
 
           <div className="flex-1" />
@@ -32,10 +32,10 @@ export function Header() {
               <NavLink href="/" icon={Home} accentColor="amber">
                 Home
               </NavLink>
-              <NavLink href="/markets" icon={Ticket} accentColor="amber">
+              <NavLink href="/markets" icon={TrendingUp} accentColor="amber">
                 Markets
               </NavLink>
-              <NavLink href="/my-tickets" icon={Trophy} accentColor="amber">
+              <NavLink href="/my-bets" icon={User} accentColor="amber">
                 My Bets
               </NavLink>
               <NavLink href="/history" icon={Clock} accentColor="amber">

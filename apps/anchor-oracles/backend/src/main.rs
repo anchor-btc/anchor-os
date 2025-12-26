@@ -115,6 +115,7 @@ async fn main() -> anyhow::Result<()> {
         // Oracles
         .route("/api/oracles", get(list_oracles))
         .route("/api/oracles/register", post(register_oracle))
+        .route("/api/oracles/by-addresses", get(get_oracles_by_addresses).post(post_oracles_by_addresses))
         .route("/api/oracles/:pubkey", get(get_oracle))
         .route("/api/oracles/:pubkey/attestations", get(get_oracle_attestations))
         // Attestations
@@ -123,6 +124,8 @@ async fn main() -> anyhow::Result<()> {
         // Events
         .route("/api/events", get(list_events))
         .route("/api/events/request", post(create_event_request))
+        .route("/api/events/:id", get(get_event))
+        .route("/api/events/:id/attestations", get(get_event_attestations))
         // Disputes
         .route("/api/disputes", get(list_disputes))
         // Categories

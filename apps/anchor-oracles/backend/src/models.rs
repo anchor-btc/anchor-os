@@ -33,11 +33,53 @@ impl OracleCategories {
     }
 }
 
+/// Key type for oracle identity
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum KeyType {
+    /// secp256k1 Schnorr (Nostr, Bitcoin)
+    Secp256k1 = 0,
+    /// Ed25519 (Pubky)
+    Ed25519 = 1,
+}
+
+impl KeyType {
+    pub fn from_byte(b: u8) -> Self {
+        match b {
+            1 => KeyType::Ed25519,
+            _ => KeyType::Secp256k1,
+        }
+    }
+
+    pub fn to_byte(&self) -> u8 {
+        match self {
+            KeyType::Secp256k1 => 0,
+            KeyType::Ed25519 => 1,
+        }
+    }
+
+    pub fn name(&self) -> &'static str {
+        match self {
+            KeyType::Secp256k1 => "Nostr (secp256k1)",
+            KeyType::Ed25519 => "Pubky (Ed25519)",
+        }
+    }
+}
+
+impl Default for KeyType {
+    fn default() -> Self {
+        KeyType::Secp256k1
+    }
+}
+
 /// Oracle registration/profile
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct Oracle {
     pub id: i32,
     pub pubkey: String,
+    /// Key type: 0 = secp256k1 (Nostr), 1 = Ed25519 (Pubky)
+    pub key_type: i32,
+    pub key_type_name: String,
     pub name: String,
     pub description: Option<String>,
     pub categories: i32,
@@ -50,6 +92,8 @@ pub struct Oracle {
     pub disputed_attestations: i32,
     pub reputation_score: f32,
     pub created_at: String,
+    /// Linked identity ID (if linked to wallet identity)
+    pub linked_identity_id: Option<String>,
 }
 
 /// Oracle attestation
@@ -57,6 +101,7 @@ pub struct Oracle {
 pub struct Attestation {
     pub id: i32,
     pub oracle_id: i32,
+    pub oracle_pubkey: Option<String>,
     pub oracle_name: Option<String>,
     pub txid: String,
     pub vout: i32,
@@ -129,8 +174,13 @@ pub struct CategoryInfo {
 #[derive(Debug, Clone, Deserialize, ToSchema)]
 pub struct RegisterOracleRequest {
     pub pubkey: String,
+    /// Key type: 0 = secp256k1 (Nostr), 1 = Ed25519 (Pubky)
+    #[serde(default)]
+    pub key_type: i32,
     pub name: String,
     pub categories: i32,
+    /// Optional: Link to wallet identity ID
+    pub identity_id: Option<String>,
 }
 
 /// Request to submit attestation
@@ -147,18 +197,18 @@ pub struct CreateEventRequest {
     pub category: i32,
     pub description: String,
     pub resolution_block: Option<i32>,
+    #[serde(default)]
+    pub bounty_sats: i64,
 }
 
 pub fn category_name(category: i32) -> String {
-    match category {
-        1 => "Block".to_string(),
-        2 => "Prices".to_string(),
-        4 => "Sports".to_string(),
-        8 => "Weather".to_string(),
-        16 => "Elections".to_string(),
-        32 => "Random".to_string(),
-        64 => "Custom".to_string(),
-        _ => format!("Unknown({})", category),
+    // Handle bitmask categories (composite values like 6 = Prices + Sports)
+    let cats = OracleCategories(category);
+    let names = cats.names();
+    if names.is_empty() {
+        format!("Unknown({})", category)
+    } else {
+        names.join(", ")
     }
 }
 
@@ -169,6 +219,14 @@ pub fn dispute_reason_name(reason: i32) -> String {
         3 => "Invalid signature".to_string(),
         4 => "Oracle not authorized".to_string(),
         _ => format!("Unknown({})", reason),
+    }
+}
+
+pub fn key_type_name(key_type: i32) -> String {
+    match key_type {
+        0 => "Nostr (secp256k1)".to_string(),
+        1 => "Pubky (Ed25519)".to_string(),
+        _ => format!("Unknown({})", key_type),
     }
 }
 

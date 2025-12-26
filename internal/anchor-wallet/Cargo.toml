@@ -46,5 +46,9 @@ rand.workspace = true
 base64.workspace = true
 sha2.workspace = true
 
+# Identity management
+uuid = { version = "1.11", features = ["v4", "serde"] }
+ed25519-dalek = { version = "2.1", features = ["rand_core"] }
+
 [dev-dependencies]
 tempfile = "3"

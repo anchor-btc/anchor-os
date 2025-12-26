@@ -23,35 +23,45 @@ export function formatSats(sats: number): string {
   return `${sats} sats`;
 }
 
-export function formatNumbers(numbers: number[]): string {
-  return numbers.map(n => n.toString().padStart(2, '0')).join(' - ');
+export function formatPercent(value: number): string {
+  return `${(value * 100).toFixed(1)}%`;
 }
 
-export function lotteryTypeName(type: number): string {
-  switch (type) {
-    case 0: return "Daily";
-    case 1: return "Weekly";
-    case 2: return "Jackpot";
-    default: return "Unknown";
-  }
+export function formatOdds(price: number): string {
+  if (price <= 0 || price >= 1) return "N/A";
+  return (1 / price).toFixed(2);
 }
 
-export function lotteryTypeColor(type: number): string {
-  switch (type) {
-    case 0: return "bg-blue-500/20 text-blue-400";
-    case 1: return "bg-purple-500/20 text-purple-400";
-    case 2: return "bg-amber-500/20 text-amber-400";
-    default: return "bg-gray-500/20 text-gray-400";
-  }
+export function outcomeColor(outcome: number): string {
+  return outcome === 1
+    ? "bg-green-500/20 text-green-400 border-green-500/50"
+    : "bg-red-500/20 text-red-400 border-red-500/50";
 }
 
 export function statusColor(status: string): string {
   switch (status) {
-    case "open": return "bg-green-500/20 text-green-400";
-    case "drawing": return "bg-yellow-500/20 text-yellow-400";
-    case "completed": return "bg-blue-500/20 text-blue-400";
-    case "cancelled": return "bg-red-500/20 text-red-400";
-    default: return "bg-gray-500/20 text-gray-400";
+    case "open":
+      return "bg-green-500/20 text-green-400";
+    case "resolved":
+      return "bg-blue-500/20 text-blue-400";
+    case "cancelled":
+      return "bg-red-500/20 text-red-400";
+    default:
+      return "bg-gray-500/20 text-gray-400";
   }
 }
 
+export function resolutionColor(resolution: number | null): string {
+  if (resolution === null) return "bg-yellow-500/20 text-yellow-400";
+  if (resolution === 1) return "bg-green-500/20 text-green-400";
+  if (resolution === 0) return "bg-red-500/20 text-red-400";
+  return "bg-gray-500/20 text-gray-400";
+}
+
+export function priceToColor(price: number): string {
+  // Higher price = more likely = greener
+  if (price >= 0.7) return "text-green-400";
+  if (price >= 0.5) return "text-yellow-400";
+  if (price >= 0.3) return "text-orange-400";
+  return "text-red-400";
+}

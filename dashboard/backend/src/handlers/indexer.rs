@@ -57,9 +57,88 @@ fn get_kind_name(kind: i32) -> String {
         6 => "Proof".to_string(),
         10 => "Token Deploy".to_string(),
         11 => "Token Mint".to_string(),
+        12 => "Token Burn".to_string(),
         20 => "Token Transfer".to_string(),
+        30 => "Oracle Register".to_string(),
+        31 => "Oracle Attestation".to_string(),
+        32 => "Oracle Dispute".to_string(),
+        33 => "Oracle Event".to_string(),
+        40 => "Market Create".to_string(),
+        41 => "Place Bet".to_string(),
+        42 => "Market Resolve".to_string(),
+        43 => "Claim Winnings".to_string(),
         _ => format!("Kind {}", kind),
     }
+}
+
+/// Get app info for a message kind
+fn get_app_info(kind: i32) -> Option<AppInfo> {
+    match kind {
+        1 => Some(AppInfo {
+            app_id: "threads".to_string(),
+            app_name: "Threads".to_string(),
+            app_path: "/apps/threads".to_string(),
+            color: "#3B82F6".to_string(), // blue
+        }),
+        2 => Some(AppInfo {
+            app_id: "pixel".to_string(),
+            app_name: "Pixel".to_string(),
+            app_path: "/apps/pixel".to_string(),
+            color: "#EC4899".to_string(), // pink
+        }),
+        3 => Some(AppInfo {
+            app_id: "pixel".to_string(),
+            app_name: "Pixel".to_string(),
+            app_path: "/apps/pixel".to_string(),
+            color: "#EC4899".to_string(), // pink
+        }),
+        4 => Some(AppInfo {
+            app_id: "map".to_string(),
+            app_name: "Map".to_string(),
+            app_path: "/apps/map".to_string(),
+            color: "#22C55E".to_string(), // green
+        }),
+        5 => Some(AppInfo {
+            app_id: "dns".to_string(),
+            app_name: "DNS".to_string(),
+            app_path: "/apps/dns".to_string(),
+            color: "#8B5CF6".to_string(), // purple
+        }),
+        6 => Some(AppInfo {
+            app_id: "proof".to_string(),
+            app_name: "Proof".to_string(),
+            app_path: "/apps/proof".to_string(),
+            color: "#14B8A6".to_string(), // teal
+        }),
+        10 | 11 | 12 | 20 => Some(AppInfo {
+            app_id: "tokens".to_string(),
+            app_name: "Tokens".to_string(),
+            app_path: "/apps/tokens".to_string(),
+            color: "#F59E0B".to_string(), // amber
+        }),
+        30 | 31 | 32 | 33 => Some(AppInfo {
+            app_id: "oracles".to_string(),
+            app_name: "Oracles".to_string(),
+            app_path: "/apps/oracles".to_string(),
+            color: "#EF4444".to_string(), // red
+        }),
+        40 | 41 | 42 | 43 => Some(AppInfo {
+            app_id: "predictions".to_string(),
+            app_name: "Predictions".to_string(),
+            app_path: "/apps/predictions".to_string(),
+            color: "#F97316".to_string(), // orange
+        }),
+        _ => None,
+    }
+}
+
+/// App info for linking UTXOs to apps
+#[derive(Debug, Clone, Serialize, ToSchema)]
+pub struct AppInfo {
+    pub app_id: String,
+    pub app_name: String,
+    pub app_path: String,
+    pub color: String,
 }
 
 fn get_carrier_name(carrier: i32) -> String {
@@ -565,6 +644,161 @@ pub async fn get_message_detail(
         anchors,
         replies_count,
         created_at: parts[9].to_string(),
+    }))
+}
+
+// ============================================================================
+// UTXO Protocol Info - Get protocol info for wallet UTXOs
+// ============================================================================
+
+/// Request to get protocol info for multiple txids
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct UtxoProtocolInfoRequest {
+    /// List of txids to query
+    pub txids: Vec<String>,
+}
+
+/// Protocol info for a single UTXO/transaction
+#[derive(Debug, Serialize, ToSchema)]
+pub struct UtxoProtocolInfo {
+    /// TXID as stored in database (little-endian)
+    pub txid: String,
+    /// TXID in big-endian format (as returned by Bitcoin Core)
+    pub original_txid: String,
+    pub vout: i32,
+    pub kind: i32,
+    pub kind_name: String,
+    pub carrier: i32,
+    pub carrier_name: String,
+    pub app: Option<AppInfo>,
+    pub body_preview: String,
+    pub block_height: Option<i32>,
+}
+
+/// Response with protocol info for multiple txids
+#[derive(Debug, Serialize, ToSchema)]
+pub struct UtxoProtocolInfoResponse {
+    pub items: Vec<UtxoProtocolInfo>,
+    pub found_count: i32,
+    pub not_found_count: i32,
+}
+
+/// Get protocol info for wallet UTXOs
+/// 
+/// This endpoint accepts a list of txids and returns protocol information
+/// for any that are found in the Anchor Protocol index, including the
+/// app they belong to with links for easy navigation.
+#[utoipa::path(
+    post,
+    path = "/indexer/utxo-protocol-info",
+    tag = "Indexer",
+    request_body = UtxoProtocolInfoRequest,
+    responses(
+        (status = 200, description = "Protocol info for UTXOs", body = UtxoProtocolInfoResponse),
+        (status = 500, description = "Internal server error")
+    )
+)]
+pub async fn get_utxo_protocol_info(
+    State(state): State<Arc<AppState>>,
+    Json(req): Json<UtxoProtocolInfoRequest>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    if req.txids.is_empty() {
+        return Ok(Json(UtxoProtocolInfoResponse {
+            items: vec![],
+            found_count: 0,
+            not_found_count: 0,
+        }));
+    }
+
+    // Helper function to reverse bytes of a hex string (big-endian <-> little-endian)
+    fn reverse_hex_bytes(hex: &str) -> String {
+        let bytes: Vec<u8> = hex::decode(hex).unwrap_or_default();
+        let reversed: Vec<u8> = bytes.into_iter().rev().collect();
+        hex::encode(reversed)
+    }
+
+    // Build a map from db_txid (little-endian) -> original_txid (big-endian)
+    // This allows us to return the original format that the frontend will use for lookups
+    let mut txid_to_original: std::collections::HashMap<String, String> = std::collections::HashMap::new();
+    
+    // Build query for all txids - check both original and reversed format
+    // Bitcoin Core returns txids in big-endian, but the indexer stores in little-endian
+    let txid_conditions: Vec<String> = req.txids
+        .iter()
+        .flat_map(|txid| {
+            let txid_lower = txid.to_lowercase();
+            let txid_reversed = reverse_hex_bytes(&txid_lower);
+            
+            // Map both formats to the original txid
+            txid_to_original.insert(txid_lower.clone(), txid_lower.clone());
+            txid_to_original.insert(txid_reversed.clone(), txid_lower.clone());
+            
+            vec![
+                format!("encode(m.txid, 'hex') = '{}'", txid_lower),
+                format!("encode(m.txid, 'hex') = '{}'", txid_reversed),
+            ]
+        })
+        .collect();
+    
+    let query = format!(
+        r#"
+        SELECT 
+            encode(m.txid, 'hex') as txid,
+            m.vout,
+            m.kind,
+            m.carrier,
+            encode(substring(m.body from 1 for 30), 'hex') as body_preview,
+            m.block_height
+        FROM messages m
+        WHERE {}
+        ORDER BY m.id DESC
+        "#,
+        txid_conditions.join(" OR ")
+    );
+
+    let result = exec_sql(&state.docker, &query)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?;
+
+    let items: Vec<UtxoProtocolInfo> = result
+        .lines()
+        .filter_map(|line| {
+            let parts: Vec<&str> = line.split('|').collect();
+            if parts.len() >= 6 {
+                let db_txid = parts[0].to_string();
+                let kind = parts[2].parse::<i32>().ok()?;
+                let carrier = parts[3].parse::<i32>().ok()?;
+                
+                // Get the original txid (big-endian) from our map
+                let original_txid = txid_to_original.get(&db_txid)
+                    .cloned()
+                    .unwrap_or_else(|| db_txid.clone());
+                
+                Some(UtxoProtocolInfo {
+                    txid: db_txid,
+                    original_txid,
+                    vout: parts[1].parse().ok()?,
+                    kind,
+                    kind_name: get_kind_name(kind),
+                    carrier,
+                    carrier_name: get_carrier_name(carrier),
+                    app: get_app_info(kind),
+                    body_preview: parts[4].to_string(),
+                    block_height: parts[5].parse().ok(),
+                })
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    let found_count = items.len() as i32;
+    let not_found_count = req.txids.len() as i32 - found_count;
+
+    Ok(Json(UtxoProtocolInfoResponse {
+        items,
+        found_count,
+        not_found_count,
     }))
 }
 

@@ -29,7 +29,10 @@ pub struct TestnetConfig {
     pub enable_oracle: bool,              // Kind 30 (Register)
     pub enable_oracle_attestation: bool,  // Kind 31 (Attestation)
     pub enable_oracle_dispute: bool,      // Kind 32 (Dispute)
-    pub enable_prediction: bool,          // Kind 40-43
+    pub enable_oracle_event: bool,        // Event Requests (via API)
+    pub enable_prediction: bool,          // Kind 40 (LotteryCreate)
+    pub enable_prediction_ticket: bool,   // Kind 41 (LotteryTicket)
+    pub enable_prediction_draw: bool,     // Kind 42 (LotteryDraw)
 
     // Carrier weights (0-100, will be normalized)
     pub weight_op_return: u8,
@@ -64,7 +67,10 @@ impl Default for TestnetConfig {
             enable_oracle: false,
             enable_oracle_attestation: false,
             enable_oracle_dispute: false,
+            enable_oracle_event: false,
             enable_prediction: false,
+            enable_prediction_ticket: false,
+            enable_prediction_draw: false,
 
             // Default carrier weights (matching original distribution)
             weight_op_return: 30,
@@ -147,8 +153,17 @@ impl TestnetConfig {
         if self.enable_oracle_dispute {
             types.push(MessageType::OracleDispute);
         }
+        if self.enable_oracle_event {
+            types.push(MessageType::OracleEvent);
+        }
         if self.enable_prediction {
             types.push(MessageType::Prediction);
+        }
+        if self.enable_prediction_ticket {
+            types.push(MessageType::PredictionTicket);
+        }
+        if self.enable_prediction_draw {
+            types.push(MessageType::PredictionDraw);
         }
         types
     }
@@ -194,8 +209,11 @@ pub enum MessageType {
     Oracle,            // Register (Kind 30)
     OracleAttestation, // Attestation (Kind 31)
     OracleDispute,     // Dispute (Kind 32)
-    // Other types
-    Prediction,
+    OracleEvent,       // Event Request (via API)
+    // Prediction/Lottery types
+    Prediction,        // Kind 40 (LotteryCreate)
+    PredictionTicket,  // Kind 41 (LotteryTicket)
+    PredictionDraw,    // Kind 42 (LotteryDraw)
 }
 
 impl MessageType {
@@ -216,7 +234,10 @@ impl MessageType {
             MessageType::Oracle => 30,
             MessageType::OracleAttestation => 31,
             MessageType::OracleDispute => 32,
+            MessageType::OracleEvent => 33, // Not a blockchain kind, uses API
             MessageType::Prediction => 40,
+            MessageType::PredictionTicket => 41,
+            MessageType::PredictionDraw => 42,
         }
     }
 
@@ -236,7 +257,10 @@ impl MessageType {
             MessageType::Oracle => "Oracle Register",
             MessageType::OracleAttestation => "Oracle Attestation",
             MessageType::OracleDispute => "Oracle Dispute",
-            MessageType::Prediction => "Prediction",
+            MessageType::OracleEvent => "Oracle Event",
+            MessageType::Prediction => "Market Create",
+            MessageType::PredictionTicket => "Place Bet",
+            MessageType::PredictionDraw => "Market Resolve",
         }
     }
 
@@ -257,7 +281,10 @@ impl MessageType {
             MessageType::Oracle,
             MessageType::OracleAttestation,
             MessageType::OracleDispute,
+            MessageType::OracleEvent,
             MessageType::Prediction,
+            MessageType::PredictionTicket,
+            MessageType::PredictionDraw,
         ]
     }
 }
@@ -280,7 +307,10 @@ pub struct GeneratorStats {
     pub oracle_count: u64,
     pub oracle_attestation_count: u64,
     pub oracle_dispute_count: u64,
+    pub oracle_event_count: u64,
     pub prediction_count: u64,
+    pub prediction_ticket_count: u64,
+    pub prediction_draw_count: u64,
     pub carrier_op_return: u64,
     pub carrier_stamps: u64,
     pub carrier_inscription: u64,
@@ -318,7 +348,10 @@ impl GeneratorStats {
             MessageType::Oracle => self.oracle_count += 1,
             MessageType::OracleAttestation => self.oracle_attestation_count += 1,
             MessageType::OracleDispute => self.oracle_dispute_count += 1,
+            MessageType::OracleEvent => self.oracle_event_count += 1,
             MessageType::Prediction => self.prediction_count += 1,
+            MessageType::PredictionTicket => self.prediction_ticket_count += 1,
+            MessageType::PredictionDraw => self.prediction_draw_count += 1,
         }
     }
 

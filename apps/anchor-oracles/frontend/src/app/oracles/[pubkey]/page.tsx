@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { Star, CheckCircle, AlertCircle, Coins, ArrowLeft, ExternalLink } from "lucide-react";
 import Link from "next/link";
-import { fetchOracle, fetchOracleAttestations } from "@/lib/api";
+import { fetchOracle, fetchOracleAttestations, fetchDefaultExplorer, buildExplorerTxUrl } from "@/lib/api";
 import { shortenPubkey, formatSats } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 
@@ -22,6 +22,12 @@ export default function OracleDetailPage() {
     queryKey: ["oracle-attestations", pubkey],
     queryFn: () => fetchOracleAttestations(pubkey, 20),
     enabled: !!pubkey,
+  });
+
+  const { data: explorer } = useQuery({
+    queryKey: ["default-explorer"],
+    queryFn: fetchDefaultExplorer,
+    staleTime: 1000 * 60 * 5,
   });
 
   if (loadingOracle) {
@@ -162,12 +168,16 @@ export default function OracleDetailPage() {
                   {formatDistanceToNow(new Date(att.created_at), { addSuffix: true })}
                 </td>
                 <td className="px-4 py-3">
-                  <a
-                    href={`#tx/${att.txid}`}
-                    className="text-purple-400 hover:text-purple-300"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                  </a>
+                  {explorer && (
+                    <a
+                      href={buildExplorerTxUrl(explorer, att.txid)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-purple-400 hover:text-purple-300"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  )}
                 </td>
               </tr>
             ))}

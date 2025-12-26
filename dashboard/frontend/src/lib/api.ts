@@ -1,5 +1,6 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8010";
 const TESTNET_URL = process.env.NEXT_PUBLIC_TESTNET_URL || "http://localhost:8002";
+const WALLET_URL = process.env.NEXT_PUBLIC_WALLET_URL || "http://localhost:8001";
 
 // Types
 export interface Container {
@@ -373,6 +374,7 @@ export interface TestnetConfig {
   enable_oracle: boolean;
   enable_oracle_attestation: boolean;
   enable_oracle_dispute: boolean;
+  enable_oracle_event: boolean;
   enable_prediction: boolean;
   weight_op_return: number;
   weight_stamps: number;
@@ -398,6 +400,7 @@ export interface TestnetStats {
   oracle_count: number;
   oracle_attestation_count: number;
   oracle_dispute_count: number;
+  oracle_event_count: number;
   prediction_count: number;
   carrier_op_return: number;
   carrier_stamps: number;
@@ -1699,5 +1702,255 @@ export function getIndexerWebSocketUrl(): string {
   const wsProtocol = typeof window !== "undefined" && window.location.protocol === "https:" ? "wss:" : "ws:";
   const apiHost = API_URL.replace(/^https?:\/\//, "").replace(/\/$/, "");
   return `${wsProtocol}//${apiHost}/indexer/ws/live`;
+}
+
+// ============================================================================
+// UTXO Protocol Info Types & API Functions
+// ============================================================================
+
+export interface AppInfo {
+  app_id: string;
+  app_name: string;
+  app_path: string;
+  color: string;
+}
+
+export interface UtxoProtocolInfo {
+  /** TXID as stored in database (little-endian) */
+  txid: string;
+  /** TXID in big-endian format (as returned by Bitcoin Core) - use this for lookups */
+  original_txid: string;
+  vout: number;
+  kind: number;
+  kind_name: string;
+  carrier: number;
+  carrier_name: string;
+  app: AppInfo | null;
+  body_preview: string;
+  block_height: number | null;
+}
+
+export interface UtxoProtocolInfoResponse {
+  items: UtxoProtocolInfo[];
+  found_count: number;
+  not_found_count: number;
+}
+
+export async function fetchUtxoProtocolInfo(txids: string[]): Promise<UtxoProtocolInfoResponse> {
+  const res = await fetch(`${API_URL}/indexer/utxo-protocol-info`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ txids }),
+  });
+  if (!res.ok) throw new Error("Failed to fetch UTXO protocol info");
+  return res.json();
+}
+
+// ============================================================================
+// Identity Management Types & API Functions
+// ============================================================================
+
+export type IdentityType = "nostr" | "pubky";
+
+export interface NostrMetadata {
+  type: "nostr";
+  relays: string[];
+  nip05?: string;
+  name?: string;
+  about?: string;
+  picture?: string;
+}
+
+export interface PubkyMetadata {
+  type: "pubky";
+  homeserver?: string;
+  registered: boolean;
+  profile_url?: string;
+}
+
+export interface DnsPublishedInfo {
+  domain: string;
+  subdomain?: string;
+  record_name: string;
+  published_at: string;
+}
+
+export interface Identity {
+  id: string;
+  identity_type: IdentityType;
+  label: string;
+  public_key: string;
+  formatted_public_key: string;
+  is_primary: boolean;
+  metadata: NostrMetadata | PubkyMetadata;
+  dns_published?: DnsPublishedInfo;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface IdentitiesResponse {
+  identities: Identity[];
+  total: number;
+}
+
+export interface IdentityDefaults {
+  nostr: {
+    relays: string[];
+  };
+  pubky: {
+    homeservers: {
+      name: string;
+      url: string;
+      requires_invite: boolean;
+    }[];
+  };
+}
+
+export interface GeneratedKeypair {
+  public_key: string;
+  private_key: string;
+  formatted: string;
+}
+
+export interface CreateIdentityRequest {
+  identity_type: IdentityType;
+  label: string;
+  public_key: string;
+  private_key_encrypted: string;
+  metadata?: {
+    type: IdentityType;
+    relays?: string[];
+    nip05?: string;
+    name?: string;
+    homeserver?: string;
+  };
+}
+
+export interface UpdateIdentityRequest {
+  label?: string;
+  metadata?: {
+    type: IdentityType;
+    relays?: string[];
+    nip05?: string;
+    name?: string;
+    homeserver?: string;
+  };
+}
+
+export async function fetchIdentities(): Promise<IdentitiesResponse> {
+  const res = await fetch(`${WALLET_URL}/wallet/identities`);
+  if (!res.ok) throw new Error("Failed to fetch identities");
+  return res.json();
+}
+
+export async function fetchIdentity(id: string): Promise<Identity> {
+  const res = await fetch(`${WALLET_URL}/wallet/identities/${id}`);
+  if (!res.ok) throw new Error("Failed to fetch identity");
+  return res.json();
+}
+
+export async function fetchIdentityDefaults(): Promise<IdentityDefaults> {
+  const res = await fetch(`${WALLET_URL}/wallet/identities/defaults`);
+  if (!res.ok) throw new Error("Failed to fetch identity defaults");
+  return res.json();
+}
+
+export async function generateKeypair(identity_type: IdentityType): Promise<GeneratedKeypair> {
+  const res = await fetch(`${WALLET_URL}/wallet/identities/generate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ identity_type }),
+  });
+  if (!res.ok) throw new Error("Failed to generate keypair");
+  return res.json();
+}
+
+export async function createIdentity(request: CreateIdentityRequest): Promise<Identity> {
+  const res = await fetch(`${WALLET_URL}/wallet/identities`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(error || "Failed to create identity");
+  }
+  return res.json();
+}
+
+export async function updateIdentity(id: string, request: UpdateIdentityRequest): Promise<Identity> {
+  const res = await fetch(`${WALLET_URL}/wallet/identities/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
+  if (!res.ok) throw new Error("Failed to update identity");
+  return res.json();
+}
+
+export async function deleteIdentity(id: string): Promise<void> {
+  const res = await fetch(`${WALLET_URL}/wallet/identities/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error("Failed to delete identity");
+}
+
+export async function setIdentityPrimary(id: string): Promise<Identity> {
+  const res = await fetch(`${WALLET_URL}/wallet/identities/${id}/primary`, {
+    method: "POST",
+  });
+  if (!res.ok) throw new Error("Failed to set identity as primary");
+  return res.json();
+}
+
+export async function publishIdentityToDns(
+  id: string,
+  domain: string,
+  subdomain?: string
+): Promise<Identity> {
+  const res = await fetch(`${WALLET_URL}/wallet/identities/${id}/dns`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ domain, subdomain }),
+  });
+  if (!res.ok) throw new Error("Failed to publish identity to DNS");
+  return res.json();
+}
+
+export async function removeIdentityFromDns(id: string): Promise<Identity> {
+  const res = await fetch(`${WALLET_URL}/wallet/identities/${id}/dns`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error("Failed to remove identity from DNS");
+  return res.json();
+}
+
+export interface SyncDnsResult {
+  synced_count: number;
+  checked_domains: number;
+}
+
+export async function syncIdentitiesFromDns(): Promise<SyncDnsResult> {
+  const res = await fetch(`${WALLET_URL}/wallet/identities/sync-dns`, {
+    method: "POST",
+  });
+  if (!res.ok) throw new Error("Failed to sync identities from DNS");
+  return res.json();
+}
+
+export interface ExportKeyResult {
+  id: string;
+  label: string;
+  identity_type: string;
+  public_key: string;
+  private_key_hex: string;
+  private_key_formatted: string;
+  warning: string;
+}
+
+export async function exportIdentityKey(id: string): Promise<ExportKeyResult> {
+  const res = await fetch(`${WALLET_URL}/wallet/identities/${id}/export`);
+  if (!res.ok) throw new Error("Failed to export identity key");
+  return res.json();
 }
 

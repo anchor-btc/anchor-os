@@ -20,6 +20,7 @@ import { formatDistanceToNow, format } from "date-fns";
 import { useState } from "react";
 
 import { getExplorerTxUrl } from "@/lib/api";
+import { DomainIdentitySection } from "@/components/domain-identity-section";
 
 export default function DomainDetailPage({
   params,
@@ -278,47 +279,66 @@ export default function DomainDetailPage({
 
           {domain.records.length > 0 ? (
             <div className="space-y-2">
-              {domain.records.map((record) => (
-                <div
-                  key={record.id}
-                  className="flex items-center gap-4 p-4 bg-slate-700/30 rounded-lg"
-                >
-                  <span
-                    className={`px-3 py-1 rounded font-medium text-sm ${getRecordTypeColor(
-                      record.record_type
-                    )}`}
+              {domain.records.map((record) => {
+                // Check if this has a subdomain/name prefix
+                const hasName = !!record.name;
+                const displayName = record.name || "@";
+                
+                return (
+                  <div
+                    key={record.id}
+                    className="flex items-center gap-4 p-4 bg-slate-700/30 rounded-lg"
                   >
-                    {record.record_type}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-mono text-white truncate">
-                      {record.value}
-                    </p>
-                    <p className="text-xs text-slate-400">
-                      TTL: {record.ttl}s
-                      {record.priority !== undefined &&
-                        ` • Priority: ${record.priority}`}
-                      {record.port !== undefined && ` • Port: ${record.port}`}
-                    </p>
+                    <span
+                      className={`px-3 py-1 rounded font-medium text-sm ${getRecordTypeColor(
+                        record.record_type
+                      )}`}
+                    >
+                      {record.record_type}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={`text-sm font-mono ${hasName ? 'text-purple-400' : 'text-slate-500'}`}>
+                          {displayName}
+                        </span>
+                        {hasName && (
+                          <span className="text-xs text-slate-600">.{decodedName}</span>
+                        )}
+                      </div>
+                      <p className="font-mono text-white truncate text-sm">
+                        {record.value}
+                      </p>
+                      <p className="text-xs text-slate-400 mt-1">
+                        TTL: {record.ttl}s
+                        {record.priority !== undefined &&
+                          ` • Priority: ${record.priority}`}
+                        {record.port !== undefined && ` • Port: ${record.port}`}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() =>
+                        copyToClipboard(record.value, `record-${record.id}`)
+                      }
+                      className="p-2 text-slate-400 hover:text-white transition-colors"
+                    >
+                      {copiedField === `record-${record.id}` ? (
+                        <CheckCircle className="h-4 w-4 text-green-400" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </button>
                   </div>
-                  <button
-                    onClick={() =>
-                      copyToClipboard(record.value, `record-${record.id}`)
-                    }
-                    className="p-2 text-slate-400 hover:text-white transition-colors"
-                  >
-                    {copiedField === `record-${record.id}` ? (
-                      <CheckCircle className="h-4 w-4 text-green-400" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <p className="text-slate-400 text-center py-4">No records found</p>
           )}
+        </div>
+
+        {/* Identity Records (Selfie Records) */}
+        <div className="mb-6">
+          <DomainIdentitySection domainName={decodedName} />
         </div>
 
         {/* History */}

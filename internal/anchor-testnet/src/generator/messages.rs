@@ -42,6 +42,26 @@ pub struct TrackedAttestation {
     pub vout: u32,
 }
 
+/// Tracked prediction market for bet/resolve operations
+#[derive(Debug, Clone)]
+pub struct TrackedMarket {
+    pub market_id: [u8; 32],
+    pub question: String,
+    pub resolution_block: u32,
+    pub oracle_pubkey: [u8; 32],
+    pub initial_liquidity: i64,
+    pub created_txid: String,
+    pub created_vout: u32,
+    /// Number of bets placed on this market
+    pub bet_count: u32,
+    /// Whether the market has been resolved
+    pub resolved: bool,
+    /// Current simulated YES pool (for price calculation)
+    pub yes_pool: i64,
+    /// Current simulated NO pool
+    pub no_pool: i64,
+}
+
 /// Message generator that interacts with the wallet service
 pub struct MessageGenerator {
     wallet: WalletClient,
@@ -53,6 +73,10 @@ pub struct MessageGenerator {
     oracle_history: Vec<TrackedOracle>,
     /// History of attestations for disputes
     attestation_history: Vec<TrackedAttestation>,
+    /// History of created markets for bet/resolve operations
+    market_history: Vec<TrackedMarket>,
+    /// Current simulated block height for lottery draws
+    current_block: u32,
     rng: rand::rngs::ThreadRng,
     config: SharedConfig,
     stats: SharedStats,
@@ -67,10 +91,17 @@ impl MessageGenerator {
             token_history: Vec::new(),
             oracle_history: Vec::new(),
             attestation_history: Vec::new(),
+            market_history: Vec::new(),
+            current_block: 7000, // Start at a reasonable block height
             rng: rand::thread_rng(),
             config,
             stats,
         }
+    }
+
+    /// Increment the simulated block height
+    pub fn advance_block(&mut self) {
+        self.current_block += 1;
     }
 
     /// Check if wallet service is healthy
@@ -183,8 +214,36 @@ impl MessageGenerator {
                     self.create_oracle_dispute(carrier).await?
                 }
             }
+            MessageType::OracleEvent => self.create_oracle_event().await?,
             MessageType::Prediction => self.create_prediction(carrier).await?,
+            MessageType::PredictionTicket => {
+                // Need at least one market to place a bet on
+                if self.market_history.is_empty() {
+                    self.create_prediction(carrier).await?
+                } else {
+                    self.create_prediction_ticket(carrier).await?
+                }
+            }
+            MessageType::PredictionDraw => {
+                // Need at least one market with bets
+                let has_market_with_bets = self.market_history
+                    .iter()
+                    .any(|m| !m.resolved && m.bet_count > 0);
+                
+                if has_market_with_bets {
+                    self.create_prediction_draw(carrier).await?
+                } else if !self.market_history.is_empty() {
+                    self.create_prediction_ticket(carrier).await?
+                } else {
+                    self.create_prediction(carrier).await?
+                }
+            }
         };
+
+        // Advance block counter periodically
+        if self.rng.gen_bool(0.2) {
+            self.advance_block();
+        }
 
         // Update stats
         {
@@ -1132,85 +1191,184 @@ impl MessageGenerator {
         })
     }
 
+    /// Create an oracle event request via API (not a blockchain transaction)
+    async fn create_oracle_event(&mut self) -> Result<MessageResult> {
+        // Categories to choose from
+        let categories = [1, 2, 4, 8, 16, 32]; // Block, Prices, Sports, Weather, Elections, Random
+        let category = *categories.choose(&mut self.rng).unwrap_or(&2);
+
+        // Generate random event descriptions based on category
+        let descriptions = match category {
+            1 => vec![
+                "What will be the block height at midnight UTC?",
+                "Will a block larger than 2MB be mined today?",
+                "How many transactions in the next block?",
+            ],
+            2 => vec![
+                "What will be BTC price at 00:00 UTC tomorrow?",
+                "Will ETH cross $5000 this week?",
+                "What will be the BTC dominance percentage?",
+            ],
+            4 => vec![
+                "Who will win the World Cup final?",
+                "Total goals in today's match?",
+                "Will team A score in first half?",
+            ],
+            8 => vec![
+                "Maximum temperature in NYC tomorrow?",
+                "Will it rain in London on Friday?",
+                "Minimum temperature in Tokyo next week?",
+            ],
+            16 => vec![
+                "Who will win the 2024 presidential election?",
+                "Will candidate X get more than 50% votes?",
+                "Voter turnout percentage prediction?",
+            ],
+            _ => vec![
+                "Random outcome A or B?",
+                "Roll a dice: what number?",
+                "Flip a coin: heads or tails?",
+            ],
+        };
+
+        let description = descriptions.choose(&mut self.rng)
+            .unwrap_or(&"What will happen?")
+            .to_string();
+
+        // Resolution block (within next 100-1000 blocks)
+        let resolution_block: i32 = self.rng.gen_range(100..1000);
+
+        // Bounty (1000-100000 sats)
+        let bounty_sats: i64 = self.rng.gen_range(1000..100000);
+
+        // Call the anchor-oracles API to create the event
+        let oracles_api_url = std::env::var("ORACLES_API_URL")
+            .unwrap_or_else(|_| "http://app-oracles-backend:3701".to_string());
+
+        let client = reqwest::Client::new();
+        let response = client
+            .post(format!("{}/api/events/request", oracles_api_url))
+            .json(&serde_json::json!({
+                "category": category,
+                "description": description,
+                "resolution_block": resolution_block,
+                "bounty_sats": bounty_sats,
+            }))
+            .send()
+            .await?;
+
+        if !response.status().is_success() {
+            let status = response.status();
+            let error_text = response.text().await.unwrap_or_default();
+            return Err(anyhow::anyhow!("Failed to create event request: {} - {}", status, error_text));
+        }
+
+        let result: serde_json::Value = response.json().await?;
+        let event_id = result["event_id"].as_str().unwrap_or("unknown").to_string();
+
+        tracing::info!(
+            "Created oracle event request: id={}, category={}, bounty={} sats",
+            &event_id[..16.min(event_id.len())],
+            category,
+            bounty_sats
+        );
+
+        // Return a fake MessageResult since this is an API call, not a tx
+        Ok(MessageResult {
+            txid: event_id,
+            vout: 0,
+            message_type: MessageType::OracleEvent,
+            is_reply: false,
+            parent_txid: None,
+            parent_vout: None,
+            carrier: CarrierType::OpReturn, // Placeholder
+        })
+    }
+
     /// Create a lottery message (Kind 40 - LotteryCreate)
+    /// Create a prediction market (Kind 40 - MarketCreate)
     /// Format expected by indexer:
-    /// [lottery_id 32 bytes] [lottery_type u8] [number_count u8] [number_max u8]
-    /// [draw_block u32 BE] [ticket_price i64 BE] [token_type u8] [oracle_pubkey 32 bytes]
+    /// [market_id 32] [question_len 2 BE] [question var] [desc_len 2 BE] [desc var] 
+    /// [resolution_block 4 BE] [oracle_pubkey 32] [initial_liquidity 8 BE]
     async fn create_prediction(&mut self, carrier: CarrierType) -> Result<MessageResult> {
-        // Generate a random 32-byte lottery ID
-        let mut lottery_id = [0u8; 32];
-        self.rng.fill(&mut lottery_id);
+        use super::sample_data::{SAMPLE_MARKET_QUESTIONS, SAMPLE_MARKET_DESCRIPTIONS};
+        
+        // Generate a random 32-byte market ID
+        let mut market_id = [0u8; 32];
+        self.rng.fill(&mut market_id);
 
-        // Lottery type: 0=daily, 1=weekly, 2=jackpot
-        let lottery_type: u8 = self.rng.gen_range(0..3);
+        // Pick a random question
+        let question = SAMPLE_MARKET_QUESTIONS
+            .choose(&mut self.rng)
+            .unwrap_or(&"Will this happen?")
+            .to_string();
 
-        // Number of numbers to pick (3-6)
-        let number_count: u8 = self.rng.gen_range(3..7);
+        // Pick a random description (80% chance)
+        let description = if self.rng.gen_bool(0.8) {
+            Some(SAMPLE_MARKET_DESCRIPTIONS
+                .choose(&mut self.rng)
+                .unwrap_or(&"No description")
+                .to_string())
+        } else {
+            None
+        };
 
-        // Max number value (30-60)
-        let number_max: u8 = self.rng.gen_range(30..61);
+        // Resolution block: current + 20-100 blocks
+        let resolution_block: u32 = self.current_block + self.rng.gen_range(20..100);
 
-        // Draw block: current + 100-1000 blocks
-        let current_block = 7000u32; // Approximate current block
-        let draw_block: u32 = current_block + self.rng.gen_range(100..1000);
+        // Random oracle pubkey (or use one from oracle_history if available)
+        let oracle_pubkey = if !self.oracle_history.is_empty() && self.rng.gen_bool(0.7) {
+            let oracle = self.oracle_history.choose(&mut self.rng).unwrap();
+            oracle.pubkey
+        } else {
+            let mut pk = [0u8; 32];
+            self.rng.fill(&mut pk);
+            pk
+        };
 
-        // Ticket price: 1000-100000 sats
-        let ticket_price_sats: i64 = self.rng.gen_range(1_000..100_000);
+        // Initial liquidity: 1 billion units (standard AMM starting point)
+        let initial_liquidity: i64 = 1_000_000_000;
 
-        // Token type: 0=BTC, 1=AnchorToken
-        let token_type: u8 = if self.rng.gen_bool(0.8) { 0 } else { 1 };
+        // Build market creation body
+        let question_bytes = question.as_bytes();
+        let desc_bytes = description.as_ref().map(|d| d.as_bytes()).unwrap_or(&[]);
+        
+        let mut data = Vec::with_capacity(32 + 2 + question_bytes.len() + 2 + desc_bytes.len() + 4 + 32 + 8);
 
-        // Random oracle pubkey
-        let mut oracle_pubkey = [0u8; 32];
-        self.rng.fill(&mut oracle_pubkey);
+        // Market ID (32 bytes)
+        data.extend_from_slice(&market_id);
 
-        // Build lottery creation body
-        let mut data = Vec::with_capacity(80);
+        // Question length (2 bytes, big-endian)
+        data.extend_from_slice(&(question_bytes.len() as u16).to_be_bytes());
 
-        // Lottery ID (32 bytes)
-        data.extend_from_slice(&lottery_id);
+        // Question (variable)
+        data.extend_from_slice(question_bytes);
 
-        // Lottery type (1 byte)
-        data.push(lottery_type);
+        // Description length (2 bytes, big-endian)
+        data.extend_from_slice(&(desc_bytes.len() as u16).to_be_bytes());
 
-        // Number count (1 byte)
-        data.push(number_count);
+        // Description (variable)
+        data.extend_from_slice(desc_bytes);
 
-        // Number max (1 byte)
-        data.push(number_max);
-
-        // Draw block (4 bytes, big-endian)
-        data.extend_from_slice(&draw_block.to_be_bytes());
-
-        // Ticket price (8 bytes, big-endian)
-        data.extend_from_slice(&ticket_price_sats.to_be_bytes());
-
-        // Token type (1 byte)
-        data.push(token_type);
+        // Resolution block (4 bytes, big-endian)
+        data.extend_from_slice(&resolution_block.to_be_bytes());
 
         // Oracle pubkey (32 bytes)
         data.extend_from_slice(&oracle_pubkey);
 
+        // Initial liquidity (8 bytes, big-endian)
+        data.extend_from_slice(&initial_liquidity.to_be_bytes());
+
         let body = hex::encode(&data);
 
-        let lottery_type_name = match lottery_type {
-            0 => "Daily",
-            1 => "Weekly",
-            2 => "Jackpot",
-            _ => "Unknown",
-        };
-
         tracing::info!(
-            "Creating lottery: {} type, pick {} from {}, draw at block {}, ticket {} sats",
-            lottery_type_name,
-            number_count,
-            number_max,
-            draw_block,
-            ticket_price_sats
+            "📊 Creating market: \"{}\" resolves at block {}",
+            question.chars().take(50).collect::<String>(),
+            resolution_block
         );
 
         let request = CreateMessageRequest {
-            kind: 40, // LotteryCreate
+            kind: 40, // MarketCreate
             body,
             body_is_hex: true,
             parent_txid: None,
@@ -1224,10 +1382,223 @@ impl MessageGenerator {
 
         let response = self.wallet.send_create_message(&request).await?;
 
+        // Track the created market for bet/resolve operations
+        self.market_history.push(TrackedMarket {
+            market_id,
+            question,
+            resolution_block,
+            oracle_pubkey,
+            initial_liquidity,
+            created_txid: response.txid.clone(),
+            created_vout: response.vout,
+            bet_count: 0,
+            resolved: false,
+            yes_pool: initial_liquidity,
+            no_pool: initial_liquidity,
+        });
+
+        // Keep max 20 markets in history
+        if self.market_history.len() > 20 {
+            self.market_history.remove(0);
+        }
+
         Ok(MessageResult {
             txid: response.txid,
             vout: response.vout,
             message_type: MessageType::Prediction,
+            is_reply: false,
+            parent_txid: None,
+            parent_vout: None,
+            carrier: CarrierType::from_u8(response.carrier),
+        })
+    }
+
+    /// Create a place bet message (Kind 41 - PlaceBet)
+    /// Format expected by indexer:
+    /// [market_id 32] [outcome 1] [amount_sats 8 BE] [min_shares 8 BE] [user_pubkey 33]
+    async fn create_prediction_ticket(&mut self, carrier: CarrierType) -> Result<MessageResult> {
+        // Need at least one market to place a bet on
+        if self.market_history.is_empty() {
+            return self.create_prediction(carrier).await;
+        }
+
+        // Pick an open market (one that hasn't been resolved yet)
+        let open_markets: Vec<_> = self.market_history
+            .iter()
+            .filter(|m| !m.resolved && m.resolution_block > self.current_block)
+            .collect();
+
+        if open_markets.is_empty() {
+            return self.create_prediction(carrier).await;
+        }
+
+        let market = open_markets.choose(&mut self.rng).unwrap();
+        let market_id = market.market_id;
+
+        // Random outcome: 0=NO, 1=YES
+        let outcome: u8 = self.rng.gen_range(0..2);
+        let outcome_str = if outcome == 1 { "YES" } else { "NO" };
+
+        // Bet amount: 1000-100000 sats
+        let amount_sats: i64 = self.rng.gen_range(1_000..100_000);
+
+        // Min shares: 0 (no slippage protection for testnet)
+        let min_shares: i64 = 0;
+
+        // Generate a random user pubkey (33 bytes for compressed pubkey)
+        let mut user_pubkey = [0u8; 33];
+        user_pubkey[0] = if self.rng.gen_bool(0.5) { 0x02 } else { 0x03 };
+        self.rng.fill(&mut user_pubkey[1..]);
+
+        // Build bet body
+        let mut data = Vec::with_capacity(32 + 1 + 8 + 8 + 33);
+
+        // Market ID (32 bytes)
+        data.extend_from_slice(&market_id);
+
+        // Outcome (1 byte)
+        data.push(outcome);
+
+        // Amount sats (8 bytes, big-endian)
+        data.extend_from_slice(&amount_sats.to_be_bytes());
+
+        // Min shares (8 bytes, big-endian)
+        data.extend_from_slice(&min_shares.to_be_bytes());
+
+        // User pubkey (33 bytes)
+        data.extend_from_slice(&user_pubkey);
+
+        let body = hex::encode(&data);
+
+        tracing::info!(
+            "🎯 Placing bet on market {}: {} for {} sats",
+            hex::encode(&market_id[..8]),
+            outcome_str,
+            amount_sats
+        );
+
+        let request = CreateMessageRequest {
+            kind: 41, // PlaceBet
+            body,
+            body_is_hex: true,
+            parent_txid: None,
+            parent_vout: None,
+            carrier: Some(carrier as u8),
+            lock_for_dns: false,
+            domain_name: None,
+            lock_for_token: false,
+            token_ticker: None,
+        };
+
+        let response = self.wallet.send_create_message(&request).await?;
+
+        // Update market bet count and simulated pools
+        if let Some(market) = self.market_history.iter_mut().find(|m| m.market_id == market_id) {
+            market.bet_count += 1;
+            // Simulate AMM pool changes
+            if outcome == 1 {
+                market.no_pool += amount_sats;
+            } else {
+                market.yes_pool += amount_sats;
+            }
+        }
+
+        Ok(MessageResult {
+            txid: response.txid,
+            vout: response.vout,
+            message_type: MessageType::PredictionTicket,
+            is_reply: false,
+            parent_txid: None,
+            parent_vout: None,
+            carrier: CarrierType::from_u8(response.carrier),
+        })
+    }
+
+    /// Create a market resolve message (Kind 42 - MarketResolve)
+    /// Format expected by indexer:
+    /// [market_id 32] [resolution 1] [oracle_pubkey 32] [schnorr_signature 64]
+    async fn create_prediction_draw(&mut self, carrier: CarrierType) -> Result<MessageResult> {
+        // Need at least one market with bets that can be resolved
+        if self.market_history.is_empty() {
+            return self.create_prediction(carrier).await;
+        }
+
+        // Find markets that are ready for resolution:
+        // - Have at least one bet
+        // - Not already resolved
+        let ready_markets: Vec<_> = self.market_history
+            .iter()
+            .filter(|m| !m.resolved && m.bet_count > 0)
+            .collect();
+
+        if ready_markets.is_empty() {
+            // No markets ready for resolution, place a bet first
+            return self.create_prediction_ticket(carrier).await;
+        }
+
+        let market = ready_markets.choose(&mut self.rng).unwrap();
+        let market_id = market.market_id;
+        let oracle_pubkey = market.oracle_pubkey;
+
+        // Random resolution: 0=NO, 1=YES
+        // Slightly bias towards YES if YES pool is larger (more bets on YES = more likely to happen)
+        let yes_pool = market.yes_pool as f64;
+        let no_pool = market.no_pool as f64;
+        let yes_prob = no_pool / (yes_pool + no_pool); // Price of YES
+        let resolution: u8 = if self.rng.gen_bool(yes_prob.max(0.3).min(0.7)) { 1 } else { 0 };
+        let resolution_str = if resolution == 1 { "YES" } else { "NO" };
+
+        // Generate a mock Schnorr signature (64 bytes)
+        let mut schnorr_signature = [0u8; 64];
+        self.rng.fill(&mut schnorr_signature);
+
+        // Build resolve message body
+        let mut data = Vec::with_capacity(32 + 1 + 32 + 64);
+
+        // Market ID (32 bytes)
+        data.extend_from_slice(&market_id);
+
+        // Resolution (1 byte)
+        data.push(resolution);
+
+        // Oracle pubkey (32 bytes)
+        data.extend_from_slice(&oracle_pubkey);
+
+        // Schnorr signature (64 bytes)
+        data.extend_from_slice(&schnorr_signature);
+
+        let body = hex::encode(&data);
+
+        tracing::info!(
+            "⚖️ Resolving market {}: {}",
+            hex::encode(&market_id[..8]),
+            resolution_str
+        );
+
+        let request = CreateMessageRequest {
+            kind: 42, // MarketResolve
+            body,
+            body_is_hex: true,
+            parent_txid: None,
+            parent_vout: None,
+            carrier: Some(carrier as u8),
+            lock_for_dns: false,
+            domain_name: None,
+            lock_for_token: false,
+            token_ticker: None,
+        };
+
+        let response = self.wallet.send_create_message(&request).await?;
+
+        // Mark market as resolved
+        if let Some(market) = self.market_history.iter_mut().find(|m| m.market_id == market_id) {
+            market.resolved = true;
+        }
+
+        Ok(MessageResult {
+            txid: response.txid,
+            vout: response.vout,
+            message_type: MessageType::PredictionDraw,
             is_reply: false,
             parent_txid: None,
             parent_vout: None,

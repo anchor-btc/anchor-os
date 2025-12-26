@@ -7,6 +7,7 @@
   "nav": {
     "dashboard": "Dashboard",
     "services": "Services",
+    "identities": "Identities",
     "testnetControl": "Testnet Control",
     "bitcoinNode": "Bitcoin Node",
     "wallet": "Wallet",

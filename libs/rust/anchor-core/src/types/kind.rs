@@ -27,15 +27,15 @@ pub enum AnchorKind {
     /// Slash oracle stake (after dispute resolution)
     OracleSlash = 33,
 
-    // Lottery types (40-49)
-    /// Create a new lottery
-    LotteryCreate = 40,
-    /// Buy a lottery ticket
-    LotteryTicket = 41,
-    /// Lottery draw (oracle attestation of winning numbers)
-    LotteryDraw = 42,
-    /// Claim lottery winnings (with DLC proof)
-    LotteryClaim = 43,
+    // Prediction Market types (40-49)
+    /// Create a new prediction market
+    MarketCreate = 40,
+    /// Place a bet on a market outcome
+    PlaceBet = 41,
+    /// Resolve a market (oracle attestation)
+    MarketResolve = 42,
+    /// Claim winnings from resolved market
+    ClaimWinnings = 43,
 
     /// Custom type (value 5-255, excluding reserved ranges)
     Custom(u8),
@@ -54,11 +54,11 @@ impl From<u8> for AnchorKind {
             31 => AnchorKind::OracleAttestation,
             32 => AnchorKind::OracleDispute,
             33 => AnchorKind::OracleSlash,
-            // Lottery types
-            40 => AnchorKind::LotteryCreate,
-            41 => AnchorKind::LotteryTicket,
-            42 => AnchorKind::LotteryDraw,
-            43 => AnchorKind::LotteryClaim,
+            // Prediction Market types
+            40 => AnchorKind::MarketCreate,
+            41 => AnchorKind::PlaceBet,
+            42 => AnchorKind::MarketResolve,
+            43 => AnchorKind::ClaimWinnings,
             n => AnchorKind::Custom(n),
         }
     }
@@ -77,11 +77,11 @@ impl From<AnchorKind> for u8 {
             AnchorKind::OracleAttestation => 31,
             AnchorKind::OracleDispute => 32,
             AnchorKind::OracleSlash => 33,
-            // Lottery types
-            AnchorKind::LotteryCreate => 40,
-            AnchorKind::LotteryTicket => 41,
-            AnchorKind::LotteryDraw => 42,
-            AnchorKind::LotteryClaim => 43,
+            // Prediction Market types
+            AnchorKind::MarketCreate => 40,
+            AnchorKind::PlaceBet => 41,
+            AnchorKind::MarketResolve => 42,
+            AnchorKind::ClaimWinnings => 43,
             AnchorKind::Custom(n) => n,
         }
     }

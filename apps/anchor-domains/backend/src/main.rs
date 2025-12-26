@@ -232,6 +232,11 @@ fn build_router(state: Arc<AppState>) -> Router {
         // Pending transactions
         .route("/pending", get(handlers::list_pending_transactions))
         .route("/pending/:name", get(handlers::get_pending_status))
+        // Identity DNS (Selfie Records)
+        .route("/domains/:name/identities", get(handlers::list_domain_identities))
+        .route("/domains/:name/identities", post(handlers::publish_domain_identity))
+        .route("/domains/:name/identities/:identity_type", axum::routing::delete(handlers::remove_domain_identity))
+        .route("/identities/resolve", get(handlers::resolve_identity))
         // Swagger UI
         .merge(SwaggerUi::new("/docs").url("/api-doc/openapi.json", ApiDoc::openapi()))
         // State and middleware

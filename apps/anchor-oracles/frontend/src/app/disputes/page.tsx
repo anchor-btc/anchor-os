@@ -1,9 +1,10 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, Clock, Coins, CheckCircle, XCircle } from "lucide-react";
+import { AlertTriangle, Clock, Coins, CheckCircle, XCircle, ExternalLink } from "lucide-react";
 import { useState } from "react";
-import { fetchDisputes } from "@/lib/api";
+import Link from "next/link";
+import { fetchDisputes, fetchDefaultExplorer, buildExplorerTxUrl } from "@/lib/api";
 import { formatDistanceToNow } from "date-fns";
 import { formatSats, shortenPubkey } from "@/lib/utils";
 
@@ -13,6 +14,12 @@ export default function DisputesPage() {
   const { data: disputes, isLoading } = useQuery({
     queryKey: ["disputes", statusFilter],
     queryFn: () => fetchDisputes(statusFilter === "all" ? undefined : statusFilter, 50),
+  });
+
+  const { data: explorer } = useQuery({
+    queryKey: ["default-explorer"],
+    queryFn: fetchDefaultExplorer,
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 
   return (
@@ -79,32 +86,55 @@ export default function DisputesPage() {
                   <p className="text-xs text-gray-500">Stake at risk</p>
                 </div>
               </div>
-              <div className="flex items-center gap-4 mt-3 pt-3 border-t border-white/5 text-sm text-gray-400">
-                <div className="flex items-center gap-1">
-                  <Clock className="w-4 h-4" />
-                  {formatDistanceToNow(new Date(dispute.created_at), { addSuffix: true })}
+              <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/5 text-sm text-gray-400">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-1">
+                    <Clock className="w-4 h-4" />
+                    {formatDistanceToNow(new Date(dispute.created_at), { addSuffix: true })}
+                  </div>
+                  {dispute.block_height && (
+                    <span>Block {dispute.block_height}</span>
+                  )}
+                  {dispute.resolution === "upheld" && (
+                    <div className="flex items-center gap-1 text-red-400">
+                      <XCircle className="w-4 h-4" />
+                      Oracle slashed
+                    </div>
+                  )}
+                  {dispute.resolution === "rejected" && (
+                    <div className="flex items-center gap-1 text-green-400">
+                      <CheckCircle className="w-4 h-4" />
+                      Dispute rejected
+                    </div>
+                  )}
                 </div>
-                {dispute.block_height && (
-                  <span>Block {dispute.block_height}</span>
-                )}
-                {dispute.resolution === "upheld" && (
-                  <div className="flex items-center gap-1 text-red-400">
-                    <XCircle className="w-4 h-4" />
-                    Oracle slashed
-                  </div>
-                )}
-                {dispute.resolution === "rejected" && (
-                  <div className="flex items-center gap-1 text-green-400">
-                    <CheckCircle className="w-4 h-4" />
-                    Dispute rejected
-                  </div>
+                {explorer && (
+                  <a
+                    href={buildExplorerTxUrl(explorer, dispute.txid)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 rounded-lg bg-white/5 text-gray-400 hover:text-white"
+                    title="View Transaction"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
                 )}
               </div>
             </div>
           ))}
           {(!disputes || disputes.length === 0) && (
-            <div className="text-center py-12 text-gray-400">
-              No disputes found
+            <div className="text-center py-12">
+              <AlertTriangle className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+              <p className="text-gray-400 mb-2">No disputes found</p>
+              <p className="text-sm text-gray-500">
+                Disputes appear here when attestations are challenged
+              </p>
+              <Link
+                href="/attestations"
+                className="inline-block mt-4 text-purple-400 hover:text-purple-300"
+              >
+                View attestations to dispute →
+              </Link>
             </div>
           )}
         </div>

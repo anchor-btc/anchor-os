@@ -1,6 +1,43 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import type { UtxoProtocolInfo } from "@/lib/api";
+
+// Session storage key for protocol info cache
+const PROTOCOL_CACHE_KEY = "protocolInfoCache";
+
+// Helper to load cache from sessionStorage
+function loadCacheFromStorage(): Map<string, UtxoProtocolInfo> {
+  if (typeof window === "undefined") return new Map();
+  try {
+    const stored = sessionStorage.getItem(PROTOCOL_CACHE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored) as Record<string, UtxoProtocolInfo>;
+      return new Map(Object.entries(parsed));
+    }
+  } catch (e) {
+    console.warn("Failed to load protocol cache from storage:", e);
+  }
+  return new Map();
+}
+
+// Helper to save cache to sessionStorage
+function saveCacheToStorage(cache: Map<string, UtxoProtocolInfo>) {
+  if (typeof window === "undefined") return;
+  try {
+    const obj = Object.fromEntries(cache);
+    sessionStorage.setItem(PROTOCOL_CACHE_KEY, JSON.stringify(obj));
+  } catch (e) {
+    console.warn("Failed to save protocol cache to storage:", e);
+  }
+}
+
+// Global cache for protocol info that persists between navigations
+// Initialize from sessionStorage if available
+let protocolInfoCache: Map<string, UtxoProtocolInfo> = new Map();
+if (typeof window !== "undefined") {
+  protocolInfoCache = loadCacheFromStorage();
+}
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -16,6 +53,7 @@ import {
   setAutoLock,
   formatBtc,
   shortenHash,
+  fetchUtxoProtocolInfo,
   type Utxo,
   type Transaction,
   type LockedUtxo,
@@ -45,6 +83,7 @@ import { cn } from "@/lib/utils";
 import { QRCodeSVG } from "qrcode.react";
 import { BackupSection } from "@/components/wallet/backup-section";
 import { LockedAssetsSection } from "@/components/wallet/locked-assets-section";
+import { ProtocolTag } from "@/components/wallet/protocol-tag";
 
 // Import DS components
 import {
@@ -96,6 +135,66 @@ export default function WalletPage() {
     queryFn: fetchLockSettings,
     refetchInterval: 10000,
   });
+
+  // Collect all txids from utxos and transactions for protocol info lookup
+  const allTxids = useMemo(() => {
+    const txids = new Set<string>();
+    utxos?.forEach(u => txids.add(u.txid));
+    transactions?.forEach(tx => txids.add(tx.txid));
+    return Array.from(txids).sort(); // Sort for stable key
+  }, [utxos, transactions]);
+
+  // Stable key for protocol info query (prevent unnecessary refetches)
+  const protocolInfoQueryKey = useMemo(() => allTxids.join(","), [allTxids]);
+
+  // Fetch protocol info for all txids
+  const { data: protocolInfoData } = useQuery({
+    queryKey: ["protocol-info", protocolInfoQueryKey],
+    queryFn: () => fetchUtxoProtocolInfo(allTxids),
+    enabled: allTxids.length > 0,
+    staleTime: 120000, // Keep data fresh for 2 minutes
+    gcTime: 600000, // Keep in cache for 10 minutes
+    refetchOnWindowFocus: false,
+  });
+
+  // Counter to trigger re-renders when cache updates
+  const [cacheVersion, setCacheVersion] = useState(0);
+
+  // Update the global cache when new data arrives (merge, don't replace)
+  useEffect(() => {
+    if (protocolInfoData?.items && protocolInfoData.items.length > 0) {
+      let hasNewItems = false;
+      protocolInfoData.items.forEach(item => {
+        if (!protocolInfoCache.has(item.original_txid)) {
+          protocolInfoCache.set(item.original_txid, item);
+          hasNewItems = true;
+        }
+      });
+      // Save to sessionStorage and trigger re-render if new items were added
+      if (hasNewItems) {
+        saveCacheToStorage(protocolInfoCache);
+        setCacheVersion(v => v + 1);
+      }
+    }
+  }, [protocolInfoData]);
+
+  // Load cache from sessionStorage on mount
+  useEffect(() => {
+    const loadedCache = loadCacheFromStorage();
+    if (loadedCache.size > 0 && protocolInfoCache.size === 0) {
+      loadedCache.forEach((value, key) => {
+        protocolInfoCache.set(key, value);
+      });
+      setCacheVersion(v => v + 1);
+    }
+  }, []);
+
+  // Create a stable reference to the cache for lookups
+  const protocolInfoMap = useMemo(() => {
+    // This depends on cacheVersion to re-create when cache updates
+    return protocolInfoCache;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cacheVersion]);
 
   const addressMutation = useMutation({
     mutationFn: fetchNewAddress,
@@ -241,7 +340,12 @@ export default function WalletPage() {
           ) : (
             <div className="divide-y divide-border max-h-[500px] overflow-auto">
               {transactions.map((tx, i) => (
-                <TransactionRow key={`${tx.txid}-${i}`} transaction={tx} t={t} />
+                <TransactionRow 
+                  key={`${tx.txid}-${i}`} 
+                  transaction={tx} 
+                  t={t} 
+                  protocolInfo={protocolInfoMap.get(tx.txid)}
+                />
               ))}
             </div>
           )}
@@ -258,6 +362,7 @@ export default function WalletPage() {
           onLock={(txid, vout) => lockMutation.mutate([{ txid, vout }])}
           onUnlock={(txid, vout) => unlockMutation.mutate([{ txid, vout }])}
           t={t}
+          protocolInfoMap={protocolInfoMap}
         />
       )}
 
@@ -365,9 +470,11 @@ function BalanceItem({
 function TransactionRow({
   transaction,
   t,
+  protocolInfo,
 }: {
   transaction: Transaction;
   t: (key: string) => string;
+  protocolInfo?: UtxoProtocolInfo;
 }) {
   const isReceive =
     transaction.category === "receive" ||
@@ -391,10 +498,13 @@ function TransactionRow({
           )}
         </div>
         <div>
-          <p className="font-medium text-foreground">
-            {isReceive ? t("wallet.received") : t("wallet.sent")}
-            {transaction.category === "generate" && ` (${t("wallet.mined")})`}
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="font-medium text-foreground">
+              {isReceive ? t("wallet.received") : t("wallet.sent")}
+              {transaction.category === "generate" && ` (${t("wallet.mined")})`}
+            </p>
+            {protocolInfo && <ProtocolTag protocolInfo={protocolInfo} size="sm" />}
+          </div>
           <p className="text-xs text-muted-foreground font-mono">
             {shortenHash(transaction.txid, 8)}
           </p>
@@ -435,6 +545,7 @@ function UtxosSection({
   onLock,
   onUnlock,
   t,
+  protocolInfoMap,
 }: {
   utxos?: Utxo[];
   isLoading: boolean;
@@ -444,6 +555,7 @@ function UtxosSection({
   onLock: (txid: string, vout: number) => void;
   onUnlock: (txid: string, vout: number) => void;
   t: (key: string) => string;
+  protocolInfoMap: Map<string, UtxoProtocolInfo>;
 }) {
   const totalCount = utxos?.length || 0;
   const totalPages = Math.ceil(totalCount / UTXOS_PER_PAGE);
@@ -490,6 +602,7 @@ function UtxosSection({
                 onLock={() => onLock(utxo.txid, utxo.vout)}
                 onUnlock={() => onUnlock(utxo.txid, utxo.vout)}
                 t={t}
+                protocolInfo={protocolInfoMap.get(utxo.txid)}
               />
             ))}
           </div>
@@ -531,12 +644,14 @@ function UtxoRow({
   onLock,
   onUnlock,
   t,
+  protocolInfo,
 }: {
   utxo: Utxo;
   isLocked: boolean;
   onLock: () => void;
   onUnlock: () => void;
   t: (key: string) => string;
+  protocolInfo?: UtxoProtocolInfo;
 }) {
   return (
     <div className={cn(
@@ -555,10 +670,11 @@ function UtxoRow({
           )}
         </div>
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <p className="text-sm font-mono text-foreground">
               {shortenHash(utxo.txid, 8)}:{utxo.vout}
             </p>
+            {protocolInfo && <ProtocolTag protocolInfo={protocolInfo} size="sm" />}
             {isLocked && (
               <span className="px-1.5 py-0.5 text-[10px] font-medium bg-warning/20 text-warning rounded">
                 LOCKED

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Eye, CheckCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Eye, CheckCircle, Key, AlertCircle, Loader2, Zap, RefreshCw } from "lucide-react";
 
 const categories = [
   { id: 1, name: "Block", description: "Block and chain data" },
@@ -13,11 +13,64 @@ const categories = [
   { id: 64, name: "Custom", description: "Custom event types" },
 ];
 
+interface Identity {
+  id: string;
+  identity_type: string;
+  label: string;
+  public_key: string;
+  formatted_public_key: string;
+  is_primary: boolean;
+}
+
+const WALLET_URL = process.env.NEXT_PUBLIC_WALLET_URL || "http://localhost:8001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3701";
+
 export default function RegisterPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
   const [stakeAmount, setStakeAmount] = useState("10000");
+  
+  // Identity state
+  const [identities, setIdentities] = useState<Identity[]>([]);
+  const [selectedIdentity, setSelectedIdentity] = useState<Identity | null>(null);
+  const [isLoadingIdentities, setIsLoadingIdentities] = useState(true);
+  const [identityError, setIdentityError] = useState<string | null>(null);
+  
+  // Registration state
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [registerError, setRegisterError] = useState<string | null>(null);
+  const [registerSuccess, setRegisterSuccess] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadIdentities();
+  }, []);
+
+  const loadIdentities = async () => {
+    setIsLoadingIdentities(true);
+    setIdentityError(null);
+    try {
+      const res = await fetch(`${WALLET_URL}/wallet/identities`);
+      if (!res.ok) throw new Error("Failed to fetch identities");
+      const data = await res.json();
+      const nostrIdentities = (data.identities || []).filter(
+        (i: Identity) => i.identity_type === "nostr"
+      );
+      setIdentities(nostrIdentities);
+      
+      // Auto-select primary or first identity
+      const primary = nostrIdentities.find((i: Identity) => i.is_primary);
+      if (primary) {
+        setSelectedIdentity(primary);
+      } else if (nostrIdentities.length > 0) {
+        setSelectedIdentity(nostrIdentities[0]);
+      }
+    } catch (e: any) {
+      setIdentityError(e.message || "Failed to load identities");
+    } finally {
+      setIsLoadingIdentities(false);
+    }
+  };
 
   const toggleCategory = (id: number) => {
     setSelectedCategories((prev) =>
@@ -26,6 +79,90 @@ export default function RegisterPage() {
   };
 
   const categoryBitmap = selectedCategories.reduce((acc, id) => acc | id, 0);
+
+  const handleRegister = async () => {
+    if (!name || !selectedIdentity || selectedCategories.length === 0) {
+      setRegisterError("Please fill in all required fields");
+      return;
+    }
+
+    setIsRegistering(true);
+    setRegisterError(null);
+    setRegisterSuccess(null);
+
+    try {
+      // Create oracle registration message via wallet
+      const response = await fetch(`${WALLET_URL}/wallet/create-message`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kind: 30, // Oracle Registration
+          body: buildOracleRegistrationBody(),
+          body_is_hex: true,
+          carrier: 1, // Inscription
+          fee_rate: 50,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Failed to create oracle registration");
+      }
+
+      const result = await response.json();
+      setRegisterSuccess(`Oracle registered successfully! TXID: ${result.txid}`);
+    } catch (e: any) {
+      setRegisterError(e.message || "Failed to register oracle");
+    } finally {
+      setIsRegistering(false);
+    }
+  };
+
+  const buildOracleRegistrationBody = (): string => {
+    // Build the oracle registration body as hex
+    // Expected format by indexer (from indexer.rs OracleRegistration::parse):
+    // - byte 0: action (0=register)
+    // - bytes 1-32: oracle_pubkey (32 bytes)
+    // - bytes 33-34: name_len (u16 big-endian)
+    // - bytes 35..35+name_len: name
+    // - bytes after name: categories (i16 = 2 bytes big-endian)
+    // - bytes after categories: stake_amount (i64 = 8 bytes big-endian)
+    // - remaining: metadata (optional raw string, no length prefix)
+    
+    const pubkeyHex = selectedIdentity?.public_key || "";
+    const nameBytes = new TextEncoder().encode(name);
+    const metadataBytes = new TextEncoder().encode(description || "");
+    const stakeValue = BigInt(stakeAmount);
+    
+    let hex = "";
+    
+    // Action: 0 = register
+    hex += "00";
+    
+    // Oracle pubkey (32 bytes)
+    hex += pubkeyHex;
+    
+    // Name length (u16 big-endian)
+    hex += nameBytes.length.toString(16).padStart(4, "0");
+    
+    // Name bytes
+    hex += Array.from(nameBytes).map(b => b.toString(16).padStart(2, "0")).join("");
+    
+    // Categories (i16 big-endian, 2 bytes)
+    hex += categoryBitmap.toString(16).padStart(4, "0");
+    
+    // Stake amount (i64 big-endian, 8 bytes)
+    hex += stakeValue.toString(16).padStart(16, "0");
+    
+    // Metadata (optional raw string, no length prefix)
+    if (metadataBytes.length > 0) {
+      hex += Array.from(metadataBytes).map(b => b.toString(16).padStart(2, "0")).join("");
+    }
+    
+    return hex;
+  };
+
+  const canRegister = name && selectedIdentity && selectedCategories.length > 0 && !isRegistering;
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
@@ -40,6 +177,80 @@ export default function RegisterPage() {
       </div>
 
       <div className="rounded-xl border border-white/10 bg-white/5 p-6 space-y-6">
+        {/* Identity Selector */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-sm font-medium text-gray-300">
+              Oracle Identity (Nostr Key)
+            </label>
+            <button
+              onClick={loadIdentities}
+              className="text-xs text-gray-400 hover:text-white flex items-center gap-1"
+            >
+              <RefreshCw className={`w-3 h-3 ${isLoadingIdentities ? "animate-spin" : ""}`} />
+              Refresh
+            </button>
+          </div>
+          
+          {isLoadingIdentities ? (
+            <div className="flex items-center justify-center py-6 text-gray-400">
+              <Loader2 className="w-5 h-5 animate-spin mr-2" />
+              Loading identities...
+            </div>
+          ) : identityError ? (
+            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm flex items-center gap-2">
+              <AlertCircle className="w-4 h-4" />
+              {identityError}
+            </div>
+          ) : identities.length === 0 ? (
+            <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-center">
+              <Key className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
+              <p className="text-yellow-300 font-medium">No Nostr identities found</p>
+              <p className="text-yellow-400/70 text-sm mt-1">
+                Create a Nostr identity in your{" "}
+                <a href="http://localhost:8000/identities" className="underline hover:text-yellow-300">
+                  Anchor Wallet
+                </a>{" "}
+                first.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {identities.map((identity) => (
+                <button
+                  key={identity.id}
+                  onClick={() => setSelectedIdentity(identity)}
+                  className={`w-full flex items-center gap-3 p-3 rounded-lg border text-left transition-colors ${
+                    selectedIdentity?.id === identity.id
+                      ? "border-purple-500 bg-purple-500/20"
+                      : "border-white/10 bg-white/5 hover:border-white/20"
+                  }`}
+                >
+                  <div className="p-2 rounded-lg bg-purple-500/20">
+                    <Zap className="w-4 h-4 text-purple-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-white">{identity.label}</p>
+                      {identity.is_primary && (
+                        <span className="text-xs bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded">
+                          Primary
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-400 font-mono truncate">
+                      {identity.formatted_public_key.slice(0, 20)}...{identity.formatted_public_key.slice(-8)}
+                    </p>
+                  </div>
+                  {selectedIdentity?.id === identity.id && (
+                    <CheckCircle className="w-5 h-5 text-purple-400" />
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">
             Oracle Name
@@ -112,15 +323,38 @@ export default function RegisterPage() {
           </p>
         </div>
 
+        {/* Error/Success Messages */}
+        {registerError && (
+          <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            {registerError}
+          </div>
+        )}
+        
+        {registerSuccess && (
+          <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-lg text-green-400 text-sm">
+            <CheckCircle className="w-4 h-4 inline mr-2" />
+            {registerSuccess}
+          </div>
+        )}
+
         <div className="pt-4 border-t border-white/10">
           <button
-            disabled={!name || selectedCategories.length === 0}
-            className="w-full py-3 rounded-lg bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-medium transition-colors"
+            onClick={handleRegister}
+            disabled={!canRegister}
+            className="w-full py-3 rounded-lg bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-medium transition-colors flex items-center justify-center gap-2"
           >
-            Register Oracle
+            {isRegistering ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Registering...
+              </>
+            ) : (
+              "Register Oracle"
+            )}
           </button>
           <p className="text-xs text-gray-500 text-center mt-2">
-            Category bitmap: {categoryBitmap}
+            Category bitmap: {categoryBitmap} | Identity: {selectedIdentity?.label || "None"}
           </p>
         </div>
       </div>
@@ -137,4 +371,3 @@ export default function RegisterPage() {
     </div>
   );
 }
-

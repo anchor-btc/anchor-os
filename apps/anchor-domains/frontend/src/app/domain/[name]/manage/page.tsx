@@ -7,8 +7,11 @@ import {
   getDomain,
   updateDomain,
   mineBlocks,
+  getWalletIdentities,
+  formatIdentityAsTxt,
   DnsRecordInput,
   getRecordTypeColor,
+  type WalletIdentity,
 } from "@/lib/api";
 import {
   Globe,
@@ -21,6 +24,9 @@ import {
   CheckCircle,
   X,
   Info,
+  Fingerprint,
+  Zap,
+  Key,
 } from "lucide-react";
 
 const RECORD_TYPES = ["A", "AAAA", "CNAME", "TXT", "MX", "NS", "SRV"];
@@ -36,6 +42,7 @@ const DNS_CARRIERS = [
 interface RecordForm {
   id: string;
   record_type: string;
+  name: string; // Subdomain/prefix (e.g., "user._nostr", "www", "@" for root)
   value: string;
   ttl: number;
   priority?: number;
@@ -66,6 +73,51 @@ export default function ManageDomainPage({
     queryFn: () => getDomain(decodedName),
   });
 
+  // Fetch wallet identities
+  const { data: identitiesData, isLoading: isLoadingIdentities } = useQuery({
+    queryKey: ["walletIdentities"],
+    queryFn: getWalletIdentities,
+    staleTime: 30000,
+  });
+
+  const identities = identitiesData?.identities || [];
+
+  // Add identity as a DNS record (instead of just selecting)
+  const addIdentityAsRecord = (identity: WalletIdentity) => {
+    const namePrefix = identity.identity_type === "nostr" ? "user._nostr" : "user._pubky";
+    const value = formatIdentityAsTxt(identity);
+    
+    // Check if this identity is already added
+    const alreadyExists = records.some(
+      (r) => r.record_type === "TXT" && r.value === value
+    );
+    
+    if (alreadyExists) {
+      // Remove if already exists
+      setRecords(records.filter((r) => !(r.record_type === "TXT" && r.value === value)));
+    } else {
+      // Add new record with pre-filled values
+      setRecords([
+        ...records,
+        {
+          id: `identity-${identity.id}-${Date.now()}`,
+          record_type: "TXT",
+          name: namePrefix,
+          value: value,
+          ttl: 300,
+          isNew: true,
+        },
+      ]);
+    }
+    setHasChanges(true);
+  };
+  
+  // Check if an identity is already added as a record
+  const isIdentityAdded = (identity: WalletIdentity) => {
+    const value = formatIdentityAsTxt(identity);
+    return records.some((r) => r.record_type === "TXT" && r.value === value);
+  };
+
   // Initialize records when domain data is loaded
   useEffect(() => {
     if (domain && !initialized) {
@@ -73,6 +125,7 @@ export default function ManageDomainPage({
         domain.records.map((r, i) => ({
           id: `existing-${i}`,
           record_type: r.record_type,
+          name: r.name || "@", // Use "@" for root domain records
           value: r.value,
           ttl: r.ttl,
           priority: r.priority ?? undefined,
@@ -111,6 +164,7 @@ export default function ManageDomainPage({
       {
         id: `new-${Date.now()}`,
         record_type: "A",
+        name: "@", // Default to root domain
         value: "",
         ttl: 300,
         isNew: true,
@@ -145,9 +199,10 @@ export default function ManageDomainPage({
       }
     }
 
-    // Convert to API format
+    // Convert to API format (identities are already in records list)
     const apiRecords: DnsRecordInput[] = records.map((r) => ({
       record_type: r.record_type,
+      name: r.name === "@" ? undefined : r.name, // "@" means root, send as null/undefined
       value: r.value,
       ttl: r.ttl,
       priority: r.priority,
@@ -254,14 +309,14 @@ export default function ManageDomainPage({
                   key={record.id}
                   className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/50"
                 >
-                  <div className="grid grid-cols-12 gap-4 items-start">
+                  <div className="grid grid-cols-12 gap-3 items-start">
                     {/* Type */}
                     <div className="col-span-2">
                       <label className="block text-xs text-slate-400 mb-1">Type</label>
                       <select
                         value={record.record_type}
                         onChange={(e) => updateRecord(record.id, "record_type", e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-bitcoin-orange"
+                        className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-bitcoin-orange text-sm"
                       >
                         {RECORD_TYPES.map((type) => (
                           <option key={type} value={type}>
@@ -271,8 +326,24 @@ export default function ManageDomainPage({
                       </select>
                     </div>
 
+                    {/* Name (subdomain/prefix) */}
+                    <div className="col-span-3">
+                      <label className="block text-xs text-slate-400 mb-1">
+                        Name <span className="text-slate-600">(@ = root)</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={record.name}
+                          onChange={(e) => updateRecord(record.id, "name", e.target.value || "@")}
+                          placeholder="@"
+                          className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-bitcoin-orange text-sm font-mono"
+                        />
+                      </div>
+                    </div>
+
                     {/* Value */}
-                    <div className="col-span-6">
+                    <div className="col-span-4">
                       <label className="block text-xs text-slate-400 mb-1">Value</label>
                       <input
                         type="text"
@@ -282,12 +353,12 @@ export default function ManageDomainPage({
                           record.record_type === "A"
                             ? "192.168.1.1"
                             : record.record_type === "TXT"
-                            ? "v=spf1 include:example.com ~all"
+                            ? "npub1... or pk:..."
                             : record.record_type === "CNAME"
                             ? "target.example.com"
                             : "Enter value"
                         }
-                        className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-bitcoin-orange"
+                        className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-bitcoin-orange text-sm"
                       />
                     </div>
 
@@ -298,12 +369,12 @@ export default function ManageDomainPage({
                         type="number"
                         value={record.ttl}
                         onChange={(e) => updateRecord(record.id, "ttl", parseInt(e.target.value) || 300)}
-                        className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-bitcoin-orange"
+                        className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-bitcoin-orange text-sm"
                       />
                     </div>
 
                     {/* Delete */}
-                    <div className="col-span-2 flex items-end justify-end">
+                    <div className="col-span-1 flex items-end justify-end">
                       <button
                         onClick={() => removeRecord(record.id)}
                         className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
@@ -367,6 +438,87 @@ export default function ManageDomainPage({
             </div>
           )}
         </div>
+
+        {/* Identity Records (Selfie Records) */}
+        {identities.length > 0 && (
+          <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-6 mb-6">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="p-2 bg-purple-500/20 rounded-lg">
+                <Fingerprint className="h-4 w-4 text-purple-400" />
+              </div>
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-slate-300">
+                  Quick Add Identity
+                </label>
+                <p className="text-xs text-slate-500">
+                  Click to add as TXT record - you can edit the name above
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              {isLoadingIdentities ? (
+                <div className="col-span-2 flex items-center justify-center py-4">
+                  <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
+                </div>
+              ) : (
+                identities
+                .filter((identity) => identity.identity_type === "nostr") // Only Nostr for now
+                .map((identity) => {
+                  const isAdded = isIdentityAdded(identity);
+                  const namePrefix = "user._nostr";
+                  
+                  return (
+                    <button
+                      type="button"
+                      key={identity.id}
+                      onClick={() => addIdentityAsRecord(identity)}
+                      className={`flex items-center gap-3 p-3 rounded-lg border text-left transition-all ${
+                        isAdded
+                          ? "bg-purple-500/10 border-purple-500"
+                          : "bg-slate-700/30 border-slate-600 hover:border-slate-500"
+                      }`}
+                    >
+                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors flex-shrink-0 ${
+                        isAdded
+                          ? "border-purple-500 bg-purple-500"
+                          : "border-slate-500"
+                      }`}>
+                        {isAdded && (
+                          <CheckCircle className="h-3.5 w-3.5 text-white" />
+                        )}
+                      </div>
+                      <div className="p-1.5 rounded-lg flex-shrink-0 bg-purple-500/20">
+                        <Zap className="h-3.5 w-3.5 text-purple-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-white text-sm truncate">
+                            {identity.label}
+                          </span>
+                          {identity.is_primary && (
+                            <span className="text-xs px-1.5 py-0.5 rounded bg-bitcoin-orange/20 text-bitcoin-orange flex-shrink-0">
+                              Primary
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-slate-500 font-mono mt-0.5">
+                          {namePrefix}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+
+            <div className="mt-3 p-2 bg-slate-700/30 rounded-lg">
+              <p className="text-xs text-slate-500">
+                💡 <span className="text-slate-400">Tip:</span> After adding, edit the <span className="text-purple-400 font-mono">Name</span> field above to use subdomains like <span className="font-mono text-slate-400">hello.user._nostr</span>
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Carrier Selection */}
         <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-6">

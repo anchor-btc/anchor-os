@@ -85,11 +85,11 @@ impl InscriptionCarrier {
             AnchorKind::OracleAttestation => "application/octet-stream",
             AnchorKind::OracleDispute => "application/octet-stream",
             AnchorKind::OracleSlash => "application/octet-stream",
-            // Lottery types - use binary format
-            AnchorKind::LotteryCreate => "application/octet-stream",
-            AnchorKind::LotteryTicket => "application/octet-stream",
-            AnchorKind::LotteryDraw => "application/octet-stream",
-            AnchorKind::LotteryClaim => "application/octet-stream",
+            // Prediction Market types - use binary format
+            AnchorKind::MarketCreate => "application/octet-stream",
+            AnchorKind::PlaceBet => "application/octet-stream",
+            AnchorKind::MarketResolve => "application/octet-stream",
+            AnchorKind::ClaimWinnings => "application/octet-stream",
             AnchorKind::Custom(_) => "application/octet-stream",
         }
     }

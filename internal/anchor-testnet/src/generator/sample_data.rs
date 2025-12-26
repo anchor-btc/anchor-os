@@ -146,28 +146,41 @@ pub const SAMPLE_ORACLE_CATEGORIES: &[i32] = &[
     8,      // Weather only
 ];
 
-/// Sample prediction market titles
-#[allow(dead_code)]
-pub const SAMPLE_PREDICTION_TITLES: &[&str] = &[
-    "BTC above $100k by EOY?",
-    "Next halving before April 2028?",
-    "ETF approval this quarter?",
-    "Mining difficulty increase >5%?",
-    "Lightning capacity >10k BTC?",
-    "Hash rate new ATH this month?",
-    "Mempool clears below 1 sat/vB?",
-    "Block subsidy halves again?",
-    "First country adopts BTC standard?",
-    "Bitcoin dominance above 60%?",
+/// Sample prediction market questions (binary YES/NO)
+pub const SAMPLE_MARKET_QUESTIONS: &[&str] = &[
+    "Will Bitcoin reach $100,000 by end of 2025?",
+    "Will Ethereum flip Bitcoin in market cap?",
+    "Will the next halving occur before April 2028?",
+    "Will a Bitcoin spot ETF be approved this year?",
+    "Will Lightning Network capacity exceed 10,000 BTC?",
+    "Will Bitcoin mining difficulty reach a new ATH this month?",
+    "Will the mempool clear below 1 sat/vB this week?",
+    "Will El Salvador acquire more than 10,000 BTC?",
+    "Will Bitcoin dominance stay above 50% next quarter?",
+    "Will Tether maintain its $1 peg through year end?",
+    "Will MicroStrategy buy more BTC this month?",
+    "Will Bitcoin be adopted as legal tender by another country?",
+    "Will hash rate exceed 800 EH/s this year?",
+    "Will on-chain transactions exceed 1 million per day?",
+    "Will a major exchange get hacked this quarter?",
+    "Will Bitcoin close above $80,000 this month?",
+    "Will Ordinals inscriptions exceed 100 million?",
+    "Will Bitcoin fees average below 10 sats/vB next week?",
+    "Will any country ban Bitcoin mining this year?",
+    "Will a Bitcoin scaling solution gain 1M users?",
 ];
 
-/// Sample prediction outcomes
-#[allow(dead_code)]
-pub const SAMPLE_PREDICTION_OUTCOMES: &[(&str, &str)] = &[
-    ("Yes", "No"),
-    ("Above", "Below"),
-    ("Before", "After"),
-    ("Bullish", "Bearish"),
-    ("Pass", "Fail"),
+/// Sample market descriptions
+pub const SAMPLE_MARKET_DESCRIPTIONS: &[&str] = &[
+    "Resolution based on CoinGecko price at midnight UTC.",
+    "Oracle will attest based on official announcements.",
+    "Determined by blockchain data at resolution block.",
+    "Based on aggregate market data from major exchanges.",
+    "Resolution criteria defined by network metrics.",
+    "Oracle attestation required for final resolution.",
+    "Market resolves when event occurs or at expiry.",
+    "Binary outcome - YES if condition met, NO otherwise.",
+    "Data sourced from multiple reliable oracles.",
+    "Objective resolution based on verifiable on-chain data.",
 ];
 

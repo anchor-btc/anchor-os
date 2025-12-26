@@ -1,6 +1,7 @@
 //! Anchor Predictions Backend
-//! Trustless lottery with DLC-based payouts
+//! Binary Prediction Markets with AMM
 
+mod amm;
 mod config;
 mod db;
 mod handlers;
@@ -27,40 +28,39 @@ use crate::models::*;
 #[openapi(
     paths(
         get_stats,
-        list_lotteries,
-        get_lottery,
-        create_lottery,
-        get_lottery_tickets,
-        buy_ticket,
-        get_draw_result,
-        get_lottery_winners,
-        claim_prize,
-        get_my_tickets,
-        get_prize_tiers,
+        list_markets,
+        get_market,
+        create_market,
+        get_market_positions,
+        get_bet_quote,
+        place_bet,
+        get_resolution,
+        get_market_winners,
+        claim_winnings,
+        get_my_positions,
+        get_all_positions,
         get_history,
     ),
     components(schemas(
-        Lottery,
-        Ticket,
-        DlcContract,
-        LotteryStats,
-        PrizeTier,
+        Market,
+        Position,
+        MarketStats,
         Winner,
-        CreateLotteryRequest,
-        BuyTicketRequest,
-        ClaimPrizeRequest,
+        CreateMarketRequest,
+        PlaceBetRequest,
+        PlaceBetQuote,
+        ClaimWinningsRequest,
     )),
     tags(
-        (name = "stats", description = "Lottery statistics"),
-        (name = "lotteries", description = "Lottery operations"),
-        (name = "user", description = "User ticket operations"),
-        (name = "config", description = "Configuration"),
+        (name = "stats", description = "Market statistics"),
+        (name = "markets", description = "Prediction market operations"),
+        (name = "user", description = "User position operations"),
         (name = "history", description = "Historical data"),
     ),
     info(
         title = "Anchor Predictions API",
-        version = "1.0.0",
-        description = "Trustless lottery with DLC-based payouts on Bitcoin"
+        version = "2.0.0",
+        description = "Binary Prediction Markets with AMM on Bitcoin"
     )
 )]
 struct ApiDoc;
@@ -71,7 +71,7 @@ async fn main() -> anyhow::Result<()> {
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| "anchor_lottery_backend=info".into()),
+                .unwrap_or_else(|_| "anchor_predictions_backend=info".into()),
         )
         .with(tracing_subscriber::fmt::layer())
         .init();
@@ -112,19 +112,19 @@ async fn main() -> anyhow::Result<()> {
         .route("/health", get(health))
         // Stats
         .route("/api/stats", get(get_stats))
-        // Lotteries
-        .route("/api/lotteries", get(list_lotteries))
-        .route("/api/lotteries/create", post(create_lottery))
-        .route("/api/lotteries/:id", get(get_lottery))
-        .route("/api/lotteries/:id/tickets", get(get_lottery_tickets))
-        .route("/api/lotteries/:id/buy", post(buy_ticket))
-        .route("/api/lotteries/:id/draw", get(get_draw_result))
-        .route("/api/lotteries/:id/winners", get(get_lottery_winners))
-        .route("/api/lotteries/:id/claim", post(claim_prize))
-        // User
-        .route("/api/my/tickets", get(get_my_tickets))
-        // Config
-        .route("/api/prize-tiers/:lottery_type", get(get_prize_tiers))
+        // Markets
+        .route("/api/markets", get(list_markets))
+        .route("/api/markets/create", post(create_market))
+        .route("/api/markets/:id", get(get_market))
+        .route("/api/markets/:id/positions", get(get_market_positions))
+        .route("/api/markets/:id/quote", post(get_bet_quote))
+        .route("/api/markets/:id/bet", post(place_bet))
+        .route("/api/markets/:id/resolution", get(get_resolution))
+        .route("/api/markets/:id/winners", get(get_market_winners))
+        .route("/api/markets/:id/claim", post(claim_winnings))
+        // User/Positions
+        .route("/api/my/positions", get(get_my_positions))
+        .route("/api/positions", get(get_all_positions))
         // History
         .route("/api/history", get(get_history))
         // Swagger UI
@@ -140,4 +140,3 @@ async fn main() -> anyhow::Result<()> {
 
     Ok(())
 }
-

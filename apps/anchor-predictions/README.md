@@ -1,111 +1,156 @@
 # Anchor Predictions
 
-Trustless lottery with DLC-based payouts on Bitcoin using the Anchor Protocol.
+**Binary Prediction Markets on Bitcoin** - Trade on real-world outcomes using an Automated Market Maker (AMM).
 
 ## Overview
 
-Anchor Predictions enables provably fair lotteries where winnings are automatically paid out through Discreet Log Contracts (DLCs). Oracles from the Anchor Oracles network attest to the winning numbers, triggering trustless settlement.
+Anchor Predictions enables trustless binary (YES/NO) prediction markets on Bitcoin. Markets are created with questions about future events, and users can bet on outcomes. An oracle resolves the market, and winners receive payouts.
 
 ## Features
 
-- **Trustless Payouts**: Winners receive funds automatically via DLC, no central party holds funds
-- **Oracle Attestation**: Winning numbers determined by trusted oracles from Anchor Oracles
-- **Multiple Lottery Types**: Daily, weekly, and jackpot lotteries with different prize structures
-- **BTC & Token Support**: Pay for tickets and receive winnings in BTC or Anchor Tokens
-- **Transparent Results**: All lottery data indexed on-chain for full auditability
+- **Binary Markets** - Simple YES/NO outcomes for any question
+- **AMM Pricing** - Automated Market Maker with constant product formula
+- **Oracle Resolution** - Markets resolved by trusted oracles
+- **On-Chain Settlement** - All bets and payouts recorded on Bitcoin
+- **Real-Time Odds** - Prices update with each bet placed
 
 ## How It Works
 
-1. **Create Lottery**: Specify number range, draw block, ticket price, and oracle
-2. **Buy Tickets**: Users pick numbers and create DLC-backed tickets
-3. **Oracle Draw**: At draw block, oracle attests to winning numbers
-4. **Auto Settlement**: DLCs settle automatically, paying winners
+1. **Create Market** - Ask a yes/no question, set resolution date, choose oracle
+2. **Place Bets** - Buy YES or NO shares at current AMM price
+3. **Resolution** - Oracle attests to the outcome at resolution block
+4. **Claim Winnings** - Winners claim their payouts
 
 ## Message Types
 
-| Kind | Value | Description |
-|------|-------|-------------|
-| LotteryCreate | 40 | Create a new lottery |
-| LotteryTicket | 41 | Buy a ticket |
-| LotteryDraw | 42 | Oracle attestation of winning numbers |
-| LotteryClaim | 43 | Claim winnings with DLC proof |
+### Kind 40: MarketCreate
 
-## Lottery Types
+Create a new prediction market.
 
-| Type | ID | Description |
-|------|-----|-------------|
-| Daily | 0 | Draws every ~144 blocks (~24h) |
-| Weekly | 1 | Draws every ~1008 blocks (~7 days) |
-| Jackpot | 2 | Larger prize pool, less frequent |
+```
+[market_id: 32 bytes]
+[question_len: 2 bytes BE]
+[question: variable UTF-8]
+[description_len: 2 bytes BE]
+[description: variable UTF-8]
+[resolution_block: 4 bytes BE]
+[oracle_pubkey: 32 bytes]
+[initial_liquidity: 8 bytes BE]
+```
 
-## Prize Tiers (Daily Example)
+### Kind 41: PlaceBet
 
-| Tier | Matches | Pool % | Description |
-|------|---------|--------|-------------|
-| 1 | 6/6 | 50% | Jackpot |
-| 2 | 5/6 | 25% | Second prize |
-| 3 | 4/6 | 15% | Third prize |
-| 4 | 3/6 | 10% | Fourth prize |
+Place a bet on a market outcome.
+
+```
+[market_id: 32 bytes]
+[outcome: 1 byte] (0=NO, 1=YES)
+[amount_sats: 8 bytes BE]
+[min_shares: 8 bytes BE]
+[user_pubkey: 33 bytes]
+```
+
+### Kind 42: MarketResolve
+
+Oracle resolves the market.
+
+```
+[market_id: 32 bytes]
+[resolution: 1 byte] (0=NO, 1=YES, 2=INVALID)
+[oracle_pubkey: 32 bytes]
+[schnorr_signature: 64 bytes]
+```
+
+### Kind 43: ClaimWinnings
+
+Claim winnings from a resolved market.
+
+```
+[market_id: 32 bytes]
+[position_id: 4 bytes BE]
+[user_pubkey: 33 bytes]
+[signature: 64 bytes]
+```
+
+## AMM Formula
+
+Uses Constant Product Market Maker (CPMM):
+
+```
+k = YES_pool × NO_pool (constant)
+
+Price of YES = NO_pool / (YES_pool + NO_pool)
+Price of NO = YES_pool / (YES_pool + NO_pool)
+
+When buying YES:
+- Add sats to NO pool
+- Calculate new YES pool to maintain k
+- Shares out = old YES pool - new YES pool
+```
 
 ## API Endpoints
 
-### Stats
-- `GET /api/stats` - Lottery statistics
-
-### Lotteries
-- `GET /api/lotteries` - List lotteries
-- `GET /api/lotteries/:id` - Lottery details
-- `POST /api/lotteries/create` - Create lottery
-- `GET /api/lotteries/:id/tickets` - Lottery tickets
-- `POST /api/lotteries/:id/buy` - Buy ticket (returns DLC offer)
-- `GET /api/lotteries/:id/draw` - Draw result
-- `GET /api/lotteries/:id/winners` - Winners list
-- `POST /api/lotteries/:id/claim` - Claim prize
-
-### User
-- `GET /api/my/tickets` - User's tickets
-
-### Config
-- `GET /api/prize-tiers/:type` - Prize tier configuration
-
-### History
-- `GET /api/history` - Completed lotteries
-
-## DLC Integration
-
-The lottery uses Discreet Log Contracts for trustless payouts:
-
-1. **Ticket Purchase**: Creates a DLC with adaptor signatures for each possible outcome
-2. **Oracle Attestation**: Oracle publishes Schnorr signature for winning numbers
-3. **Signature Completion**: Adaptor signature combined with oracle's signature
-4. **Settlement**: Complete signature used to claim funds on-chain
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/stats` | GET | Protocol statistics |
+| `/api/markets` | GET | List all markets |
+| `/api/markets/:id` | GET | Get market details |
+| `/api/markets/create` | POST | Create new market |
+| `/api/markets/:id/quote` | POST | Get bet quote |
+| `/api/markets/:id/bet` | POST | Place a bet |
+| `/api/markets/:id/positions` | GET | List positions |
+| `/api/markets/:id/winners` | GET | List winners |
+| `/api/markets/:id/claim` | POST | Claim winnings |
+| `/api/my/positions` | GET | User's positions |
+| `/api/history` | GET | Resolved markets |
 
 ## Development
 
-```bash
-# Start the database
-docker compose up -d anchor-app-predictions-postgres
+### Backend
 
-# Run the backend
+```bash
 cd apps/anchor-predictions/backend
 cargo run
+```
 
-# Run the frontend
+### Frontend
+
+```bash
 cd apps/anchor-predictions/frontend
+npm install
 npm run dev
+```
+
+### Docker
+
+```bash
+docker compose build app-predictions-backend app-predictions-frontend
+docker compose up -d app-predictions-backend app-predictions-frontend
 ```
 
 ## Architecture
 
 ```
-anchor-predictions/
-├── backend/          # Rust/Axum API server + DLC engine + indexer
-├── frontend/         # Next.js web interface
-├── postgres/         # Database schema
-└── README.md
+┌─────────────────────────────────────────────────────────────────┐
+│                     ANCHOR PREDICTIONS                          │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌─────────────┐    ┌──────────────┐    ┌─────────────────┐    │
+│  │   Frontend  │───▶│   Backend    │───▶│   PostgreSQL    │    │
+│  │  (Next.js)  │    │  (Rust/Axum) │    │    (Markets,    │    │
+│  │             │    │              │    │   Positions)    │    │
+│  └─────────────┘    └──────────────┘    └─────────────────┘    │
+│                            │                                    │
+│                            ▼                                    │
+│                     ┌──────────────┐                            │
+│                     │   Indexer    │                            │
+│                     │  (Bitcoin    │                            │
+│                     │   Blocks)    │                            │
+│                     └──────────────┘                            │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ## License
 
 MIT
-

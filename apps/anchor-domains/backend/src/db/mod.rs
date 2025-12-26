@@ -7,9 +7,12 @@
 //! - `indexer`: Indexer state management
 
 mod domains;
+mod identities;
 mod indexer;
 mod pending;
 mod records;
+
+pub use identities::DomainIdentityRow;
 
 use anyhow::Result;
 use sqlx::postgres::PgPool;

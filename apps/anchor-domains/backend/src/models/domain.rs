@@ -40,6 +40,10 @@ pub struct Domain {
 pub struct DnsRecordResponse {
     pub id: i32,
     pub record_type: String,
+    /// Record name/subdomain prefix (e.g., "user._nostr", "www", "@" for root)
+    /// NULL or "@" means this record applies to the root domain
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
     pub ttl: i32,
     pub value: String,
     #[serde(skip_serializing_if = "Option::is_none")]

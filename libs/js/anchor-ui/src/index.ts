@@ -89,6 +89,9 @@ export {
   NavGroup,
   gapSizes,
   type NavGroupProps,
+  NavDropdown,
+  type NavDropdownProps,
+  type NavDropdownItem,
   // Fullscreen layout components
   FullscreenShell,
   type FullscreenShellProps,
