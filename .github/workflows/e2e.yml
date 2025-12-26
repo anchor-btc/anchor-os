@@ -41,14 +41,14 @@ jobs:
           docker compose --profile default build
           
           echo "Listing built images..."
-          docker images | grep -E "anchor-os" || true
+          docker images | grep -E "^anchor" || true
 
       - name: Save Docker Images
         run: |
           mkdir -p /tmp/docker-images
           
-          # Get ONLY built images (anchor-os-*), not external ones
-          IMAGES=$(docker images --format '{{.Repository}}:{{.Tag}}' | grep "^anchor-os" | sort -u)
+          # Get ONLY built images (anchor-*), not external ones like postgres, mempool, mariadb
+          IMAGES=$(docker images --format '{{.Repository}}:{{.Tag}}' | grep "^anchor" | sort -u)
           
           echo "Saving images: $IMAGES"
           
@@ -99,7 +99,7 @@ jobs:
           docker load -i /tmp/docker-images/anchor-images.tar
           
           echo "Loaded images:"
-          docker images | grep -E "anchor-os" || true
+          docker images | grep -E "^anchor" || true
           
           echo "Pulling external images..."
           docker compose --profile default pull --ignore-pull-failures || true
