@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy workspace files
-COPY Cargo.toml Cargo.lock ./
+COPY Cargo.toml Cargo.lock* ./
 COPY libs/rust/anchor-core ./libs/rust/anchor-core
 COPY libs/rust/anchor-specs ./libs/rust/anchor-specs
 COPY apps/anchor-oracles/backend ./apps/anchor-oracles/backend
