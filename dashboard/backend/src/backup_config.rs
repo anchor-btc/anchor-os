@@ -4,11 +4,6 @@ use std::env;
 
 #[derive(Debug, Clone)]
 pub struct BackupConfig {
-    #[allow(dead_code)]
-    pub host: String,
-    #[allow(dead_code)]
-    pub port: u16,
-
     // Local backup settings
     pub backup_dir: String,
 
@@ -32,12 +27,6 @@ impl BackupConfig {
         dotenvy::dotenv().ok();
 
         Self {
-            host: env::var("HOST").unwrap_or_else(|_| "0.0.0.0".to_string()),
-            port: env::var("PORT")
-                .unwrap_or_else(|_| "8003".to_string())
-                .parse()
-                .expect("PORT must be a number"),
-
             // Local backup
             backup_dir: env::var("BACKUP_DIR").unwrap_or_else(|_| "/backups".to_string()),
 

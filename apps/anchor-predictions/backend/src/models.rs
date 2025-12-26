@@ -94,7 +94,6 @@ pub struct CreateMarketRequest {
 
 /// Place Bet Request
 #[derive(Debug, Clone, Deserialize, ToSchema)]
-#[allow(dead_code)]
 pub struct PlaceBetRequest {
     pub outcome: i16, // 0=NO, 1=YES
     pub amount_sats: i64,

@@ -126,7 +126,6 @@ pub struct HomeserverInfo {
 
 /// Sign message request
 #[derive(Debug, Deserialize, ToSchema)]
-#[allow(dead_code)]
 pub struct SignMessageRequest {
     /// Message to sign (hex encoded)
     pub message: String,

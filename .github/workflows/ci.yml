@@ -12,7 +12,7 @@ env:
 
 jobs:
   # =============================================================================
-  # Format Check - Rust + TypeScript
+  # Format Check - Rust + TypeScript (runs in parallel, no build needed)
   # =============================================================================
   format:
     name: Format
@@ -44,12 +44,12 @@ jobs:
         run: npm run format:check
 
   # =============================================================================
-  # Lint - Rust (Clippy) + TypeScript (ESLint)
+  # Build - Compiles everything and saves cache for other jobs
   # =============================================================================
-  lint:
-    name: Lint
+  build:
+    name: Build
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
@@ -60,18 +60,53 @@ jobs:
         with:
           components: clippy
 
-      - name: Cache Cargo
-        uses: actions/cache@v4
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
         with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-
+          shared-key: "rust-build"
+          save-if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Build Rust (release check)
+        run: cargo build --workspace --all-features
+
+      - name: Build Rust (test artifacts)
+        run: cargo test --workspace --all-features --no-run
+
+      - name: Build TypeScript
+        run: npm run build:all
+
+  # =============================================================================
+  # Lint - Runs after build to reuse compiled artifacts
+  # =============================================================================
+  lint:
+    name: Lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    needs: build
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "rust-build"
+          save-if: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -89,12 +124,13 @@ jobs:
         run: npm run lint
 
   # =============================================================================
-  # Test - Rust Unit Tests
+  # Test - Runs after build to reuse compiled artifacts
   # =============================================================================
   test-rust:
     name: Test Rust
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    needs: build
 
     steps:
       - name: Checkout
@@ -103,64 +139,11 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Cache Cargo
-        uses: actions/cache@v4
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
         with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-test-
-            ${{ runner.os }}-cargo-
+          shared-key: "rust-build"
+          save-if: false
 
       - name: Run Rust tests
         run: cargo test --workspace --all-features
-
-  # =============================================================================
-  # Build Check - Ensure everything compiles
-  # =============================================================================
-  build:
-    name: Build
-    runs-on: ubuntu-24.04
-    timeout-minutes: 30
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache Cargo
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-build-
-            ${{ runner.os }}-cargo-
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install Node dependencies
-        run: npm ci
-
-      - name: Build Rust
-        run: cargo build --workspace --all-features
-
-      - name: Build TypeScript
-        run: npm run build:all
-

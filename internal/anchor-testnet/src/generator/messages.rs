@@ -14,7 +14,6 @@ use crate::config::{MessageType, SharedConfig, SharedStats, TestnetConfig};
 
 /// Tracked token info for mint/transfer/burn operations
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
 pub struct TrackedToken {
     pub ticker: String,
     pub deploy_txid: String,
@@ -36,7 +35,6 @@ pub struct TrackedOracle {
 
 /// Tracked attestation for disputes
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
 pub struct TrackedAttestation {
     pub oracle_pubkey: [u8; 32],
     pub event_id: [u8; 32],
@@ -46,7 +44,6 @@ pub struct TrackedAttestation {
 
 /// Tracked prediction market for bet/resolve operations
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
 pub struct TrackedMarket {
     pub market_id: [u8; 32],
     pub question: String,

@@ -53,11 +53,11 @@ pub struct MessageResult {
 pub struct CreateMessageResponse {
     pub txid: String,
     pub vout: u32,
-    #[allow(dead_code)]
-    pub hex: String,
+    #[serde(rename = "hex")]
+    pub _hex: String,
     pub carrier: u8,
-    #[allow(dead_code)]
-    pub carrier_name: String,
+    #[serde(rename = "carrier_name")]
+    pub _carrier_name: String,
 }
 
 /// Response from wallet mine endpoint
@@ -69,10 +69,10 @@ pub struct MineResponse {
 /// Response from wallet balance endpoint
 #[derive(Debug, Deserialize)]
 pub struct BalanceResponse {
-    #[allow(dead_code)]
-    pub confirmed: f64,
-    #[allow(dead_code)]
-    pub unconfirmed: f64,
+    #[serde(rename = "confirmed")]
+    pub _confirmed: f64,
+    #[serde(rename = "unconfirmed")]
+    pub _unconfirmed: f64,
     pub total: f64,
 }
 

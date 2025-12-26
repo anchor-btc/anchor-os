@@ -44,7 +44,6 @@ pub enum AppError {
     Spec(String),
 }
 
-#[allow(dead_code)]
 impl AppError {
     /// Create a validation error
     pub fn validation(msg: impl Into<String>) -> Self {

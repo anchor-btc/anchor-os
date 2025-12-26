@@ -102,25 +102,6 @@ impl Database {
         Ok(row.as_ref().map(|r| self.row_to_market(r)))
     }
 
-    #[allow(dead_code)]
-    pub async fn get_market_by_bytes(&self, market_id: &[u8]) -> Result<Option<Market>> {
-        let row = sqlx::query(
-            r#"
-            SELECT id, market_id, question, description, resolution_block,
-                   oracle_pubkey, creator_pubkey, status, resolution,
-                   yes_pool, no_pool, total_volume_sats, total_yes_sats,
-                   total_no_sats, position_count, created_at
-            FROM markets
-            WHERE market_id = $1
-            "#,
-        )
-        .bind(market_id)
-        .fetch_optional(&self.pool)
-        .await?;
-
-        Ok(row.as_ref().map(|r| self.row_to_market(r)))
-    }
-
     pub async fn create_market(&self, market: &Market) -> Result<i32> {
         // Convert hex market_id to bytes
         let market_id_bytes = hex::decode(&market.market_id)?;

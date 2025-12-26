@@ -116,62 +116,10 @@ impl LogRingBuffer {
         entry_clone
     }
 
-    /// Get all logs
-    #[allow(dead_code)]
-    pub fn all(&self) -> Vec<LogEntry> {
-        self.buffer.iter().cloned().collect()
-    }
-
-    /// Get logs since a specific ID
-    #[allow(dead_code)]
-    pub fn since(&self, id: u64) -> Vec<LogEntry> {
-        self.buffer.iter().filter(|e| e.id > id).cloned().collect()
-    }
-
     /// Get the last N logs
-    #[allow(dead_code)]
     pub fn last_n(&self, n: usize) -> Vec<LogEntry> {
         let skip = self.buffer.len().saturating_sub(n);
         self.buffer.iter().skip(skip).cloned().collect()
-    }
-
-    /// Filter logs by level
-    #[allow(dead_code)]
-    pub fn filter_by_level(&self, level: &str) -> Vec<LogEntry> {
-        self.buffer
-            .iter()
-            .filter(|e| e.level == level)
-            .cloned()
-            .collect()
-    }
-
-    /// Search logs by message content
-    #[allow(dead_code)]
-    pub fn search(&self, query: &str) -> Vec<LogEntry> {
-        let query_lower = query.to_lowercase();
-        self.buffer
-            .iter()
-            .filter(|e| e.message.to_lowercase().contains(&query_lower))
-            .cloned()
-            .collect()
-    }
-
-    /// Get current buffer size
-    #[allow(dead_code)]
-    pub fn len(&self) -> usize {
-        self.buffer.len()
-    }
-
-    /// Check if buffer is empty
-    #[allow(dead_code)]
-    pub fn is_empty(&self) -> bool {
-        self.buffer.is_empty()
-    }
-
-    /// Clear all logs
-    #[allow(dead_code)]
-    pub fn clear(&mut self) {
-        self.buffer.clear();
     }
 }
 

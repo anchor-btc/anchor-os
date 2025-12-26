@@ -13,41 +13,6 @@ pub struct DockerVolume {
     pub size_bytes: Option<i64>,
 }
 
-/// List all Docker volumes
-#[allow(dead_code)]
-pub async fn list_volumes() -> Result<Vec<DockerVolume>> {
-    let output = Command::new("docker")
-        .args(["volume", "ls", "--format", "{{json .}}"])
-        .output()
-        .await?;
-
-    if !output.status.success() {
-        return Err(anyhow::anyhow!("Failed to list Docker volumes"));
-    }
-
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    let mut volumes = Vec::new();
-
-    for line in stdout.lines() {
-        if let Ok(vol) = serde_json::from_str::<serde_json::Value>(line) {
-            let name = vol.get("Name").and_then(|v| v.as_str()).unwrap_or_default();
-            let driver = vol
-                .get("Driver")
-                .and_then(|v| v.as_str())
-                .unwrap_or("local");
-
-            volumes.push(DockerVolume {
-                name: name.to_string(),
-                driver: driver.to_string(),
-                mountpoint: String::new(),
-                size_bytes: None,
-            });
-        }
-    }
-
-    Ok(volumes)
-}
-
 /// Get list of Anchor-related volumes to backup
 pub fn get_anchor_volumes() -> Vec<&'static str> {
     vec![

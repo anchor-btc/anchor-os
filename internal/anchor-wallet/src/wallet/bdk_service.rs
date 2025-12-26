@@ -89,9 +89,6 @@ pub struct BdkWalletService {
     network: Network,
     /// Data directory
     data_dir: PathBuf,
-    /// Wallet password (used for encrypting mnemonic)
-    #[allow(dead_code)]
-    password: RwLock<Option<String>>,
     /// Current chain tip height
     chain_tip: Arc<Mutex<u32>>,
 }
@@ -184,7 +181,6 @@ impl BdkWalletService {
             mnemonic,
             network,
             data_dir,
-            password: RwLock::new(password),
             chain_tip: Arc::new(Mutex::new(chain_tip)),
         };
 

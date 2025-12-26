@@ -9,7 +9,6 @@
 mod canvas;
 mod config;
 mod db;
-mod error;
 mod handlers;
 mod indexer;
 mod models;

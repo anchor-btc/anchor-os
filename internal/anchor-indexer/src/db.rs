@@ -45,27 +45,6 @@ impl Database {
         Ok(())
     }
 
-    /// Insert a new ANCHOR message (legacy, defaults to OP_RETURN carrier)
-    #[allow(dead_code)]
-    pub async fn insert_message(
-        &self,
-        txid: &Txid,
-        vout: u32,
-        block_hash: Option<&[u8]>,
-        block_height: Option<i32>,
-        message: &ParsedAnchorMessage,
-    ) -> Result<i32> {
-        self.insert_message_with_carrier(
-            txid,
-            vout,
-            block_hash,
-            block_height,
-            message,
-            CarrierType::OpReturn,
-        )
-        .await
-    }
-
     /// Insert a new ANCHOR message with carrier type
     pub async fn insert_message_with_carrier(
         &self,

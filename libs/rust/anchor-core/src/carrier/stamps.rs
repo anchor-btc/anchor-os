@@ -178,17 +178,6 @@ impl StampsCarrier {
 
         Some(data)
     }
-
-    /// Check if this looks like a stamps multisig with ANCHOR data
-    #[allow(dead_code)]
-    pub fn is_anchor_stamps(&self, script: &bitcoin::Script) -> bool {
-        if let Some(data) = self.parse_multisig_script(script) {
-            // Check for ANCHOR magic bytes
-            is_anchor_payload(&data)
-        } else {
-            false
-        }
-    }
 }
 
 impl Default for StampsCarrier {

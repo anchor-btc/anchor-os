@@ -5,7 +5,6 @@ use anyhow::Result;
 use super::Database;
 use crate::models::{Proof, ProofListItem, ProofRow, ProofStats};
 
-#[allow(dead_code)]
 impl Database {
     /// Check if a transaction output is already indexed
     pub async fn tx_exists(&self, txid: &[u8], vout: i32) -> Result<bool> {

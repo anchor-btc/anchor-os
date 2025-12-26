@@ -74,7 +74,6 @@ impl OracleRegistration {
 }
 
 /// Oracle attestation body parser
-#[allow(dead_code)]
 pub struct OracleAttestationBody {
     pub category: u8,
     pub event_id: [u8; 32],
@@ -116,53 +115,7 @@ impl OracleAttestationBody {
     }
 }
 
-/// Oracle event request body parser
-#[allow(dead_code)]
-pub struct OracleEventBody {
-    pub event_id: [u8; 32],
-    pub category: u8,
-    pub resolution_block: i32,
-    pub bounty_sats: i64,
-    pub description: String,
-}
-
-#[allow(dead_code)]
-impl OracleEventBody {
-    pub fn parse(body: &[u8]) -> Option<Self> {
-        // Minimum: event_id(32) + category(1) + resolution_block(4) + bounty(8) = 45 bytes
-        if body.len() < 45 {
-            return None;
-        }
-
-        let mut event_id = [0u8; 32];
-        event_id.copy_from_slice(&body[0..32]);
-
-        let category = body[32];
-
-        let resolution_block = i32::from_be_bytes([body[33], body[34], body[35], body[36]]);
-
-        let bounty_sats = i64::from_be_bytes([
-            body[37], body[38], body[39], body[40], body[41], body[42], body[43], body[44],
-        ]);
-
-        let description = if body.len() > 45 {
-            String::from_utf8(body[45..].to_vec()).unwrap_or_default()
-        } else {
-            String::new()
-        };
-
-        Some(Self {
-            event_id,
-            category,
-            resolution_block,
-            bounty_sats,
-            description,
-        })
-    }
-}
-
 /// Oracle dispute body parser
-#[allow(dead_code)]
 pub struct OracleDisputeBody {
     pub disputer_pubkey: [u8; 32],
     pub attestation_txid: [u8; 32],
@@ -172,7 +125,6 @@ pub struct OracleDisputeBody {
     pub evidence: String,
 }
 
-#[allow(dead_code)]
 impl OracleDisputeBody {
     pub fn parse(body: &[u8]) -> Option<Self> {
         // Minimum: disputer(32) + att_txid(32) + att_vout(2) + reason(1) + stake(8) = 75 bytes

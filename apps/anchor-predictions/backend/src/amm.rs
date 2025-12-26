@@ -15,10 +15,6 @@
 /// Initial liquidity for new markets (in pool units, not sats)
 pub const INITIAL_LIQUIDITY: i64 = 1_000_000_000; // 1 billion units
 
-/// Minimum bet amount in sats
-#[allow(dead_code)]
-pub const MIN_BET_SATS: i64 = 1_000; // 1000 sats minimum
-
 /// AMM state for a market
 #[derive(Debug, Clone)]
 pub struct AmmState {
@@ -29,7 +25,6 @@ pub struct AmmState {
 
 impl AmmState {
     /// Create new AMM state with initial liquidity
-    #[allow(dead_code)]
     pub fn new(initial_liquidity: i64) -> Self {
         let k = (initial_liquidity as i128) * (initial_liquidity as i128);
         Self {

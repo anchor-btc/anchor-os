@@ -217,30 +217,6 @@ pub enum MessageType {
 }
 
 impl MessageType {
-    /// Get the ANCHOR kind for this message type
-    #[allow(dead_code)]
-    pub fn kind(&self) -> u8 {
-        match self {
-            MessageType::Text => 1,
-            MessageType::Pixel => 2,
-            MessageType::Image => 4,
-            MessageType::Map => 5,
-            MessageType::Dns => 10,
-            MessageType::Proof => 11,
-            MessageType::Token => 20,
-            MessageType::TokenMint => 20,
-            MessageType::TokenTransfer => 20,
-            MessageType::TokenBurn => 20,
-            MessageType::Oracle => 30,
-            MessageType::OracleAttestation => 31,
-            MessageType::OracleDispute => 32,
-            MessageType::OracleEvent => 33, // Not a blockchain kind, uses API
-            MessageType::Prediction => 40,
-            MessageType::PredictionTicket => 41,
-            MessageType::PredictionDraw => 42,
-        }
-    }
-
     /// Get display name
     pub fn name(&self) -> &'static str {
         match self {
@@ -262,30 +238,6 @@ impl MessageType {
             MessageType::PredictionTicket => "Place Bet",
             MessageType::PredictionDraw => "Market Resolve",
         }
-    }
-
-    /// Get all available message types
-    #[allow(dead_code)]
-    pub fn all() -> Vec<MessageType> {
-        vec![
-            MessageType::Text,
-            MessageType::Pixel,
-            MessageType::Image,
-            MessageType::Map,
-            MessageType::Dns,
-            MessageType::Proof,
-            MessageType::Token,
-            MessageType::TokenMint,
-            MessageType::TokenTransfer,
-            MessageType::TokenBurn,
-            MessageType::Oracle,
-            MessageType::OracleAttestation,
-            MessageType::OracleDispute,
-            MessageType::OracleEvent,
-            MessageType::Prediction,
-            MessageType::PredictionTicket,
-            MessageType::PredictionDraw,
-        ]
     }
 }
 
@@ -370,12 +322,10 @@ impl GeneratorStats {
         self.total_blocks += count;
     }
 
-    #[allow(dead_code)]
     pub fn increment_error(&mut self) {
         self.errors_count += 1;
     }
 
-    #[allow(dead_code)]
     pub fn mark_started(&mut self) {
         self.started_at = Some(
             std::time::SystemTime::now()

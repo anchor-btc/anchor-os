@@ -323,8 +323,8 @@ struct TransactionInfo {
     txid: String,
     amount: f64,
     confirmations: i64,
-    #[allow(dead_code)]
-    category: String,
+    #[serde(rename = "category")]
+    _category: String,
 }
 
 /// Fetch transactions from Bitcoin RPC

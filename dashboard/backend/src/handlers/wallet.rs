@@ -42,7 +42,6 @@ pub struct Utxo {
 
 /// Send request (for OpenAPI schema)
 #[derive(Debug, Deserialize, ToSchema)]
-#[allow(dead_code)]
 pub struct SendRequest {
     pub address: String,
     pub amount: f64,

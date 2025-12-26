@@ -42,14 +42,6 @@ pub struct HealthResponse {
     pub service: String,
 }
 
-/// Create transaction response
-#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
-pub struct CreateTxResponse {
-    pub txid: String,
-    pub hex: String,
-    pub fee: u64,
-}
-
 /// Request to get pixels by transaction IDs
 #[derive(Debug, Clone, Deserialize, ToSchema)]
 pub struct GetPixelsByTxidsRequest {

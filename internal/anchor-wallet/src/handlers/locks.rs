@@ -24,9 +24,9 @@ pub struct LockRequest {
     /// List of UTXOs to lock
     pub utxos: Vec<UtxoRef>,
     /// Reason for locking (optional, defaults to "manual")
-    /// Note: Currently unused but kept for API compatibility
-    #[allow(dead_code)]
-    pub reason: Option<String>,
+    /// Note: Received from API but not currently stored
+    #[serde(rename = "reason")]
+    pub _reason: Option<String>,
 }
 
 /// Request to unlock UTXOs

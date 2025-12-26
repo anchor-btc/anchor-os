@@ -59,30 +59,6 @@ pub enum KeyType {
     Ed25519 = 1,
 }
 
-#[allow(dead_code)]
-impl KeyType {
-    pub fn from_byte(b: u8) -> Self {
-        match b {
-            1 => KeyType::Ed25519,
-            _ => KeyType::Secp256k1,
-        }
-    }
-
-    pub fn to_byte(self) -> u8 {
-        match self {
-            KeyType::Secp256k1 => 0,
-            KeyType::Ed25519 => 1,
-        }
-    }
-
-    pub fn name(&self) -> &'static str {
-        match self {
-            KeyType::Secp256k1 => "Nostr (secp256k1)",
-            KeyType::Ed25519 => "Pubky (Ed25519)",
-        }
-    }
-}
-
 /// Oracle registration/profile
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct Oracle {
@@ -183,7 +159,6 @@ pub struct CategoryInfo {
 
 /// Request to register an oracle
 #[derive(Debug, Clone, Deserialize, ToSchema)]
-#[allow(dead_code)]
 pub struct RegisterOracleRequest {
     pub pubkey: String,
     /// Key type: 0 = secp256k1 (Nostr), 1 = Ed25519 (Pubky)

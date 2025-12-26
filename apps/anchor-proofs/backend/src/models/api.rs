@@ -141,7 +141,6 @@ pub struct StampRequest {
     pub carrier: Option<u8>,
 }
 
-#[allow(dead_code)]
 impl StampRequest {
     /// Convert to a ProofEntry from anchor-specs
     pub fn to_proof_entry(&self) -> Option<ProofEntry> {

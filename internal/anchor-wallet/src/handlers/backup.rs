@@ -76,16 +76,6 @@ pub struct VerifyMnemonicResponse {
     pub error: Option<String>,
 }
 
-/// Restore wallet request
-#[derive(Debug, Deserialize, ToSchema)]
-#[allow(dead_code)]
-pub struct RestoreWalletRequest {
-    /// The 12 or 24 mnemonic words
-    pub mnemonic: String,
-    /// Password for encrypting the restored mnemonic
-    pub password: String,
-}
-
 /// Restore wallet response
 #[derive(Serialize, ToSchema)]
 pub struct RestoreWalletResponse {
@@ -405,16 +395,6 @@ pub struct ExportBackupResponse {
     pub backup: Option<EncryptedBackup>,
     /// Error message if failed
     pub error: Option<String>,
-}
-
-/// Import backup request
-#[derive(Debug, Deserialize, ToSchema)]
-#[allow(dead_code)]
-pub struct ImportBackupRequest {
-    /// The encrypted backup data
-    pub backup: EncryptedBackup,
-    /// Password to decrypt the backup
-    pub password: String,
 }
 
 /// Import backup response

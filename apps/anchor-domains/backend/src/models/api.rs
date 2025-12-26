@@ -143,18 +143,6 @@ pub struct MyDomainsQuery {
     pub owner_txids: String,
 }
 
-/// Request to create a pending transaction
-/// Note: This struct is for API documentation purposes and may not be used directly.
-#[derive(Debug, Clone, Deserialize, ToSchema)]
-#[allow(dead_code)]
-pub struct CreatePendingRequest {
-    pub txid: String,
-    pub domain_name: String,
-    pub operation: i16, // 1=register, 2=update, 3=transfer
-    pub records: Option<Vec<DnsRecordInput>>,
-    pub carrier: Option<i16>,
-}
-
 // ============================================================================
 // Response Models
 // ============================================================================

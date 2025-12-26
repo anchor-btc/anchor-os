@@ -12,32 +12,6 @@ use utoipa::ToSchema;
 
 use crate::AppState;
 
-/// Notification severity levels
-#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
-#[serde(rename_all = "lowercase")]
-pub enum NotificationSeverity {
-    Info,
-    Success,
-    Warning,
-    Error,
-}
-
-impl Default for NotificationSeverity {
-    fn default() -> Self {
-        Self::Info
-    }
-}
-
-/// Notification types
-#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
-#[serde(rename_all = "lowercase")]
-pub enum NotificationType {
-    System,
-    Backup,
-    Service,
-    Transaction,
-}
-
 /// A notification entry
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct Notification {

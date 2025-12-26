@@ -58,14 +58,6 @@ impl BackupState {
 // Request/Response types
 
 #[derive(Debug, Serialize)]
-pub struct StatusResponse {
-    pub status: String,
-    pub service: String,
-    pub current_backup: Option<BackupJob>,
-    pub last_backup: Option<BackupJob>,
-}
-
-#[derive(Debug, Serialize)]
 pub struct BackupStatusResponse {
     pub running: bool,
     pub current_job: Option<BackupJob>,
@@ -102,8 +94,6 @@ pub struct TargetsResponse {
 pub struct RestoreRequest {
     pub snapshot_id: String,
     pub target: Option<String>,
-    #[allow(dead_code)]
-    pub restore_path: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -220,15 +210,6 @@ pub struct LocalFilesResponse {
 }
 
 // Handlers
-
-/// Health check
-#[allow(dead_code)]
-pub async fn health() -> impl IntoResponse {
-    Json(serde_json::json!({
-        "status": "ok",
-        "service": "anchor-backup"
-    }))
-}
 
 /// Get backup status
 pub async fn get_status(State(state): State<Arc<BackupState>>) -> impl IntoResponse {
@@ -537,18 +518,6 @@ pub async fn restore(
                 errors: Some(vec![e.to_string()]),
                 duration_ms: None,
             })
-        }
-    }
-}
-
-/// List Docker volumes
-#[allow(dead_code)]
-pub async fn list_volumes() -> impl IntoResponse {
-    match volumes::list_volumes().await {
-        Ok(vols) => Json(VolumesResponse { volumes: vols }),
-        Err(e) => {
-            error!("Failed to list volumes: {}", e);
-            Json(VolumesResponse { volumes: vec![] })
         }
     }
 }
