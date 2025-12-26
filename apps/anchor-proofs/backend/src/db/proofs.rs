@@ -31,45 +31,6 @@ impl Database {
         Ok(row.0)
     }
 
-    /// Create a new proof
-    #[allow(clippy::too_many_arguments)]
-    pub async fn create_proof(
-        &self,
-        hash_algo: i16,
-        file_hash: &[u8],
-        filename: &Option<String>,
-        mime_type: &Option<String>,
-        file_size: Option<i64>,
-        description: &Option<String>,
-        txid: &[u8],
-        vout: i32,
-        block_hash: Option<&[u8]>,
-        block_height: Option<i32>,
-    ) -> Result<i32> {
-        let row: (i32,) = sqlx::query_as(
-            r#"
-            INSERT INTO proofs (hash_algo, file_hash, filename, mime_type, file_size, description, txid, vout, block_hash, block_height)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-            ON CONFLICT (file_hash, hash_algo) DO NOTHING
-            RETURNING id
-            "#,
-        )
-        .bind(hash_algo)
-        .bind(file_hash)
-        .bind(filename)
-        .bind(mime_type)
-        .bind(file_size)
-        .bind(description)
-        .bind(txid)
-        .bind(vout)
-        .bind(block_hash)
-        .bind(block_height)
-        .fetch_one(&self.pool)
-        .await?;
-
-        Ok(row.0)
-    }
-
     /// Create a new proof with creator address
     #[allow(clippy::too_many_arguments)]
     pub async fn create_proof_with_creator(

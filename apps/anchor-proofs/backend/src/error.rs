@@ -19,10 +19,6 @@ pub enum AppError {
     #[error("Wallet service error: {0}")]
     Wallet(#[from] reqwest::Error),
 
-    /// Validation errors
-    #[error("Validation error: {0}")]
-    Validation(String),
-
     /// Resource not found
     #[error("Not found: {0}")]
     NotFound(String),
@@ -45,11 +41,6 @@ pub enum AppError {
 }
 
 impl AppError {
-    /// Create a validation error
-    pub fn validation(msg: impl Into<String>) -> Self {
-        Self::Validation(msg.into())
-    }
-
     /// Create a not found error
     pub fn not_found(msg: impl Into<String>) -> Self {
         Self::NotFound(msg.into())
@@ -70,10 +61,6 @@ impl AppError {
         Self::Internal(msg.into())
     }
 
-    /// Create a spec error
-    pub fn spec(msg: impl Into<String>) -> Self {
-        Self::Spec(msg.into())
-    }
 }
 
 impl IntoResponse for AppError {
@@ -93,7 +80,6 @@ impl IntoResponse for AppError {
                     format!("Wallet service error: {}", e),
                 )
             }
-            AppError::Validation(msg) => (StatusCode::BAD_REQUEST, msg.clone()),
             AppError::NotFound(msg) => (StatusCode::NOT_FOUND, msg.clone()),
             AppError::Conflict(msg) => (StatusCode::CONFLICT, msg.clone()),
             AppError::BadRequest(msg) => (StatusCode::BAD_REQUEST, msg.clone()),

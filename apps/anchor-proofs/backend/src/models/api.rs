@@ -169,15 +169,6 @@ impl StampRequest {
             metadata,
         })
     }
-
-    /// Parse the hash algorithm
-    pub fn parse_algorithm(&self) -> Option<HashAlgorithm> {
-        match self.hash_algo.to_lowercase().as_str() {
-            "sha256" | "sha-256" => Some(HashAlgorithm::Sha256),
-            "sha512" | "sha-512" => Some(HashAlgorithm::Sha512),
-            _ => None,
-        }
-    }
 }
 
 /// Batch stamp request
