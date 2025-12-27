@@ -28,6 +28,28 @@ jobs:
       packages: write
 
     steps:
+      - name: Free Disk Space
+        run: |
+          echo "=== Disk space before cleanup ==="
+          df -h
+          
+          # Remove unnecessary tools to free up space (~10GB)
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/share/boost
+          sudo rm -rf /usr/share/swift
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          
+          # Clean apt cache
+          sudo apt-get clean
+          
+          # Clean docker
+          docker system prune -af || true
+          
+          echo "=== Disk space after cleanup ==="
+          df -h
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -270,6 +292,28 @@ jobs:
       packages: read
 
     steps:
+      - name: Free Disk Space
+        run: |
+          echo "=== Disk space before cleanup ==="
+          df -h
+          
+          # Remove unnecessary tools to free up space (~10GB)
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/share/boost
+          sudo rm -rf /usr/share/swift
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          
+          # Clean apt cache
+          sudo apt-get clean
+          
+          # Clean docker
+          docker system prune -af || true
+          
+          echo "=== Disk space after cleanup ==="
+          df -h
+
       - name: Checkout
         uses: actions/checkout@v4
 
