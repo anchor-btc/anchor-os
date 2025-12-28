@@ -10,7 +10,7 @@
 #   make logs s=X    - View logs for service X
 # =============================================================================
 
-.PHONY: help up up-full up-min down build rebuild logs migrate db-reset clean setup
+.PHONY: help up up-full up-min down build rebuild logs migrate db-reset clean setup install
 
 # Default target
 help:
@@ -36,6 +36,7 @@ help:
 	@echo "    make db-reset      Reset database (WARNING: deletes data)"
 	@echo ""
 	@echo "  Development:"
+	@echo "    make install       Install all npm + cargo dependencies"
 	@echo "    make setup         Initial development setup"
 	@echo "    make clean         Stop containers and prune Docker"
 	@echo "    make clean-all     Remove everything (volumes, node_modules, target)"
@@ -96,6 +97,9 @@ db-reset:
 # =============================================================================
 
 setup:
+	./scripts/dev-setup.sh
+
+install:
 	./scripts/dev-setup.sh
 
 clean:
