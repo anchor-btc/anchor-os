@@ -22,21 +22,8 @@ import { fetchMyPositions, fetchAllPositions, claimWinnings } from '@/lib/api';
 import { cn, formatSats, formatPercent, shortenHash } from '@/lib/utils';
 import { useWallet } from '@/contexts';
 
-// Generate deterministic pubkey from address (same as market page)
-function addressToPubkey(address: string): string {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(address + 'anchor-predictions');
-  let hash = 0x02;
-  const result = [0x02];
-  for (let i = 0; i < 32; i++) {
-    hash = ((hash << 5) - hash + (data[i % data.length] || 0)) | 0;
-    result.push(Math.abs(hash % 256));
-  }
-  return result.map((b) => b.toString(16).padStart(2, '0')).join('');
-}
-
 export default function MyBetsPage() {
-  const { address, connected } = useWallet();
+  const { address, connected, pubkey: walletPubkey, signMessage } = useWallet();
   const queryClient = useQueryClient();
 
   const [pubkey, setPubkey] = useState('');
@@ -50,12 +37,11 @@ export default function MyBetsPage() {
 
   // Auto-set pubkey from wallet
   useEffect(() => {
-    if (connected && address) {
-      const walletPubkey = addressToPubkey(address);
+    if (connected && walletPubkey) {
       setPubkey(walletPubkey);
       setSearchPubkey(walletPubkey);
     }
-  }, [connected, address]);
+  }, [connected, walletPubkey]);
 
   // Query for user's positions
   const {
@@ -95,7 +81,23 @@ export default function MyBetsPage() {
       if (!address) {
         throw new Error('Wallet not connected. Please connect your wallet to claim winnings.');
       }
-      return claimWinnings(marketId, { position_id: positionId, payout_address: address });
+      if (!walletPubkey) {
+        throw new Error('No signing key available. Please reconnect wallet.');
+      }
+
+      // Build the claim message (must match backend format)
+      const claimMessage = `claim:${marketId}:${positionId}:${address}`;
+
+      // Sign the message with the user's private key
+      const signature = await signMessage(claimMessage);
+
+      // Send claim request with signature
+      return claimWinnings(marketId, {
+        position_id: positionId,
+        payout_address: address,
+        user_pubkey: walletPubkey,
+        signature: signature,
+      });
     },
     onSuccess: (data, variables) => {
       const message = data.payout_sats

@@ -183,6 +183,10 @@ export interface PlaceBetResponse {
 export interface ClaimWinningsRequest {
   position_id: number;
   payout_address: string;
+  /** User's public key (hex encoded, 32 bytes x-only pubkey) */
+  user_pubkey: string;
+  /** Schnorr signature over the claim message (hex encoded, 64 bytes) */
+  signature: string;
 }
 
 export interface ClaimWinningsResponse {

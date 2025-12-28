@@ -8,7 +8,7 @@ const steps = [
     number: '01',
     title: 'Clone the Repository',
     description: 'Get the Anchor OS source code from GitHub',
-    code: 'git clone https://github.com/AnchorProtocol/anchor-os.git\ncd anchor-os',
+    code: 'git clone https://github.com/anchor-btc/anchor-os.git\ncd anchor-os',
   },
   {
     number: '02',

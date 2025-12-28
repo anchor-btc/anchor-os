@@ -9,7 +9,7 @@ export function ProofsFooter() {
       appName="Proofs"
       appIcon={FileCheck}
       accentColor="emerald"
-      docsUrl="http://localhost:3900/apps/proofs"
+      docsUrl="https://docs.anchor-protocol.com/apps/proofs"
     />
   );
 }

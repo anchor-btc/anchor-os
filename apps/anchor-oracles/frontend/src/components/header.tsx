@@ -23,7 +23,7 @@ import {
   Compass,
 } from 'lucide-react';
 
-const DOCS_URL = 'http://localhost:3900/apps/oracles';
+const DOCS_URL = 'https://docs.anchor-protocol.com/apps/oracles';
 
 export function Header() {
   return (

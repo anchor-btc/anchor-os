@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 export default function DocsPage() {
   useEffect(() => {
     // Redirect to the centralized Anchor Docs
-    window.location.href = 'http://localhost:3900/kinds/geomarker.html';
+    window.location.href = 'https://docs.anchor-protocol.com/kinds/geomarker.html';
   }, []);
 
   return (
@@ -15,7 +15,7 @@ export default function DocsPage() {
         <p className="text-gray-400">Redirecting to Anchor Documentation...</p>
         <p className="text-gray-500 text-sm mt-2">
           <a
-            href="http://localhost:3900/kinds/geomarker.html"
+            href="https://docs.anchor-protocol.com/kinds/geomarker.html"
             className="text-primary hover:underline"
           >
             Click here if you are not redirected automatically

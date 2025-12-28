@@ -148,7 +148,7 @@ Each update must anchor to the previous ownership UTXO.
 
 ## Full Documentation
 
-For complete protocol specification, encoding/decoding examples, and SDK usage, see the [Anchor Domains Documentation](http://localhost:3900/kinds/dns.html).
+For complete protocol specification, encoding/decoding examples, and SDK usage, see the [Anchor Domains Documentation](https://docs.anchor-protocol.com/kinds/dns.html).
 "#
     )
 )]

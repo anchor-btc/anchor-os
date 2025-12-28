@@ -9,7 +9,7 @@ export function CanvasFooter() {
       appName="Canvas"
       appIcon={Grid3X3}
       accentColor="rose"
-      docsUrl="http://localhost:3900/kinds/state.html"
+      docsUrl="https://docs.anchor-protocol.com/kinds/state.html"
     />
   );
 }

@@ -5,7 +5,7 @@ import { fetchStats, formatNumber } from '@/lib/api';
 import { AppHeader, AppLogo, NavLink, NavGroup, Container } from '@AnchorProtocol/ui';
 import { MapPin, Activity, BookOpen, User, Home } from 'lucide-react';
 
-const DOCS_URL = 'http://localhost:3900/apps/places';
+const DOCS_URL = 'https://docs.anchor-protocol.com/apps/places';
 
 export function Header() {
   const { data: stats } = useQuery({

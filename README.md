@@ -19,7 +19,7 @@ ANCHOR enables embedding structured messages in Bitcoin transactions that refere
 
 ```bash
 # Clone and start
-git clone https://github.com/AnchorProtocol/anchor.git
+git clone https://github.com/anchor-btc/anchor-os.git
 cd anchor
 docker compose up -d
 
@@ -277,9 +277,16 @@ All migrations are centralized in `infra/postgres/migrations/`:
 
 ## Links
 
-- **Docs**: [anchorprotocol.com/docs](https://anchorprotocol.com/docs)
-- **GitHub**: [github.com/AnchorProtocol/anchor](https://github.com/AnchorProtocol/anchor)
+- **Docs**: [docs.anchor-protocol.com](https://docs.anchor-protocol.com)
+- **GitHub**: [github.com/anchor-btc/anchor-os](https://github.com/anchor-btc/anchor-os)
 - **npm**: [@AnchorProtocol/sdk](https://npmjs.com/package/@AnchorProtocol/sdk)
+
+## Community
+
+- **Discord**: [discord.gg/mrzgrFt5](https://discord.gg/mrzgrFt5)
+- **Telegram**: [t.me/+s7sBoBaI3XNmOTgx](https://t.me/+s7sBoBaI3XNmOTgx)
+- **X / Twitter**: [x.com/AnchorProt26203](https://x.com/AnchorProt26203)
+- **Nostr**: `npub1kyz74p2ngknz6euvdfh30z9ptvu5l3tg297zxj6up0xt8tuj4ccq43s7ey`
 
 ## License
 

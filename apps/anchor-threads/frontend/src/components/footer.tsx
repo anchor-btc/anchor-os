@@ -9,7 +9,7 @@ export function ThreadsFooter() {
       appName="Threads"
       appIcon={MessageSquare}
       accentColor="cyan"
-      docsUrl="http://localhost:3900/apps/threads"
+      docsUrl="https://docs.anchor-protocol.com/apps/threads"
     />
   );
 }

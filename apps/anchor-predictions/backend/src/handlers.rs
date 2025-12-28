@@ -6,6 +6,8 @@ use axum::{
     response::IntoResponse,
     Json,
 };
+use bitcoin::hashes::{sha256, Hash};
+use bitcoin::secp256k1::{schnorr::Signature, Message, Secp256k1, XOnlyPublicKey};
 use serde::Deserialize;
 use std::sync::Arc;
 
@@ -13,6 +15,47 @@ use crate::db::Database;
 use crate::models::*;
 
 pub type AppState = Arc<Database>;
+
+// ==================== Signature Verification ====================
+
+/// Verify a Schnorr signature over a message
+/// Returns true if the signature is valid for the given message and public key
+fn verify_schnorr_signature(message: &[u8], signature: &[u8], pubkey: &[u8]) -> bool {
+    // Validate input lengths
+    if signature.len() != 64 || pubkey.len() != 32 {
+        return false;
+    }
+
+    // Hash the message with SHA256 (Schnorr requires 32-byte message)
+    let msg_hash = sha256::Hash::hash(message);
+    let msg_bytes: [u8; 32] = msg_hash.to_byte_array();
+
+    let secp = Secp256k1::verification_only();
+
+    // Parse public key (x-only for Schnorr)
+    let xonly = match XOnlyPublicKey::from_slice(pubkey) {
+        Ok(pk) => pk,
+        Err(_) => return false,
+    };
+
+    // Parse signature
+    let sig = match Signature::from_slice(signature) {
+        Ok(s) => s,
+        Err(_) => return false,
+    };
+
+    // Create message from digest
+    let msg = Message::from_digest(msg_bytes);
+
+    // Verify signature
+    secp.verify_schnorr(&sig, &msg, &xonly).is_ok()
+}
+
+/// Build the claim message that must be signed
+/// Format: "claim:{market_id}:{position_id}:{payout_address}"
+fn build_claim_message(market_id: &str, position_id: i32, payout_address: &str) -> String {
+    format!("claim:{}:{}:{}", market_id, position_id, payout_address)
+}
 
 // ==================== Health ====================
 
@@ -516,6 +559,125 @@ pub async fn claim_winnings(
             return (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response();
         }
     };
+
+    // ==================== OWNERSHIP VERIFICATION ====================
+    // Verify that the requester owns this position by checking signature
+
+    // Parse the user's public key from request
+    let user_pubkey_bytes = match hex::decode(&req.user_pubkey) {
+        Ok(b) if b.len() == 32 => b,
+        Ok(_) => {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(serde_json::json!({
+                    "status": "error",
+                    "message": "Invalid user_pubkey: must be 32 bytes (x-only pubkey)"
+                })),
+            )
+                .into_response();
+        }
+        Err(e) => {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(serde_json::json!({
+                    "status": "error",
+                    "message": format!("Invalid user_pubkey hex: {}", e)
+                })),
+            )
+                .into_response();
+        }
+    };
+
+    // Parse the signature from request
+    let signature_bytes = match hex::decode(&req.signature) {
+        Ok(b) if b.len() == 64 => b,
+        Ok(_) => {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(serde_json::json!({
+                    "status": "error",
+                    "message": "Invalid signature: must be 64 bytes"
+                })),
+            )
+                .into_response();
+        }
+        Err(e) => {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(serde_json::json!({
+                    "status": "error",
+                    "message": format!("Invalid signature hex: {}", e)
+                })),
+            )
+                .into_response();
+        }
+    };
+
+    // Check that the provided pubkey matches the position's user_pubkey
+    // The position stores a 33-byte compressed pubkey, but we accept 32-byte x-only
+    // For x-only comparison, we check if the x-coordinate matches
+    let position_pubkey_bytes = match hex::decode(&position.user_pubkey) {
+        Ok(b) => b,
+        Err(_) => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({
+                    "status": "error",
+                    "message": "Invalid position pubkey in database"
+                })),
+            )
+                .into_response();
+        }
+    };
+
+    // Compare pubkeys: handle both 33-byte compressed and 32-byte x-only formats
+    let pubkey_matches = if position_pubkey_bytes.len() == 33 {
+        // Position has compressed pubkey (02/03 prefix + 32 bytes x-coord)
+        // Compare x-coordinate only (bytes 1-32)
+        position_pubkey_bytes[1..33] == user_pubkey_bytes[..]
+    } else if position_pubkey_bytes.len() == 32 {
+        // Position already has x-only pubkey
+        position_pubkey_bytes == user_pubkey_bytes
+    } else {
+        false
+    };
+
+    if !pubkey_matches {
+        return (
+            StatusCode::UNAUTHORIZED,
+            Json(serde_json::json!({
+                "status": "error",
+                "message": "Unauthorized: pubkey does not match position owner"
+            })),
+        )
+            .into_response();
+    }
+
+    // Build the expected claim message and verify signature
+    let claim_message = build_claim_message(&id, req.position_id, &req.payout_address);
+
+    if !verify_schnorr_signature(
+        claim_message.as_bytes(),
+        &signature_bytes,
+        &user_pubkey_bytes,
+    ) {
+        return (
+            StatusCode::UNAUTHORIZED,
+            Json(serde_json::json!({
+                "status": "error",
+                "message": "Invalid signature: signature verification failed"
+            })),
+        )
+            .into_response();
+    }
+
+    tracing::info!(
+        "Claim signature verified for position {} by {}",
+        req.position_id,
+        &req.user_pubkey[..16]
+    );
+
+    // ==================== END OWNERSHIP VERIFICATION ====================
 
     // Check if position is eligible for claiming
     if !position.is_winner {

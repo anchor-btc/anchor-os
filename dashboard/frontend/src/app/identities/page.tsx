@@ -19,6 +19,7 @@ import {
   Shield,
   Eye,
   EyeOff,
+  Key,
 } from 'lucide-react';
 import {
   fetchIdentities,
@@ -36,6 +37,7 @@ import {
   ExportKeyResult,
 } from '@/lib/api';
 import { PublishDnsModal } from '@/components/identity/publish-dns-modal';
+import { PageHeader, StatGrid, Section, SectionHeader, ActionButton, RefreshButton } from '@/components/ds';
 
 // ============================================================================
 // Identity Card Component
@@ -91,12 +93,12 @@ function IdentityCard({
   const relaysCount = metadata.type === 'nostr' ? metadata.relays?.length || 0 : 0;
 
   return (
-    <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-5 hover:border-purple-500/30 transition-all">
+    <div className="bg-card border border-border rounded-xl p-5 hover:border-primary/30 transition-all group">
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-purple-500/10">
-            <Zap className="w-5 h-5 text-purple-400" />
+          <div className="p-2.5 rounded-xl bg-purple-500/20">
+            <Zap className="w-5 h-5 text-purple-500" />
           </div>
           <div className="flex-1">
             {isEditing ? (
@@ -112,13 +114,13 @@ function IdentityCard({
                       setEditLabel(identity.label);
                     }
                   }}
-                  className="px-2 py-1 bg-slate-700 border border-slate-600 rounded text-sm text-white w-full focus:outline-none focus:border-purple-500"
+                  className="px-2 py-1 bg-muted border border-border rounded text-sm text-foreground w-full focus:outline-none focus:border-primary"
                   autoFocus
                 />
                 <button
                   onClick={handleSaveLabel}
                   disabled={isSaving}
-                  className="p-1 text-green-400 hover:bg-green-500/10 rounded"
+                  className="p-1 text-success hover:bg-success/10 rounded"
                 >
                   <Check className="w-4 h-4" />
                 </button>
@@ -127,20 +129,20 @@ function IdentityCard({
                     setIsEditing(false);
                     setEditLabel(identity.label);
                   }}
-                  className="p-1 text-gray-400 hover:bg-gray-500/10 rounded"
+                  className="p-1 text-muted-foreground hover:bg-muted rounded"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-white">{identity.label}</h3>
+                <h3 className="font-semibold text-foreground">{identity.label}</h3>
                 {identity.is_primary && (
-                  <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                  <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
                 )}
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="p-1 text-gray-500 hover:text-white hover:bg-white/5 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="p-1 text-muted-foreground hover:text-foreground hover:bg-muted rounded opacity-0 group-hover:opacity-100 transition-opacity"
                   title="Edit label"
                 >
                   <Pencil className="w-3 h-3" />
@@ -148,9 +150,9 @@ function IdentityCard({
               </div>
             )}
             <div className="flex items-center gap-2 mt-0.5">
-              <span className="text-xs text-purple-400 font-medium uppercase">Nostr</span>
+              <span className="text-xs text-purple-500 font-medium uppercase">Nostr</span>
               {relaysCount > 0 && (
-                <span className="text-xs text-gray-500 flex items-center gap-1">
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
                   <Radio className="w-3 h-3" />
                   {relaysCount} relays
                 </span>
@@ -161,14 +163,14 @@ function IdentityCard({
         <div className="flex gap-1">
           <button
             onClick={() => setIsEditing(true)}
-            className="p-2 text-gray-500 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+            className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
             title="Edit label"
           >
             <Pencil className="w-4 h-4" />
           </button>
           <button
             onClick={() => onBackup(identity)}
-            className="p-2 text-gray-500 hover:text-orange-400 hover:bg-orange-500/10 rounded-lg transition-colors"
+            className="p-2 text-muted-foreground hover:text-orange-500 hover:bg-orange-500/10 rounded-lg transition-colors"
             title="Backup private key"
           >
             <Download className="w-4 h-4" />
@@ -176,7 +178,7 @@ function IdentityCard({
           {!identity.is_primary && (
             <button
               onClick={() => onSetPrimary(identity.id)}
-              className="p-2 text-gray-500 hover:text-yellow-400 hover:bg-yellow-500/10 rounded-lg transition-colors"
+              className="p-2 text-muted-foreground hover:text-yellow-500 hover:bg-yellow-500/10 rounded-lg transition-colors"
               title="Set as primary"
             >
               <Star className="w-4 h-4" />
@@ -184,14 +186,14 @@ function IdentityCard({
           )}
           <button
             onClick={() => onPublishDns(identity)}
-            className="p-2 text-gray-500 hover:text-green-400 hover:bg-green-500/10 rounded-lg transition-colors"
+            className="p-2 text-muted-foreground hover:text-success hover:bg-success/10 rounded-lg transition-colors"
             title="Publish to DNS"
           >
             <Globe className="w-4 h-4" />
           </button>
           <button
             onClick={() => onDelete(identity.id)}
-            className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+            className="p-2 text-muted-foreground hover:text-error hover:bg-error/10 rounded-lg transition-colors"
             title="Delete"
           >
             <Trash2 className="w-4 h-4" />
@@ -202,15 +204,15 @@ function IdentityCard({
       {/* Public Key - Full display */}
       <div className="mb-4">
         <div className="flex items-center justify-between mb-1.5">
-          <p className="text-xs text-gray-500">Public Key (npub)</p>
+          <p className="text-xs text-muted-foreground">Public Key (npub)</p>
           <button
             onClick={copyToClipboard}
-            className="text-xs text-gray-500 hover:text-white flex items-center gap-1 transition-colors"
+            className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
           >
             {copied ? (
               <>
-                <Check className="w-3 h-3 text-green-400" />
-                <span className="text-green-400">Copied!</span>
+                <Check className="w-3 h-3 text-success" />
+                <span className="text-success">Copied!</span>
               </>
             ) : (
               <>
@@ -220,8 +222,8 @@ function IdentityCard({
             )}
           </button>
         </div>
-        <div className="p-3 bg-slate-900/50 rounded-lg border border-slate-700/50">
-          <code className="text-xs text-purple-300 font-mono break-all leading-relaxed">
+        <div className="p-3 bg-muted rounded-lg border border-border">
+          <code className="text-xs text-purple-500 font-mono break-all leading-relaxed">
             {identity.formatted_public_key}
           </code>
         </div>
@@ -229,19 +231,19 @@ function IdentityCard({
 
       {/* DNS Status */}
       {identity.dns_published ? (
-        <div className="p-3 bg-green-500/5 border border-green-500/20 rounded-lg">
-          <div className="flex items-center gap-2 text-green-400 text-sm">
+        <div className="p-3 bg-success/10 border border-success/20 rounded-lg">
+          <div className="flex items-center gap-2 text-success text-sm">
             <Globe className="w-4 h-4" />
             <span className="font-medium">Published to DNS</span>
           </div>
-          <code className="text-xs text-green-300/70 font-mono mt-1 block">
+          <code className="text-xs text-success/70 font-mono mt-1 block">
             {identity.dns_published.record_name}
           </code>
         </div>
       ) : (
         <button
           onClick={() => onPublishDns(identity)}
-          className="w-full p-3 bg-slate-700/30 hover:bg-slate-700/50 border border-slate-600/50 hover:border-green-500/30 rounded-lg text-gray-400 hover:text-green-400 text-sm transition-all flex items-center justify-center gap-2"
+          className="w-full p-3 bg-muted hover:bg-muted/80 border border-border hover:border-success/30 rounded-lg text-muted-foreground hover:text-success text-sm transition-all flex items-center justify-center gap-2"
         >
           <Globe className="w-4 h-4" />
           Publish to DNS
@@ -304,21 +306,21 @@ function BackupKeyModal({ isOpen, onClose, identity }: BackupKeyModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-      <div className="bg-slate-800 border border-slate-700 rounded-xl w-full max-w-lg mx-4">
+      <div className="bg-card border border-border rounded-xl w-full max-w-lg mx-4">
         {/* Header */}
-        <div className="p-4 border-b border-slate-700 flex items-center justify-between">
+        <div className="p-4 border-b border-border flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-orange-500/10 rounded-lg">
-              <Shield className="w-5 h-5 text-orange-400" />
+            <div className="p-2 bg-orange-500/20 rounded-lg">
+              <Shield className="w-5 h-5 text-orange-500" />
             </div>
             <div>
-              <h2 className="text-lg font-medium text-white">Backup Private Key</h2>
-              <p className="text-xs text-slate-400">{identity?.label}</p>
+              <h2 className="text-lg font-medium text-foreground">Backup Private Key</h2>
+              <p className="text-xs text-muted-foreground">{identity?.label}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg"
+            className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg"
           >
             <X className="w-5 h-5" />
           </button>
@@ -327,12 +329,12 @@ function BackupKeyModal({ isOpen, onClose, identity }: BackupKeyModalProps) {
         {/* Content */}
         <div className="p-4 space-y-4">
           {/* Warning */}
-          <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-            <div className="flex items-start gap-2 text-red-400 text-sm">
+          <div className="p-3 bg-error/10 border border-error/30 rounded-lg">
+            <div className="flex items-start gap-2 text-error text-sm">
               <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
               <div>
                 <p className="font-medium">Never share your private key!</p>
-                <p className="text-red-400/70 text-xs mt-1">
+                <p className="text-error/70 text-xs mt-1">
                   Anyone with this key has full control of your Nostr identity. Store it securely
                   offline.
                 </p>
@@ -342,12 +344,12 @@ function BackupKeyModal({ isOpen, onClose, identity }: BackupKeyModalProps) {
 
           {isLoading && (
             <div className="flex items-center justify-center py-8">
-              <RefreshCw className="w-6 h-6 text-slate-400 animate-spin" />
+              <RefreshCw className="w-6 h-6 text-muted-foreground animate-spin" />
             </div>
           )}
 
           {error && (
-            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+            <div className="p-3 bg-error/10 border border-error/30 rounded-lg text-error text-sm">
               {error}
             </div>
           )}
@@ -356,9 +358,9 @@ function BackupKeyModal({ isOpen, onClose, identity }: BackupKeyModalProps) {
             <>
               {/* Public Key */}
               <div>
-                <p className="text-xs text-slate-500 mb-1">Public Key (npub)</p>
-                <div className="p-3 bg-slate-900 rounded-lg">
-                  <code className="text-xs text-purple-300 font-mono break-all">
+                <p className="text-xs text-muted-foreground mb-1">Public Key (npub)</p>
+                <div className="p-3 bg-muted rounded-lg">
+                  <code className="text-xs text-purple-500 font-mono break-all">
                     {keyData.public_key}
                   </code>
                 </div>
@@ -367,22 +369,22 @@ function BackupKeyModal({ isOpen, onClose, identity }: BackupKeyModalProps) {
               {/* Private Key */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <p className="text-xs text-slate-500">Private Key (hex)</p>
+                  <p className="text-xs text-muted-foreground">Private Key (hex)</p>
                   <button
                     onClick={() => setShowKey(!showKey)}
-                    className="text-xs text-slate-400 hover:text-white flex items-center gap-1"
+                    className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
                   >
                     {showKey ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
                     {showKey ? 'Hide' : 'Reveal'}
                   </button>
                 </div>
-                <div className="p-3 bg-slate-900 rounded-lg relative">
+                <div className="p-3 bg-muted rounded-lg relative">
                   {showKey ? (
-                    <code className="text-xs text-orange-300 font-mono break-all">
+                    <code className="text-xs text-orange-500 font-mono break-all">
                       {keyData.private_key_hex}
                     </code>
                   ) : (
-                    <div className="text-xs text-slate-600 font-mono">
+                    <div className="text-xs text-muted-foreground font-mono">
                       ••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
                     </div>
                   )}
@@ -393,7 +395,7 @@ function BackupKeyModal({ isOpen, onClose, identity }: BackupKeyModalProps) {
               <button
                 onClick={copyKey}
                 disabled={!showKey}
-                className="w-full py-3 bg-orange-600 hover:bg-orange-500 disabled:bg-slate-700 disabled:text-slate-500 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                className="w-full py-3 bg-orange-500 hover:bg-orange-400 disabled:bg-muted disabled:text-muted-foreground text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
               >
                 {copied ? (
                   <>
@@ -521,11 +523,11 @@ function AddIdentityModal({ isOpen, onClose, defaults, onSuccess }: AddIdentityM
 
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-      <div className="bg-[#0d1117] border border-gray-800/50 rounded-lg w-full max-w-md mx-4 max-h-[85vh] overflow-y-auto">
+      <div className="bg-card border border-border rounded-xl w-full max-w-md mx-4 max-h-[85vh] overflow-y-auto">
         {/* Header */}
-        <div className="p-4 border-b border-gray-800/50">
-          <h2 className="text-lg font-medium text-white">Add Identity</h2>
-          <p className="text-xs text-gray-500 mt-0.5">
+        <div className="p-4 border-b border-border">
+          <h2 className="text-lg font-medium text-foreground">Add Identity</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
             Step {step} of 3 — {step === 1 ? 'Choose Type' : step === 2 ? 'Configure' : 'Confirm'}
           </p>
         </div>
@@ -533,7 +535,7 @@ function AddIdentityModal({ isOpen, onClose, defaults, onSuccess }: AddIdentityM
         {/* Content */}
         <div className="p-4">
           {error && (
-            <div className="mb-3 p-2.5 bg-red-500/10 border border-red-500/20 rounded flex items-center gap-2 text-red-400 text-xs">
+            <div className="mb-3 p-2.5 bg-error/10 border border-error/20 rounded flex items-center gap-2 text-error text-xs">
               <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
               <span>{error}</span>
             </div>
@@ -545,10 +547,10 @@ function AddIdentityModal({ isOpen, onClose, defaults, onSuccess }: AddIdentityM
               {/* Nostr Info */}
               <div className="p-3 bg-purple-500/10 border border-purple-500/30 rounded-lg">
                 <div className="flex items-center gap-2 mb-1">
-                  <Zap className="w-4 h-4 text-purple-400" />
-                  <span className="text-sm font-medium text-white">Nostr Identity</span>
+                  <Zap className="w-4 h-4 text-purple-500" />
+                  <span className="text-sm font-medium text-foreground">Nostr Identity</span>
                 </div>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-muted-foreground">
                   Create a secp256k1 keypair for Nostr protocol. Your npub can be published to DNS
                   for discovery.
                 </p>
@@ -561,7 +563,7 @@ function AddIdentityModal({ isOpen, onClose, defaults, onSuccess }: AddIdentityM
                     setStep(2);
                   }}
                   disabled={isGenerating}
-                  className="w-full py-2.5 bg-purple-600 hover:bg-purple-500 disabled:bg-purple-600/50 text-white text-sm rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                  className="w-full py-2.5 bg-purple-500 hover:bg-purple-400 disabled:bg-purple-500/50 text-white text-sm rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
                 >
                   {isGenerating ? (
                     <RefreshCw className="w-3.5 h-3.5 animate-spin" />
@@ -575,7 +577,7 @@ function AddIdentityModal({ isOpen, onClose, defaults, onSuccess }: AddIdentityM
                     setImportMode(true);
                     setStep(2);
                   }}
-                  className="w-full py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-400 text-sm rounded-lg font-medium transition-colors"
+                  className="w-full py-2.5 bg-muted hover:bg-muted/80 text-muted-foreground text-sm rounded-lg font-medium transition-colors"
                 >
                   Import Existing nsec
                 </button>
@@ -588,17 +590,17 @@ function AddIdentityModal({ isOpen, onClose, defaults, onSuccess }: AddIdentityM
             <div className="space-y-3">
               {importMode && !publicKey && (
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">Private Key (hex)</label>
+                  <label className="block text-xs text-muted-foreground mb-1">Private Key (hex)</label>
                   <input
                     type="password"
                     value={importKey}
                     onChange={(e) => setImportKey(e.target.value)}
                     placeholder="Enter 64-character hex private key"
-                    className="w-full px-3 py-2 bg-gray-900 border border-gray-800 rounded text-sm text-white placeholder-gray-600 focus:border-blue-500 focus:outline-none"
+                    className="w-full px-3 py-2 bg-muted border border-border rounded text-sm text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none"
                   />
                   <button
                     onClick={handleImportKey}
-                    className="mt-2 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-white rounded text-xs"
+                    className="mt-2 px-3 py-1.5 bg-muted hover:bg-muted/80 text-foreground rounded text-xs"
                   >
                     Import
                   </button>
@@ -607,8 +609,8 @@ function AddIdentityModal({ isOpen, onClose, defaults, onSuccess }: AddIdentityM
 
               {publicKey && (
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">Generated Public Key</label>
-                  <code className="block p-2.5 bg-gray-900 rounded text-green-400 text-xs font-mono break-all">
+                  <label className="block text-xs text-muted-foreground mb-1">Generated Public Key</label>
+                  <code className="block p-2.5 bg-muted rounded text-success text-xs font-mono break-all">
                     {publicKey}
                   </code>
                 </div>
@@ -616,8 +618,8 @@ function AddIdentityModal({ isOpen, onClose, defaults, onSuccess }: AddIdentityM
 
               {identityType === 'nostr' && (
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">Relays</label>
-                  <div className="space-y-1.5 max-h-40 overflow-y-auto p-2 bg-gray-900 rounded">
+                  <label className="block text-xs text-muted-foreground mb-1">Relays</label>
+                  <div className="space-y-1.5 max-h-40 overflow-y-auto p-2 bg-muted rounded">
                     {defaults?.nostr.relays.map((relay) => (
                       <label key={relay} className="flex items-center gap-2 text-xs cursor-pointer">
                         <input
@@ -630,9 +632,9 @@ function AddIdentityModal({ isOpen, onClose, defaults, onSuccess }: AddIdentityM
                               setSelectedRelays(selectedRelays.filter((r) => r !== relay));
                             }
                           }}
-                          className="rounded border-gray-700 bg-gray-800 text-blue-500 w-3.5 h-3.5"
+                          className="rounded border-border bg-card text-primary w-3.5 h-3.5"
                         />
-                        <span className="text-gray-400 truncate">{relay}</span>
+                        <span className="text-muted-foreground truncate">{relay}</span>
                       </label>
                     ))}
                   </div>
@@ -647,29 +649,29 @@ function AddIdentityModal({ isOpen, onClose, defaults, onSuccess }: AddIdentityM
           {step === 3 && (
             <div className="space-y-3">
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Label</label>
+                <label className="block text-xs text-muted-foreground mb-1">Label</label>
                 <input
                   type="text"
                   value={label}
                   onChange={(e) => setLabel(e.target.value)}
                   placeholder={`My ${identityType === 'nostr' ? 'Nostr' : 'Pubky'} Identity`}
-                  className="w-full px-3 py-2 bg-gray-900 border border-gray-800 rounded text-sm text-white placeholder-gray-600 focus:border-blue-500 focus:outline-none"
+                  className="w-full px-3 py-2 bg-muted border border-border rounded text-sm text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none"
                 />
               </div>
 
-              <div className="p-3 bg-gray-900 rounded space-y-1.5">
+              <div className="p-3 bg-muted rounded space-y-1.5">
                 <div className="flex justify-between text-xs">
-                  <span className="text-gray-500">Type</span>
-                  <span className="text-white capitalize">{identityType}</span>
+                  <span className="text-muted-foreground">Type</span>
+                  <span className="text-foreground capitalize">{identityType}</span>
                 </div>
                 <div className="flex justify-between text-xs">
-                  <span className="text-gray-500">Public Key</span>
-                  <code className="text-green-400 font-mono">{publicKey.slice(0, 16)}...</code>
+                  <span className="text-muted-foreground">Public Key</span>
+                  <code className="text-success font-mono">{publicKey.slice(0, 16)}...</code>
                 </div>
                 {identityType === 'nostr' && (
                   <div className="flex justify-between text-xs">
-                    <span className="text-gray-500">Relays</span>
-                    <span className="text-white">{selectedRelays.length} selected</span>
+                    <span className="text-muted-foreground">Relays</span>
+                    <span className="text-foreground">{selectedRelays.length} selected</span>
                   </div>
                 )}
                 {/* Pubky homeserver info removed - will be added later */}
@@ -679,10 +681,10 @@ function AddIdentityModal({ isOpen, onClose, defaults, onSuccess }: AddIdentityM
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-800/50 flex justify-between">
+        <div className="p-4 border-t border-border flex justify-between">
           <button
             onClick={() => (step === 1 ? onClose() : setStep(step - 1))}
-            className="px-3 py-1.5 text-sm text-gray-500 hover:text-white transition-colors"
+            className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             {step === 1 ? 'Cancel' : 'Back'}
           </button>
@@ -690,7 +692,7 @@ function AddIdentityModal({ isOpen, onClose, defaults, onSuccess }: AddIdentityM
             <button
               onClick={() => setStep(step + 1)}
               disabled={step === 2 && !publicKey}
-              className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-800 disabled:text-gray-600 text-white text-sm rounded font-medium transition-colors"
+              className="px-4 py-1.5 bg-primary hover:bg-primary/80 disabled:bg-muted disabled:text-muted-foreground text-primary-foreground text-sm rounded font-medium transition-colors"
             >
               Next
             </button>
@@ -698,7 +700,7 @@ function AddIdentityModal({ isOpen, onClose, defaults, onSuccess }: AddIdentityM
             <button
               onClick={handleCreate}
               disabled={isCreating || !label.trim()}
-              className="px-4 py-1.5 bg-green-600 hover:bg-green-500 disabled:bg-gray-800 disabled:text-gray-600 text-white text-sm rounded font-medium transition-colors flex items-center gap-1.5"
+              className="px-4 py-1.5 bg-success hover:bg-success/80 disabled:bg-muted disabled:text-muted-foreground text-white text-sm rounded font-medium transition-colors flex items-center gap-1.5"
             >
               {isCreating && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
               Create Identity
@@ -802,69 +804,53 @@ export default function IdentitiesPage() {
   const publishedCount = identities.filter((i) => i.dns_published).length;
 
   return (
-    <main className="flex-1 p-6 bg-slate-900/50">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-purple-500/10 rounded-xl">
-            <Zap className="w-6 h-6 text-purple-400" />
+      <PageHeader
+        icon={Zap}
+        iconColor="purple"
+        title="Identities"
+        subtitle="Manage your Nostr keypairs and DNS records"
+        actions={
+          <div className="flex items-center gap-2">
+            <ActionButton
+              onClick={handleSyncFromDns}
+              disabled={isSyncing}
+              variant="secondary"
+              icon={CloudDownload}
+              label="Sync DNS"
+              className={isSyncing ? 'animate-pulse' : ''}
+            />
+            <RefreshButton onClick={loadData} loading={isLoading} />
+            <ActionButton
+              onClick={() => setShowAddModal(true)}
+              variant="primary"
+              icon={Plus}
+              label="New Identity"
+            />
           </div>
-          <div>
-            <h1 className="text-xl font-bold text-white">Nostr Identities</h1>
-            <p className="text-sm text-slate-400">Manage your Nostr keypairs and DNS records</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleSyncFromDns}
-            disabled={isSyncing}
-            className="px-3 py-2 text-slate-400 hover:text-green-400 hover:bg-green-500/10 rounded-lg transition-colors flex items-center gap-2 text-sm"
-            title="Sync from DNS"
-          >
-            <CloudDownload className={`w-4 h-4 ${isSyncing ? 'animate-pulse' : ''}`} />
-            <span className="hidden sm:inline">Sync DNS</span>
-          </button>
-          <button
-            onClick={loadData}
-            className="p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
-            title="Refresh"
-          >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-          </button>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-sm rounded-lg font-medium transition-colors flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            New Identity
-          </button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Stats Row */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
-          <p className="text-3xl font-bold text-white">{identities.length}</p>
-          <p className="text-sm text-slate-400">Total Identities</p>
-        </div>
-        <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
-          <p className="text-3xl font-bold text-purple-400">{nostrCount}</p>
-          <p className="text-sm text-slate-400">Nostr Keys</p>
-        </div>
-        <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
-          <p className="text-3xl font-bold text-green-400">{publishedCount}</p>
-          <p className="text-sm text-slate-400">Published to DNS</p>
-        </div>
-      </div>
+      <StatGrid
+        items={[
+          { icon: Key, value: identities.length, label: 'Total Identities', color: 'purple' },
+          { icon: Zap, value: nostrCount, label: 'Nostr Keys', color: 'purple' },
+          { icon: Globe, value: publishedCount, label: 'Published to DNS', color: 'success' },
+        ]}
+        columns={{ default: 3 }}
+        isLoading={isLoading && identities.length === 0}
+      />
 
       {/* Sync Message */}
       {syncMessage && (
-        <div className="mb-4 p-3 bg-green-500/10 border border-green-500/30 rounded-xl flex items-center gap-2 text-green-400 text-sm">
+        <div className="p-3 bg-success/10 border border-success/30 rounded-xl flex items-center gap-2 text-success text-sm">
           <CloudDownload className="w-4 h-4 flex-shrink-0" />
           <span className="flex-1">{syncMessage}</span>
           <button
             onClick={() => setSyncMessage(null)}
-            className="text-green-400 hover:text-green-300 p-1"
+            className="text-success hover:text-success/80 p-1"
           >
             <X className="w-4 h-4" />
           </button>
@@ -873,10 +859,10 @@ export default function IdentitiesPage() {
 
       {/* Error */}
       {error && (
-        <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl flex items-center gap-2 text-red-400 text-sm">
+        <div className="p-3 bg-error/10 border border-error/30 rounded-xl flex items-center gap-2 text-error text-sm">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
           <span className="flex-1">{error}</span>
-          <button onClick={() => setError(null)} className="text-red-400 hover:text-red-300 p-1">
+          <button onClick={() => setError(null)} className="text-error hover:text-error/80 p-1">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -885,29 +871,29 @@ export default function IdentitiesPage() {
       {/* Loading */}
       {isLoading && identities.length === 0 && (
         <div className="flex items-center justify-center py-16">
-          <RefreshCw className="w-8 h-8 text-purple-400 animate-spin" />
+          <RefreshCw className="w-8 h-8 text-purple-500 animate-spin" />
         </div>
       )}
 
       {/* Empty State */}
       {!isLoading && nostrCount === 0 && (
-        <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-16 text-center">
-          <div className="p-4 bg-purple-500/10 rounded-2xl w-fit mx-auto mb-6">
-            <Zap className="w-12 h-12 text-purple-400" />
+        <Section className="text-center py-16">
+          <div className="p-4 bg-purple-500/20 rounded-2xl w-fit mx-auto mb-6">
+            <Zap className="w-12 h-12 text-purple-500" />
           </div>
-          <h3 className="text-xl font-bold text-white mb-2">No Nostr Identity Yet</h3>
-          <p className="text-slate-400 mb-6 max-w-md mx-auto">
+          <h3 className="text-xl font-bold text-foreground mb-2">No Nostr Identity Yet</h3>
+          <p className="text-muted-foreground mb-6 max-w-md mx-auto">
             Create your first Nostr identity keypair. You can then publish it to DNS using Selfie
             Records.
           </p>
           <button
             onClick={() => setShowAddModal(true)}
-            className="px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-medium transition-colors inline-flex items-center gap-2"
+            className="px-6 py-3 bg-purple-500 hover:bg-purple-400 text-white rounded-xl font-medium transition-colors inline-flex items-center gap-2"
           >
             <Plus className="w-5 h-5" />
             Create Your First Identity
           </button>
-        </div>
+        </Section>
       )}
 
       {/* Identity Grid - Only showing Nostr identities for now */}
@@ -928,6 +914,47 @@ export default function IdentitiesPage() {
             ))}
         </div>
       )}
+
+      {/* Other Identity Protocols Section */}
+      <Section>
+        <SectionHeader
+          icon={Radio}
+          iconColor="cyan"
+          title="Other Identity Protocols"
+          subtitle="More identity protocols coming soon"
+        />
+        
+        {/* Pubky Coming Soon Card */}
+        <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-xl p-5 relative overflow-hidden">
+          <div className="relative flex items-start gap-4">
+            <div className="p-3 bg-cyan-500/20 rounded-xl">
+              <Radio className="w-6 h-6 text-cyan-500" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="text-lg font-semibold text-foreground">Pubky</h3>
+                <span className="px-2 py-0.5 bg-cyan-500/20 text-cyan-500 text-xs font-medium rounded-full">
+                  Coming Soon
+                </span>
+              </div>
+              <p className="text-sm text-muted-foreground mb-3">
+                Pubky is a decentralized identity protocol using Ed25519 keys. Create and manage your Pubky identity with DNS integration for easy discovery.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <span className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded-lg border border-border">
+                  Ed25519 Keys
+                </span>
+                <span className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded-lg border border-border">
+                  DNS Publishing
+                </span>
+                <span className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded-lg border border-border">
+                  Homeserver Support
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Section>
 
       {/* Add Modal */}
       <AddIdentityModal
@@ -951,6 +978,6 @@ export default function IdentitiesPage() {
         onClose={() => setBackupIdentity(null)}
         identity={backupIdentity}
       />
-    </main>
+    </div>
   );
 }

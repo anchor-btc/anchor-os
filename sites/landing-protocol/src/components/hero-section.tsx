@@ -106,7 +106,7 @@ export function HeroSection() {
             </svg>
           </a>
           <a
-            href="http://localhost:3900"
+            href="https://docs.anchor-protocol.com"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-8 py-4 rounded-xl border border-muted hover:border-accent/50 text-foreground font-semibold transition-all duration-200 hover:bg-accent/5"

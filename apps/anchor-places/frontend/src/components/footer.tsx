@@ -9,7 +9,7 @@ export function PlacesFooter() {
       appName="Places"
       appIcon={MapPin}
       accentColor="blue"
-      docsUrl="http://localhost:3900/apps/places"
+      docsUrl="https://docs.anchor-protocol.com/apps/places"
     />
   );
 }

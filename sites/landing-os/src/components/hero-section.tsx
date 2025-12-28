@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 
-const INSTALL_COMMAND = 'curl -fsSL http://localhost:3951/install.sh | bash';
+const INSTALL_COMMAND = 'curl -fsSL http://os.anchor-protocol.com/install.sh | bash';
 
 export function HeroSection() {
   const [copied, setCopied] = useState(false);
@@ -209,7 +209,7 @@ export function HeroSection() {
             </svg>
           </a>
           <a
-            href="https://github.com/AnchorProtocol/anchor"
+            href="https://github.com/anchor-btc/anchor-os"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-8 py-4 rounded-xl glass-card hover:bg-white/10 text-foreground font-semibold transition-all duration-200"

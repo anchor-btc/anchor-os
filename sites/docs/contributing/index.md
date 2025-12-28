@@ -13,7 +13,7 @@ Set up a local development environment for the Anchor Protocol.
 
 ```bash
 # Clone the repository
-git clone https://github.com/AnchorProtocol/anchor.git
+git clone https://github.com/anchor-btc/anchor-os.git
 cd anchor
 
 # Initial setup
@@ -112,6 +112,9 @@ docker compose down -v
 
 ## Getting Help
 
-- [GitHub Issues](https://github.com/AnchorProtocol/anchor/issues)
-- [GitHub Discussions](https://github.com/AnchorProtocol/anchor/discussions)
+- [GitHub Issues](https://github.com/anchor-btc/anchor-os/issues)
+- [GitHub Discussions](https://github.com/anchor-btc/anchor-os/discussions)
+- [Discord](https://discord.gg/mrzgrFt5)
+- [Telegram](https://t.me/+s7sBoBaI3XNmOTgx)
+- [X / Twitter](https://x.com/AnchorProt26203)
 

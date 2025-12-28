@@ -9,7 +9,7 @@ export function TokensFooter() {
       appName="Tokens"
       appIcon={Coins}
       accentColor="amber"
-      docsUrl="http://localhost:3900/apps/tokens"
+      docsUrl="https://docs.anchor-protocol.com/apps/tokens"
     />
   );
 }

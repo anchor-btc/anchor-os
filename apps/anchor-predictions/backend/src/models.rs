@@ -123,6 +123,11 @@ pub struct ClaimWinningsRequest {
     pub position_id: i32,
     /// Bitcoin address to receive the payout
     pub payout_address: String,
+    /// User's public key (hex encoded, 32 bytes x-only pubkey)
+    pub user_pubkey: String,
+    /// Schnorr signature over the claim message (hex encoded, 64 bytes)
+    /// Message format: SHA256("claim:{market_id}:{position_id}:{payout_address}")
+    pub signature: String,
 }
 
 /// Winner info

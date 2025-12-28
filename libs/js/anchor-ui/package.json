@@ -88,7 +88,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/AnchorProtocol/anchor.git",
+    "url": "https://github.com/anchor-btc/anchor-os.git",
     "directory": "libs/js/anchor-ui"
   }
 }

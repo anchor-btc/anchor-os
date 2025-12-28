@@ -171,16 +171,6 @@ export function ArchitectureDiagram() {
                     </div>
                     <p className="text-sm text-muted-foreground truncate">{layer.label}</p>
                   </div>
-
-                  {/* Connection Line */}
-                  {index < stackLayers.length - 1 && (
-                    <div
-                      className="absolute left-[2.5rem] -bottom-3 w-0.5 h-3 z-10"
-                      style={{
-                        background: `linear-gradient(to bottom, ${layer.color}50, ${stackLayers[index + 1].color}50)`,
-                      }}
-                    />
-                  )}
                 </div>
               </motion.button>
             ))}

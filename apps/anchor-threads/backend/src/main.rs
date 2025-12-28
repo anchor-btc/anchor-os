@@ -32,7 +32,7 @@ pub struct AppState {
         version = "1.0.0",
         description = "REST API for querying ANCHOR protocol messages indexed from Bitcoin blockchain",
         license(name = "MIT", url = "https://opensource.org/licenses/MIT"),
-        contact(name = "ANCHOR Protocol", url = "https://github.com/AnchorProtocol/anchor")
+        contact(name = "ANCHOR Protocol", url = "https://github.com/anchor-btc/anchor-os")
     ),
     paths(
         handlers::health,

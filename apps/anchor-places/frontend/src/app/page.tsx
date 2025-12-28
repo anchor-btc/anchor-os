@@ -138,7 +138,7 @@ function HomeContent() {
         <span>Powered by Bitcoin & Anchor Protocol</span>
         <span className="ml-auto">
           <a
-            href="https://github.com/anchor-protocol"
+            href="https://github.com/anchor-btc"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-primary transition-colors"

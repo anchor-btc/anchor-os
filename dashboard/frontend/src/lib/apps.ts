@@ -341,7 +341,7 @@ export const apps: App[] = [
     descriptionKey: 'appDescriptions.anchor-docs',
     icon: 'BookOpen',
     color: 'amber',
-    url: 'http://localhost:3900',
+    url: 'https://docs.anchor-protocol.com',
     port: 3900,
     containers: ['anchor-docs'],
     containerConfigs: [{ name: 'anchor-docs', label: 'Docs', port: 3900 }],

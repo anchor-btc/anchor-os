@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { AppHeader, AppLogo, NavLink, NavGroup, Container, Button } from '@AnchorProtocol/ui';
 import { Home, MessageSquare, User, PenLine, BookOpen } from 'lucide-react';
 
-const DOCS_URL = 'http://localhost:3900/apps/threads';
+const DOCS_URL = 'https://docs.anchor-protocol.com/apps/threads';
 
 export function Header() {
   return (

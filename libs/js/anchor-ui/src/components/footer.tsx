@@ -109,7 +109,7 @@ export interface FooterProps {
  *   appName="Threads"
  *   appIcon={Anchor}
  *   accentColor="orange"
- *   docsUrl="http://localhost:3900/apps/threads"
+ *   docsUrl="https://docs.anchor-protocol.com/apps/threads"
  * />
  * ```
  */
@@ -117,8 +117,8 @@ export function Footer({
   appName,
   appIcon: Icon,
   accentColor,
-  docsUrl = 'http://localhost:3900',
-  githubUrl = 'https://github.com/AnchorProtocol/anchor',
+  docsUrl = 'https://docs.anchor-protocol.com',
+  githubUrl = 'https://github.com/anchor-btc/anchor-os',
   className,
   showGradientBar = false,
 }: FooterProps) {

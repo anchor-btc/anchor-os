@@ -7,7 +7,7 @@ import { Grid3X3, Palette, Zap, Box, BookOpen, Home } from 'lucide-react';
 
 const DOCS_URL = process.env.NEXT_PUBLIC_DOCS_URL
   ? `${process.env.NEXT_PUBLIC_DOCS_URL}/kinds/state.html`
-  : 'http://localhost:3900/kinds/state.html';
+  : 'https://docs.anchor-protocol.com/kinds/state.html';
 
 export function Header() {
   const { data: stats } = useQuery({

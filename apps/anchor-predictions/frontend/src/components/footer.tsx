@@ -9,7 +9,7 @@ export function PredictionsFooter() {
       appName="Predictions"
       appIcon={Ticket}
       accentColor="amber"
-      docsUrl="http://localhost:3900/apps/predictions"
+      docsUrl="https://docs.anchor-protocol.com/apps/predictions"
     />
   );
 }

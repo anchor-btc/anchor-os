@@ -5,7 +5,14 @@ import './commands';
 
 // Global before hook - runs once before all tests
 before(() => {
-  // Bypass setup wizard before running any tests
+  // Skip bypassSetup for setup-wizard tests - they need the wizard to be active
+  const specName = Cypress.spec.name;
+  if (specName && specName.includes('setup-wizard')) {
+    cy.log('Skipping bypassSetup for setup wizard tests');
+    return;
+  }
+
+  // Bypass setup wizard before running any other tests
   cy.bypassSetup();
 });
 

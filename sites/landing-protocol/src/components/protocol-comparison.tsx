@@ -183,7 +183,7 @@ export function ProtocolComparison() {
           className="text-center mt-16"
         >
           <a
-            href="http://localhost:3900/kinds"
+            href="https://docs.anchor-protocol.com/kinds"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-6 py-3 bg-accent/10 hover:bg-accent/20 border border-accent/20 rounded-xl text-accent font-medium transition-colors"

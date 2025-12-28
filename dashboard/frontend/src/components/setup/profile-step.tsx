@@ -3,8 +3,9 @@
 import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
-import { User, Camera, Sparkles } from 'lucide-react';
+import { User, Camera, Sparkles, Upload, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 interface ProfileStepProps {
   userName: string;
@@ -41,12 +42,19 @@ const AVATAR_OPTIONS = [
   '🏴‍☠️',
 ];
 
+// Check if avatar is a data URL (uploaded image)
+const isImageDataUrl = (avatar: string | null): boolean => {
+  return avatar ? avatar.startsWith('data:image/') : false;
+};
+
 export function ProfileStep({ userName, userAvatar, onProfileChange, onNext }: ProfileStepProps) {
   const { t } = useTranslation();
   const [name, setName] = useState(userName || '');
   const [avatar, setAvatar] = useState(userAvatar || '');
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleNameChange = (value: string) => {
     setName(value);
@@ -57,6 +65,84 @@ export function ProfileStep({ userName, userAvatar, onProfileChange, onNext }: P
     setAvatar(emoji);
     onProfileChange(name, emoji);
     setShowAvatarPicker(false);
+  };
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      return;
+    }
+
+    setIsUploading(true);
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+
+      // Create an image to resize if needed
+      const img = document.createElement('img');
+      img.onload = () => {
+        // Create canvas for resizing
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Max dimensions for the avatar
+        const maxSize = 200;
+        let width = img.width;
+        let height = img.height;
+
+        // Calculate new dimensions maintaining aspect ratio
+        if (width > height) {
+          if (width > maxSize) {
+            height = (height * maxSize) / width;
+            width = maxSize;
+          }
+        } else {
+          if (height > maxSize) {
+            width = (width * maxSize) / height;
+            height = maxSize;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        // Convert to data URL (JPEG for smaller size)
+        const resizedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+
+        setAvatar(resizedDataUrl);
+        onProfileChange(name, resizedDataUrl);
+        setShowAvatarPicker(false);
+        setIsUploading(false);
+      };
+      img.src = result;
+    };
+    reader.onerror = () => {
+      setIsUploading(false);
+    };
+    reader.readAsDataURL(file);
+
+    // Reset input so the same file can be selected again
+    event.target.value = '';
+  };
+
+  const handleRemoveImage = () => {
+    setAvatar('');
+    onProfileChange(name, null);
+  };
+
+  const triggerFileUpload = () => {
+    fileInputRef.current?.click();
   };
 
   const handleContinue = () => {
@@ -92,20 +178,54 @@ export function ProfileStep({ userName, userAvatar, onProfileChange, onNext }: P
             <button
               onClick={() => setShowAvatarPicker(!showAvatarPicker)}
               className="relative group"
+              disabled={isUploading}
             >
               <div
                 className={cn(
-                  'w-20 h-20 rounded-2xl flex items-center justify-center text-4xl',
+                  'w-20 h-20 rounded-2xl flex items-center justify-center text-4xl overflow-hidden',
                   'bg-card border-2 border-border transition-all',
-                  'group-hover:border-primary group-hover:scale-105'
+                  'group-hover:border-primary group-hover:scale-105',
+                  isUploading && 'opacity-50'
                 )}
               >
-                {avatar || '🧑‍💻'}
+                {isUploading ? (
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+                ) : isImageDataUrl(avatar) ? (
+                  <Image
+                    src={avatar}
+                    alt="Avatar"
+                    width={80}
+                    height={80}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  avatar || '🧑‍💻'
+                )}
               </div>
               <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-primary flex items-center justify-center shadow-lg">
                 <Camera className="w-3.5 h-3.5 text-primary-foreground" />
               </div>
+              {/* Remove button for uploaded images */}
+              {isImageDataUrl(avatar) && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemoveImage();
+                  }}
+                  className="absolute -top-1 -left-1 w-6 h-6 rounded-full bg-destructive flex items-center justify-center shadow-lg hover:bg-destructive/90"
+                >
+                  <X className="w-3 h-3 text-destructive-foreground" />
+                </button>
+              )}
             </button>
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
 
             {/* Name Preview */}
             <div className="flex-1">
@@ -123,25 +243,70 @@ export function ProfileStep({ userName, userAvatar, onProfileChange, onNext }: P
       {/* Avatar Picker */}
       {showAvatarPicker && (
         <div className="max-w-md mx-auto">
-          <div className="p-4 rounded-xl bg-card border border-border">
-            <p className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-primary" />
-              {t('setup.profile.chooseAvatar', 'Choose your avatar')}
-            </p>
-            <div className="grid grid-cols-8 gap-2">
-              {AVATAR_OPTIONS.map((emoji) => (
-                <button
-                  key={emoji}
-                  onClick={() => handleAvatarSelect(emoji)}
-                  className={cn(
-                    'w-10 h-10 rounded-lg flex items-center justify-center text-xl',
-                    'hover:bg-muted transition-colors',
-                    avatar === emoji && 'bg-primary/20 ring-2 ring-primary'
-                  )}
-                >
-                  {emoji}
-                </button>
-              ))}
+          <div className="p-4 rounded-xl bg-card border border-border space-y-4">
+            {/* Upload Photo Button */}
+            <div>
+              <p className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
+                <Upload className="w-4 h-4 text-primary" />
+                {t('setup.profile.uploadPhoto', 'Upload your photo')}
+              </p>
+              <button
+                onClick={triggerFileUpload}
+                disabled={isUploading}
+                className={cn(
+                  'w-full py-3 px-4 rounded-xl border-2 border-dashed border-border',
+                  'flex items-center justify-center gap-2 text-sm text-muted-foreground',
+                  'hover:border-primary hover:text-primary hover:bg-primary/5 transition-all',
+                  isUploading && 'opacity-50 cursor-not-allowed'
+                )}
+              >
+                {isUploading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" />
+                    {t('setup.profile.uploading', 'Uploading...')}
+                  </>
+                ) : (
+                  <>
+                    <Camera className="w-4 h-4" />
+                    {t('setup.profile.clickToUpload', 'Click to upload image')}
+                  </>
+                )}
+              </button>
+              <p className="text-xs text-muted-foreground mt-2 text-center">
+                {t('setup.profile.uploadHint', 'JPG, PNG or GIF. Max 2MB.')}
+              </p>
+            </div>
+
+            {/* Divider */}
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-border" />
+              <span className="text-xs text-muted-foreground">
+                {t('setup.profile.orChooseEmoji', 'or choose an emoji')}
+              </span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+
+            {/* Emoji Options */}
+            <div>
+              <p className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-primary" />
+                {t('setup.profile.chooseAvatar', 'Choose your avatar')}
+              </p>
+              <div className="grid grid-cols-8 gap-2">
+                {AVATAR_OPTIONS.map((emoji) => (
+                  <button
+                    key={emoji}
+                    onClick={() => handleAvatarSelect(emoji)}
+                    className={cn(
+                      'w-10 h-10 rounded-lg flex items-center justify-center text-xl',
+                      'hover:bg-muted transition-colors',
+                      avatar === emoji && 'bg-primary/20 ring-2 ring-primary'
+                    )}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>

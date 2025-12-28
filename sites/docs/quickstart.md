@@ -2,6 +2,10 @@
 
 Get your first message on Bitcoin in under 5 minutes.
 
+::: tip 🧪 Regtest Playground
+Anchor Protocol is currently available on **regtest only** in Anchor OS. This is our playground phase where we're refining the protocol based on developer feedback. Everything is fully functional — you can build and test all features right now! The roadmap is: **Regtest** → **Testnet** → **Mainnet**.
+:::
+
 ## 1. Install the SDK
 
 ```bash

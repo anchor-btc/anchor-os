@@ -26,7 +26,7 @@ function ThemeCard({
     <button
       onClick={onSelect}
       className={cn(
-        'relative p-4 rounded-xl border-2 transition-all text-left',
+        'relative p-3 rounded-xl border-2 transition-all text-left',
         isSelected
           ? 'border-primary ring-2 ring-primary/20'
           : 'border-border hover:border-primary/50'
@@ -34,29 +34,29 @@ function ThemeCard({
     >
       {/* Theme Preview */}
       <div
-        className="w-full h-20 rounded-lg mb-3 overflow-hidden border border-border/50"
+        className="w-full h-16 rounded-lg mb-2 overflow-hidden border border-border/50"
         style={{ backgroundColor: theme.preview.background }}
       >
         {/* Mock UI */}
         <div className="h-full flex">
           {/* Sidebar mock */}
           <div
-            className="w-6 h-full"
+            className="w-5 h-full"
             style={{
               backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
             }}
           />
           {/* Content area */}
-          <div className="flex-1 p-2">
+          <div className="flex-1 p-1.5">
             {/* Header bar */}
             <div
-              className="h-2 w-10 rounded-full mb-2"
+              className="h-1.5 w-8 rounded-full mb-1.5"
               style={{ backgroundColor: theme.preview.primary }}
             />
             {/* Cards */}
             <div className="flex gap-1">
-              <div className="w-6 h-5 rounded" style={{ backgroundColor: theme.preview.card }} />
-              <div className="w-6 h-5 rounded" style={{ backgroundColor: theme.preview.card }} />
+              <div className="w-5 h-4 rounded" style={{ backgroundColor: theme.preview.card }} />
+              <div className="w-5 h-4 rounded" style={{ backgroundColor: theme.preview.card }} />
             </div>
           </div>
         </div>
@@ -65,7 +65,7 @@ function ThemeCard({
       {/* Theme Info */}
       <div className="flex items-center justify-between">
         <div className="min-w-0">
-          <div className="font-medium text-foreground truncate">{theme.name}</div>
+          <div className="font-medium text-foreground text-sm truncate">{theme.name}</div>
           <div className="text-xs text-muted-foreground truncate">
             {t(theme.descriptionKey, theme.description)}
           </div>
@@ -85,20 +85,20 @@ export function AppearanceStep({ onNext, onBack }: AppearanceStepProps) {
   const { theme, setTheme, themes } = useTheme();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header */}
-      <div className="text-center space-y-2">
-        <div className="mx-auto w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-          <Palette className="w-7 h-7 text-primary" />
+      <div className="text-center space-y-1">
+        <div className="mx-auto w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
+          <Palette className="w-6 h-6 text-primary" />
         </div>
         <h2 className="text-2xl font-bold">{t('setup.appearance.title', 'Choose Theme')}</h2>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           {t('setup.appearance.description', 'Select a visual theme for your dashboard')}
         </p>
       </div>
 
       {/* Theme Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-h-[350px] overflow-y-auto pr-2">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         {themes.map((themeItem) => (
           <ThemeCard
             key={themeItem.id}
@@ -111,7 +111,7 @@ export function AppearanceStep({ onNext, onBack }: AppearanceStepProps) {
       </div>
 
       {/* Navigation */}
-      <div className="flex justify-between pt-4">
+      <div className="flex justify-between pt-2">
         <Button variant="outline" onClick={onBack}>
           <ChevronLeft className="w-4 h-4 mr-2" />
           {t('common.back', 'Back')}

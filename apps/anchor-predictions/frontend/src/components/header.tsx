@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { AppHeader, AppLogo, NavLink, NavGroup, Container, Button } from '@AnchorProtocol/ui';
 import { TrendingUp, Home, User, Clock, BookOpen, Plus } from 'lucide-react';
 
-const DOCS_URL = 'http://localhost:3900/apps/predictions';
+const DOCS_URL = 'https://docs.anchor-protocol.com/apps/predictions';
 
 export function Header() {
   return (

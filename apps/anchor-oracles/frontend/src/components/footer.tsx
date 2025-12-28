@@ -9,7 +9,7 @@ export function OraclesFooter() {
       appName="Oracles"
       appIcon={Eye}
       accentColor="purple"
-      docsUrl="http://localhost:3900/apps/oracles"
+      docsUrl="https://docs.anchor-protocol.com/apps/oracles"
     />
   );
 }

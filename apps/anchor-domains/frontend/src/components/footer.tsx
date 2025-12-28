@@ -9,7 +9,7 @@ export function DomainsFooter() {
       appName="Domains"
       appIcon={Globe}
       accentColor="orange"
-      docsUrl="http://localhost:3900/kinds/dns.html"
+      docsUrl="https://docs.anchor-protocol.com/kinds/dns.html"
     />
   );
 }

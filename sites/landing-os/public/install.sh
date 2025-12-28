@@ -1,9 +1,9 @@
 #!/bin/bash
 #
 #  ⚓ ANCHOR OS - Quick Install Script
-#  https://github.com/AnchorProtocol/anchor
+#  https://github.com/anchor-btc/anchor-os
 #
-#  Run with: curl -fsSL http://localhost:3951/install.sh | bash
+#  Run with: curl -fsSL http://os.anchor-protocol.com/install.sh | bash
 #
 
 set -e
@@ -89,7 +89,7 @@ if [ -d "$INSTALL_DIR" ]; then
     cd "$INSTALL_DIR"
     git pull origin main --quiet
 else
-    git clone --quiet https://github.com/AnchorProtocol/anchor.git "$INSTALL_DIR"
+    git clone --quiet https://github.com/anchor-btc/anchor-os.git "$INSTALL_DIR"
     cd "$INSTALL_DIR"
 fi
 echo -e "${GREEN}✓${NC} Repository ready"
@@ -127,7 +127,7 @@ echo -e "${GREEN}${BOLD}  ⚓ ANCHOR OS INSTALLED SUCCESSFULLY!${NC}"
 echo -e "${GREEN}═══════════════════════════════════════════════════════════${NC}"
 echo ""
 echo -e "  ${BOLD}Dashboard:${NC}     ${YELLOW}http://localhost:8000${NC}"
-echo -e "  ${BOLD}Documentation:${NC} ${YELLOW}http://localhost:3900${NC}"
+echo -e "  ${BOLD}Documentation:${NC} ${YELLOW}https://docs.anchor-protocol.com${NC}"
 echo ""
 echo -e "  ${BOLD}Quick Commands:${NC}"
 echo -e "    cd ${INSTALL_DIR}"
