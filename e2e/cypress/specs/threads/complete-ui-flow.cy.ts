@@ -99,7 +99,9 @@ describe('Anchor Threads - Complete User Journey via UI', () => {
       cy.get('textarea').first().type(testMessage);
 
       // Find and click submit button
-      cy.get('button[type="submit"], button').contains(/post|submit|create|send/i).click();
+      cy.get('button[type="submit"], button')
+        .contains(/post|submit|create|send/i)
+        .click();
 
       // Wait for response
       cy.wait(2000);
@@ -184,7 +186,9 @@ describe('Anchor Threads - Complete User Journey via UI', () => {
       cy.get('textarea').first().type(uniqueMessage);
 
       // Submit
-      cy.get('button').contains(/post|create|submit|send/i).click();
+      cy.get('button')
+        .contains(/post|create|submit|send/i)
+        .click();
 
       // Wait for transaction
       cy.wait(3000);
@@ -198,4 +202,3 @@ describe('Anchor Threads - Complete User Journey via UI', () => {
     });
   });
 });
-

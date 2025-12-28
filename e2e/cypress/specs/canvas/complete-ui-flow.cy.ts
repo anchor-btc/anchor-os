@@ -365,4 +365,3 @@ describe('Anchor Canvas - Complete User Journey via UI', () => {
     });
   });
 });
-

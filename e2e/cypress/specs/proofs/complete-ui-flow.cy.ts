@@ -99,7 +99,9 @@ describe('Anchor Proofs - Complete User Journey via UI', () => {
       cy.wait(1000);
 
       // Look for carrier options
-      cy.contains(/op_return|inscription|witness|carrier|stamp/i, { timeout: 10000 }).should('exist');
+      cy.contains(/op_return|inscription|witness|carrier|stamp/i, { timeout: 10000 }).should(
+        'exist'
+      );
     });
 
     it('should have description field', () => {
@@ -276,4 +278,3 @@ describe('Anchor Proofs - Complete User Journey via UI', () => {
     });
   });
 });
-

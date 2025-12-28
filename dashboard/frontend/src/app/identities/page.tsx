@@ -37,7 +37,14 @@ import {
   ExportKeyResult,
 } from '@/lib/api';
 import { PublishDnsModal } from '@/components/identity/publish-dns-modal';
-import { PageHeader, StatGrid, Section, SectionHeader, ActionButton, RefreshButton } from '@/components/ds';
+import {
+  PageHeader,
+  StatGrid,
+  Section,
+  SectionHeader,
+  ActionButton,
+  RefreshButton,
+} from '@/components/ds';
 
 // ============================================================================
 // Identity Card Component
@@ -590,7 +597,9 @@ function AddIdentityModal({ isOpen, onClose, defaults, onSuccess }: AddIdentityM
             <div className="space-y-3">
               {importMode && !publicKey && (
                 <div>
-                  <label className="block text-xs text-muted-foreground mb-1">Private Key (hex)</label>
+                  <label className="block text-xs text-muted-foreground mb-1">
+                    Private Key (hex)
+                  </label>
                   <input
                     type="password"
                     value={importKey}
@@ -609,7 +618,9 @@ function AddIdentityModal({ isOpen, onClose, defaults, onSuccess }: AddIdentityM
 
               {publicKey && (
                 <div>
-                  <label className="block text-xs text-muted-foreground mb-1">Generated Public Key</label>
+                  <label className="block text-xs text-muted-foreground mb-1">
+                    Generated Public Key
+                  </label>
                   <code className="block p-2.5 bg-muted rounded text-success text-xs font-mono break-all">
                     {publicKey}
                   </code>
@@ -923,7 +934,7 @@ export default function IdentitiesPage() {
           title="Other Identity Protocols"
           subtitle="More identity protocols coming soon"
         />
-        
+
         {/* Pubky Coming Soon Card */}
         <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-xl p-5 relative overflow-hidden">
           <div className="relative flex items-start gap-4">
@@ -938,7 +949,8 @@ export default function IdentitiesPage() {
                 </span>
               </div>
               <p className="text-sm text-muted-foreground mb-3">
-                Pubky is a decentralized identity protocol using Ed25519 keys. Create and manage your Pubky identity with DNS integration for easy discovery.
+                Pubky is a decentralized identity protocol using Ed25519 keys. Create and manage
+                your Pubky identity with DNS integration for easy discovery.
               </p>
               <div className="flex flex-wrap gap-2">
                 <span className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded-lg border border-border">

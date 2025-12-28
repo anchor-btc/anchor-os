@@ -63,9 +63,7 @@ describe('Anchor Places - Complete User Journey via UI', () => {
 
     it('should click on map to create marker (if enabled)', () => {
       // Click on map to open create panel
-      cy.get('.leaflet-container, [class*="map"]')
-        .first()
-        .click(200, 200, { force: true });
+      cy.get('.leaflet-container, [class*="map"]').first().click(200, 200, { force: true });
 
       cy.wait(1000);
       // May show create marker panel or marker popup
@@ -123,9 +121,7 @@ describe('Anchor Places - Complete User Journey via UI', () => {
 
     it('should show create marker panel when clicking map', () => {
       // Double click to create marker
-      cy.get('.leaflet-container, [class*="map"]')
-        .first()
-        .dblclick(300, 300, { force: true });
+      cy.get('.leaflet-container, [class*="map"]').first().dblclick(300, 300, { force: true });
 
       cy.wait(1000);
 
@@ -134,9 +130,7 @@ describe('Anchor Places - Complete User Journey via UI', () => {
     });
 
     it('should have close button on create panel', () => {
-      cy.get('.leaflet-container, [class*="map"]')
-        .first()
-        .dblclick(300, 300, { force: true });
+      cy.get('.leaflet-container, [class*="map"]').first().dblclick(300, 300, { force: true });
 
       cy.wait(1000);
 
@@ -145,9 +139,7 @@ describe('Anchor Places - Complete User Journey via UI', () => {
     });
 
     it('should fill create marker form', () => {
-      cy.get('.leaflet-container, [class*="map"]')
-        .first()
-        .dblclick(300, 300, { force: true });
+      cy.get('.leaflet-container, [class*="map"]').first().dblclick(300, 300, { force: true });
 
       cy.wait(1000);
 
@@ -253,9 +245,7 @@ describe('Anchor Places - Complete User Journey via UI', () => {
       cy.wait(3000);
 
       // Double click to create marker
-      cy.get('.leaflet-container, [class*="map"]')
-        .first()
-        .dblclick(350, 250, { force: true });
+      cy.get('.leaflet-container, [class*="map"]').first().dblclick(350, 250, { force: true });
 
       cy.wait(1000);
 
@@ -264,4 +254,3 @@ describe('Anchor Places - Complete User Journey via UI', () => {
     });
   });
 });
-

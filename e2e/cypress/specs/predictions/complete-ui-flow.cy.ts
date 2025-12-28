@@ -522,4 +522,3 @@ describe('Anchor Predictions - Market Interaction Details', () => {
     cy.contains('shares').should('be.visible');
   });
 });
-

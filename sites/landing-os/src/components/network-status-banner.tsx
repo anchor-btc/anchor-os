@@ -26,7 +26,8 @@ export function NetworkStatusBanner() {
           {/* Message */}
           <p className="text-sm text-muted-foreground">
             <span className="hidden sm:inline">🧪 </span>
-            Currently in <span className="text-amber-400 font-medium">playground mode</span> for protocol refinement.
+            Currently in <span className="text-amber-400 font-medium">playground mode</span> for
+            protocol refinement.
             <span className="hidden md:inline"> Devs can already build and test everything!</span>
           </p>
 
@@ -35,13 +36,23 @@ export function NetworkStatusBanner() {
             <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40 font-medium">
               Regtest
             </span>
-            <svg className="w-3 h-3 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg
+              className="w-3 h-3 text-muted-foreground"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
             <span className="px-2 py-0.5 rounded-full bg-muted/50 text-muted-foreground border border-muted font-medium">
               Testnet
             </span>
-            <svg className="w-3 h-3 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg
+              className="w-3 h-3 text-muted-foreground"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
             <span className="px-2 py-0.5 rounded-full bg-muted/50 text-muted-foreground border border-muted font-medium">
@@ -53,4 +64,3 @@ export function NetworkStatusBanner() {
     </motion.div>
   );
 }
-

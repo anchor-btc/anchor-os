@@ -413,4 +413,3 @@ describe('Anchor Dashboard - Complete User Journey via UI', () => {
     });
   });
 });
-

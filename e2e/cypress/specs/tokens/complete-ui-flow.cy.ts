@@ -103,7 +103,9 @@ describe('Anchor Tokens - Complete User Journey via UI', () => {
       cy.get('input').first().should('have.value', uniqueTicker);
 
       // Look for deploy button
-      cy.get('button').contains(/deploy|create/i).should('exist');
+      cy.get('button')
+        .contains(/deploy|create/i)
+        .should('exist');
     });
 
     it('should show fee estimate after filling form', () => {
@@ -125,7 +127,9 @@ describe('Anchor Tokens - Complete User Journey via UI', () => {
       cy.wait(1000);
 
       // Click deploy
-      cy.get('button').contains(/deploy|create/i).click();
+      cy.get('button')
+        .contains(/deploy|create/i)
+        .click();
 
       // Wait for transaction
       cy.wait(3000);
@@ -246,7 +250,9 @@ describe('Anchor Tokens - Complete User Journey via UI', () => {
       cy.wait(1000);
 
       // Deploy
-      cy.get('button').contains(/deploy|create/i).click();
+      cy.get('button')
+        .contains(/deploy|create/i)
+        .click();
       cy.wait(3000);
 
       // Mine block
@@ -265,4 +271,3 @@ describe('Anchor Tokens - Complete User Journey via UI', () => {
     });
   });
 });
-

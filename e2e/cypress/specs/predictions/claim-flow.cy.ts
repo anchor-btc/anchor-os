@@ -26,40 +26,44 @@ describe('Anchor Predictions - Claim Flow Security', () => {
   ): Cypress.Chainable<{ marketId: string; positionId: number }> => {
     return cy.wrap(null).then(() => {
       // Create market
-      return cy.request({
-        method: 'POST',
-        url: `${PREDICTIONS_API}/api/markets/create`,
-        body: {
-          question: `Claim Test Market - ${Date.now()}`,
-          description: 'For claim testing',
-          resolution_block: 999999,
-          oracle_pubkey: testOraclePubkey,
-          initial_liquidity_sats: 500000000,
-        },
-      }).then((createRes) => {
-        const marketId = createRes.body.market_id;
-
-        // Place bet
-        return cy.request({
+      return cy
+        .request({
           method: 'POST',
-          url: `${PREDICTIONS_API}/api/markets/${marketId}/bet`,
+          url: `${PREDICTIONS_API}/api/markets/create`,
           body: {
-            outcome: 1,
-            amount_sats: 10000,
-            user_pubkey: userPubkey,
+            question: `Claim Test Market - ${Date.now()}`,
+            description: 'For claim testing',
+            resolution_block: 999999,
+            oracle_pubkey: testOraclePubkey,
+            initial_liquidity_sats: 500000000,
           },
-        }).then((betRes) => {
-          // Get position ID
-          return cy.request(`${PREDICTIONS_API}/api/markets/${marketId}/positions`).then(
-            (posRes) => {
-              return {
-                marketId,
-                positionId: posRes.body[0]?.id || betRes.body.position_id,
-              };
-            }
-          );
+        })
+        .then((createRes) => {
+          const marketId = createRes.body.market_id;
+
+          // Place bet
+          return cy
+            .request({
+              method: 'POST',
+              url: `${PREDICTIONS_API}/api/markets/${marketId}/bet`,
+              body: {
+                outcome: 1,
+                amount_sats: 10000,
+                user_pubkey: userPubkey,
+              },
+            })
+            .then((betRes) => {
+              // Get position ID
+              return cy
+                .request(`${PREDICTIONS_API}/api/markets/${marketId}/positions`)
+                .then((posRes) => {
+                  return {
+                    marketId,
+                    positionId: posRes.body[0]?.id || betRes.body.position_id,
+                  };
+                });
+            });
         });
-      });
     });
   };
 
@@ -124,7 +128,7 @@ describe('Anchor Predictions - Claim Flow Security', () => {
   });
 
   describe('Ownership Verification (Critical Security)', () => {
-    it('should BLOCK attacker from claiming another user\'s position', () => {
+    it("should BLOCK attacker from claiming another user's position", () => {
       setupMarketWithPosition(legitUserPubkey).then(({ marketId, positionId }) => {
         // Attacker tries to claim with their own pubkey
         cy.request({
@@ -296,4 +300,3 @@ describe('Anchor Predictions - Claim Edge Cases', () => {
     });
   });
 });
-

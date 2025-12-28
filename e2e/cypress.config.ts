@@ -62,21 +62,28 @@ export default defineConfig({
           oracle_pubkey: string;
           initial_liquidity_sats?: number;
         }) {
-          const response = await fetch(`${config.env.predictions.replace('3800', '3801')}/api/markets/create`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data),
-          });
+          const response = await fetch(
+            `${config.env.predictions.replace('3800', '3801')}/api/markets/create`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(data),
+            }
+          );
           return response.json();
         },
 
         async getPredictionMarkets() {
-          const response = await fetch(`${config.env.predictions.replace('3800', '3801')}/api/markets`);
+          const response = await fetch(
+            `${config.env.predictions.replace('3800', '3801')}/api/markets`
+          );
           return response.json();
         },
 
         async getPredictionMarket(marketId: string) {
-          const response = await fetch(`${config.env.predictions.replace('3800', '3801')}/api/markets/${marketId}`);
+          const response = await fetch(
+            `${config.env.predictions.replace('3800', '3801')}/api/markets/${marketId}`
+          );
           return response.json();
         },
 
@@ -146,7 +153,11 @@ export default defineConfig({
             }
           );
           const text = await response.text();
-          return { status: response.ok ? 'success' : 'error', message: text, statusCode: response.status };
+          return {
+            status: response.ok ? 'success' : 'error',
+            message: text,
+            statusCode: response.status,
+          };
         },
 
         async getMarketPositions(marketId: string) {

@@ -47,54 +47,62 @@ describe('Anchor Predictions - API Integration', () => {
     });
 
     it('should place a YES bet and return shares', () => {
-      cy.wrap(null).then(() => {
-        return cy.task('placePredictionBet', {
-          marketId: testMarketId,
-          outcome: 1,
-          amount_sats: 10000,
-          user_pubkey: testUserPubkey,
+      cy.wrap(null)
+        .then(() => {
+          return cy.task('placePredictionBet', {
+            marketId: testMarketId,
+            outcome: 1,
+            amount_sats: 10000,
+            user_pubkey: testUserPubkey,
+          });
+        })
+        .then((result: any) => {
+          expect(result.status).to.equal('success');
+          expect(result.outcome).to.equal('YES');
+          expect(result.shares).to.be.greaterThan(0);
         });
-      }).then((result: any) => {
-        expect(result.status).to.equal('success');
-        expect(result.outcome).to.equal('YES');
-        expect(result.shares).to.be.greaterThan(0);
-      });
     });
 
     it('should place a NO bet and return shares', () => {
-      cy.wrap(null).then(() => {
-        return cy.task('placePredictionBet', {
-          marketId: testMarketId,
-          outcome: 0,
-          amount_sats: 5000,
-          user_pubkey: testUserPubkey,
+      cy.wrap(null)
+        .then(() => {
+          return cy.task('placePredictionBet', {
+            marketId: testMarketId,
+            outcome: 0,
+            amount_sats: 5000,
+            user_pubkey: testUserPubkey,
+          });
+        })
+        .then((result: any) => {
+          expect(result.status).to.equal('success');
+          expect(result.outcome).to.equal('NO');
+          expect(result.shares).to.be.greaterThan(0);
         });
-      }).then((result: any) => {
-        expect(result.status).to.equal('success');
-        expect(result.outcome).to.equal('NO');
-        expect(result.shares).to.be.greaterThan(0);
-      });
     });
 
     it('should create positions in database', () => {
-      cy.wrap(null).then(() => {
-        return cy.task('getMarketPositions', testMarketId);
-      }).then((positions: any) => {
-        expect(positions).to.be.an('array');
-        expect(positions.length).to.be.greaterThan(0);
-      });
+      cy.wrap(null)
+        .then(() => {
+          return cy.task('getMarketPositions', testMarketId);
+        })
+        .then((positions: any) => {
+          expect(positions).to.be.an('array');
+          expect(positions.length).to.be.greaterThan(0);
+        });
     });
 
     it('should update AMM prices after bets', () => {
-      cy.wrap(null).then(() => {
-        return cy.task('getPredictionMarket', testMarketId);
-      }).then((market: any) => {
-        expect(market.yes_price).to.be.a('number');
-        expect(market.no_price).to.be.a('number');
-        expect(market.total_volume_sats).to.be.greaterThan(0);
-        // Prices should sum close to 1
-        expect(market.yes_price + market.no_price).to.be.closeTo(1, 0.01);
-      });
+      cy.wrap(null)
+        .then(() => {
+          return cy.task('getPredictionMarket', testMarketId);
+        })
+        .then((market: any) => {
+          expect(market.yes_price).to.be.a('number');
+          expect(market.no_price).to.be.a('number');
+          expect(market.total_volume_sats).to.be.greaterThan(0);
+          // Prices should sum close to 1
+          expect(market.yes_price + market.no_price).to.be.closeTo(1, 0.01);
+        });
     });
   });
 });
@@ -121,4 +129,3 @@ describe('Anchor Predictions - API Health Check', () => {
     });
   });
 });
-
