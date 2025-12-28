@@ -28,6 +28,7 @@ services:
       - anchor-network
     restart: unless-stopped
     profiles:
+      - minimum
       - default
       - full
       - core-electrs

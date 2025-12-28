@@ -14,7 +14,7 @@ const steps = [
     number: '02',
     title: 'Start the Stack',
     description: 'Launch all services with Docker Compose',
-    code: 'docker compose up -d',
+    code: 'docker compose --profile minimum up -d',
   },
   {
     number: '03',

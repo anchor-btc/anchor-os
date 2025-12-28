@@ -16,10 +16,10 @@
 #   docker/compose.sites.yml       - Docs, Landing Pages
 #
 # Usage:
-#   docker compose --profile minimum up -d    # Core services only
-#   docker compose --profile default up -d    # Standard setup
-#   docker compose --profile full up -d       # Everything
-#   docker compose --profile app-threads up -d # Specific app
+#   docker compose --profile minimum up -d    # Core + Dashboard only (for initial setup)
+#   docker compose --profile default up -d    # Core + Dashboard + All Apps + Networking
+#   docker compose --profile full up -d       # Everything including explorers
+#   docker compose --profile app-threads up -d # Specific app only
 #
 # =============================================
 

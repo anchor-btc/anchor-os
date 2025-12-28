@@ -113,7 +113,7 @@ echo -e "${BLUE}[4/5]${NC} Starting Anchor OS services..."
 echo -e "${YELLOW}  This may take a few minutes on first run...${NC}"
 echo ""
 
-docker compose up -d
+docker compose --profile minimum up -d
 
 # Wait for services
 echo ""

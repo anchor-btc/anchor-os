@@ -1,0 +1,85 @@
+# =============================================
+# ANCHOR SITES - Standalone Docker Compose
+# =============================================
+#
+# Use this file to deploy institutional sites on a separate server.
+#
+# Usage:
+#   docker compose -f docker-compose.sites.yml up -d
+#   docker compose -f docker-compose.sites.yml up -d docs        # Only docs
+#   docker compose -f docker-compose.sites.yml up -d protocol    # Only protocol landing
+#   docker compose -f docker-compose.sites.yml up -d os          # Only OS landing
+#
+# Environment Variables (optional):
+#   DOCS_PORT=3900           - Documentation port
+#   PROTOCOL_PORT=3950       - Protocol landing page port
+#   OS_PORT=3951             - OS landing page port
+#
+# =============================================
+
+services:
+  # =============================================
+  # ANCHOR DOCS - Protocol Documentation
+  # =============================================
+  docs:
+    build:
+      context: ./sites/docs
+      dockerfile: Dockerfile
+    container_name: anchor-docs
+    ports:
+      - '${DOCS_PORT:-3900}:3900'
+    networks:
+      - sites-network
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3900']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # =============================================
+  # ANCHOR PROTOCOL - Landing Page
+  # https://anchor-protocol.com
+  # =============================================
+  protocol:
+    build:
+      context: ./sites/landing-protocol
+      dockerfile: Dockerfile
+    container_name: anchor-landing-protocol
+    ports:
+      - '${PROTOCOL_PORT:-3950}:3000'
+    networks:
+      - sites-network
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # =============================================
+  # ANCHOR OS - Landing Page
+  # https://os.anchor-protocol.com
+  # =============================================
+  os:
+    build:
+      context: ./sites/landing-os
+      dockerfile: Dockerfile
+    container_name: anchor-landing-os
+    ports:
+      - '${OS_PORT:-3951}:3000'
+    networks:
+      - sites-network
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+# =============================================
+# NETWORK
+# =============================================
+networks:
+  sites-network:
+    driver: bridge

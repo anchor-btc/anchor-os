@@ -100,7 +100,6 @@ services:
       - anchor-network
     restart: unless-stopped
     profiles:
-      - minimum
       - full
       - explorer-btc-rpc
 
