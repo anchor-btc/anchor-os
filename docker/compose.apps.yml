@@ -369,6 +369,8 @@ services:
     volumes:
       - oracles-postgres-data:/var/lib/postgresql/data
       - ../apps/anchor-oracles/backend/migrations/0020_oracles_schema.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - ../apps/anchor-oracles/backend/migrations/0021_oracle_identity.sql:/docker-entrypoint-initdb.d/02-identity.sql
+      - ../apps/anchor-oracles/backend/migrations/0022_oracle_creator_address.sql:/docker-entrypoint-initdb.d/03-creator.sql
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U anchor -d anchor_oracles']
       interval: 5s
@@ -449,6 +451,7 @@ services:
     volumes:
       - lottery-postgres-data:/var/lib/postgresql/data
       - ../apps/anchor-predictions/backend/migrations/0021_predictions_schema.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - ../apps/anchor-predictions/backend/migrations/0022_prediction_markets.sql:/docker-entrypoint-initdb.d/02-markets.sql
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U anchor -d anchor_lottery']
       interval: 5s
