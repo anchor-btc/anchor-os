@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Anchor, Check, Copy, ArrowRight, Github } from 'lucide-react';
 
 const INSTALL_COMMAND = 'curl -fsSL http://os.anchor-protocol.com/install.sh | bash';
 
@@ -54,19 +55,7 @@ export function HeroSection() {
           className="mb-8"
         >
           <div className="inline-flex items-center justify-center w-28 h-28 rounded-3xl bg-gradient-to-br from-primary/30 to-amber-500/20 border border-primary/30 glow-primary-strong animate-glow">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="w-14 h-14 text-primary"
-            >
-              <circle cx="12" cy="5" r="3" />
-              <line x1="12" y1="22" x2="12" y2="8" />
-              <path d="M5 12H2a10 10 0 0 0 20 0h-3" />
-            </svg>
+            <Anchor className="w-14 h-14 text-primary" strokeWidth={1.5} />
           </div>
         </motion.div>
 
@@ -144,38 +133,22 @@ export function HeroSection() {
           <div className="text-sm text-muted-foreground mb-3 font-medium">Quick Install</div>
           <div
             onClick={copyToClipboard}
-            className="group relative inline-flex items-center gap-3 px-6 py-4 rounded-xl glass-card border border-primary/30 hover:border-primary/60 cursor-pointer transition-all duration-300 hover:scale-[1.02] glow-primary-subtle"
+            className="group relative inline-flex items-center gap-4 px-4 sm:px-6 py-3 sm:py-4 rounded-xl glass-card border border-primary/30 hover:border-primary/60 cursor-pointer transition-all duration-300 hover:scale-[1.02] glow-primary-subtle max-w-full"
           >
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <span className="text-primary">$</span>
-            </div>
-            <code className="font-mono text-sm sm:text-base text-foreground">
-              {INSTALL_COMMAND}
+            <span className="text-primary font-mono shrink-0">$</span>
+            <code className="font-mono text-xs sm:text-sm md:text-base text-foreground text-left break-all sm:break-normal">
+              curl -fsSL os.anchor-protocol.com/install.sh | bash
             </code>
-            <button className="flex items-center gap-1 ml-2 px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-sm font-medium transition-colors">
+            <button className="shrink-0 flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-xs sm:text-sm font-medium transition-colors">
               {copied ? (
                 <>
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                  Copied!
+                  <Check className="w-4 h-4" />
+                  <span className="hidden sm:inline">Copied!</span>
                 </>
               ) : (
                 <>
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                    />
-                  </svg>
-                  Copy
+                  <Copy className="w-4 h-4" />
+                  <span className="hidden sm:inline">Copy</span>
                 </>
               )}
             </button>
@@ -194,19 +167,7 @@ export function HeroSection() {
             className="group inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all duration-200 hover:scale-105 glow-primary"
           >
             View Full Setup Guide
-            <svg
-              className="w-4 h-4 transition-transform group-hover:translate-x-1"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17 8l4 4m0 0l-4 4m4-4H3"
-              />
-            </svg>
+            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
           </a>
           <a
             href="https://github.com/anchor-btc/anchor-os"
@@ -214,41 +175,12 @@ export function HeroSection() {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-8 py-4 rounded-xl glass-card hover:bg-white/10 text-foreground font-semibold transition-all duration-200"
           >
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path
-                fillRule="evenodd"
-                d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
-                clipRule="evenodd"
-              />
-            </svg>
+            <Github className="w-5 h-5" />
             GitHub
           </a>
         </motion.div>
       </div>
 
-      {/* Scroll Indicator */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1, delay: 1.2 }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2"
-      >
-        <motion.div
-          animate={{ y: [0, 8, 0] }}
-          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-          className="flex flex-col items-center gap-2 text-muted-foreground"
-        >
-          <span className="text-xs font-mono uppercase tracking-widest">Explore</span>
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 14l-7 7m0 0l-7-7m7 7V3"
-            />
-          </svg>
-        </motion.div>
-      </motion.div>
     </section>
   );
 }

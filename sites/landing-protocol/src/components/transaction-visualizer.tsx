@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Play, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface TxPart {
@@ -184,14 +185,7 @@ export function TransactionVisualizer() {
               onClick={() => setIsPaused(false)}
               className="px-4 py-2 rounded-xl border border-accent/30 bg-accent/10 text-accent text-sm font-medium hover:bg-accent/20 transition-colors flex items-center gap-2"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 3l14 9-14 9V3z"
-                />
-              </svg>
+              <Play className="w-4 h-4" />
               Auto-rotate
             </button>
           )}
@@ -433,14 +427,7 @@ export function TransactionVisualizer() {
               </div>
             ) : (
               <div className="flex items-center gap-3 text-muted-foreground">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
+                <Info className="w-5 h-5" />
                 <span className="text-sm">
                   Hover over transaction parts to explore. Click a carrier to see different
                   embedding methods!

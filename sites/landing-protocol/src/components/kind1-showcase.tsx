@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const TS_CODE_EXAMPLE = `import { createMessage, AnchorKind } from '@AnchorProtocol/anchor-sdk'
@@ -33,7 +34,7 @@ const HEX_RESULT = 'A11C0001 01 00 48656C6C6F2C20426974636F696E2120E29AA1';
 const DECODED_PARTS = [
   { label: 'Magic', value: 'A11C0001', color: 'text-purple-400' },
   { label: 'Kind', value: '01', color: 'text-blue-400' },
-  { label: 'Anchors', value: '00', color: 'text-cyan-400' },
+  { label: 'Anchor Count', value: '00', color: 'text-cyan-400' },
   { label: 'Body', value: '48656C6C6F...', color: 'text-accent' },
 ];
 
@@ -222,14 +223,7 @@ export function Kind1Showcase() {
             href="#decoder"
             className="inline-flex items-center gap-2 px-6 py-3 bg-accent/10 hover:bg-accent/20 border border-accent/20 rounded-xl text-accent font-medium transition-colors"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 3l14 9-14 9V3z"
-              />
-            </svg>
+            <Play className="w-4 h-4" />
             Try it in the Decoder
           </a>
         </motion.div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { ChevronRight } from 'lucide-react';
 
 export function NetworkStatusBanner() {
   return (
@@ -8,7 +9,7 @@ export function NetworkStatusBanner() {
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: 'easeOut' }}
-      className="w-full bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 border-b border-amber-500/20"
+      className="w-full bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 border-b border-amber-500/20 mb-8 sm:mb-12 md:mb-16"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
         <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-center">
@@ -36,25 +37,11 @@ export function NetworkStatusBanner() {
             <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40 font-medium">
               Regtest
             </span>
-            <svg
-              className="w-3 h-3 text-muted-foreground"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
+            <ChevronRight className="w-3 h-3 text-muted-foreground" />
             <span className="px-2 py-0.5 rounded-full bg-muted/50 text-muted-foreground border border-muted font-medium">
               Testnet
             </span>
-            <svg
-              className="w-3 h-3 text-muted-foreground"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
+            <ChevronRight className="w-3 h-3 text-muted-foreground" />
             <span className="px-2 py-0.5 rounded-full bg-muted/50 text-muted-foreground border border-muted font-medium">
               Mainnet
             </span>

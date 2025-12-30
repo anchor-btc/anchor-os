@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { ChevronRight } from 'lucide-react';
 
 export function NetworkStatusBanner() {
   return (
@@ -36,25 +37,11 @@ export function NetworkStatusBanner() {
             <span className="px-2 py-0.5 rounded-full bg-accent/20 text-accent border border-accent/40 font-medium">
               Regtest
             </span>
-            <svg
-              className="w-3 h-3 text-muted-foreground"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
+            <ChevronRight className="w-3 h-3 text-muted-foreground" />
             <span className="px-2 py-0.5 rounded-full bg-muted/50 text-muted-foreground border border-muted font-medium">
               Testnet
             </span>
-            <svg
-              className="w-3 h-3 text-muted-foreground"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
+            <ChevronRight className="w-3 h-3 text-muted-foreground" />
             <span className="px-2 py-0.5 rounded-full bg-muted/50 text-muted-foreground border border-muted font-medium">
               Mainnet
             </span>

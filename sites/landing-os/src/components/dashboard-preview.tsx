@@ -62,13 +62,13 @@ export function DashboardPreview() {
 
             {/* Dashboard content simulation */}
             <div className="relative bg-background/80 rounded-b-xl overflow-hidden">
-              <div className="flex min-h-[500px]">
-                {/* Sidebar */}
-                <div className="w-64 bg-card/50 border-r border-white/5 p-4">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+              <div className="flex min-h-[300px] md:min-h-[500px]">
+                {/* Sidebar - hidden on mobile */}
+                <div className="hidden sm:block w-32 md:w-48 lg:w-64 bg-card/50 border-r border-white/5 p-2 md:p-4">
+                  <div className="flex items-center gap-2 md:gap-3 mb-4 md:mb-6">
+                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-primary/20 flex items-center justify-center">
                       <svg
-                        className="w-5 h-5 text-primary"
+                        className="w-4 h-4 md:w-5 md:h-5 text-primary"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
@@ -80,8 +80,8 @@ export function DashboardPreview() {
                       </svg>
                     </div>
                     <div>
-                      <div className="font-bold text-sm">ANCHOR OS</div>
-                      <div className="text-[10px] text-muted-foreground">beta</div>
+                      <div className="font-bold text-xs md:text-sm">ANCHOR OS</div>
+                      <div className="text-[8px] md:text-[10px] text-muted-foreground">beta</div>
                     </div>
                   </div>
 
@@ -90,23 +90,23 @@ export function DashboardPreview() {
                     {['Dashboard', 'Services', 'Settings'].map((item, i) => (
                       <div
                         key={item}
-                        className={`px-3 py-2 rounded-lg text-sm ${i === 0 ? 'bg-primary/10 text-primary' : 'text-muted-foreground'}`}
+                        className={`px-2 md:px-3 py-1.5 md:py-2 rounded-lg text-xs md:text-sm ${i === 0 ? 'bg-primary/10 text-primary' : 'text-muted-foreground'}`}
                       >
                         {item}
                       </div>
                     ))}
                   </div>
 
-                  <div className="mt-6 mb-2 text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-3">
+                  <div className="mt-4 md:mt-6 mb-2 text-[8px] md:text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-2 md:px-3">
                     Apps
                   </div>
                   <div className="space-y-1">
                     {['Threads', 'Map', 'Pixel', 'Proof'].map((app) => (
                       <div
                         key={app}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground transition-colors"
+                        className="flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 rounded-lg text-xs md:text-sm text-muted-foreground hover:text-foreground transition-colors"
                       >
-                        <div className="w-2 h-2 rounded-full bg-green-500" />
+                        <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-green-500" />
                         {app}
                       </div>
                     ))}
@@ -114,14 +114,14 @@ export function DashboardPreview() {
                 </div>
 
                 {/* Main content */}
-                <div className="flex-1 p-6">
-                  <div className="mb-6">
-                    <h1 className="text-2xl font-bold mb-1">Dashboard</h1>
-                    <p className="text-sm text-muted-foreground">Welcome to Anchor OS</p>
+                <div className="flex-1 p-3 sm:p-4 md:p-6">
+                  <div className="mb-3 md:mb-6">
+                    <h1 className="text-lg sm:text-xl md:text-2xl font-bold mb-1">Dashboard</h1>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Welcome to Anchor OS</p>
                   </div>
 
                   {/* Stats cards */}
-                  <div className="grid grid-cols-3 gap-4 mb-6">
+                  <div className="flex flex-row gap-2 sm:gap-3 md:gap-4 mb-3 md:mb-6 overflow-x-auto sm:overflow-visible">
                     {[
                       { label: 'Block Height', value: '847,293', icon: '₿' },
                       { label: 'Connections', value: '8 peers', icon: '🔗' },
@@ -129,21 +129,21 @@ export function DashboardPreview() {
                     ].map((stat) => (
                       <div
                         key={stat.label}
-                        className="p-4 rounded-xl bg-card/50 border border-white/5"
+                        className="flex-1 min-w-[80px] p-2 sm:p-3 md:p-4 rounded-lg md:rounded-xl bg-card/50 border border-white/5"
                       >
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs text-muted-foreground">{stat.label}</span>
-                          <span>{stat.icon}</span>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-1 md:mb-2 gap-0.5">
+                          <span className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground whitespace-nowrap">{stat.label}</span>
+                          <span className="text-xs md:text-base hidden sm:block">{stat.icon}</span>
                         </div>
-                        <div className="text-xl font-bold">{stat.value}</div>
+                        <div className="text-sm sm:text-base md:text-xl font-bold whitespace-nowrap">{stat.value}</div>
                       </div>
                     ))}
                   </div>
 
                   {/* Activity chart placeholder */}
-                  <div className="p-4 rounded-xl bg-card/50 border border-white/5">
-                    <div className="text-sm font-medium mb-4">Network Activity</div>
-                    <div className="h-32 flex items-end justify-around gap-2">
+                  <div className="p-2 sm:p-3 md:p-4 rounded-lg md:rounded-xl bg-card/50 border border-white/5">
+                    <div className="text-xs md:text-sm font-medium mb-2 md:mb-4">Network Activity</div>
+                    <div className="h-16 sm:h-24 md:h-32 flex items-end justify-around gap-1 md:gap-2">
                       {[40, 65, 45, 80, 55, 70, 60, 85, 50, 75, 65, 90].map((height, i) => (
                         <div
                           key={i}

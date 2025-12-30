@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { Check, AlertCircle } from 'lucide-react';
 import {
   parseAnchorMessage,
   EXAMPLE_HEX,
@@ -115,7 +116,7 @@ const EXAMPLE_MESSAGES: ExampleMessage[] = [
   },
   {
     id: 'threaded',
-    name: 'Reply (Threaded)',
+    name: 'Reply (1 Anchor)',
     kind: 'Kind 1',
     kindColor: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
     hex: bytesToHex([
@@ -133,7 +134,83 @@ const EXAMPLE_MESSAGES: ExampleMessage[] = [
       0, // vout
       ...Array.from(new TextEncoder().encode('This is a reply!')),
     ]),
-    description: 'Message with anchor (reply to another tx)',
+    description: 'Reply to a single parent transaction',
+  },
+  {
+    id: 'multi-anchor-2',
+    name: 'Multi-Anchor (2)',
+    kind: 'Kind 1',
+    kindColor: 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30',
+    hex: bytesToHex([
+      ...ANCHOR_MAGIC,
+      1, // Kind: Text
+      2, // 2 anchors!
+      // Anchor 1: First parent tx
+      0xab,
+      0xcd,
+      0xef,
+      0x12,
+      0x34,
+      0x56,
+      0x78,
+      0x9a, // txid prefix
+      0, // vout 0
+      // Anchor 2: Second parent tx
+      0x11,
+      0x22,
+      0x33,
+      0x44,
+      0x55,
+      0x66,
+      0x77,
+      0x88, // txid prefix
+      1, // vout 1
+      ...Array.from(new TextEncoder().encode('Merged thread!')),
+    ]),
+    description: 'Message linking 2 parent transactions',
+  },
+  {
+    id: 'multi-anchor-3',
+    name: 'Multi-Anchor (3)',
+    kind: 'Kind 1',
+    kindColor: 'bg-rose-500/20 text-rose-400 border-rose-500/30',
+    hex: bytesToHex([
+      ...ANCHOR_MAGIC,
+      1, // Kind: Text
+      3, // 3 anchors!
+      // Anchor 1
+      0xaa,
+      0xbb,
+      0xcc,
+      0xdd,
+      0xee,
+      0xff,
+      0x00,
+      0x11,
+      0,
+      // Anchor 2
+      0x22,
+      0x33,
+      0x44,
+      0x55,
+      0x66,
+      0x77,
+      0x88,
+      0x99,
+      1,
+      // Anchor 3
+      0xff,
+      0xee,
+      0xdd,
+      0xcc,
+      0xbb,
+      0xaa,
+      0x99,
+      0x88,
+      2,
+      ...Array.from(new TextEncoder().encode('Three parents!')),
+    ]),
+    description: 'Chain linking 3 different parent txs',
   },
 ];
 
@@ -173,9 +250,9 @@ export function MessageDecoder() {
 
     if (parsed.anchorCount) {
       result.push({
-        label: 'Anchors',
+        label: 'Anchor Count',
         hex: parsed.anchorCount.hex.toUpperCase(),
-        description: `Number of parent references: ${parsed.anchorCount.value}`,
+        description: `Number of parent references: ${parsed.anchorCount.value} (supports 0-255)`,
         color: 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400',
         startIndex: offset,
         endIndex: offset + 2,
@@ -283,6 +360,55 @@ export function MessageDecoder() {
             Explore different message kinds! Click an example below or paste your own hex. Hover
             over segments to understand each part.
           </p>
+        </motion.div>
+
+        {/* Protocol Format Info */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.05 }}
+          className="mb-10 p-5 bg-gradient-to-r from-cyan-500/10 via-indigo-500/10 to-purple-500/10 border border-cyan-500/20 rounded-2xl"
+        >
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-indigo-500 flex items-center justify-center text-white font-bold text-lg">
+              ⚓
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-foreground mb-2">
+                Multiple Anchors per Transaction
+              </h3>
+              <p className="text-sm text-muted-foreground mb-3">
+                Each ANCHOR message can reference{' '}
+                <span className="text-cyan-400 font-semibold">0-255 parent transactions</span>. This
+                enables powerful use cases like thread merging, cross-referencing, and complex
+                dependency chains.
+              </p>
+              <div className="font-mono text-xs bg-background/50 p-3 rounded-lg border border-muted overflow-x-auto">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="px-2 py-1 rounded bg-purple-500/20 text-purple-400 border border-purple-500/30">
+                    Magic (4B)
+                  </span>
+                  <span className="text-muted-foreground">→</span>
+                  <span className="px-2 py-1 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                    Kind (1B)
+                  </span>
+                  <span className="text-muted-foreground">→</span>
+                  <span className="px-2 py-1 rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 animate-pulse">
+                    Anchor Count (1B)
+                  </span>
+                  <span className="text-muted-foreground">→</span>
+                  <span className="px-2 py-1 rounded bg-teal-500/20 text-teal-400 border border-teal-500/30">
+                    Anchors (9B × N)
+                  </span>
+                  <span className="text-muted-foreground">→</span>
+                  <span className="px-2 py-1 rounded bg-accent/20 text-accent border border-accent/30">
+                    Body (var)
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
         </motion.div>
 
         {/* Example Messages Grid */}
@@ -424,19 +550,7 @@ export function MessageDecoder() {
           {parsed.isValid && parsed.body && (
             <div className="mt-6 p-4 bg-accent/10 border border-accent/20 rounded-xl">
               <div className="flex items-center gap-2 mb-2">
-                <svg
-                  className="w-5 h-5 text-accent"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
+                <Check className="w-5 h-5 text-accent" />
                 <span className="font-semibold text-accent">Decoded Message</span>
                 {parsed.kind && (
                   <span className="text-xs px-2 py-0.5 rounded-full bg-accent/20 text-accent font-mono ml-auto">
@@ -464,14 +578,7 @@ export function MessageDecoder() {
           {parsed.error && (
             <div className="mt-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
               <div className="flex items-center gap-2 text-red-400">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
+                <AlertCircle className="w-5 h-5" />
                 <span className="font-medium">{parsed.error}</span>
               </div>
             </div>

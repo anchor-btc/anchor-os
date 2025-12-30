@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Check, Copy } from 'lucide-react';
 
 const steps = [
   {
@@ -66,31 +67,31 @@ export function QuickStart() {
               transition={{ duration: 0.5, delay: index * 0.1 }}
               className="relative"
             >
-              {/* Connection line */}
+              {/* Connection line - only on larger screens */}
               {index < steps.length - 1 && (
-                <div className="absolute left-[47px] top-[80px] w-px h-[calc(100%-40px)] bg-gradient-to-b from-primary/50 to-transparent" />
+                <div className="absolute left-[31px] sm:left-[47px] top-[64px] sm:top-[80px] w-px h-[calc(100%-32px)] sm:h-[calc(100%-40px)] bg-gradient-to-b from-primary/50 to-transparent" />
               )}
 
-              <div className="flex gap-6">
+              <div className="flex gap-3 sm:gap-6">
                 {/* Step number */}
                 <div className="relative z-10 flex-shrink-0">
-                  <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary/20 to-amber-500/10 border border-primary/30 flex items-center justify-center">
-                    <span className="text-3xl font-bold text-gradient">{step.number}</span>
+                  <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary/20 to-amber-500/10 border border-primary/30 flex items-center justify-center">
+                    <span className="text-xl sm:text-3xl font-bold text-gradient">{step.number}</span>
                   </div>
                 </div>
 
                 {/* Step content */}
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold mb-2">{step.title}</h3>
-                  <p className="text-muted-foreground mb-4">{step.description}</p>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base sm:text-xl font-bold mb-1 sm:mb-2">{step.title}</h3>
+                  <p className="text-sm sm:text-base text-muted-foreground mb-2 sm:mb-4">{step.description}</p>
 
                   {/* Code block */}
                   <div className="relative glass-card overflow-hidden">
-                    <div className="flex items-center justify-between px-4 py-2 bg-card/50 border-b border-white/5">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-red-500/50" />
-                        <div className="w-3 h-3 rounded-full bg-yellow-500/50" />
-                        <div className="w-3 h-3 rounded-full bg-green-500/50" />
+                    <div className="flex items-center justify-between px-2 sm:px-4 py-2 bg-card/50 border-b border-white/5">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-red-500/50" />
+                        <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-yellow-500/50" />
+                        <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-green-500/50" />
                       </div>
                       <button
                         onClick={() => copyToClipboard(step.code, index)}
@@ -98,43 +99,19 @@ export function QuickStart() {
                       >
                         {copiedStep === index ? (
                           <>
-                            <svg
-                              className="w-4 h-4 text-green-400"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M5 13l4 4L19 7"
-                              />
-                            </svg>
+                            <Check className="w-4 h-4 text-green-400" />
                             Copied!
                           </>
                         ) : (
                           <>
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                              />
-                            </svg>
+                            <Copy className="w-4 h-4" />
                             Copy
                           </>
                         )}
                       </button>
                     </div>
-                    <pre className="p-4 overflow-x-auto">
-                      <code className="text-sm font-mono text-primary">{step.code}</code>
+                    <pre className="p-2 sm:p-4 overflow-x-auto scrollbar-thin scrollbar-thumb-primary/20">
+                      <code className="text-xs sm:text-sm font-mono text-primary whitespace-pre">{step.code}</code>
                     </pre>
                   </div>
                 </div>
