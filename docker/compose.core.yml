@@ -60,18 +60,18 @@ services:
       # Core services migrations
       - ../internal/anchor-indexer/migrations/0001_core_carrier.sql:/docker-entrypoint-initdb.d/01-core-carrier.sql
       # App migrations - Canvas
-      - ../apps/anchor-canvas/backend/migrations/0002_canvas_schema.sql:/docker-entrypoint-initdb.d/02-canvas.sql
-      - ../apps/anchor-canvas/backend/migrations/0003_add_creator_address.sql:/docker-entrypoint-initdb.d/02-canvas-creator.sql
+      - ../apps/anchor-canvas/backend/migrations/0002_canvas_schema.sql:/docker-entrypoint-initdb.d/02a-canvas.sql
+      - ../apps/anchor-canvas/backend/migrations/0003_add_creator_address.sql:/docker-entrypoint-initdb.d/02b-canvas-creator.sql
       # App migrations - Places
       - ../apps/anchor-places/backend/migrations/0003_places_schema.sql:/docker-entrypoint-initdb.d/03-places.sql
       # App migrations - Domains
-      - ../apps/anchor-domains/backend/migrations/0004_domains_schema.sql:/docker-entrypoint-initdb.d/04-domains.sql
-      - ../apps/anchor-domains/backend/migrations/0005_pending_transactions.sql:/docker-entrypoint-initdb.d/04-domains-pending.sql
-      - ../apps/anchor-domains/backend/migrations/0006_domain_identities.sql:/docker-entrypoint-initdb.d/04-domains-identities.sql
-      - ../apps/anchor-domains/backend/migrations/0007_dns_record_names.sql:/docker-entrypoint-initdb.d/04-domains-records.sql
+      - ../apps/anchor-domains/backend/migrations/0004_domains_schema.sql:/docker-entrypoint-initdb.d/04a-domains.sql
+      - ../apps/anchor-domains/backend/migrations/0005_pending_transactions.sql:/docker-entrypoint-initdb.d/04b-domains-pending.sql
+      - ../apps/anchor-domains/backend/migrations/0006_domain_identities.sql:/docker-entrypoint-initdb.d/04c-domains-identities.sql
+      - ../apps/anchor-domains/backend/migrations/0007_dns_record_names.sql:/docker-entrypoint-initdb.d/04d-domains-records.sql
       # App migrations - Proofs
-      - ../apps/anchor-proofs/backend/migrations/0005_proofs_schema.sql:/docker-entrypoint-initdb.d/05-proofs.sql
-      - ../apps/anchor-proofs/backend/migrations/0006_add_creator_address.sql:/docker-entrypoint-initdb.d/05-proofs-creator.sql
+      - ../apps/anchor-proofs/backend/migrations/0005_proofs_schema.sql:/docker-entrypoint-initdb.d/05a-proofs.sql
+      - ../apps/anchor-proofs/backend/migrations/0006_add_creator_address.sql:/docker-entrypoint-initdb.d/05b-proofs-creator.sql
       # App migrations - Tokens
       - ../apps/anchor-tokens/backend/migrations/0006_anchor_tokens_schema.sql:/docker-entrypoint-initdb.d/06-tokens.sql
       # Dashboard migrations
