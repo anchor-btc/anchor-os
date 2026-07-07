@@ -271,55 +271,53 @@ impl MarkerIndexer {
                 }
 
                 // Text message with anchors = Reply to a marker
-                AnchorKind::Text => {
-                    if !detection.message.anchors.is_empty() {
-                        // This is a reply - check if parent is a marker
-                        let parent_anchor = &detection.message.anchors[0];
+                AnchorKind::Text if !detection.message.anchors.is_empty() => {
+                    // This is a reply - check if parent is a marker
+                    let parent_anchor = &detection.message.anchors[0];
 
-                        debug!(
-                            "Found text message with anchor: prefix={}, vout={}",
-                            hex::encode(parent_anchor.txid_prefix),
-                            parent_anchor.vout
-                        );
+                    debug!(
+                        "Found text message with anchor: prefix={}, vout={}",
+                        hex::encode(parent_anchor.txid_prefix),
+                        parent_anchor.vout
+                    );
 
-                        // Try to find the parent marker
-                        match self
-                            .db
-                            .resolve_anchor_to_marker(
-                                &parent_anchor.txid_prefix,
-                                parent_anchor.vout as i32,
-                            )
-                            .await?
-                        {
-                            Some(parent_txid) => {
-                                let raw_message =
-                                    String::from_utf8_lossy(&detection.message.body).to_string();
-                                // Sanitize for PostgreSQL (remove null bytes and replacement chars)
-                                let message = sanitize_for_postgres(&raw_message);
+                    // Try to find the parent marker
+                    match self
+                        .db
+                        .resolve_anchor_to_marker(
+                            &parent_anchor.txid_prefix,
+                            parent_anchor.vout as i32,
+                        )
+                        .await?
+                    {
+                        Some(parent_txid) => {
+                            let raw_message =
+                                String::from_utf8_lossy(&detection.message.body).to_string();
+                            // Sanitize for PostgreSQL (remove null bytes and replacement chars)
+                            let message = sanitize_for_postgres(&raw_message);
 
-                                info!("Found reply to marker: {}", message);
+                            info!("Found reply to marker: {}", message);
 
-                                self.db
-                                    .insert_reply(
-                                        &txid_bytes,
-                                        detection.vout as i32,
-                                        &parent_txid,
-                                        parent_anchor.vout as i32,
-                                        &message,
-                                        block_hash,
-                                        block_height,
-                                    )
-                                    .await?;
+                            self.db
+                                .insert_reply(
+                                    &txid_bytes,
+                                    detection.vout as i32,
+                                    &parent_txid,
+                                    parent_anchor.vout as i32,
+                                    &message,
+                                    block_hash,
+                                    block_height,
+                                )
+                                .await?;
 
-                                replies += 1;
-                            }
-                            None => {
-                                debug!(
-                                    "Could not resolve anchor to marker: prefix={}, vout={}",
-                                    hex::encode(parent_anchor.txid_prefix),
-                                    parent_anchor.vout
-                                );
-                            }
+                            replies += 1;
+                        }
+                        None => {
+                            debug!(
+                                "Could not resolve anchor to marker: prefix={}, vout={}",
+                                hex::encode(parent_anchor.txid_prefix),
+                                parent_anchor.vout
+                            );
                         }
                     }
                 }

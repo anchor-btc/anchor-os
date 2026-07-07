@@ -76,14 +76,18 @@ export function QuickStart() {
                 {/* Step number */}
                 <div className="relative z-10 flex-shrink-0">
                   <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary/20 to-amber-500/10 border border-primary/30 flex items-center justify-center">
-                    <span className="text-xl sm:text-3xl font-bold text-gradient">{step.number}</span>
+                    <span className="text-xl sm:text-3xl font-bold text-gradient">
+                      {step.number}
+                    </span>
                   </div>
                 </div>
 
                 {/* Step content */}
                 <div className="flex-1 min-w-0">
                   <h3 className="text-base sm:text-xl font-bold mb-1 sm:mb-2">{step.title}</h3>
-                  <p className="text-sm sm:text-base text-muted-foreground mb-2 sm:mb-4">{step.description}</p>
+                  <p className="text-sm sm:text-base text-muted-foreground mb-2 sm:mb-4">
+                    {step.description}
+                  </p>
 
                   {/* Code block */}
                   <div className="relative glass-card overflow-hidden">
@@ -111,7 +115,9 @@ export function QuickStart() {
                       </button>
                     </div>
                     <pre className="p-2 sm:p-4 overflow-x-auto scrollbar-thin scrollbar-thumb-primary/20">
-                      <code className="text-xs sm:text-sm font-mono text-primary whitespace-pre">{step.code}</code>
+                      <code className="text-xs sm:text-sm font-mono text-primary whitespace-pre">
+                        {step.code}
+                      </code>
                     </pre>
                   </div>
                 </div>

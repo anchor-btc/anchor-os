@@ -132,17 +132,23 @@ export function DashboardPreview() {
                         className="flex-1 min-w-[80px] p-2 sm:p-3 md:p-4 rounded-lg md:rounded-xl bg-card/50 border border-white/5"
                       >
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-1 md:mb-2 gap-0.5">
-                          <span className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground whitespace-nowrap">{stat.label}</span>
+                          <span className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground whitespace-nowrap">
+                            {stat.label}
+                          </span>
                           <span className="text-xs md:text-base hidden sm:block">{stat.icon}</span>
                         </div>
-                        <div className="text-sm sm:text-base md:text-xl font-bold whitespace-nowrap">{stat.value}</div>
+                        <div className="text-sm sm:text-base md:text-xl font-bold whitespace-nowrap">
+                          {stat.value}
+                        </div>
                       </div>
                     ))}
                   </div>
 
                   {/* Activity chart placeholder */}
                   <div className="p-2 sm:p-3 md:p-4 rounded-lg md:rounded-xl bg-card/50 border border-white/5">
-                    <div className="text-xs md:text-sm font-medium mb-2 md:mb-4">Network Activity</div>
+                    <div className="text-xs md:text-sm font-medium mb-2 md:mb-4">
+                      Network Activity
+                    </div>
                     <div className="h-16 sm:h-24 md:h-32 flex items-end justify-around gap-1 md:gap-2">
                       {[40, 65, 45, 80, 55, 70, 60, 85, 50, 75, 65, 90].map((height, i) => (
                         <div

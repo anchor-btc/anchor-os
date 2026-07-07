@@ -245,12 +245,12 @@ impl DnsRecord {
                     ));
                 }
             }
-            RecordType::SRV => {
-                if self.priority.is_none() || self.weight.is_none() || self.port.is_none() {
-                    return Err(SpecError::InvalidDnsRecord(
-                        "SRV record requires priority, weight, and port".to_string(),
-                    ));
-                }
+            RecordType::SRV
+                if self.priority.is_none() || self.weight.is_none() || self.port.is_none() =>
+            {
+                return Err(SpecError::InvalidDnsRecord(
+                    "SRV record requires priority, weight, and port".to_string(),
+                ));
             }
             _ => {}
         }

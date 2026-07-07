@@ -180,7 +180,6 @@ export function HeroSection() {
           </a>
         </motion.div>
       </div>
-
     </section>
   );
 }
