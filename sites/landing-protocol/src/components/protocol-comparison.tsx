@@ -1,7 +1,16 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { MessageSquare, LayoutGrid, Archive, Zap, Lock, Clock, Database, FileText } from 'lucide-react';
+import {
+  MessageSquare,
+  LayoutGrid,
+  Archive,
+  Zap,
+  Lock,
+  Clock,
+  Database,
+  FileText,
+} from 'lucide-react';
 
 interface Feature {
   icon: React.ReactNode;

@@ -508,7 +508,7 @@ impl Database {
         }
 
         // Sort by total thread messages descending
-        popular.sort_by(|a, b| b.total_thread_messages.cmp(&a.total_thread_messages));
+        popular.sort_by_key(|entry| std::cmp::Reverse(entry.total_thread_messages));
 
         // Take only threads with more than 1 message and limit
         Ok(popular
