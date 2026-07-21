@@ -549,7 +549,7 @@ pub async fn get_locked_assets(
     }
 
     // Sort by locked_at descending (newest first)
-    items.sort_by(|a, b| b.locked_at.cmp(&a.locked_at));
+    items.sort_by_key(|item| std::cmp::Reverse(item.locked_at));
 
     let summary = LockedAssetsSummary {
         domains: CategorySummary {
