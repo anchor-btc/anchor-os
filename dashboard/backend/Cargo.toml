@@ -10,6 +10,10 @@ description = "Dashboard backend for managing the Anchor stack"
 name = "dashboard-backend"
 path = "src/main.rs"
 
+[build-dependencies]
+# Constrains the zip version used by the utoipa-swagger-ui build script (see root Cargo.toml).
+zip.workspace = true
+
 [dependencies]
 tokio.workspace = true
 axum.workspace = true
