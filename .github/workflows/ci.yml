@@ -41,6 +41,9 @@ jobs:
           npm ci
           npm rebuild
 
+      - name: Check Next.js security floor
+        run: npm run test:security
+
       - name: Check Rust formatting
         run: cargo fmt --all -- --check
 

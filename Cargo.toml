@@ -105,6 +105,10 @@ reqwest = { version = "0.12", features = ["json"] }
 # OpenAPI / Swagger
 utoipa = { version = "5", features = ["axum_extras", "chrono"] }
 utoipa-swagger-ui = { version = "8", features = ["axum"] }
+# utoipa-swagger-ui 8.x build script does not compile against zip >= 2.3
+# (ZipFile gained a generic reader parameter). Keep zip below 2.3 until the
+# workspace moves to axum 0.8 + utoipa-swagger-ui 9.
+zip = { version = ">=2, <2.3", default-features = false }
 
 # Public SDK crates (libs/rust/)
 anchor-core = { path = "libs/rust/anchor-core" }
